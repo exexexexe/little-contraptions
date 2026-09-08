@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Daily Hence</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23E8EDE5'/><rect x='6' y='8' width='20' height='3' fill='%23155E52'/><rect x='6' y='14' width='14' height='2' fill='%231A1D19'/><rect x='6' y='19' width='20' height='2' fill='%231A1D19'/><rect x='6' y='24' width='11' height='2' fill='%231A1D19'/></svg>">
+<style>
+:root{
+  --paper:#E8EDE5;
+  --paper-2:#DDE4D9;
+  --ink:#1A1D19;
+  --ink-2:#414A3F;
+  --dim:#78826F;
+  --teal:#155E52;
+  --rule:#B9C4B3;
+  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Georgia,serif;
+  --sans:ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);color:var(--ink);font-family:var(--serif);
+  min-height:100vh;padding:26px 18px 60px;
+}
+.paper{ max-width:840px;margin:0 auto }
+
+/* ---------- masthead ---------- */
+.mast{ text-align:center;border-bottom:3px double var(--ink);padding-bottom:12px }
+.mast .over{
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--dim);
+}
+.mast h1{
+  margin:6px 0 4px;font-size:clamp(34px,8vw,64px);font-weight:400;font-style:italic;
+  letter-spacing:-.02em;line-height:.96;
+}
+.mast .rule-line{
+  display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-2);
+  border-top:1px solid var(--rule);margin-top:9px;padding-top:8px;
+}
+
+/* ---------- lead ---------- */
+.lead{ padding:24px 0 20px;border-bottom:1px solid var(--rule) }
+.chip{
+  display:inline-block;font-family:var(--mono);font-size:9px;letter-spacing:.17em;
+  text-transform:uppercase;color:var(--teal);border:1px solid var(--teal);padding:3px 8px;margin-bottom:11px;
+}
+.lead h2{
+  margin:0 0 11px;font-size:clamp(26px,6.2vw,48px);font-weight:700;line-height:1.06;letter-spacing:-.025em;
+}
+.lead .stand{ margin:0;font-size:17px;line-height:1.62;color:var(--ink-2);max-width:58ch }
+.lead .byline{
+  margin-top:13px;font-family:var(--mono);font-size:10.5px;color:var(--dim);letter-spacing:.06em;
+}
+
+/* ---------- columns ---------- */
+.cols{
+  padding:20px 0 0;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(228px,1fr));gap:0;
+}
+.story{ padding:0 20px 20px;border-right:1px solid var(--rule) }
+.story:last-child{ border-right:0 }
+@media (max-width:640px){ .story{ border-right:0;border-bottom:1px solid var(--rule);padding:0 0 18px;margin-bottom:18px } .story:last-child{ border-bottom:0 } }
+.story:first-child{ padding-left:0 }
+.story h3{ margin:0 0 7px;font-size:18px;font-weight:700;line-height:1.24;letter-spacing:-.012em }
+.story p{ margin:0;font-size:14px;line-height:1.58;color:var(--ink-2) }
+.story .k{
+  font-family:var(--mono);font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--dim);display:block;margin-bottom:6px;
+}
+
+/* ---------- sidebar strip ---------- */
+.strip{
+  margin-top:22px;border-top:3px double var(--ink);border-bottom:1px solid var(--rule);
+  padding:14px 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;
+}
+.strip div{ font-family:var(--mono);font-size:10.5px;color:var(--dim);line-height:1.6 }
+.strip div b{ display:block;font-family:var(--serif);font-size:15px;color:var(--ink);font-weight:700;margin-top:3px }
+
+.deck{ display:flex;gap:9px;flex-wrap:wrap;margin-top:22px }
+.btn{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;
+  background:var(--ink);color:var(--paper);border:0;padding:12px 18px;cursor:pointer;font-weight:700;
+}
+.btn:hover{ background:#000 }
+.btn.sec{ background:transparent;color:var(--ink);border:1px solid var(--rule);font-weight:400 }
+.btn.sec:hover{ border-color:var(--teal);color:var(--teal) }
+.btn:focus-visible{ outline:2px solid var(--teal);outline-offset:2px }
+
+footer{
+  max-width:840px;margin:26px auto 0;padding-top:14px;border-top:1px solid var(--rule);
+  font-family:var(--mono);font-size:10.5px;color:var(--dim);line-height:1.8;
+}
+footer a{ color:var(--ink-2) }
+</style>
+</head>
+<body>
+<div class="paper">
+  <div class="mast">
+    <div class="over">est. 2071 · circulation disputed</div>
+    <h1>The Daily Hence</h1>
+    <div class="rule-line">
+      <span id="dateline">—</span>
+      <span id="edition">—</span>
+      <span>price: negotiable</span>
+    </div>
+  </div>
+
+  <div class="lead" id="lead"></div>
+  <div class="cols" id="cols"></div>
+  <div class="strip" id="strip"></div>
+
+  <div class="deck">
+    <button class="btn" id="next">Print tomorrow's edition</button>
+    <button class="btn sec" id="far">Go a century further</button>
+  </div>
+</div>
+
+<footer>
+  Every word is generated in your browser from word lists. It is not a forecast, a prediction,
+  or in any sense information. <a href="/">← back to the cabinet</a>
+</footer>
+
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+const pick = (a) => a[Math.floor(Math.random() * a.length)];
+const ri = (a,b) => a + Math.floor(Math.random() * (b - a + 1));
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+let yearOffset = 100;
+
+const SECTIONS = ['World','Orbit','Home','Weather','Culture','Labour','Transit','Health','Oceans','Law'];
+
+const SUBJECT = [
+  'the Lunar Postal Service','the Atlantic Shade Project','the Committee on Remaining Coastlines',
+  'the Mars Tenants Association','the Reconstituted Bee Programme','the Department of Legacy Software',
+  'the Southern Cloud Authority','the Orbital Refuse Board','the Great Lakes Water Trust',
+  'the Bureau of Discontinued Weather','the Reef Rebuilding Corps','the Office of Ancestral Passwords',
+  'the Deep Storage Archive','the Antarctic Freight Union','the Ministry of Remaining Insects',
+];
+const VERB_PHRASE = [
+  'misses another deadline','votes to postpone itself','is quietly abolished, then reinstated by Thursday',
+  'admits it has lost the paperwork','declares the backlog a permanent feature',
+  'apologises, at length, for the wrong thing','announces a review of the previous review',
+  'is found to have been running on borrowed hardware since 2089',
+  'says the shortfall is temporary and has been for eleven years',
+  'blames the weather, which it also manages',
+];
+const STANDFIRST = [
+  'Officials stress there is no cause for concern, and have stressed this in each of the last four statements.',
+  'The decision affects roughly nine million households, none of whom were consulted, all of whom were surveyed.',
+  'A spokesperson described the situation as stable, then declined to define stable.',
+  'The report runs to eleven hundred pages. The summary runs to one, and contradicts it.',
+  'Independent auditors say the figures are accurate, correctly filed, and describe something that does not exist.',
+  'The change takes effect immediately, retroactively, and in one region only.',
+];
+const REPORTERS = ['A. Vell','M. Okonkwo-Reyes','J. Sarn','P. Haldane','Ø. Bruun','R. Adeyemi','T. Ishikawa-Ward','C. Marram'];
+const FILED_FROM = ['Lagos Ring','New Aberdeen','the Baltic Shelf','Nairobi Upper','Reykjavík Deep',
+  'the Manila Spans','Halifax Reclaimed','Perth Terrace','Montréal Sub','the Bosphorus Locks'];
+
+const SHORTS = [
+  ['Transit','Cross-channel tunnel now slower than the ferry it replaced',
+   'Engineers cite silt, scheduling and "a general reluctance". The ferry company has said nothing, loudly.'],
+  ['Home','Landlords must now disclose whether the building thinks',
+   'The rule covers any structure capable of forming a preference. Enforcement begins whenever the buildings agree to it.'],
+  ['Culture','Museum returns artefact to the future it was borrowed from',
+   'The item, a kettle, had been on loan for ninety years and was described in the catalogue as "self-evidently important".'],
+  ['Labour','Four-day week extended to three, then to whichever days feel right',
+   'Productivity is unchanged, which economists describe as either a triumph or an error in the measurement.'],
+  ['Oceans','Reef declared legally a person, immediately files a complaint',
+   'The complaint names four governments and one shipping company. Lawyers say it is well drafted, which surprised them.'],
+  ['Health','Doctors advise against reading the results before breakfast',
+   'The guidance follows a study of people who read theirs before breakfast and had a worse morning.'],
+  ['Orbit','Third satellite this month found to be a very confident piece of debris',
+   'It had a name, a schedule and a small following. It was not, on inspection, a satellite.'],
+  ['World','Nation quietly renames itself, hopes nobody updates the maps',
+   'Cartographers have agreed to wait a year, as is now customary, in case it changes back.'],
+  ['Weather','Cloud cover privatised in two counties, returned within a fortnight',
+   'The operator cited "unfavourable sky conditions". The counties cited the sky being, in their view, theirs.'],
+  ['Law','Court rules a promise made to a machine still counts',
+   'The judgment is eleven words long and has already been cited in ninety cases.'],
+  ['Transit','Autonomous ferry refuses to dock, citing the forecast',
+   'The forecast was accurate. Passengers were returned, apologised to, and asked to rate the experience.'],
+  ['Home','Last analogue doorbell in the district finally fails',
+   'Neighbours have kept the button. It is now wired to nothing, and is pressed most days.'],
+  ['Culture','Novel written entirely in the second person outsells everything',
+   'Readers report feeling personally accused. Sales have risen every week since.'],
+  ['Labour','Union wins right to be unreachable after six',
+   'The clause covers messages, calls and "any means yet to be invented", which lawyers fought hardest over.'],
+];
+
+const CONDITIONS = [
+  ['Sky','managed, lightly'],['Sky','unscheduled blue'],['Sky','under maintenance'],['Sky','honest grey'],
+];
+const INDEX = [
+  ['Bread index','up, again'],['Bread index','holding'],['Bread index','nobody will say'],
+];
+const MOOD = [
+  ['Public mood','cautiously fed up'],['Public mood','fine, apparently'],['Public mood','improved since Tuesday'],
+  ['Public mood','under review'],
+];
+const TIDE = [
+  ['High water','13:40, as agreed'],['High water','earlier than advertised'],['High water','see notice'],
+];
+
+function futureDate(){
+  const d = new Date();
+  d.setFullYear(d.getFullYear() + yearOffset);
+  return d;
+}
+
+function shuffle(a){
+  a = a.slice();
+  for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+
+function render(){
+  const d = futureDate();
+  $('dateline').textContent = d.toLocaleDateString('en-GB',
+    { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+  $('edition').textContent = 'edition ' + ri(9000, 99999) + ' · ' + yearOffset + ' years hence';
+
+  const subject = pick(SUBJECT);
+  const headline = subject.charAt(0).toUpperCase() + subject.slice(1) + ' ' + pick(VERB_PHRASE);
+  $('lead').innerHTML =
+    '<span class="chip">' + esc(pick(SECTIONS)) + ' · lead</span>' +
+    '<h2>' + esc(headline) + '</h2>' +
+    '<p class="stand">' + esc(pick(STANDFIRST)) + '</p>' +
+    '<div class="byline">' + esc(pick(REPORTERS)) + ' · filed from ' + esc(pick(FILED_FROM)) + '</div>';
+
+  const shorts = shuffle(SHORTS).slice(0, 3);
+  $('cols').innerHTML = shorts.map(s =>
+    '<div class="story"><span class="k">' + esc(s[0]) + '</span>' +
+    '<h3>' + esc(s[1]) + '</h3><p>' + esc(s[2]) + '</p></div>').join('');
+
+  const strip = [pick(CONDITIONS), pick(INDEX), pick(MOOD), pick(TIDE)];
+  $('strip').innerHTML = strip.map(s =>
+    '<div>' + esc(s[0]) + '<b>' + esc(s[1]) + '</b></div>').join('');
+}
+
+$('next').addEventListener('click', render);
+$('far').addEventListener('click', () => { yearOffset += 100; render(); });
+
+render();
+</script>
+</body>
+</html>
