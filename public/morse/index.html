@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Morse Key</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23151A18'/><circle cx='8' cy='16' r='3' fill='%23E0B84A'/><rect x='14' y='13' width='12' height='6' rx='3' fill='%23E0B84A'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --case:#1B211E;
+  --case-2:#141917;
+  --brass:#C8A24A;
+  --brass-2:#8E7130;
+  --lamp:#FFD98A;
+  --paper:#E8E2D2;
+  --ink:#151A18;
+  --dim:#7E8A83;
+  --rule:#2E3833;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --sans:ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif;
+  --display:"Avenir Next Condensed","Roboto Condensed","Arial Narrow",var(--sans);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:radial-gradient(800px 500px at 50% -10%, #232B27 0%, var(--case-2) 60%);
+  color:var(--paper);font-family:var(--sans);min-height:100vh;padding:28px 18px 64px;
+}
+.wrap{ max-width:760px;margin:0 auto }
+header{ margin-bottom:20px }
+h1{ font-family:var(--display);font-size:clamp(26px,5.5vw,40px);margin:0;letter-spacing:.08em;text-transform:uppercase }
+.sub{ font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;opacity:.55;margin-top:8px }
+
+.panel{
+  background:linear-gradient(180deg, var(--case) 0%, var(--case-2) 100%);
+  border:1px solid var(--rule);border-radius:4px;padding:20px;
+  box-shadow:0 16px 40px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.05);
+}
+
+textarea{
+  width:100%;min-height:88px;resize:vertical;background:#0F1412;color:var(--paper);
+  border:1px solid var(--rule);border-radius:3px;padding:13px 14px;
+  font-family:var(--sans);font-size:16px;line-height:1.5;
+}
+textarea:focus{ outline:2px solid var(--brass);outline-offset:-1px }
+
+/* the lamp and the code strip */
+.rig{ display:flex;gap:16px;align-items:center;margin:16px 0 4px;flex-wrap:wrap }
+.lamp{
+  width:58px;height:58px;border-radius:50%;flex:0 0 auto;
+  background:radial-gradient(circle at 38% 34%, #2A2318, #14100A);
+  border:2px solid var(--brass-2);box-shadow:inset 0 2px 6px rgba(0,0,0,.7);
+  transition:background .04s, box-shadow .04s;
+}
+.lamp.on{
+  background:radial-gradient(circle at 38% 34%, #FFF0C0, var(--lamp));
+  box-shadow:0 0 26px rgba(255,217,138,.75), inset 0 2px 6px rgba(0,0,0,.15);
+}
+.meta{ font-family:var(--mono);font-size:10.5px;color:var(--dim);letter-spacing:.1em;line-height:1.8 }
+.meta b{ color:var(--brass);font-weight:600 }
+
+.code{
+  margin-top:14px;background:#0F1412;border:1px solid var(--rule);border-radius:3px;
+  padding:14px;font-family:var(--mono);font-size:15px;line-height:2;
+  letter-spacing:.06em;word-break:break-word;min-height:58px;color:var(--brass);
+}
+.code .w{ display:inline-block;margin-right:14px }
+.code .l{ display:inline-block;margin-right:9px }
+.code .l.lit{ color:var(--lamp);text-shadow:0 0 10px rgba(255,217,138,.8) }
+.code .unknown{ color:#8E5A4A;text-decoration:underline dotted }
+
+.deck{ display:flex;gap:9px;flex-wrap:wrap;margin-top:16px;align-items:center }
+.btn{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
+  background:var(--brass);color:#151005;border:0;padding:12px 18px;cursor:pointer;font-weight:700;border-radius:2px;
+}
+.btn:hover{ background:#DCB65C }
+.btn[disabled]{ opacity:.4;cursor:default }
+.btn.sec{ background:transparent;color:var(--paper);border:1px solid var(--rule);font-weight:400 }
+.btn.sec:hover{ border-color:var(--brass);color:var(--brass) }
+.btn:focus-visible{ outline:2px solid var(--lamp);outline-offset:3px }
+.speed{ display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:.12em;text-transform:uppercase }
+.speed input{ accent-color:var(--brass);width:120px }
+
+.ref{ margin-top:20px;border-top:1px solid var(--rule);padding-top:16px }
+.ref h2{ font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);font-weight:400;margin:0 0 12px }
+.grid{ display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:7px }
+.grid div{ font-family:var(--mono);font-size:11px;color:var(--dim) }
+.grid div b{ color:var(--paper);font-weight:600;display:inline-block;width:16px }
+.grid div span{ color:var(--brass) }
+
+footer{
+  max-width:760px;margin:24px auto 0;padding-top:14px;border-top:1px solid var(--rule);
+  font-family:var(--mono);font-size:10.5px;line-height:1.8;color:var(--dim);
+}
+footer a{ color:#C0CFC6 }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+body{ padding-bottom:64px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media print{ #lc-back{ display:none } }
+@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } .lamp{ transition:none } }
+</style>
+</head>
+<body>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<div class="wrap">
+  <header>
+    <h1>Morse Key</h1>
+    <div class="sub">type it · see it · hear it</div>
+  </header>
+
+  <div class="panel">
+    <label for="msg" class="sr" style="position:absolute;left:-9999px">Message to send</label>
+    <textarea id="msg" placeholder="Type anything. It will be sent at the speed you choose.">the ship is fine and so am i</textarea>
+
+    <div class="rig">
+      <div class="lamp" id="lamp" aria-hidden="true"></div>
+      <div class="meta">
+        <div><b id="m-chars">0</b> characters · <b id="m-units">0</b> code units</div>
+        <div>at <b id="m-wpm">14</b> words per minute, about <b id="m-time">0s</b></div>
+      </div>
+    </div>
+
+    <div class="code" id="code" aria-live="polite"></div>
+
+    <div class="deck">
+      <button class="btn" id="play">▶ Send</button>
+      <button class="btn sec" id="stop" disabled>Stop</button>
+      <span class="speed">
+        <label for="wpm">speed</label>
+        <input type="range" id="wpm" min="5" max="30" value="14">
+      </span>
+    </div>
+
+    <div class="ref">
+      <h2>the alphabet, for reference</h2>
+      <div class="grid" id="ref"></div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  International Morse, the standard letters, digits and common punctuation. Timing follows the usual
+  ratios — a dash is three dots long, the gap between letters is three dots, between words seven — so
+  the speed slider is a real words-per-minute figure rather than a label.
+  The tone is synthesised in your browser; nothing is recorded or sent anywhere.
+  <a href="/">← back to the cabinet</a>
+</footer>
+
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+/* International Morse: letters, digits, and the punctuation that is actually
+   standardised. Anything outside this is shown as unsendable rather than
+   quietly dropped. */
+const M = {
+  a:'.-', b:'-...', c:'-.-.', d:'-..', e:'.', f:'..-.', g:'--.', h:'....', i:'..', j:'.---',
+  k:'-.-', l:'.-..', m:'--', n:'-.', o:'---', p:'.--.', q:'--.-', r:'.-.', s:'...', t:'-',
+  u:'..-', v:'...-', w:'.--', x:'-..-', y:'-.--', z:'--..',
+  '0':'-----','1':'.----','2':'..---','3':'...--','4':'....-',
+  '5':'.....','6':'-....','7':'--...','8':'---..','9':'----.',
+  '.':'.-.-.-', ',':'--..--', '?':'..--..', "'":'.----.', '!':'-.-.--', '/':'-..-.',
+  '(':'-.--.', ')':'-.--.-', '&':'.-...', ':':'---...', ';':'-.-.-.', '=':'-...-',
+  '+':'.-.-.', '-':'-....-', '_':'..--.-', '"':'.-..-.', '$':'...-..-', '@':'.--.-.'
+};
+
+/* ---------- timing ----------
+   One dot is the unit. PARIS is 50 units, so at W words per minute a unit is
+   1200/W milliseconds — the standard figure, which is why the slider can be
+   labelled honestly. */
+const unitMs = () => 1200 / Number($('wpm').value);
+
+function encode(text){
+  const words = text.toLowerCase().trim().split(/\s+/).filter(Boolean);
+  return words.map(w => w.split('').map(ch => ({ ch, code: M[ch] || null })));
+}
+
+function countUnits(model){
+  let u = 0;
+  model.forEach((word, wi) => {
+    word.forEach((c, ci) => {
+      if (!c.code) return;
+      for (const sym of c.code) u += (sym === '-' ? 3 : 1);
+      u += (c.code.length - 1);                    // gaps inside the letter
+      if (ci < word.length - 1) u += 3;            // between letters
+    });
+    if (wi < model.length - 1) u += 7;             // between words
+  });
+  return u;
+}
+
+function render(){
+  const model = encode($('msg').value);
+  const chars = model.reduce((n, w) => n + w.length, 0);
+  const units = countUnits(model);
+  $('m-chars').textContent = chars;
+  $('m-units').textContent = units;
+  $('m-wpm').textContent = $('wpm').value;
+  const secs = units * unitMs() / 1000;
+  $('m-time').textContent = secs < 60 ? secs.toFixed(1) + 's'
+    : Math.floor(secs / 60) + 'm ' + Math.round(secs % 60) + 's';
+
+  $('code').innerHTML = model.map((word, wi) =>
+    '<span class="w">' + word.map((c, ci) =>
+      c.code
+        ? '<span class="l" data-w="' + wi + '" data-c="' + ci + '">' + c.code + '</span>'
+        : '<span class="l unknown" title="not in the standard alphabet">' + esc(c.ch) + '</span>'
+    ).join('') + '</span>'
+  ).join('') || '<span style="color:var(--dim)">nothing to send</span>';
+  return model;
+}
+
+/* ---------- sound ---------- */
+let ctx = null, osc = null, gain = null;
+function ensureAudio(){
+  if (ctx) return true;
+  try {
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    osc = ctx.createOscillator();
+    gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = 620;                     // a comfortable listening pitch
+    gain.gain.value = 0;
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start();
+    return true;
+  } catch (e) { ctx = null; return false; }
+}
+
+let playing = false, timers = [];
+function clearTimers(){ timers.forEach(clearTimeout); timers = []; }
+
+function stop(){
+  playing = false;
+  clearTimers();
+  if (gain && ctx) gain.gain.setTargetAtTime(0, ctx.currentTime, 0.005);
+  $('lamp').classList.remove('on');
+  document.querySelectorAll('.code .l').forEach(e => e.classList.remove('lit'));
+  $('play').disabled = false; $('stop').disabled = true;
+}
+
+function play(){
+  const model = render();
+  if (!model.length) return;
+  const hasAudio = ensureAudio();
+  if (ctx && ctx.state === 'suspended') ctx.resume();
+  playing = true;
+  $('play').disabled = true; $('stop').disabled = false;
+
+  const u = unitMs();
+  let t = 0;                                        // ms from now
+  const at = (ms, fn) => timers.push(setTimeout(fn, ms));
+
+  model.forEach((word, wi) => {
+    word.forEach((c, ci) => {
+      if (!c.code) return;
+      const el = document.querySelector('.code .l[data-w="' + wi + '"][data-c="' + ci + '"]');
+      at(t, () => { if (el) el.classList.add('lit'); });
+      for (const sym of c.code){
+        const len = (sym === '-' ? 3 : 1) * u;
+        at(t, () => {
+          $('lamp').classList.add('on');
+          if (hasAudio && gain) gain.gain.setTargetAtTime(0.22, ctx.currentTime, 0.004);
+        });
+        at(t + len, () => {
+          $('lamp').classList.remove('on');
+          if (hasAudio && gain) gain.gain.setTargetAtTime(0, ctx.currentTime, 0.004);
+        });
+        t += len + u;                               // symbol then its trailing gap
+      }
+      const letterEnd = t;
+      at(letterEnd, () => { if (el) el.classList.remove('lit'); });
+      if (ci < word.length - 1) t += 2 * u;          // 3 total between letters
+    });
+    if (wi < model.length - 1) t += 6 * u;           // 7 total between words
+  });
+  at(t + 200, stop);
+}
+
+$('play').addEventListener('click', play);
+$('stop').addEventListener('click', stop);
+$('msg').addEventListener('input', () => { if (playing) stop(); render(); });
+$('wpm').addEventListener('input', () => { if (playing) stop(); render(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden && playing) stop(); });
+
+// reference table
+$('ref').innerHTML = Object.keys(M).map(k =>
+  '<div><b>' + esc(k.toUpperCase()) + '</b><span>' + M[k] + '</span></div>').join('');
+
+render();
+</script>
+</body>
+</html>
