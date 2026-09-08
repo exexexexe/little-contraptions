@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Going Outside</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23FFD9A0'/><circle cx='16' cy='18' r='7' fill='%23F08A24'/></svg>">
+<style>
+:root{
+  --sky-1:#8FC4E8; --sky-2:#DCEAF3; --ground:#F6EFE2;
+  --ink:#2A2620; --ink-2:#5C5449; --dim:#8B8277;
+  --sun:#F08A24; --line:rgba(42,38,32,.16);
+  --sans:ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  min-height:100vh;margin:0;
+  background:linear-gradient(180deg, var(--sky-1) 0%, var(--sky-2) 52%, var(--ground) 100%);
+  transition:background 1.4s ease;
+  color:var(--ink);font-family:var(--sans);
+  padding:28px 18px 50px;
+}
+.wrap{ max-width:720px;margin:0 auto }
+
+header{ text-align:center;margin-bottom:6px }
+h1{ margin:0;font-size:clamp(27px,5.4vw,40px);font-weight:800;letter-spacing:-.025em }
+.where{
+  font-family:var(--mono);font-size:11.5px;color:var(--ink-2);
+  margin-top:5px;letter-spacing:.04em;
+}
+
+/* ---------- sun arc ---------- */
+.arc-box{ margin:14px 0 6px }
+svg.arc{ width:100%;height:auto;display:block;overflow:visible }
+.arc .band{ fill:none;stroke:var(--line);stroke-width:1.5;stroke-dasharray:3 5 }
+.arc .day{ fill:none;stroke:var(--sun);stroke-width:2.5;stroke-linecap:round;opacity:.55 }
+.arc .horizon{ stroke:var(--line);stroke-width:1.5 }
+.arc .sun{ fill:var(--sun) }
+.arc .sun.down{ fill:#7C8EA0 }
+.arc text{ font-family:ui-monospace,monospace;font-size:9px;fill:var(--ink-2) }
+
+/* ---------- verdict / times ---------- */
+.card{
+  background:rgba(255,255,255,.55);
+  border:1px solid rgba(255,255,255,.8);
+  backdrop-filter:blur(3px);
+  padding:22px 24px;margin-top:10px;
+  box-shadow:0 6px 30px rgba(60,50,35,.10);
+}
+.verdict h2{ margin:0 0 8px;font-size:clamp(19px,3.6vw,26px);line-height:1.28;font-weight:800;letter-spacing:-.015em }
+.verdict p{ margin:0;font-size:14.5px;line-height:1.65;color:var(--ink-2) }
+.big{
+  font-variant-numeric:tabular-nums;font-weight:800;
+  font-size:clamp(34px,8vw,54px);line-height:1;letter-spacing:-.03em;margin:2px 0 4px;
+}
+.big small{ font-size:.42em;font-weight:700;letter-spacing:0;color:var(--ink-2);margin-left:4px }
+
+.times{ display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin-top:14px }
+.t{ background:rgba(255,255,255,.72);padding:12px 14px }
+.t b{ display:block;font-size:20px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em }
+.t span{ font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;color:var(--dim);text-transform:uppercase }
+
+/* ---------- controls ---------- */
+.modes{ display:flex;border:1px solid var(--line);margin:16px 0 0;background:rgba(255,255,255,.4) }
+.modes button{
+  flex:1;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+  background:transparent;border:0;border-right:1px solid var(--line);padding:11px 8px;
+  cursor:pointer;color:var(--ink-2);
+}
+.modes button:last-child{ border-right:0 }
+.modes button[aria-pressed="true"]{ background:var(--ink);color:#fff }
+.modes button:focus-visible{ outline:2px solid var(--sun);outline-offset:-2px }
+
+.finder{ margin-top:14px;display:flex;gap:8px;flex-wrap:wrap }
+.finder input{
+  flex:1;min-width:170px;font-family:var(--sans);font-size:14px;
+  padding:11px 13px;border:1px solid var(--line);background:rgba(255,255,255,.8);color:var(--ink);
+}
+.finder input:focus-visible{ outline:2px solid var(--sun);outline-offset:-1px }
+.btn{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+  background:var(--ink);color:#fff;border:0;padding:11px 16px;cursor:pointer;
+}
+.btn.sec{ background:transparent;color:var(--ink);border:1px solid var(--line) }
+.btn:hover{ opacity:.88 }
+.btn:focus-visible{ outline:2px solid var(--sun);outline-offset:2px }
+
+.hits{ margin-top:9px;display:flex;flex-direction:column;gap:1px;background:var(--line);border:1px solid var(--line) }
+.hits button{
+  background:rgba(255,255,255,.8);border:0;text-align:left;padding:10px 13px;cursor:pointer;
+  font-family:var(--sans);font-size:13.5px;color:var(--ink);
+}
+.hits button:hover{ background:#fff }
+.hits button span{ color:var(--dim);font-size:11.5px;margin-left:6px }
+
+.msg{ font-family:var(--mono);font-size:11.5px;color:var(--ink-2);margin-top:10px;line-height:1.7 }
+.msg.err{ color:#A83A22 }
+
+footer{
+  margin-top:28px;text-align:center;
+  font-family:var(--mono);font-size:10.5px;color:var(--ink-2);line-height:1.8;
+}
+footer a{ color:var(--ink) }
+@media (prefers-reduced-motion:reduce){ body{ transition:none } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Going Outside</h1>
+    <div class="where" id="where">working out where you are…</div>
+  </header>
+
+  <div class="arc-box">
+    <svg class="arc" id="arc" viewBox="0 0 320 118" aria-hidden="true"></svg>
+  </div>
+
+  <div class="card">
+    <div class="modes" id="modes">
+      <button data-m="verdict" aria-pressed="true">Is it worth it?</button>
+      <button data-m="times" aria-pressed="false">Just the times</button>
+    </div>
+    <div id="body" style="margin-top:16px">
+      <div class="msg">Loading the sun.</div>
+    </div>
+
+    <div class="finder">
+      <input id="q" placeholder="or type a town — Stockholm, Lisbon, Valparaiso…" autocomplete="off">
+      <button class="btn" id="go">Look up</button>
+      <button class="btn sec" id="geo">Use my location</button>
+    </div>
+    <div class="hits" id="hits" hidden></div>
+    <div class="msg" id="msg"></div>
+  </div>
+
+  <footer>
+    Sun times from <a href="https://sunrise-sunset.org/" target="_blank" rel="noopener">sunrise-sunset.org</a>,
+    place lookup from <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a>.
+    Both are keyless and called straight from your browser; your location is never sent anywhere else.
+    <a href="/">← back to the cabinet</a>
+  </footer>
+</div>
+
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+const pick = (a) => a[Math.floor(Math.random()*a.length)];
+
+let place = null;   // { label, lat, lon, tz }
+let sun = null;     // { sunrise:Date, sunset:Date, dayLength:seconds }
+let mode = 'verdict';
+let timer = 0;
+
+/* Times come back in UTC; render them in the *place's* zone, not the browser's. */
+function fmt(d, tz){
+  try {
+    return new Intl.DateTimeFormat('en-GB',
+      { hour:'2-digit', minute:'2-digit', hour12:false, timeZone: tz }).format(d);
+  } catch (e) {
+    return new Intl.DateTimeFormat('en-GB', { hour:'2-digit', minute:'2-digit', hour12:false }).format(d);
+  }
+}
+function hoursMins(ms){
+  const m = Math.max(0, Math.round(ms / 60000));
+  const h = Math.floor(m / 60);
+  return { h, m: m % 60, text: h ? h + 'h ' + String(m % 60).padStart(2,'0') + 'm' : m + ' min' };
+}
+
+/* ---------------------------- data --------------------------------- */
+async function fetchSun(lat, lon){
+  const u = 'https://api.sunrise-sunset.org/json?lat=' + lat + '&lng=' + lon + '&formatted=0';
+  const r = await fetch(u);
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  const j = await r.json();
+  if (j.status !== 'OK') throw new Error(j.status || 'no result');
+  return {
+    sunrise: new Date(j.results.sunrise),
+    sunset:  new Date(j.results.sunset),
+    dayLength: j.results.day_length,
+  };
+}
+
+async function geocode(name){
+  const u = 'https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=' +
+            encodeURIComponent(name);
+  const r = await fetch(u);
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  const j = await r.json();
+  return j.results || [];
+}
+
+/* ---------------------------- sky ---------------------------------- */
+// Five bands from the sun's position, so the page reads before you do.
+const SKIES = {
+  night:  ['#1B2A44','#2C3E5C','#3D4A5E'],
+  dawn:   ['#6E7FA8','#E7A986','#F3D9BC'],
+  day:    ['#8FC4E8','#DCEAF3','#F6EFE2'],
+  golden: ['#F0A860','#F6CE9C','#F7EAD6'],
+  dusk:   ['#4A5A80','#9A7E9A','#D8C0B4'],
+};
+function applySky(phase){
+  const c = SKIES[phase] || SKIES.day;
+  document.body.style.background =
+    'linear-gradient(180deg, ' + c[0] + ' 0%, ' + c[1] + ' 52%, ' + c[2] + ' 100%)';
+  const dark = (phase === 'night' || phase === 'dusk');
+  document.documentElement.style.setProperty('--ink', dark ? '#F2EEE6' : '#2A2620');
+  document.documentElement.style.setProperty('--ink-2', dark ? '#C9D2DE' : '#5C5449');
+  document.documentElement.style.setProperty('--dim', dark ? '#9AA6B6' : '#8B8277');
+  document.documentElement.style.setProperty('--line', dark ? 'rgba(242,238,230,.22)' : 'rgba(42,38,32,.16)');
+}
+
+function phaseNow(){
+  if (!sun) return 'day';
+  const now = Date.now(), a = sun.sunrise.getTime(), b = sun.sunset.getTime();
+  const H = 3600000;
+  if (now < a - H || now > b + H) return 'night';
+  if (now < a) return 'dawn';
+  if (now > b) return 'dusk';
+  if (b - now < H) return 'golden';
+  if (now - a < H) return 'dawn';
+  return 'day';
+}
+
+/* ---------------------------- arc ---------------------------------- */
+function drawArc(){
+  const W = 320, H = 118, cx = W/2, base = 96, r = 78;
+  let frac = null;
+  if (sun){
+    const now = Date.now(), a = sun.sunrise.getTime(), b = sun.sunset.getTime();
+    frac = (now - a) / (b - a);
+  }
+  const clamped = frac == null ? null : Math.min(1, Math.max(0, frac));
+  const ang = clamped == null ? null : Math.PI * (1 - clamped);
+  const sx = ang == null ? null : cx + r * Math.cos(ang);
+  const sy = ang == null ? null : base - r * Math.sin(ang);
+  const up = frac != null && frac >= 0 && frac <= 1;
+
+  $('arc').innerHTML =
+    '<path class="band" d="M ' + (cx-r) + ' ' + base + ' A ' + r + ' ' + r + ' 0 0 1 ' + (cx+r) + ' ' + base + '"/>' +
+    (up ? '<path class="day" d="M ' + (cx-r) + ' ' + base + ' A ' + r + ' ' + r + ' 0 0 1 ' + sx + ' ' + sy + '"/>' : '') +
+    '<line class="horizon" x1="12" y1="' + base + '" x2="' + (W-12) + '" y2="' + base + '"/>' +
+    (sx != null ? '<circle class="sun' + (up ? '' : ' down') + '" cx="' + sx + '" cy="' + (up ? sy : base + 8) + '" r="7"/>' : '') +
+    '<text x="' + (cx-r) + '" y="' + (base+15) + '" text-anchor="middle">' + (sun ? fmt(sun.sunrise, place.tz) : '') + '</text>' +
+    '<text x="' + (cx+r) + '" y="' + (base+15) + '" text-anchor="middle">' + (sun ? fmt(sun.sunset, place.tz) : '') + '</text>';
+}
+
+/* -------------------------- the verdict ----------------------------- */
+// A nudge, never a plan. No advice beyond "there is light, or there isn't".
+function verdict(){
+  const now = Date.now(), a = sun.sunrise.getTime(), b = sun.sunset.getTime();
+  if (now < a){
+    const t = hoursMins(a - now);
+    return { big: fmt(sun.sunrise, place.tz), unit: 'sunrise',
+      head: 'Not up yet.', body: 'The sun gets here in ' + t.text + '. ' +
+      pick(['Nothing to see outside but the dark.', 'A reasonable hour to still be indoors.', 'The early ones already know.']) };
+  }
+  if (now > b){
+    const t = hoursMins(b - now);
+    return { big: fmt(sun.sunset, place.tz), unit: 'set at',
+      head: 'That is the light gone.', body: 'It set ' + hoursMins(now - b).text + ' ago. ' +
+      pick(['Tomorrow it tries again.', 'Outside is still there, it is just darker.', 'Good hour for a window seat instead.']) };
+  }
+  const left = b - now;
+  const t = hoursMins(left);
+  if (left > 4*3600000) return { big: t.text, unit: 'of daylight left',
+    head: 'Yes. Obviously yes.', body: pick([
+      'There is more light left than most people get in a working day. Take some of it.',
+      'Whatever the plan was, it fits. Go and do the outside version of it.',
+      'This is as much daylight as you are going to be offered. The door is right there.']) };
+  if (left > 90*60000) return { big: t.text, unit: 'of daylight left',
+    head: 'Comfortably, yes.', body: pick([
+      'Enough for a proper wander and still be back before the light goes.',
+      'Time for a walk that goes somewhere, rather than a lap of the block.',
+      'A couple of hours of light is a generous offer. Accept it.']) };
+  if (left > 35*60000) return { big: t.text, unit: 'of daylight left',
+    head: 'If you go now.', body: pick([
+      'Enough for a lap of the block and a look at the sky on the way back.',
+      'Coat, door, twenty minutes. That is the whole plan.',
+      'Not long. Long enough.']) };
+  return { big: t.text, unit: 'of daylight left',
+    head: 'You would be walking into dusk.', body: pick([
+      'Which is arguably the best bit, if you do not mind coming home in the dark.',
+      'The light goes fast at this end. Worth catching anyway.',
+      'Barely any left — but sunset is the part worth standing still for.']) };
+}
+
+/* --------------------------- render -------------------------------- */
+function render(){
+  if (!sun || !place) return;
+  applySky(phaseNow());
+  drawArc();
+
+  if (mode === 'verdict'){
+    const v = verdict();
+    $('body').innerHTML =
+      '<div class="verdict">' +
+        '<div class="big">' + v.big + '<small>' + v.unit + '</small></div>' +
+        '<h2>' + v.head + '</h2><p>' + v.body + '</p>' +
+      '</div>';
+  } else {
+    const dl = hoursMins(sun.dayLength * 1000);
+    const noonish = new Date((sun.sunrise.getTime() + sun.sunset.getTime()) / 2);
+    $('body').innerHTML =
+      '<div class="times">' +
+        '<div class="t"><b>' + fmt(sun.sunrise, place.tz) + '</b><span>sunrise</span></div>' +
+        '<div class="t"><b>' + fmt(sun.sunset, place.tz) + '</b><span>sunset</span></div>' +
+        '<div class="t"><b>' + fmt(noonish, place.tz) + '</b><span>midpoint</span></div>' +
+        '<div class="t"><b>' + dl.text + '</b><span>daylight</span></div>' +
+      '</div>';
+  }
+  $('where').textContent = place.label + '  ·  local time ' + fmt(new Date(), place.tz);
+}
+
+async function useLocation(p, note){
+  place = p;
+  // `note` survives the load, so an explanation (e.g. "permission declined,
+  // showing Stockholm instead") isn't wiped by the thing it is explaining.
+  $('msg').innerHTML = note || '';
+  $('hits').hidden = true;
+  $('where').textContent = 'reading the sun over ' + p.label + '…';
+  try {
+    sun = await fetchSun(p.lat.toFixed(4), p.lon.toFixed(4));
+    render();
+    clearInterval(timer);
+    timer = setInterval(render, 30000);
+  } catch (err) {
+    $('body').innerHTML = '<div class="msg err">Could not get sun times (' + err.message +
+      '). The service is keyless and public, so this is usually a passing network problem.</div>';
+  }
+}
+
+/* ---------------------------- inputs -------------------------------- */
+function browserTz(){
+  try { return Intl.DateTimeFormat().resolvedOptions().timeZone; } catch (e) { return 'UTC'; }
+}
+
+function askGeo(){
+  if (!navigator.geolocation){
+    $('msg').innerHTML = 'This browser has no location support — type a town instead.';
+    return;
+  }
+  $('msg').textContent = 'asking the browser for your location…';
+  navigator.geolocation.getCurrentPosition(
+    (pos) => useLocation({ label:'your location', lat:pos.coords.latitude,
+                           lon:pos.coords.longitude, tz:browserTz() }),
+    (err) => {
+      const why = 'Location ' + (err.code === 1 ? 'permission was declined' : 'was unavailable') +
+        ', so this is Stockholm. Type a town above to change it.';
+      if (!place) useLocation({ label:'Stockholm', lat:59.3293, lon:18.0686, tz:'Europe/Stockholm' },
+                              '<span class="err">' + why + '</span>');
+      else $('msg').innerHTML = '<span class="err">' + why + '</span>';
+    },
+    { timeout: 9000, maximumAge: 600000 }
+  );
+}
+
+async function search(){
+  const q = $('q').value.trim();
+  if (!q) return;
+  $('msg').textContent = 'looking for "' + q + '"…';
+  $('hits').hidden = true;
+  try {
+    const hits = await geocode(q);
+    if (!hits.length){
+      $('msg').innerHTML = '<span class="err">Nowhere by that name.</span> ' +
+        'Real places only, sadly — the almanac next door handles the invented ones.';
+      return;
+    }
+    $('msg').textContent = '';
+    $('hits').innerHTML = '';
+    hits.forEach(h => {
+      const b = document.createElement('button');
+      const bits = [h.admin1, h.country].filter(Boolean).join(', ');
+      b.innerHTML = h.name + '<span>' + bits + '</span>';
+      b.onclick = () => useLocation({ label: h.name + (h.country ? ', ' + h.country : ''),
+                                      lat: h.latitude, lon: h.longitude,
+                                      tz: h.timezone || browserTz() });
+      $('hits').appendChild(b);
+    });
+    $('hits').hidden = false;
+  } catch (err) {
+    $('msg').innerHTML = '<span class="err">Place lookup failed (' + err.message + ').</span>';
+  }
+}
+
+$('modes').addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  mode = b.dataset.m;
+  [...$('modes').children].forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  render();
+});
+$('go').addEventListener('click', search);
+$('q').addEventListener('keydown', (e) => { if (e.key === 'Enter') search(); });
+$('geo').addEventListener('click', askGeo);
+
+askGeo();
+</script>
+</body>
+</html>
