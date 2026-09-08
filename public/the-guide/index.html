@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Guide Entry</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%232B2A26'/><rect x='6' y='8' width='20' height='16' rx='3' fill='%230A1A0E'/><rect x='9' y='12' width='11' height='2' fill='%237FE28A'/><rect x='9' y='17' width='14' height='2' fill='%237FE28A' opacity='.6'/></svg>">
+<style>
+:root{
+  --room:#2B2A26;
+  --room-2:#38362F;
+  --case:#4A4740;
+  --case-hi:#5E5A50;
+  --screen:#08150C;
+  --screen-2:#0C2012;
+  --glow:#7FE28A;
+  --glow-2:#B6F2BC;
+  --glow-dim:#4E8F58;
+  --amber:#E0A83C;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  --sans:ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--room);
+  background-image:radial-gradient(900px 600px at 50% -10%, var(--room-2) 0%, transparent 65%);
+  min-height:100vh;padding:30px 16px 60px;
+  font-family:var(--sans);color:#CFCABC;
+}
+.wrap{ max-width:720px;margin:0 auto }
+
+.hd{ text-align:center;margin-bottom:18px }
+.hd h1{
+  margin:0;font-family:var(--mono);font-size:clamp(15px,3vw,20px);
+  letter-spacing:.34em;text-transform:uppercase;font-weight:400;color:#CFCABC;
+}
+.hd p{ margin:7px 0 0;font-size:12.5px;color:#8C8778;font-style:italic }
+
+/* ---------- the device ---------- */
+.device{
+  background:linear-gradient(160deg, var(--case-hi) 0%, var(--case) 34%, #3B3830 100%);
+  border-radius:22px;padding:16px;
+  box-shadow:0 22px 60px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.14);
+}
+.screen{
+  background:var(--screen);
+  background-image:
+    repeating-linear-gradient(0deg, rgba(127,226,138,.045) 0 1px, transparent 1px 3px),
+    radial-gradient(120% 90% at 50% 0%, var(--screen-2) 0%, var(--screen) 70%);
+  border-radius:11px;padding:22px 22px 20px;
+  min-height:344px;
+  border:1px solid #0A2B14;
+  box-shadow:inset 0 0 30px rgba(0,0,0,.7), inset 0 0 0 1px rgba(127,226,138,.09);
+  font-family:var(--mono);color:var(--glow);
+  font-size:13.5px;line-height:1.72;
+  text-shadow:0 0 7px rgba(127,226,138,.32);
+  overflow-wrap:break-word;
+}
+.screen .top{
+  display:flex;justify-content:space-between;gap:12px;
+  font-size:9.5px;letter-spacing:.15em;color:var(--glow-dim);text-transform:uppercase;
+  border-bottom:1px dashed rgba(127,226,138,.22);padding-bottom:9px;margin-bottom:15px;
+}
+.screen h2{
+  margin:0 0 3px;font-size:clamp(19px,4.2vw,27px);font-weight:700;
+  letter-spacing:.05em;text-transform:uppercase;color:var(--glow-2);line-height:1.15;
+}
+.rating{
+  font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--amber);
+  border:1px solid rgba(224,168,60,.42);padding:3px 8px;display:inline-block;margin-bottom:14px;
+}
+.screen p{ margin:0 0 12px }
+.screen .fn{
+  border-top:1px dashed rgba(127,226,138,.22);margin-top:16px;padding-top:11px;
+  font-size:11.5px;color:var(--glow-dim);
+}
+.screen .fn sup{ color:var(--amber) }
+.screen .also{
+  margin-top:13px;font-size:11px;color:var(--glow-dim);
+}
+.screen .also b{ color:var(--glow);font-weight:400;cursor:pointer;border-bottom:1px dotted rgba(127,226,138,.4) }
+.screen .also b:hover{ color:var(--glow-2) }
+.cursor::after{ content:"_";animation:blink 1s steps(1) infinite;color:var(--glow) }
+@keyframes blink{ 50%{ opacity:0 } }
+
+/* ---------- controls ---------- */
+.panel{ display:flex;gap:9px;margin-top:15px;flex-wrap:wrap }
+.panel input{
+  flex:1;min-width:180px;font-family:var(--mono);font-size:14px;
+  background:#2F2C26;border:1px solid #262420;color:#E4DFD0;padding:12px 13px;border-radius:7px;
+  box-shadow:inset 0 2px 5px rgba(0,0,0,.4);
+}
+.panel input::placeholder{ color:#7E7969 }
+.panel input:focus-visible{ outline:2px solid var(--glow-dim);outline-offset:1px }
+.key{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;
+  background:linear-gradient(180deg,#615C51,#4A4740);color:#EDE7D8;
+  border:0;border-radius:7px;padding:12px 18px;cursor:pointer;
+  box-shadow:0 3px 0 #34322C, inset 0 1px 0 rgba(255,255,255,.16);
+}
+.key:active{ transform:translateY(2px);box-shadow:0 1px 0 #34322C }
+.key.go{ background:linear-gradient(180deg,#6E9C68,#557A50);color:#F2FBF1 }
+.key:focus-visible{ outline:2px solid var(--glow);outline-offset:2px }
+
+footer{
+  margin-top:26px;text-align:center;
+  font-family:var(--mono);font-size:10.5px;color:#7E7969;line-height:1.8;
+}
+footer a{ color:#A39D8C }
+
+@media (prefers-reduced-motion:reduce){ .cursor::after{ animation:none } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hd">
+    <h1>The Guide</h1>
+    <p>Entries for things, whether or not they warranted one.</p>
+  </div>
+
+  <div class="device">
+    <div class="screen" id="screen">
+      <div class="top"><span>entry — awaiting subject</span><span>ed. 47</span></div>
+      <p class="cursor">Type a noun below. Any noun. The Guide has views on most of them</p>
+    </div>
+    <div class="panel">
+      <input id="q" placeholder="a noun — teapot, Monday, badger, deadline" autocomplete="off" maxlength="60">
+      <button class="key go" id="look">Look up</button>
+      <button class="key" id="rand">Surprise</button>
+    </div>
+  </div>
+
+  <footer>
+    Every entry is assembled in your browser from word lists — original text, in the general spirit of a
+    certain guidebook, quoting none of it. <a href="/">← back to the cabinet</a>
+  </footer>
+</div>
+
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+
+/* Same word, same entry — it should feel like a real reference work. */
+function hash(s){
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < s.length; i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
+  return h >>> 0;
+}
+function mulberry(a){
+  return function(){
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+let rnd = mulberry(1);
+const one = (a) => a[Math.floor(rnd() * a.length)];
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+const RATINGS = [
+  'Broadly tolerable','Best avoided on Tuesdays','Of limited consequence','Surprisingly load-bearing',
+  'Overrated in three systems','Recommended, with caveats','Not as advertised','Perfectly adequate',
+  'A known hazard to the unprepared','Currently under review','Fine. Genuinely fine.','Discontinued, unhelpfully',
+];
+const OPENERS = [
+  'A {noun} is, in most respects, exactly what it appears to be, which has caused more trouble than you would expect.',
+  'The {noun} was invented three separate times by civilisations who each assumed they were first, and each of whom was wrong.',
+  'Nobody has ever been able to agree on what a {noun} is for, and the argument is now considered part of the design.',
+  'A {noun} is one of the few objects that becomes more confusing the longer you look at it, which is why the entry is short.',
+  'The {noun} occupies an unusual position: universally recognised, rarely understood, and never once explained properly.',
+  'On the majority of inhabited worlds, the {noun} is regarded as either essential or faintly embarrassing, depending on the century.',
+];
+const MIDDLES = [
+  'It is worth noting that the {noun} functions identically whether or not anybody is paying attention to it, a property it shares with most bureaucracy.',
+  'Attempts to improve the {noun} have, without exception, produced something that is technically better and universally disliked.',
+  'A committee once spent eleven years standardising the {noun}. The resulting document is longer than the object it describes and considerably harder to use.',
+  'There exists a thriving trade in slightly wrong {noun}s, sold to people who have never seen a correct one and are therefore perfectly happy.',
+  'Any sufficiently advanced civilisation eventually decides the {noun} is beneath it, and every one of them quietly brings it back within a generation.',
+  'The {noun} is frequently cited as evidence of intelligent design, usually by people who have not had to repair one.',
+];
+const CLOSERS = [
+  'Travellers are advised to carry one, and to be prepared to explain why.',
+  'The Guide recommends approaching with mild optimism and no firm expectations.',
+  'It is not dangerous, exactly. It is simply not on your side.',
+  'Bring a spare. You will not need it, and you will be glad of it anyway.',
+  'Should you encounter one behaving unusually, the correct response is to leave the room without hurrying.',
+  'On balance, the Guide is in favour, though it declines to say how strongly.',
+];
+const FOOTNOTES = [
+  'Except on Grelvin IV, where the plural is considered obscene and the singular is a form of greeting.',
+  'This figure has been disputed by everyone who has checked it, and revised by nobody.',
+  'The original researcher retired shortly afterwards and now keeps bees.',
+  'Not to be confused with the identical object of the same name, which is entirely different.',
+  'A full account is available in the appendix, which was lost during a move and never reprinted.',
+  'The Guide accepts no responsibility for anything in this entry, up to and including the spelling.',
+];
+const SEE_ALSO = [
+  'Ambient Regret','The Small Print','Objects, Reluctant','Tuesday (avoid)','Provisional Physics',
+  'Things That Hum','The Second Cup','Unhelpful Signage','Adjacent Mondays','Load-Bearing Excuses',
+  'Mild Peril','The Long Way Round','Standardisation, Failures Of','Bees (see also: retirement)',
+  'Rooms, Leaving Of','Instructions, Missing',
+];
+const RANDOM_NOUNS = ['teapot','Monday','badger','deadline','escalator','ambition','a spare key','the last biscuit',
+  'motorway services','a fitted sheet','small talk','the loft','a group photo','printer','umbrella','Wednesday afternoon'];
+
+function article(w){
+  return /^[aeiou]/i.test(w) ? 'an' : 'a';
+}
+function tidy(raw){
+  let t = (raw || '').trim().replace(/\s+/g,' ').replace(/[.?!]+$/,'');
+  return t.slice(0, 60);
+}
+
+function entry(word){
+  rnd = mulberry(hash(word.toLowerCase()));
+  const fill = (s) => s.replace(/\{noun\}/g, word).replace(/\bA \{/g, 'A {');
+  const paras = [one(OPENERS), one(MIDDLES), one(CLOSERS)].map(fill);
+  const alsos = [];
+  while (alsos.length < 3){ const a = one(SEE_ALSO); if (!alsos.includes(a)) alsos.push(a); }
+  return {
+    word, rating: one(RATINGS), paras,
+    footnote: one(FOOTNOTES),
+    also: alsos,
+    ref: String(Math.floor(rnd()*89999) + 10000),
+  };
+}
+
+function show(word){
+  const w = tidy(word);
+  if (!w) return;
+  const e = entry(w);
+  $('screen').innerHTML =
+    '<div class="top"><span>entry ' + esc(e.ref) + '</span><span>ed. 47</span></div>' +
+    '<h2>' + esc(e.word) + '</h2>' +
+    '<div class="rating">' + esc(e.rating) + '</div>' +
+    e.paras.map((p, i) => '<p>' + esc(p) + (i === 1 ? '<sup style="color:var(--amber)">1</sup>' : '') + '</p>').join('') +
+    '<div class="fn"><sup>1</sup> ' + esc(e.footnote) + '</div>' +
+    '<div class="also">See also: ' +
+      e.also.map(a => '<b data-w="' + esc(a) + '">' + esc(a) + '</b>').join(', ') + '</div>';
+
+  [...$('screen').querySelectorAll('.also b')].forEach(b => {
+    b.onclick = () => { $('q').value = b.dataset.w; show(b.dataset.w); };
+  });
+  $('q').value = e.word;
+}
+
+$('look').addEventListener('click', () => show($('q').value));
+$('q').addEventListener('keydown', (e) => { if (e.key === 'Enter') show($('q').value); });
+$('rand').addEventListener('click', () => {
+  const w = RANDOM_NOUNS[Math.floor(Math.random() * RANDOM_NOUNS.length)];
+  $('q').value = w; show(w);
+});
+</script>
+</body>
+</html>
