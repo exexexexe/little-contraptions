@@ -302,3 +302,11 @@ Judgment calls, and the honesty one matters most. A face-recognition doppelgange
 
 The corpus was built by querying the Art Institute's public API for public-domain paintings, keeping 220 with usable images and measuring each one here rather than in the browser. Their IIIF server sits behind Cloudflare and sends cross-origin-resource-policy: same-origin, so the images cannot be displayed from another origin at all — server.js gained /api/art, which fetches them with the user-agent header their API asks for and hands them to the browser with a day of cache. It accepts only their IIIF host, only a UUID of the shape they issue, and only the three widths they keep derivatives for (an unusual width makes the server render one on the spot, which was timing out).
 
+### /constellation/ — Name a Constellation
+
+A gnomonic projection of a real patch of sky, centred on a random bright star, drawn from 1,637 catalogued stars down to magnitude 5. Click stars to join them, break for a separate stroke, undo, clear. Naming it writes an invented origin story around the brightest star you used and enters it in a register kept in localStorage; you can reopen any of them, and save the chart as a PNG.
+
+The facts panel is the point: it names the brightest star you joined, its magnitude and its distance, then the nearest and furthest stars in your shape and the gap between them — usually a few hundred light years — which is how the page says, without saying it, that a constellation is a trick of the angle.
+
+Judgment calls: star positions, magnitudes, proper names, Bayer designations, spectral colours and distances all come from the HYG database (Hipparcos, Yale, Gliese), and every number shown is from that catalogue rather than invented; the page credits it and says which half is real. Distances are only shown where the catalogue has a parallax good enough to give one. The story is generated and carries an INVENTED tag, and the note says outright that the IAU will not be recognising your constellation.
+
