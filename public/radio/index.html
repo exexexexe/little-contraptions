@@ -146,18 +146,64 @@ footer a{ color:var(--brass) }
   .ticker .run{ animation:none;padding-left:10px }
   .needle{ transition:none }
 }
+/* ---------- type ---------- */
+:root{
+  --display:"Avenir Next Condensed","Futura","Helvetica Neue Condensed",
+            "Roboto Condensed","Arial Narrow",var(--sans);
+}
+h1, .station .name, .knob, .lab, .st, .lab, .tuning{ font-family:var(--display) }
+h1{ letter-spacing:.06em;text-transform:uppercase }
+.st{ letter-spacing:.06em }
+.np .t{ font-family:var(--serif) }
+
+/* ---------- the tuner ---------- */
+.scale{ cursor:grab;touch-action:none }
+.scale.dragging{ cursor:grabbing }
+.needle{ transition:left .28s cubic-bezier(.2,.8,.3,1) }
+.scale.dragging .needle{ transition:none }
+.needle:focus-visible{ outline:2px solid var(--amber, #E8A33C);outline-offset:3px }
+.scale.offstation{ filter:saturate(.35) }
+.tuning{
+  height:14px;margin-top:6px;text-align:center;
+  font-size:10px;letter-spacing:.22em;text-transform:uppercase;opacity:.65;
+}
+
+/* ---------- kept records ---------- */
+.kept{
+  margin-top:16px;padding-top:13px;border-top:1px solid rgba(255,255,255,.14);
+  display:flex;flex-direction:column;gap:9px;
+}
+.kept > b{
+  font-family:var(--mono);font-size:9px;letter-spacing:.2em;text-transform:uppercase;
+  opacity:.55;font-weight:400;
+}
+.kept .none{ font-family:var(--mono);font-size:11px;opacity:.4 }
+.kept .k{ display:flex;flex-direction:column;gap:2px;padding-left:11px;border-left:2px solid rgba(232,163,60,.6) }
+.kept .kt{ font-family:var(--serif);font-size:15px }
+.kept .kb{ font-family:var(--mono);font-size:10.5px;opacity:.6 }
+.kept .k a{ font-family:var(--mono);font-size:10px;opacity:.75 }
+.kept .kf{ font-family:var(--mono);font-size:10px;opacity:.45;font-style:italic }
+.knob#keep.done{ background:rgba(232,163,60,.9);color:#1A1206 }
+.st{ font-size:8px;letter-spacing:.04em;white-space:nowrap }
+.st.row2{ transform:translate(-50%, 13px) }
+.st.on{ font-weight:700;z-index:4 }
+.kept .k a{ color:#F0B45E;text-decoration:underline }
+.kept .k a:hover{ color:#FFD79A }
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="hdr">
     <h1>The Radio Hub</h1>
-    <span class="sub">seven stations · none of them real</span>
+    <span class="sub">fourteen stations · none of them real · drag the needle</span>
   </div>
 
   <div class="set">
     <div class="dial">
-      <div class="scale" id="scale"><div class="needle" id="needle"></div></div>
+      <div class="scale" id="scale">
+        <div class="needle" id="needle" tabindex="0" role="slider" aria-label="Tuner"></div>
+      </div>
+      <div class="tuning" id="tuning"></div>
     </div>
 
     <div class="face">
@@ -178,10 +224,13 @@ footer a{ color:var(--brass) }
       <button class="knob" id="next">tune up ▸</button>
       <button class="knob" id="skip">Skip track</button>
       <button class="knob" id="audio">Sound: off</button>
+      <button class="knob" id="keep">♥ Keep</button>
       <span class="vol"><label for="volr">vol</label><input type="range" id="volr" min="0" max="100" value="55"></span>
     </div>
 
     <div class="ticker"><div class="lbl">played</div><div class="run" id="ticker"></div></div>
+
+    <div class="kept" id="kept"></div>
   </div>
 
   <footer>
@@ -290,7 +339,93 @@ const STATIONS = [
     words:[['The','Certain','Unnamed','Third','Quiet','Northern'],
            ['Testimony','Frequency','Reservoir','Interview','Recording','Departure'],
            ['recorded 1974','caller, anonymous','tape, unlabelled','archive copy','a listener']] },
-];
+
+  { f:89.5, name:'NIGHT DESK', tag:'After Hours Service', genre:'jazz · night shift',
+    dj:'Delroy Finch',
+    chat:[
+      'It is late enough now that I am going to stop pretending anybody requested this.',
+      'Somebody in the building is still working. I can hear the lift. I hope it is going down.',
+      'This next one runs eleven minutes and the last four are the reason.',
+      'If you are driving, the road is yours. If you are not, put something on the stove.',
+    ],
+    words:[['Blue','Late','Second','Small','Empty','Slow','Corner'],
+           ['Avenue','Session','Rain','Hours','Room','Set','Table'],
+           ['The Finch Quartet','Ada Roule Trio','Night Desk Players','Marcus Vane','The Late Set']] },
+
+  { f:93.4, name:'PIRATE 93', tag:'Unlicensed and Cheerful', genre:'dance · from a flat',
+    dj:'BEX',
+    chat:[
+      'We are broadcasting from a kitchen. The kettle is part of the mix now.',
+      'Someone downstairs has knocked twice. That is the warning. Three is the visit.',
+      'No adverts, no schedule, no plan. That is the format and it is working.',
+      'If the signal drops it is the aerial, the weather, or the landlord.',
+    ],
+    words:[['Rush','Loud','Fast','Bright','Hard','Big','Late'],
+           ['Riddim','Bassline','Pressure','Energy','Wave','Sound','Levels'],
+           ['DJ Sable','Rooftop Crew','Two Left Decks','Flat 4B','Kitchen Sound System']] },
+
+  { f:98.9, name:'THE COUNTY', tag:'Farming and Weather', genre:'country · agricultural',
+    dj:'Norma Pike',
+    chat:[
+      'Rain expected Thursday, which the fields want and the fete does not.',
+      'Lost dog answering to Biscuit, last seen heading confidently in the wrong direction.',
+      'The market price is up, which is good, and the diesel price is up, which cancels it.',
+      'That was a request from a gentleman who did not leave a name but did leave a marrow.',
+    ],
+    words:[['Old','Bent','Dry','Broad','Winter','High','Hard'],
+           ['Furrow','Gate','Pasture','Harvest','Lane','Barn','Frost'],
+           ['The Pike Family Band','Hollis & Wren','Dust Road Four','Ellen Marsh','The Threshers']] },
+
+  { f:100.3, name:'ORBITAL', tag:'Continuous Transmission', genre:'electronic · unmanned',
+    dj:'AUTOMATED',
+    chat:[
+      'THIS STATION IS UNSTAFFED. THE PLAYLIST IS THIRTY-ONE HOURS LONG AND HAS NOT REPEATED YET.',
+      'SIGNAL STRENGTH NOMINAL. LISTENER COUNT NOT MEASURED. LISTENER COUNT NOT REQUIRED.',
+      'A FAULT WAS LOGGED AT 03:14 AND CLEARED ITSELF AT 03:15. NO ACTION TAKEN.',
+      'TRANSMISSION CONTINUES. IT HAS CONTINUED FOR SOME TIME.',
+    ],
+    words:[['Null','Array','Phase','Zero','Cold','Deep','Outer'],
+           ['Vector','Lattice','Return','Descent','Orbit','Relay','Drift'],
+           ['UNIT 9', 'Cold Array', 'Relay Station Four', 'NULLSET', 'Автомат']] },
+
+  { f:102.9, name:'GOLDEN OLDIE', tag:'The Way It Was', genre:'nostalgia · unrepentant',
+    dj:'Sunny Delaine',
+    chat:[
+      'They do not make them like that. They make them differently, which is not the same complaint.',
+      'That record was number four for one week and number one in this building for eleven years.',
+      'A caller has asked me to stop saying "classic". I will consider it.',
+      'Coming up: three more of these, and then three more of these.',
+    ],
+    words:[['Sweet','Little','My','Blue','Sunny','Golden','Darling'],
+           ['Heartache','Sunday','Goodbye','Boulevard','Letter','Waltz','Summer'],
+           ['The Delaines','Vera Small','Bobby Crane & The Tides','The Marchettes','Ronnie Vale']] },
+
+  { f:105.6, name:'CAMPUS', tag:'Student Radio', genre:'indie · overconfident',
+    dj:'Priya & Tom',
+    chat:[
+      'We have been told we cannot say that on air, so we will say it after the next record.',
+      'This is our final show of term and also possibly ever, depending on the committee.',
+      'Tom has brought a record in on vinyl and we do not have a turntable. We are describing it instead.',
+      'Text in. Or do not. There is no number and we cannot read them anyway.',
+    ],
+    words:[['Soft','Teen','Very','Real','Fake','New','Half'],
+           ['Bedroom','Library','Weekend','Thesis','Basement','Feeling','Bus'],
+           ['Seminar Room B','The Overdrafts','Postgrad Nightmare','Nine Am Lecture','Bike Rack']] },
+
+  { f:1215, am:true, name:'THE SHIPPING', tag:'1215 AM', genre:'service · maritime',
+    dj:'Continuity',
+    chat:[
+      'And now the forecast, issued at eighteen hundred. Do not adjust anything.',
+      'There are gale warnings in four areas. The names are the pleasure and the warning is the point.',
+      'This bulletin is read at the same speed regardless of the weather in it.',
+      'For those at sea, and for those who are not and listen anyway: good night.',
+    ],
+    words:[['North','South','German','Fair','Rough','Backing','Veering'],
+           ['Bight','Fisher','Dogger','Sole','Lundy','Cromarty','Forties'],
+           ['forecast, 18:00','coastal stations','the long silence','shipping bulletin']] },
+];// dial order, so dragging left to right walks the band
+STATIONS.sort((a, b) => (a.am ? 1 : 0) - (b.am ? 1 : 0) || a.f - b.f);
+
 
 /* ---------------------------- state ------------------------------- */
 let si = 0;                 // station index
@@ -310,10 +445,25 @@ function inventTrack(st){
 
 /* ---------------------------- dial -------------------------------- */
 function dialPos(st){
-  // FM stations laid out across the scale; the AM one parked at the far right
-  if (st.am) return 96;
+  // FM across the scale; the AM stations share a strip at the far right and
+  // must not sit on top of each other now that there is more than one
+  if (st.am){
+    const ams = STATIONS.filter(x => x.am);
+    const i = ams.indexOf(st);
+    return 93 + (ams.length > 1 ? (i / (ams.length - 1)) * 5 : 0);
+  }
   const lo = 87, hi = 109;
   return 3 + ((st.f - lo) / (hi - lo)) * 88;
+}
+
+// which station a needle position lands on, for dragging
+function nearestStation(pct){
+  let best = 0, bestD = Infinity;
+  STATIONS.forEach((st, i) => {
+    const d = Math.abs(dialPos(st) - pct);
+    if (d < bestD){ bestD = d; best = i; }
+  });
+  return { index: best, distance: bestD };
 }
 function drawDial(){
   const sc = $('scale');
@@ -331,13 +481,99 @@ function drawDial(){
   }
   STATIONS.forEach((st, i) => {
     const s = document.createElement('div');
-    s.className = 'st' + (i === si ? ' on' : '');
+    // Fourteen names across one line ran into each other, so they alternate
+    // between two rows — the way a real dial staggers its call signs.
+    s.className = 'st' + (i === si ? ' on' : '') + (i % 2 ? ' row2' : '');
     s.style.left = dialPos(st) + '%';
     s.textContent = st.name;
     s.onclick = () => tune(i);
     sc.appendChild(s);
   });
-  $('needle').style.left = dialPos(station()) + '%';
+  if (!dragging) $('needle').style.left = dialPos(station()) + '%';
+}
+
+
+/* ------------------------- the tuner ------------------------------ *
+ *  The needle is dragged rather than the stations being clicked. In
+ *  between them it sits in the static, and it snaps to whatever it is
+ *  nearest when you let go — which is what the knob on a real set does
+ *  once the detent catches.
+ * ------------------------------------------------------------------ */
+let dragging = false;
+
+function needleAt(pct){
+  pct = Math.max(3, Math.min(98, pct));
+  $('needle').style.left = pct + '%';
+  const near = nearestStation(pct);
+  const locked = near.distance < 2.2;
+  $('scale').classList.toggle('offstation', !locked);
+  $('tuning').textContent = locked
+    ? STATIONS[near.index].name
+    : (pct < 93 ? (87 + (pct - 3) / 88 * 22).toFixed(1) + ' FM' : 'AM band') + ' · static';
+  return near;
+}
+
+function bindTuner(){
+  const rail = $('scale');
+  const pctFromEvent = (e) => {
+    const r = rail.getBoundingClientRect();
+    return ((e.clientX - r.left) / r.width) * 100;
+  };
+  const settle = (pct) => {
+    dragging = false;
+    rail.classList.remove('dragging');
+    $('scale').classList.remove('offstation');
+    const near = nearestStation(pct);
+    $('tuning').textContent = '';
+    if (near.index !== si) tune(near.index);
+    else $('needle').style.left = dialPos(station()) + '%';
+  };
+  rail.addEventListener('pointerdown', (e) => {
+    dragging = true;
+    rail.classList.add('dragging');
+    try { rail.setPointerCapture(e.pointerId); } catch (err) {}
+    needleAt(pctFromEvent(e));
+  });
+  rail.addEventListener('pointermove', (e) => { if (dragging) needleAt(pctFromEvent(e)); });
+  rail.addEventListener('pointerup', (e) => { if (dragging) settle(pctFromEvent(e)); });
+  rail.addEventListener('pointercancel', () => { if (dragging) settle(dialPos(station())); });
+  // and the same thing from the keyboard
+  $('needle').addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight'){ e.preventDefault(); tune(si + 1); }
+    if (e.key === 'ArrowLeft'){ e.preventDefault(); tune(si - 1); }
+  });
+}
+
+/* ------------------------ kept records ---------------------------- */
+let kept = [];
+try { kept = JSON.parse(sessionStorage.getItem('lc:radio:kept') || '[]'); } catch (e) { kept = []; }
+
+function renderKept(){
+  const box = $('kept');
+  if (!kept.length){ box.innerHTML = '<b>kept this session</b><span class="none">nothing yet — press KEEP on something you like</span>'; return; }
+  box.innerHTML = '<b>kept this session</b>' + kept.map(k =>
+    '<div class="k">' +
+      '<span class="kt">' + esc(k.title) + '</span>' +
+      '<span class="kb">' + esc(k.by) + ' · ' + esc(k.station) + '</span>' +
+      (k.real
+        ? '<a href="' + esc(k.page) + '" target="_blank" rel="noopener">' + esc(k.licence) + ' · source</a>'
+        : '<span class="kf">invented — no such record</span>') +
+    '</div>').join('');
+}
+
+function keepCurrent(){
+  if (!track) return;
+  const entry = {
+    title: track.title, by: track.by, station: station().name,
+    real: !!track.real, licence: track.licence || '', page: track.page || '',
+  };
+  if (kept.some(k => k.title === entry.title && k.by === entry.by)) return;
+  kept.unshift(entry);
+  if (kept.length > 20) kept.length = 20;
+  try { sessionStorage.setItem('lc:radio:kept', JSON.stringify(kept)); } catch (e) {}
+  renderKept();
+  $('keep').classList.add('done');
+  setTimeout(() => $('keep').classList.remove('done'), 700);
 }
 
 /* ------------------------- rendering ------------------------------ */
@@ -496,7 +732,25 @@ $('audio').addEventListener('click', async () => {
   audioOn = !audioOn;
   $('audio').textContent = audioOn ? 'Sound: on' : 'Sound: off';
   $('audio').classList.toggle('on', audioOn);
-  if (!audioOn && el){ el.pause(); }
+
+  // Toggling sound used to call newTrack(), so the record changed every time
+  // you touched the button. Only fetch when the track cannot survive the new
+  // mode: a real recording plays or pauses either way, and an invented one
+  // has no audio to turn on, so that is the single case that must reload.
+  if (!audioOn){
+    if (el && !el.paused){
+      started = Date.now() - el.currentTime * 1000;   // carry the position over
+      el.pause();
+    }
+    renderNP(); renderStation();
+    return;
+  }
+  if (track && track.real && el && el.src){
+    el.volume = $('volr').value / 100;
+    el.play().catch(() => {});
+    renderNP(); renderStation();
+    return;
+  }
   await newTrack();
 });
 document.addEventListener('visibilitychange', () => {
@@ -504,6 +758,8 @@ document.addEventListener('visibilitychange', () => {
 });
 
 chatting = true; chatLine = pick(station().chat);
+bindTuner(); renderKept();
+$('keep').addEventListener('click', keepCurrent);
 drawDial(); renderStation(); newTrack(); renderTicker();
 </script>
 </body>
