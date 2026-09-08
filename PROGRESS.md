@@ -276,3 +276,9 @@ The honesty problem is the interesting one: this cannot measure how boring a day
 
 server.js gained /api/onthisday for the live half: one date at a time, reduced to year and text, cached 24 h, with a backoff retry on 429.
 
+### /tv-voice/ — The TV Voice
+
+Six archetypes — the detective, the medical examiner, the captain, the profiler, the defence, the true-crime narrator — each with its own grammar, cadence and set of parentheticals. Output is set as a script page (scene slug, character cue, parenthetical, stage directions, cut to titles), and you can name what was found to seed it. 'Read it aloud' uses the browser's own speech synthesis at a rate and pitch set per archetype, highlights the line being spoken, and skips the stage directions.
+
+Judgment calls: nothing is quoted from or written to resemble a line from any real programme — what is borrowed is the genre's structure (the cold open, the small detail that bothers them, the turn, the sting), filled with material written for this page, and the footnote says so. No LLM: it is a slot grammar over hand-written pools. One stage direction said 'He waits', which assumed a gender the detective does not have; it is now 'Nobody moves.'
+
