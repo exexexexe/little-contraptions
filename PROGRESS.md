@@ -207,3 +207,28 @@ The *jobs* are researched and the details are the real ones: the chorobates and 
 
 **Verified:** every option points at a node that exists, every node is reachable from its start, no dead ends, no answer under 40 characters, and an eight-question walk-through builds a correct transcript.
 
+### /undersea-cables/ — The Cables
+
+**Built.** World map with all 728 cables from TeleGeography's public submarine cable map, drawn from the real MultiLineString geometry, plus 1,925 named landing points. Hover highlights, click selects, search by name.
+
+**The verification the brief asked for, and what it changed.** I checked the sources before building:
+- The GitHub repo the data is usually taken from (`telegeography/www.submarinecablemap.com`) **no longer exists** — every path 404s, and search turns up only third-party forks of unknown vintage. I did not use those; stale cable data presented as current is exactly the failure mode to avoid.
+- The live `submarinecablemap.com` API is up but sends no CORS headers, so a browser cannot read it.
+- So I added `/api/cables` to `server.js`, following the existing RSS/ISS relay pattern: a **fixed allowlist of three dataset names**, never an arbitrary `?url=`, cached 6 hours. Verified `?set=../etc` is rejected with the allowed list.
+
+**What is claimed and what is not.** The dataset contains name, id, colour and geometry — and nothing else. So the toy shows the route, the name, the segment/vertex counts and the end coordinates, plus landing points *within range of each end*, labelled as proximity rather than as a stated connection. **Capacity, ownership and length are not in the data, so they are not shown.** The footer says which cables a given message crosses depends on routing that cannot be read off a map — the "here is the path your message travels" framing would have been a claim I cannot support.
+
+**Verified:** 728 cables and 1,925 points load, 0 malformed, search finds real cables (SAIL, AC-1, FA-1, MAC, SACS), selection reports real coordinates and real nearby landing points.
+
+### /orbital-junk/ — What Is Up There
+
+**Built.** Reads CelesTrak's public general-perturbations catalogue live (keyless, sends CORS). Real counts per group, a log-scale altitude-vs-inclination plot of ~940 objects, and a table of everything catalogued in the last thirty days.
+
+**Real numbers only, and the derivations are checkable.** Period, apogee and perigee are not in the catalogue — they are computed from each object's own mean motion and eccentricity by Kepler's third law, with the standard gravitational parameter and WGS-84 radius named in the source. I validated the arithmetic against cases where the right answer is known independently: QZS-7 comes out at a 1,435.9-minute period and 36,097 km apogee (geostationary, as it should be), and Starlink objects at 91.4 minutes and 345 km (low orbit, as they should be).
+
+**Judgment call:** the full active catalogue is about 6 MB, so it is behind an explicit button that says so rather than being pulled on load. The headline counts use the smaller groups, each labelled with the exact CelesTrak group it came from.
+
+The 2009 collision note uses the *current* tracked counts (585 + 111 = 696 fragments) and says explicitly that these are live counts, not a historical figure.
+
+**Verified:** 246 recent objects, 21 station objects, 942 plotted, 25 table rows, geostationary and low-orbit sanity checks both pass.
+

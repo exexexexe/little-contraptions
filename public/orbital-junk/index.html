@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What Is Up There</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%2307090F'/><circle cx='16' cy='16' r='6' fill='%232E5A8A'/><ellipse cx='16' cy='16' rx='13' ry='5' fill='none' stroke='%23E8C05A' stroke-width='1.4' transform='rotate(-24 16 16)'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --void:#07090F;
+  --panel:#101520;
+  --panel-2:#18202E;
+  --earth:#2E5A8A;
+  --gold:#E8C05A;
+  --cyan:#4FD0E0;
+  --red:#E8664A;
+  --paper:#DCE4EE;
+  --dim:#75839A;
+  --rule:#20293A;
+  --sans:ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --display:"Avenir Next Condensed","Roboto Condensed","Arial Narrow",var(--sans);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{ background:var(--void);color:var(--paper);font-family:var(--sans);min-height:100vh;padding:24px 18px 64px }
+.wrap{ max-width:900px;margin:0 auto }
+h1{ font-family:var(--display);font-size:clamp(25px,5.4vw,38px);margin:0;letter-spacing:.07em;text-transform:uppercase;font-weight:700 }
+.sub{ font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-top:8px }
+
+.counts{ display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);margin-top:20px }
+.counts div{ background:var(--panel);padding:15px 16px }
+.counts span{ font-family:var(--mono);font-size:8.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--dim);display:block;line-height:1.5 }
+.counts b{ display:block;font-size:26px;margin-top:6px;font-variant-numeric:tabular-nums;letter-spacing:-.02em }
+.counts .src{ font-family:var(--mono);font-size:8px;color:var(--dim);opacity:.7;margin-top:6px;letter-spacing:.06em }
+.counts b.load{ font-size:13px;color:var(--dim);font-family:var(--mono);letter-spacing:.1em }
+
+.mapbox{ margin-top:18px;border:1px solid var(--rule);border-radius:4px;overflow:hidden;background:#05070C }
+canvas{ display:block;width:100%;height:auto }
+.legend{
+  display:flex;gap:16px;flex-wrap:wrap;padding:11px 14px;border-top:1px solid var(--rule);
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);background:var(--panel);
+}
+.legend i{ display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle }
+
+.deck{ display:flex;gap:9px;flex-wrap:wrap;margin-top:16px;align-items:center }
+.btn{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
+  background:transparent;color:var(--paper);border:1px solid var(--rule);padding:11px 16px;cursor:pointer;border-radius:2px;
+}
+.btn:hover{ border-color:var(--gold);color:var(--gold) }
+.btn[disabled]{ opacity:.4;cursor:default }
+.btn:focus-visible{ outline:2px solid var(--gold);outline-offset:2px }
+.status{ font-family:var(--mono);font-size:10.5px;color:var(--dim);letter-spacing:.06em }
+
+.table{ margin-top:22px }
+.table h2{ font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);font-weight:400;margin:0 0 12px }
+table{ width:100%;border-collapse:collapse;font-size:13.5px }
+th{ text-align:left;font-family:var(--mono);font-size:8.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--dim);font-weight:400;padding:0 10px 8px 0;border-bottom:1px solid var(--rule) }
+td{ padding:10px 10px 10px 0;border-bottom:1px solid var(--rule);vertical-align:top }
+td.n{ font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap }
+td.name{ font-weight:600 }
+.band{ font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:2px 6px;border:1px solid currentColor;border-radius:2px }
+
+.note{
+  margin-top:18px;border-left:3px solid var(--rule);padding:12px 15px;background:var(--panel);
+  font-size:13.5px;line-height:1.7;color:#A8B6C8;
+}
+.note b{ color:var(--paper) }
+
+footer{
+  max-width:900px;margin:24px auto 0;padding-top:14px;border-top:1px solid var(--rule);
+  font-family:var(--mono);font-size:10.5px;line-height:1.85;color:var(--dim);
+}
+footer a{ color:#9FC4E0 }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+body{ padding-bottom:64px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media print{ #lc-back{ display:none } }
+@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } }
+</style>
+</head>
+<body>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<div class="wrap">
+  <h1>What Is Up There</h1>
+  <div class="sub">real catalogue · read live from celestrak</div>
+
+  <div class="counts" id="counts"></div>
+
+  <div class="mapbox">
+    <canvas id="cv" width="900" height="460" aria-label="Orbital altitude bands with catalogued objects plotted by altitude and inclination"></canvas>
+    <div class="legend">
+      <span><i style="background:#4FD0E0"></i>low Earth orbit</span>
+      <span><i style="background:#E8C05A"></i>medium Earth orbit</span>
+      <span><i style="background:#E8664A"></i>geostationary and beyond</span>
+      <span id="plotted"></span>
+    </div>
+  </div>
+
+  <div class="deck">
+    <button class="btn" id="full">Count the whole active catalogue (about 6 MB)</button>
+    <span class="status" id="status">loading…</span>
+  </div>
+
+  <div class="note" id="note"></div>
+
+  <div class="table">
+    <h2>catalogued in the last thirty days</h2>
+    <table>
+      <thead><tr><th>object</th><th>launched</th><th class="n">period</th><th class="n">perigee</th><th class="n">apogee</th><th class="n">incl</th></tr></thead>
+      <tbody id="rows"><tr><td colspan="6" class="status">loading…</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<footer>
+  Every figure here is read live from <a href="https://celestrak.org/" target="_blank" rel="noopener">CelesTrak</a>'s
+  public general-perturbations catalogue, which is keyless and sends cross-origin headers. Periods,
+  apogees and perigees are computed from each object's own mean motion and eccentricity — the
+  working is in the page source and can be checked against any of these objects. Nothing here is
+  estimated: where a number is not in the catalogue, it is not shown.
+  <a href="/">← back to the cabinet</a>
+</footer>
+
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const fmt = (n, d) => Number(n).toLocaleString('en-GB', { maximumFractionDigits: d == null ? 0 : d });
+
+/* ---------------- published constants ----------------
+   Standard gravitational parameter and mean Earth radius. Everything derived
+   below is Kepler's third law applied to the catalogue's own mean motion —
+   no estimation, no fitted values. */
+const MU = 398600.4418;      // km^3/s^2
+const RE = 6378.137;         // km, equatorial radius (WGS 84)
+
+function orbit(o){
+  const T = 1440 / o.MEAN_MOTION;                        // minutes per revolution
+  const a = Math.cbrt(MU * Math.pow(T * 60 / (2 * Math.PI), 2));   // semi-major axis, km
+  const e = o.ECCENTRICITY;
+  return {
+    periodMin: T,
+    apogee: a * (1 + e) - RE,
+    perigee: a * (1 - e) - RE,
+    incl: o.INCLINATION,
+    a,
+  };
+}
+
+const GROUPS = [
+  { key:'last-30-days',        label:'catalogued in the last 30 days', src:'celestrak · last-30-days' },
+  { key:'stations',            label:'crewed stations and their hardware', src:'celestrak · stations' },
+  { key:'cosmos-2251-debris',  label:'fragments still tracked from one 2009 collision', src:'celestrak · cosmos-2251-debris' },
+  { key:'iridium-33-debris',   label:'fragments from the satellite it hit', src:'celestrak · iridium-33-debris' },
+];
+
+const state = { counts: {}, objects: [] };
+
+async function group(key){
+  const r = await fetch('https://celestrak.org/NORAD/elements/gp.php?GROUP=' + key + '&FORMAT=json');
+  if (!r.ok) throw new Error(key + ' HTTP ' + r.status);
+  const j = await r.json();
+  if (!Array.isArray(j)) throw new Error(key + ' unexpected payload');
+  return j;
+}
+
+function renderCounts(){
+  $('counts').innerHTML = GROUPS.map(g => {
+    const v = state.counts[g.key];
+    return '<div><span>' + esc(g.label) + '</span>' +
+      (v == null ? '<b class="load">unavailable</b>' : '<b>' + fmt(v) + '</b>') +
+      '<div class="src">' + esc(g.src) + '</div></div>';
+  }).join('') +
+  '<div><span>every active payload on file</span>' +
+    (state.counts.active == null
+      ? '<b class="load">not counted yet</b>'
+      : '<b>' + fmt(state.counts.active) + '</b>') +
+    '<div class="src">celestrak · active</div></div>';
+}
+
+function band(alt){
+  if (alt < 2000) return { k:'leo', c:'#4FD0E0' };
+  if (alt < 35000) return { k:'meo', c:'#E8C05A' };
+  return { k:'geo', c:'#E8664A' };
+}
+
+function drawPlot(){
+  const cv = $('cv'), x = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+  x.clearRect(0, 0, W, H);
+
+  const pad = { l: 58, r: 18, t: 18, b: 40 };
+  const plotW = W - pad.l - pad.r, plotH = H - pad.t - pad.b;
+
+  // log altitude axis, because LEO and GEO cannot share a linear one
+  const A_MIN = 150, A_MAX = 50000;
+  const ay = (alt) => pad.t + plotH - (Math.log10(Math.max(A_MIN, alt)) - Math.log10(A_MIN)) /
+    (Math.log10(A_MAX) - Math.log10(A_MIN)) * plotH;
+  const ix = (incl) => pad.l + (incl / 145) * plotW;
+
+  // gridlines at real, nameable altitudes
+  const marks = [[400, 'ISS, about 400 km'], [1200, ''], [2000, 'edge of low orbit'],
+    [20200, 'navigation satellites'], [35786, 'geostationary']];
+  x.font = '10px ui-monospace, monospace';
+  marks.forEach(([alt, label]) => {
+    const y = ay(alt);
+    x.strokeStyle = 'rgba(120,150,190,.16)';
+    x.beginPath(); x.moveTo(pad.l, y); x.lineTo(W - pad.r, y); x.stroke();
+    x.fillStyle = '#75839A';
+    x.textAlign = 'right';
+    x.fillText(fmt(alt) + ' km', pad.l - 8, y + 3);
+    if (label){
+      x.textAlign = 'left';
+      x.fillStyle = 'rgba(117,131,154,.75)';
+      x.fillText(label, pad.l + 6, y - 5);
+    }
+  });
+  // inclination axis
+  x.textAlign = 'center';
+  [0, 30, 60, 90, 120].forEach(i => {
+    x.fillStyle = '#75839A';
+    x.fillText(i + '°', ix(i), H - 16);
+  });
+  x.fillText('inclination', pad.l + plotW / 2, H - 3);
+
+  // the objects themselves
+  state.objects.forEach(o => {
+    const alt = (o.o.apogee + o.o.perigee) / 2;
+    const b = band(alt);
+    x.fillStyle = b.c;
+    x.globalAlpha = 0.75;
+    x.beginPath();
+    x.arc(ix(o.o.incl), ay(alt), 3, 0, 6.2832);
+    x.fill();
+  });
+  x.globalAlpha = 1;
+  $('plotted').textContent = state.objects.length + ' objects plotted';
+}
+
+function renderTable(){
+  const rows = state.objects.slice()
+    .sort((a, b) => (a.raw.OBJECT_ID < b.raw.OBJECT_ID ? 1 : -1))
+    .slice(0, 25);
+  if (!rows.length){ $('rows').innerHTML = '<tr><td colspan="6" class="status">nothing returned</td></tr>'; return; }
+  $('rows').innerHTML = rows.map(o => {
+    const b = band((o.o.apogee + o.o.perigee) / 2);
+    return '<tr>' +
+      '<td class="name">' + esc(o.raw.OBJECT_NAME) +
+        ' <span class="band" style="color:' + b.c + '">' + b.k + '</span></td>' +
+      '<td class="n">' + esc(String(o.raw.OBJECT_ID || '').slice(0, 4)) + '</td>' +
+      '<td class="n">' + fmt(o.o.periodMin, 1) + ' min</td>' +
+      '<td class="n">' + fmt(o.o.perigee) + ' km</td>' +
+      '<td class="n">' + fmt(o.o.apogee) + ' km</td>' +
+      '<td class="n">' + fmt(o.o.incl, 1) + '°</td>' +
+    '</tr>';
+  }).join('');
+}
+
+function renderNote(){
+  const c = state.counts;
+  const debris = (c['cosmos-2251-debris'] || 0) + (c['iridium-33-debris'] || 0);
+  if (!debris) { $('note').innerHTML = ''; return; }
+  $('note').innerHTML =
+    'Two satellites collided over Siberia in February 2009. <b>' + fmt(debris) + '</b> fragments from ' +
+    'that single event are still catalogued and still being tracked today — ' +
+    '<b>' + fmt(c['cosmos-2251-debris'] || 0) + '</b> from one and <b>' + fmt(c['iridium-33-debris'] || 0) + '</b> ' +
+    'from the other. Those are current counts from the catalogue, not a historical figure.';
+}
+
+async function boot(){
+  renderCounts();
+  try {
+    const results = await Promise.all(GROUPS.map(g => group(g.key).catch(() => null)));
+    GROUPS.forEach((g, i) => { if (results[i]) state.counts[g.key] = results[i].length; });
+
+    const recent = results[0] || [];
+    state.objects = recent.map(raw => ({ raw, o: orbit(raw) }))
+      .filter(o => isFinite(o.o.apogee) && isFinite(o.o.perigee) && o.o.perigee > -200);
+
+    // plot the debris clouds too, so the picture is not just new launches
+    (results[2] || []).concat(results[3] || []).forEach(raw => {
+      const o = orbit(raw);
+      if (isFinite(o.apogee) && o.perigee > -200) state.objects.push({ raw, o });
+    });
+
+    $('status').textContent = 'read from celestrak just now';
+    renderCounts(); renderNote(); drawPlot(); renderTable();
+  } catch (e) {
+    $('status').textContent = 'could not reach celestrak';
+    $('rows').innerHTML = '<tr><td colspan="6" class="status">CelesTrak could not be reached. ' +
+      'It is public and keyless, so this is usually a passing network problem.</td></tr>';
+  }
+}
+
+$('full').addEventListener('click', async () => {
+  const b = $('full');
+  b.disabled = true;
+  b.textContent = 'counting…';
+  try {
+    const all = await group('active');
+    state.counts.active = all.length;
+    renderCounts();
+    b.textContent = 'counted ' + fmt(all.length) + ' active payloads';
+  } catch (e) {
+    b.disabled = false;
+    b.textContent = 'could not count — try again';
+  }
+});
+
+boot();
+</script>
+</body>
+</html>
