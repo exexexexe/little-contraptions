@@ -288,3 +288,9 @@ Five one-screen escape rooms, each with its own kind of puzzle: arithmetic from 
 
 Judgment calls: every room is solvable from what is inside it — no outside knowledge, no pixel-hunting, and the hint explains the method rather than giving the answer. All five re-roll their numbers on load (the queue numbers, the scratched pot number, the eight lamps, which plant is self-seeded, which shelf and book and line, and the word itself), so nothing can be memorised or looked up; the lift's missing floors are the one fixed answer, because 4 and 13 are the joke. Scenes are flat SVG drawn for the page.
 
+### /universes-colliding/ — Universes Colliding
+
+Eight genre archetypes — the rain-coat detective, the sergeant, the debutante, the antiquarian, the nature narrator, the innkeeper, the friendly puppet, the netrunner — each written with its own voice for the same seven beats (arrive, open, fail to understand the other, offer something from their own world, agree to something neither has understood). Pick two, or press surprise me, and the page stages the crossover: a title card, a location made from both their settings, eight turns of dialogue, and a stinger. Fifty-six pairings, no line repeated inside a scene.
+
+Judgment calls: nobody here is from anything. These are the shapes genres reuse, not characters from any work — no named property, character, place or catchphrase appears anywhere on the page, nothing is quoted or written to echo a real line, and the footnote says so plainly. The comedy comes from the collision of registers, which needs no borrowed material at all.
+
