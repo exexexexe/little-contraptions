@@ -11,7 +11,7 @@ Opens on http://localhost:3000.
 
 ## The toys
 
-23 drawers, each a single self-contained HTML file under `public/<slug>/index.html`.
+24 drawers, each a single self-contained HTML file under `public/<slug>/index.html`.
 The hub filters them by the tag on each card.
 
 | # | Toy | Tag | What it is |
@@ -39,9 +39,10 @@ The hub filters them by the tag on each card.
 | 21 | [The Everyday Hidden Thing](/hidden-thing/) | reference | 16 objects and what they're quietly doing. |
 | 22 | [Perfume Match](/perfume-match/) | game | Notes in, character out. Real people clearly framed. |
 | 23 | [Nature's Greatest Hits](/nature-hits/) | real data | Today's tally from iNaturalist, GBIF and USGS. |
+| 24 | [ISS Tracker](/iss/) | real data | Live position, ground track and visible-pass prediction by in-browser SGP4. |
 
-Still to build: Movie night (needs `TMDB_API_KEY`), all of Phase B
-(ISS tracker, Stalker's field PDA, A sunny afternoon in the city, Radio hub,
+Still to build: Movie night (needs `TMDB_API_KEY`), the rest of Phase B
+(Stalker's field PDA, A sunny afternoon in the city, Radio hub,
 Civilizations ranked) and Phase C (needs `GROQ_API_KEY`).
 
 ## Server routes
@@ -50,6 +51,8 @@ Civilizations ranked) and Phase C (needs `GROQ_API_KEY`).
     /api/nasa/neo?date=    NASA near-Earth objects, NASA_API_KEY or DEMO_KEY, 30 min cache
     /api/rss?feed=         relays one of a fixed allowlist of RSS feeds, 10 min cache
     /api/rss/list          the allowlist
+    /api/iss/position      Open Notify relay — it has no HTTPS of its own
+    /api/iss/tle           Celestrak orbital elements, 2 h cache
 
 Keys are read from the environment and never reach the browser. The RSS relay
 takes a short feed name, never a URL — an arbitrary `?url=` would make it an
