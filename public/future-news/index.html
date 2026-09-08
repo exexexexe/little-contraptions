@@ -94,23 +94,143 @@ footer{
   font-family:var(--mono);font-size:10.5px;color:var(--dim);line-height:1.8;
 }
 footer a{ color:var(--ink-2) }
+
+/* ---------- the rig the sheet is read on ---------- */
+:root{
+  --shell:#0B0F14;
+  --shell-2:#121821;
+  --glow:#7FE3D0;
+  --rail:#5B6B78;
+}
+body{
+  background:
+    radial-gradient(120% 80% at 50% -10%, #16202B 0%, transparent 60%),
+    var(--shell);
+  color:var(--ink);padding:20px 16px 54px;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:
+    linear-gradient(rgba(127,227,208,.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(127,227,208,.045) 1px, transparent 1px);
+  background-size:44px 44px;
+}
+body::after{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:3;
+  background:radial-gradient(120% 90% at 50% 45%, transparent 55%, rgba(0,0,0,.55) 100%);
+}
+.rig{ max-width:880px;margin:0 auto;position:relative;z-index:1 }
+
+.rail{
+  display:flex;align-items:center;gap:10px;
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--rail);padding:0 4px 9px;
+}
+.rail-sp{ flex:1 }
+.rail .dot{
+  width:6px;height:6px;border-radius:50%;background:var(--glow);
+  box-shadow:0 0 8px var(--glow);animation:pulse 2.4s ease-in-out infinite;
+}
+@keyframes pulse{ 0%,100%{opacity:.35} 50%{opacity:1} }
+.rail .bars{ display:inline-flex;gap:2px;align-items:flex-end;height:10px }
+.rail .bars i{ width:3px;background:var(--glow);opacity:.55 }
+.rail .bars i:nth-child(1){ height:3px } .rail .bars i:nth-child(2){ height:5px }
+.rail .bars i:nth-child(3){ height:7px } .rail .bars i:nth-child(4){ height:10px;opacity:.25 }
+
+.sheet{
+  position:relative;overflow:hidden;
+  background:var(--paper);
+  box-shadow:0 0 0 1px rgba(127,227,208,.22), 0 0 44px rgba(127,227,208,.09), 0 26px 70px rgba(0,0,0,.6);
+}
+/* crop marks, so the sheet reads as something retrieved rather than printed */
+.sheet::before, .sheet::after{
+  content:"";position:absolute;width:13px;height:13px;pointer-events:none;z-index:2;
+  border-color:rgba(21,94,82,.5);border-style:solid;
+}
+.sheet::before{ left:7px;top:7px;border-width:1px 0 0 1px }
+.sheet::after{ right:7px;bottom:7px;border-width:0 1px 1px 0 }
+.paper{
+  max-width:none;margin:0;padding:26px 26px 24px;position:relative;z-index:1;
+  background-image:repeating-linear-gradient(0deg, rgba(26,29,25,.028) 0 1px, transparent 1px 3px);
+}
+.scan{
+  position:absolute;left:0;right:0;top:0;height:34%;z-index:2;pointer-events:none;opacity:0;
+  background:linear-gradient(180deg, transparent, rgba(127,227,208,.28), rgba(255,255,255,.5), transparent);
+}
+.sheet.printing .scan{ animation:sweep .9s ease-out 1 }
+@keyframes sweep{
+  0%{ opacity:.9;transform:translateY(-40%) } 100%{ opacity:0;transform:translateY(320%) }
+}
+
+/* ---------- ticker ---------- */
+.ticker-rail{
+  margin-top:0;border-top:1px solid rgba(127,227,208,.2);
+  background:var(--shell-2);overflow:hidden;padding:9px 0;
+}
+.ticker{ display:flex;width:max-content;animation:slide 46s linear infinite }
+.tick-run{ display:flex }
+.tick-run i{
+  font-family:var(--mono);font-style:normal;font-size:10.5px;letter-spacing:.05em;
+  color:#8FA3AE;white-space:nowrap;padding:0 26px;position:relative;
+}
+.tick-run i::after{
+  content:"";position:absolute;right:0;top:3px;bottom:3px;width:1px;background:rgba(127,227,208,.25);
+}
+@keyframes slide{ from{ transform:translateX(0) } to{ transform:translateX(-50%) } }
+
+.deck{ margin-top:18px }
+.btn{ background:var(--glow);color:#08120F }
+.btn:hover{ background:#A6F0E1 }
+.btn.sec{
+  background:rgba(255,255,255,.04);color:#C7D6DD;border:1px solid rgba(127,227,208,.3);
+}
+.btn.sec:hover{ border-color:var(--glow);color:var(--glow);background:rgba(127,227,208,.08) }
+.btn:focus-visible{ outline:2px solid var(--glow);outline-offset:3px }
+
+footer{
+  position:relative;z-index:1;max-width:880px;border-top:1px solid rgba(127,227,208,.18);
+  color:#6E808C;
+}
+footer a{ color:#9FD8CB }
+
+@media (prefers-reduced-motion: reduce){
+  .rail .dot{ animation:none;opacity:.8 }
+  .ticker{ animation:none;width:100% }
+  .tick-run:nth-child(2){ display:none }
+  .sheet.printing .scan{ animation:none;opacity:0 }
+}
 </style>
 </head>
 <body>
-<div class="paper">
-  <div class="mast">
-    <div class="over">est. 2071 · circulation disputed</div>
-    <h1>The Daily Hence</h1>
-    <div class="rule-line">
-      <span id="dateline">—</span>
-      <span id="edition">—</span>
-      <span>price: negotiable</span>
+<div class="rig">
+  <div class="rail">
+    <span class="dot" aria-hidden="true"></span>
+    <span id="retrieval">archive retrieval</span>
+    <span class="rail-sp"></span>
+    <span id="integrity">—</span>
+    <span class="bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+  </div>
+
+  <div class="sheet" id="sheet">
+    <div class="scan" aria-hidden="true"></div>
+    <div class="paper">
+      <div class="mast">
+        <div class="over">est. 2071 · circulation disputed</div>
+        <h1>The Daily Hence</h1>
+        <div class="rule-line">
+          <span id="dateline">—</span>
+          <span id="edition">—</span>
+          <span>price: negotiable</span>
+        </div>
+      </div>
+
+      <div class="lead" id="lead"></div>
+      <div class="cols" id="cols"></div>
+      <div class="strip" id="strip"></div>
     </div>
   </div>
 
-  <div class="lead" id="lead"></div>
-  <div class="cols" id="cols"></div>
-  <div class="strip" id="strip"></div>
+  <div class="ticker-rail" aria-hidden="true"><div class="ticker" id="ticker"></div></div>
 
   <div class="deck">
     <button class="btn" id="next">Print tomorrow's edition</button>
@@ -133,23 +253,204 @@ const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
 let yearOffset = 100;
+const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const SECTIONS = ['World','Orbit','Home','Weather','Culture','Labour','Transit','Health','Oceans','Law'];
 
-const SUBJECT = [
+/* ---------- word pools ---------- */
+const ORG = [
   'the Lunar Postal Service','the Atlantic Shade Project','the Committee on Remaining Coastlines',
   'the Mars Tenants Association','the Reconstituted Bee Programme','the Department of Legacy Software',
   'the Southern Cloud Authority','the Orbital Refuse Board','the Great Lakes Water Trust',
   'the Bureau of Discontinued Weather','the Reef Rebuilding Corps','the Office of Ancestral Passwords',
   'the Deep Storage Archive','the Antarctic Freight Union','the Ministry of Remaining Insects',
+  'the Standing Committee on Sea Level','the Registry of Surviving Dialects','the Pacific Salvage Board',
+  'the Bureau of Inherited Debt','the Office of Reasonable Expectations','the Continental Shade Cooperative',
+  'the Directorate of Old Coastlines','the Institute for Deferred Maintenance','the Northern Ice Authority',
+  'the Panel on Acceptable Losses','the Seed Vault Consortium','the Bureau of Unclaimed Property',
+  'the Office of Legacy Citizenship','the Commission on Working Hours','the Migratory Route Authority',
+  'the Department of Quiet Hours','the Board of Remaining Glaciers','the Registry of Extinct Trades',
+  'the Terrestrial Bandwidth Council','the Office of Necessary Fictions','the Bureau of Slow Mail',
+  'the Committee for the Last Forests','the Orbital Housing Executive','the Freshwater Allocation Board',
+  'the Office of Retired Algorithms','the Bureau of Ancestral Records','the Council on Night Sky Access',
+  'the Directorate of Managed Retreat','the Office of Provisional Borders','the Bureau of Sleep Standards',
+  'the Commission on Remaining Silence',
 ];
 const VERB_PHRASE = [
   'misses another deadline','votes to postpone itself','is quietly abolished, then reinstated by Thursday',
   'admits it has lost the paperwork','declares the backlog a permanent feature',
   'apologises, at length, for the wrong thing','announces a review of the previous review',
-  'is found to have been running on borrowed hardware since 2089',
+  'is found to have been running on borrowed hardware for a decade',
   'says the shortfall is temporary and has been for eleven years',
-  'blames the weather, which it also manages',
+  'blames the weather, which it also manages','confirms the pilot scheme has become the scheme',
+  'concedes the map was never accurate','cannot say who signed the original agreement',
+  'discovers a second, older version of itself still operating','moves its headquarters somewhere harder to reach',
+  'publishes the figures in a format nobody can open','asks the public to be patient for a further generation',
+  'has been asking the same question since 2061 and expects an answer','writes to itself, and replies',
+  'is placed under the supervision of a body it supervises','restores a service nobody remembers losing',
+  'declines to attend its own inquiry','renames the problem and closes the file',
+  'insists the shortage is a scheduling matter','loses the only copy and finds two',
+  'reports full compliance with a rule it withdrew','celebrates a centenary it cannot document',
+  'says the queue is moving and declines to say in which direction',
+  'converts its last office into storage for the paperwork about the office',
+  'is congratulated for a decision it has not yet taken','appoints a committee to find the committee',
+  'confirms the deadline was aspirational all along','has stopped counting and will not say when',
+  'discovers the archive was never digitised, only described',
+  'assures the public that the smell is unrelated','issues a correction to a statement it denies making',
+  'reduces the service to a symbol of the service','has been fully funded since the funding stopped',
+];
+const THING = [
+  'the last analogue clock in public service','the northern shipping lane','the final printed dictionary',
+  'the Tuesday postal round','the coastal railway','the deep-sea cable everyone forgot',
+  'the last commercial beekeeper','the winter itself','the ninety-year-old satellite',
+  'the shallow reef nursery','the paper census','the last manual lighthouse',
+  'the seed bank\'s southern wing','the migratory route through the delta','the public clock network',
+  'the last fluent speaker of a coastal dialect','the old flood map','the standing forest at the border',
+  'the emergency grain store','the second moon landing site','the shared water table',
+  'the original tide gauge','the last working printing press','the night train',
+  'the glacier the town is named after','the archive of household recipes','the free public library',
+  'the copper telephone network','the last cargo sail route','the great southern quiet zone',
+  'the annual bird count','the coastal cemetery','the shared electricity grid',
+];
+const PLACE = [
+  'New Lagos','the Baltic Shelf','Reykjavík Deep','Port Adelaide North','the Karachi Levee',
+  'Nuuk Central','the Sundarbans Ring','Alexandria Old Town','the Mackenzie Delta','Valparaíso Heights',
+  'the Bering Crossing','Manila Bay Sector 4','the Rhône Corridor','Hobart Station','the Yellow Sea Terraces',
+  'Marseille Under','the Caspian Flats','Tromsø Interchange','the Rio Basin Authority Zone','Dakar Seawall',
+  'the Aral Restoration Site','Vancouver Island East','the Ganges Barrage','Osaka Outer','the Fenland Reclaim',
+  'Lisbon Overflow','the Sahel Green Line','Anchorage Deep Port','the Danube Locks','Perth Interior',
+];
+const ROLE = [
+  'the Under-Secretary for Tides','a retired flood warden','the acting Archivist General',
+  'a former weather auditor','the Registrar of Lost Trades','the last accredited beekeeper',
+  'a night-shift levee inspector','the Commissioner for Quiet Hours','a hereditary lighthouse keeper',
+  'the Deputy Custodian of Old Maps','a seed vault technician','the Inspector of Remaining Wells',
+  'a coastal retreat coordinator','the Warden of the Deep Archive','a licensed rainfall witness',
+  'the Clerk to the Standing Committee','a decommissioning officer','the last salaried cartographer',
+  'a bandwidth rationing officer','the Keeper of the Public Clocks',
+];
+const EVENT = [
+  'the third audit','the long dry season','the eastern power sale','the border survey',
+  'the loss of the southern archive','the second relocation','the funding review',
+  'the winter that did not arrive','the cable failure','the census boycott',
+  'the collapse of the old agreement','the record tide','the software rollback',
+  'the withdrawal of the last carrier','the reclassification','the quiet handover',
+];
+const ADJ = ['provisional','honorary','retroactive','decommissioned','unbudgeted','inherited',
+  'symbolic','deferred','unaccredited','statutory','discontinued','emergency','ceremonial','automatic'];
+
+/* ---------- headline templates ----------
+   A hundred distinct shapes, not a hundred rewordings of one: statements,
+   figures, quotes, denials, corrections, listings, anniversaries. Slots are
+   filled from the pools above, so the same shape rarely reads the same twice. */
+const BASE_VERB = [
+  'lose the paperwork','postpone itself again','abolish the department','miss the deadline',
+  'reinstate the service','publish the figures','attend its own inquiry','answer the letters',
+  'find the missing volume','fund the repairs','consult anyone in the region','sign the agreement',
+  'replace the equipment','withdraw the standard','count what remains','open the archive',
+];
+const HEADLINES = [
+  '{Org} {verb}',
+  '{Org} {verb}, again',
+  '{Org} {verb} after {event}',
+  '{Org} {verb} — third time this year',
+  '{Org} {verb}; nobody available for comment',
+  'After {event}, {org} {verb}',
+  'Amid {event}, {org} {verb2}',
+  '{Org} and {org2} both claim responsibility for {thing}',
+  '{Org} and {org2} agree to disagree about {thing} for a further decade',
+  '{Org} takes over {thing}, then asks what it is for',
+  '{Org} sells {thing} to {org2}, which already owned it',
+  '{Org} cannot locate {thing}, or the record of {thing}',
+  '{Org} apologises to {place} for the {adj} loss of {thing}',
+  '{Org} insists {thing} is stable, {adj}, and unavailable for inspection',
+  '{Org} to run {thing} on a {adj} basis until further notice',
+  '{Org} confirms {thing} will not be replaced',
+  '{Org} confirms {thing} was replaced years ago and nobody noticed',
+  '{Org} says {thing} is now the responsibility of {org2}',
+  '{Org} declines to say who is responsible for {thing}',
+  '{Org} names {role} as custodian of {thing}',
+  '{Org} appoints {role} to investigate {org2}',
+  '{Org} promoted {role} for reporting {thing} missing',
+  'Report finds {org} has been {adj} since {yr}',
+  'Report into {org} is itself referred for review',
+  'Report on {thing} delayed until after everyone involved has retired',
+  'Inquiry into {event} finds nothing, twice',
+  'Inquiry into {event} recommends a further inquiry',
+  'Audit of {org} concludes it is well run and should not exist',
+  'Leaked memo shows {org} knew about {thing} in {yr}',
+  'Leaked memo from {org} consists entirely of a diagram',
+  'Correction: {org} did not {vbase}; it intends to',
+  'Correction: {thing} was described last week as safe. It was not.',
+  'Correction: an earlier edition placed {place} in the wrong century',
+  '{N} per cent of {place} now depends on {thing}',
+  '{N} per cent of households in {place} report no change, which is the concern',
+  '{N} households in {place} to be relocated by {yr}',
+  'Only {n2} of {thing} remain, says {org}',
+  'Just {n2} people now hold a licence to maintain {thing}',
+  '{N} years on, {event} is still being processed',
+  'For the {nth} year running, {org} {verb}',
+  'Third generation of {place} families still waiting on {org}',
+  'Waiting list for {thing} passes {n} years',
+  'Cost of maintaining {thing} exceeds cost of replacing {place}',
+  'Price of {thing} doubles; {org} calls this a stabilisation',
+  'Budget for {thing} reallocated to publicising the budget for {thing}',
+  '{Org} spends more on the archive of {thing} than on {thing}',
+  '"We are confident," says {role} of {org}',
+  '"It was working when we left it," says {role}',
+  '"Nobody has asked me about this in forty years," says {role}',
+  '"That is not the question," {role} tells inquiry into {event}',
+  '"Somebody should have written it down," says {role} of {thing}',
+  '"The map is fine. The coast moved," insists {role}',
+  '"We inherited it," {org} says of {thing}',
+  '"This is the last one," {org} said in {yr}. It was not.',
+  '{Role} resigns over {thing}; replacement resigns first',
+  '{Role} in {place} refuses to hand over the keys to {thing}',
+  '{Role} has run {thing} alone since {yr}',
+  '{Role} awarded {adj} honour for keeping {thing} running unpaid',
+  '{Role} writes to {org} every week. {Org} has never replied.',
+  'Obituary: {role}, who maintained {thing} for fifty years',
+  'Last of {thing} dismantled in {place} without ceremony',
+  'Last shipment leaves {place} ahead of {event}',
+  'Final edition of {thing} printed in {place}; no one attends',
+  '{Place} marks {n} years since {event}',
+  '{Place} votes to rename itself after {thing}',
+  '{Place} to be reclassified as {adj} by {yr}',
+  '{Place} disputes its own coastline with {org}',
+  '{Place} residents restore {thing} without permission',
+  '{Place} declares itself responsible for {thing}',
+  'Residents of {place} rebuild {thing} from memory',
+  'Schoolchildren in {place} find records of {thing} in a wall',
+  'Volunteers in {place} outperform {org} on {thing}',
+  '{Place} and {place2} to share {thing}; neither has told {org}',
+  'Weather in {place} now managed on a {adj} basis',
+  '{Thing} returns to {place} after {n} years',
+  '{Thing} in {place} listed, delisted, then listed again',
+  '{Thing} found intact beneath {place}',
+  '{Thing} declared {adj}; {org} unable to explain the decision',
+  '{Thing} to be preserved as a description only',
+  '{Thing} survives on a single {adj} grant',
+  '{Thing} quietly restored after public pressure and one letter',
+  '{Thing} now maintained by {org2} on behalf of nobody in particular',
+  '{Thing} cannot be repaired; the tools were the first thing lost',
+  '{Thing} to be taught in schools as history from {yr}',
+  'Nobody claims {thing}. {Org} keeps it anyway.',
+  'Anniversary of {event} passes without official mention',
+  'Ceremony for {thing} held {n} years late',
+  'Archive of {event} opened; three boxes are empty',
+  'Archive of {thing} to be sealed for a further {n} years',
+  'Software running {thing} declared {adj} but irreplaceable',
+  'System behind {thing} last understood in {yr}',
+  'Backup of {thing} found to be a photograph of the backup',
+  'Migration of {thing} completed; original still in use',
+  'Standard for {thing} withdrawn; everyone continues to use it',
+  'Licence for {thing} expires quietly in {place}',
+  'Insurers decline to cover {thing} in {place} from {yr}',
+  'Court rules {thing} belongs to whoever is currently holding it',
+  'Treaty on {thing} signed by {org} and {org2}; text not yet written',
+  'Ballot on {thing} in {place} draws {n2} votes',
+  'Petition to save {thing} reaches {n} signatures, {n2} of them genuine',
+  'Nothing happened in {place} today, {org} confirms',
 ];
 const STANDFIRST = [
   'Officials stress there is no cause for concern, and have stressed this in each of the last four statements.',
@@ -158,7 +459,130 @@ const STANDFIRST = [
   'The report runs to eleven hundred pages. The summary runs to one, and contradicts it.',
   'Independent auditors say the figures are accurate, correctly filed, and describe something that does not exist.',
   'The change takes effect immediately, retroactively, and in one region only.',
+  'Three departments say it is not their remit. A fourth has not been contactable since spring.',
+  'The scheme was described as temporary at launch. It is now the oldest thing in the building.',
+  'Nobody involved in the original decision is still alive, and the decision is still in force.',
+  'The consultation ran for six weeks and received two responses, both from the same address.',
+  'Costs have been revised upward for the eleventh time, and downward once, by mistake.',
+  'A version of this announcement was made in 2074. The wording has been improved.',
+  'Local records show the same thing happening twice before, both times followed by a review.',
+  'The relevant file exists. It is in a building that is no longer accessible.',
+  'Two agencies have confirmed the figure and one has confirmed it is not their figure.',
+  'The public will be informed once the informing has been costed.',
+  'A helpline has been established. It plays a recording of the announcement.',
+  'The affected area was mapped last year, though not by anyone who has been there.',
+  'The measure passed unanimously, which those present found unsettling.',
+  'It is not clear whether the deadline is a target, a limit, or a description of the past.',
+  'The paperwork was completed correctly and refers throughout to a different scheme.',
+  'Anyone with information is asked to come forward and then to be patient.',
+  'The decision has been welcomed by everybody who stands to be paid for implementing it.',
+  'The last person who understood the process retired in the spring and left no notes.',
+  'A commemorative plaque has been ordered. The wording is disputed.',
+  'The site is being monitored, in the sense that a camera points at it.',
+  'Records before 2068 are described as incomplete; records after 2068 are described as pending.',
+  'Officials note that the alternative would have been worse, and decline to describe it.',
+  'The announcement was made on a Friday, as is customary.',
+  'The affected communities have asked to be consulted. They have been added to a list.',
+  'The scheme met all of its targets, which were revised in the final quarter.',
+  'A working group has been convened and will report in the usual manner, at length, late.',
 ];
+const SHORT_BODY = [
+  'No date has been set, and none is expected before the next review.',
+  'The department responsible was merged into another department in the spring.',
+  'Residents were told in a letter that arrived after the deadline it described.',
+  'A spokesperson confirmed the figures and asked that they not be quoted.',
+  'It is the fourth such announcement this year and the second this month.',
+  'The cost is described as manageable within existing arrangements, which do not exist.',
+  'Work is expected to begin once the paperwork clears, which it has not since 2081.',
+  'Two of the three signatories have since withdrawn, citing the third.',
+  'The site will remain open to the public in principle.',
+  'An earlier version of this scheme is still running in the next region.',
+  'Nobody has objected, though nobody was told.',
+  'The equipment was found to be working, which was not the finding expected.',
+  'A replacement has been ordered from a supplier that closed last year.',
+  'Officials say the situation is being kept under review and always has been.',
+  'The relevant standard was withdrawn but continues to be enforced.',
+  'The community has been offered a commemorative event instead.',
+  'A second opinion was sought and has been filed unread.',
+  'The change is expected to save money, though not in this century.',
+  'Three staff remain, of whom one is on secondment to the inquiry.',
+  'The announcement was made in two languages, neither spoken locally.',
+  'A grant application is being prepared for the cost of preparing grant applications.',
+  'The decision may be appealed, in writing, to the body that made it.',
+  'The archive copy has been checked and is a copy of the archive copy.',
+  'Nothing further is planned, and this has been confirmed in writing twice.',
+  'A pilot will run in one district, chosen because it agreed to be chosen.',
+  'The matter has been referred upward, where it is understood to be resting.',
+];
+const TICKER = [
+  'tide gauge at {place} reads within tolerance for the ninth consecutive day',
+  '{org} confirms the queue is moving',
+  'no updates expected from {org} before the winter session',
+  'archive retrieval times at {place} now averaging four days',
+  '{thing} remains offline; cause not yet described',
+  'bandwidth in {place} rationed between 06:00 and 22:00',
+  'seed vault humidity nominal; door count unchanged since spring',
+  'freight through {place} down eleven per cent on the decade',
+  '{org} reminds the public that the helpline is not staffed',
+  'quiet-hours enforcement suspended in {place} pending appeal',
+  'the public clocks in {place} agree to within four seconds',
+  'flood warden rota at {place} filled through to next year',
+  'one further copy of {thing} reported found',
+  '{org} has not filed accounts since the merger',
+  'night train from {place} running, for now',
+];
+
+/* ---------- template fill ----------
+   Slots are filled once per headline, with a memo so that {org} and {Org} in
+   the same line refer to the same body, while {org2} is guaranteed to be a
+   different one. Capitalised slot names capitalise the value. */
+function ordinal(n){
+  const words = ['zeroth','first','second','third','fourth','fifth','sixth','seventh','eighth','ninth',
+    'tenth','eleventh','twelfth','thirteenth','fourteenth','fifteenth','sixteenth','seventeenth',
+    'eighteenth','nineteenth','twentieth'];
+  return words[n] || (n + 'th');
+}
+const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+
+function fillTemplate(tpl, year){
+  const memo = {};
+  const other = (poolName, pool) => {
+    let v, guard = 0;
+    do { v = pick(pool); } while (v === memo[poolName] && guard++ < 20);
+    return v;
+  };
+  const value = (key) => {
+    switch (key){
+      case 'org':   return memo.org   || (memo.org   = pick(ORG));
+      case 'org2':  return memo.org2  || (memo.org2  = (memo.org ? other('org', ORG) : pick(ORG)));
+      case 'thing': return memo.thing || (memo.thing = pick(THING));
+      case 'thing2':return memo.thing2|| (memo.thing2= (memo.thing ? other('thing', THING) : pick(THING)));
+      case 'place': return memo.place || (memo.place = pick(PLACE));
+      case 'place2':return memo.place2|| (memo.place2= (memo.place ? other('place', PLACE) : pick(PLACE)));
+      case 'role':  return memo.role  || (memo.role  = pick(ROLE));
+      case 'event': return memo.event || (memo.event = pick(EVENT));
+      case 'adj':   return memo.adj   || (memo.adj   = pick(ADJ));
+      case 'verb':  return memo.verb  || (memo.verb  = pick(VERB_PHRASE));
+      case 'vbase': return memo.vbase || (memo.vbase = pick(BASE_VERB));
+      case 'verb2': return memo.verb2 || (memo.verb2 = (memo.verb ? other('verb', VERB_PHRASE) : pick(VERB_PHRASE)));
+      case 'n':     return String(ri(4, 90));
+      case 'N':     return String(ri(4, 96));
+      case 'n2':    return String(ri(2, 41));
+      case 'nth':   return ordinal(ri(3, 20));
+      // a year in the edition's own past, so a century-hence paper still
+      // refers backwards rather than to something that has not happened
+      case 'yr':    return String(year - ri(8, 62));
+      default:      return key;
+    }
+  };
+  return tpl.replace(/\{(\w+)\}/g, (m, key) => {
+    const lower = key.charAt(0).toLowerCase() + key.slice(1);
+    const isCap = key !== lower && key !== key.toUpperCase();
+    const v = value(isCap ? lower : key);
+    return isCap ? cap(v) : v;
+  });
+}
+
 const REPORTERS = ['A. Vell','M. Okonkwo-Reyes','J. Sarn','P. Haldane','Ø. Bruun','R. Adeyemi','T. Ishikawa-Ward','C. Marram'];
 const FILED_FROM = ['Lagos Ring','New Aberdeen','the Baltic Shelf','Nairobi Upper','Reykjavík Deep',
   'the Manila Spans','Halifax Reclaimed','Perth Terrace','Montréal Sub','the Bosphorus Locks'];
@@ -220,21 +644,52 @@ function shuffle(a){
   return a;
 }
 
+function headline(year){ return fillTemplate(pick(HEADLINES), year); }
+
+let sweepTimer = null;
+function sweep(){
+  // the "printing" pass: a light band crosses the sheet once per edition
+  if (REDUCED) return;
+  const el = $('sheet');
+  el.classList.remove('printing');
+  void el.offsetWidth;            // restart the animation
+  el.classList.add('printing');
+  clearTimeout(sweepTimer);
+  sweepTimer = setTimeout(() => el.classList.remove('printing'), 900);
+}
+
+function renderTicker(year){
+  const items = shuffle(TICKER).slice(0, 8).map(t => fillTemplate(t, year));
+  // duplicated so the marquee can loop without a visible seam
+  $('ticker').innerHTML = [0,1].map(() =>
+    '<span class="tick-run">' + items.map(t => '<i>' + esc(t) + '</i>').join('') + '</span>'
+  ).join('');
+}
+
 function render(){
   const d = futureDate();
+  const year = d.getFullYear();
   $('dateline').textContent = d.toLocaleDateString('en-GB',
     { weekday:'long', day:'numeric', month:'long', year:'numeric' });
   $('edition').textContent = 'edition ' + ri(9000, 99999) + ' · ' + yearOffset + ' years hence';
+  $('retrieval').textContent = 'archive retrieval ' + ri(100000,999999) + '/' + year;
+  $('integrity').textContent = ri(72, 99) + '% legible';
 
-  const subject = pick(SUBJECT);
-  const headline = subject.charAt(0).toUpperCase() + subject.slice(1) + ' ' + pick(VERB_PHRASE);
   $('lead').innerHTML =
     '<span class="chip">' + esc(pick(SECTIONS)) + ' · lead</span>' +
-    '<h2>' + esc(headline) + '</h2>' +
+    '<h2>' + esc(headline(year)) + '</h2>' +
     '<p class="stand">' + esc(pick(STANDFIRST)) + '</p>' +
     '<div class="byline">' + esc(pick(REPORTERS)) + ' · filed from ' + esc(pick(FILED_FROM)) + '</div>';
 
-  const shorts = shuffle(SHORTS).slice(0, 3);
+  // three shorts, built from the same engine but never repeating the lead's shape
+  const used = new Set();
+  const shorts = [];
+  while (shorts.length < 3){
+    const tpl = pick(HEADLINES);
+    if (used.has(tpl)) continue;
+    used.add(tpl);
+    shorts.push([pick(SECTIONS), fillTemplate(tpl, year), pick(SHORT_BODY)]);
+  }
   $('cols').innerHTML = shorts.map(s =>
     '<div class="story"><span class="k">' + esc(s[0]) + '</span>' +
     '<h3>' + esc(s[1]) + '</h3><p>' + esc(s[2]) + '</p></div>').join('');
@@ -242,6 +697,9 @@ function render(){
   const strip = [pick(CONDITIONS), pick(INDEX), pick(MOOD), pick(TIDE)];
   $('strip').innerHTML = strip.map(s =>
     '<div>' + esc(s[0]) + '<b>' + esc(s[1]) + '</b></div>').join('');
+
+  renderTicker(year);
+  sweep();
 }
 
 $('next').addEventListener('click', render);

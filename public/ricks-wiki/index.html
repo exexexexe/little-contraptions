@@ -101,6 +101,18 @@ footer{
   margin-top:24px;font-family:var(--mono);font-size:10.5px;color:#5F6660;line-height:1.8;text-align:center;
 }
 footer a{ color:var(--ink-2) }
+.prior{ margin:0;padding-left:18px;list-style:square }
+.prior li{ margin:0 0 6px;font-size:13.5px;line-height:1.6 }
+.offsite{
+  display:flex;align-items:center;gap:12px;margin-top:22px;padding:14px 16px;
+  text-decoration:none;border:1px solid rgba(255,255,255,.22);border-radius:3px;
+  background:rgba(255,255,255,.05);transition:background .18s, border-color .18s, transform .18s;
+}
+.offsite:hover{ background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.42);transform:translateY(-1px) }
+.offsite-k{ font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;opacity:.65 }
+.offsite-v{ font-size:14px;font-weight:600;flex:1 }
+.offsite-arrow{ font-size:16px;opacity:.6 }
+@media (max-width:520px){ .offsite{ flex-wrap:wrap;gap:4px 10px } .offsite-v{ flex:1 0 100% } }
 </style>
 </head>
 <body>
@@ -110,9 +122,19 @@ footer a{ color:var(--ink-2) }
     <button class="btn" id="next">File another</button>
     <button class="btn sec2" id="copy">Copy the abstract</button>
   </div>
+  <!-- One link out, and only one. Everything on this page is invented; anyone who
+       actually wants the show's canon should go to the fan wiki that documents it,
+       rather than have anear-canon episode guide reassembled here. -->
+  <a class="offsite" href="https://rickandmorty.fandom.com/wiki/Rick_and_Morty_Wiki"
+     target="_blank" rel="noopener noreferrer">
+    <span class="offsite-k">Looking for the real thing?</span>
+    <span class="offsite-v">The Rick and Morty Wiki — fan-run, on Fandom</span>
+    <span class="offsite-arrow" aria-hidden="true">↗</span>
+  </a>
   <footer>
     Entirely invented filings, assembled in your browser. Written in the general spirit of a
-    certain garage inventor and quoting none of it. <a href="/">← back to the cabinet</a>
+    certain garage inventor and quoting none of it: no episode text, no screenshots, no canon
+    devices described. <a href="/">← back to the cabinet</a>
   </footer>
 </div>
 
@@ -125,66 +147,235 @@ const ri = (a,b) => a + Math.floor(Math.random() * (b - a + 1));
 const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
+/* Everything below is original writing in the shape of a patent filing.
+   Nothing here is quoted, paraphrased or lifted from the show — the joke is
+   the bureaucracy, not the canon. Deliberately no device from the series is
+   described; if you want the real thing there is one link out, at the foot. */
 const PREFIX = ['Portable','Handheld','Pocket','Field','Modular','Recursive','Disposable','Industrial',
-  'Personal','Collapsible','Autonomous','Retrofitted','Non-Consensual','Provisional','Load-Bearing'];
+  'Domestic','Provisional','Reinforced','Self-Cleaning','Unlicensed','Load-Bearing','Ambient',
+  'Collapsible','Wall-Mounted','Fun-Size','Third-Party','Reconditioned','Non-Consensual','Family-Sized',
+  'Weatherproof','Single-Occupancy','Off-Brand','Semi-Autonomous','Court-Ordered','Kitchen-Counter',
+  'Wearable','Ruggedised','Entry-Level','Extremely Loud','Bargain-Bin','Two-Person','Overclocked',
+  'Ceremonial','Refurbished','Under-Sink','Regulation','Unattended'];
 const SUBJ = ['Consequence','Timeline','Regret','Adjacency','Momentum','Probability','Grievance','Continuity',
-  'Attention','Household','Cousin','Weekend','Inventory','Apology','Dimension','Argument','Sunday'];
+  'Causality','Sincerity','Hindsight','Obligation','Proximity','Grief','Enthusiasm','Reputation','Consent',
+  'Boredom','Loyalty','Coincidence','Empathy','Debt','Nostalgia','Consensus','Patience','Ownership',
+  'Blame','Certainty','Appetite','Silence','Politeness','Inheritance','Attention','Guilt','Resentment',
+  'Coherence','Discretion','Gravity','Volume','Tuesday','Doubt','Applause','Distance','Apology','Novelty','Symmetry'];
 const DEVICE = ['Deferrer','Splitter','Compressor','Rerouter','Nullifier','Decanter','Manifold','Winder',
-  'Extractor','Collator','Dampener','Recombinator','Substituter','Flattener','Hoist'];
-
+  'Bisector','Attenuator','Distributor','Percolator','Untangler','Redactor','Governor','Escrow Unit',
+  'Substitutor','Ratchet','Sieve','Bellows','Transposer','Dampener','Flywheel','Clarifier','Injector',
+  'Bracket','Reconciler','Aperture','Ballast','Trellis','Aggregator','Spool','Gasket','Lathe','Regulator',
+  'Baffle','Turnstile','Condenser','Hopper','Reservoir'];
 const ABSTRACT = [
-  'The present invention relates to a device for {verb} {object}, which nobody asked for and which several people have now asked to be uninvented.',
-  'Disclosed herein is an apparatus for {verb} {object}. It works. That is not the same as it being a good idea, and the office would like that noted.',
-  'A method and apparatus for {verb} {object} is described. Prior art exists but was abandoned, reportedly for reasons the applicant declines to look up.',
-  'The invention provides means for {verb} {object} using components sourced entirely from a kitchen drawer.',
-  'This filing covers an assembly capable of {verb} {object} at a rate the applicant describes as "fine" and the examiner describes as "a matter for others".',
+  'A device for {verb} {object} without the user being present at the time.',
+  'An apparatus that identifies {object} and handles it by {verb} it into somewhere the user does not have to look.',
+  'A method of {verb} {object}, then presenting the result as though it had always been that way.',
+  'A portable unit which takes {object} as its input and returns roughly the same thing with the difficult part removed.',
+  'An arrangement for {verb} {object} at a rate the user selects with a dial they will immediately turn too far.',
+  'A self-contained system for {verb} {object} on behalf of a user who has explicitly declined to discuss it.',
+  'An instrument that locates {object} within a household and begins {verb} it before anybody has agreed to this.',
+  'A means of {verb} {object} such that the user can honestly claim not to remember it.',
+  'A compact appliance which, on being shown {object}, responds by {verb} it and then refusing further input.',
+  'A device that accepts {object} and holds it indefinitely, on the understanding that nobody will ask for it back.',
+  'A domestic unit for {verb} {object} in the background, at a volume just above the threshold of notice.',
+  'An apparatus for {verb} {object} and depositing the residue in a timeline where it is somebody else\'s problem.',
+  'A machine which converts {object} into a smaller and more portable version of {object}.',
+  'A method for {verb} {object} that works flawlessly on the first attempt and never again.',
+  'A device which asks the user to confirm they wish to proceed with {verb} {object}, and then proceeds regardless.',
+  'An enclosure in which {object} may be left while the user decides whether {verb} it was a good idea.',
+  'A handheld unit that begins {verb} {object} the moment it is switched on and cannot be switched off.',
+  'An apparatus for {verb} {object} which produces, as a by-product, a second and slightly worse {object}.',
+  'A system for {verb} {object} in instalments, so that no single instalment feels like a decision.',
+  'A device for {verb} {object} on a schedule, chosen by the device.',
+  'An appliance which takes {object} and returns a receipt, the terms of which are not disclosed.',
+  'A method of {verb} {object} that is reversible in principle and has never been reversed in practice.',
+  'A unit for {verb} {object} while maintaining the outward appearance of a normal and well-adjusted household.',
+  'A device that surveys the room, selects {object} without consultation, and gets on with {verb} it.',
+];
+const ELABORATION = [
+  'The applicant stresses that the device does not create the problem; it merely arrives first.',
+  'Operation requires no training, no supervision, and, in the applicant\'s words, no witnesses.',
+  'A second unit may be purchased to deal with the output of the first, and a third is available.',
+  'The device is fitted with a handle, which the applicant concedes is the most considered part of the design.',
+  'It runs on household current and on a second supply the applicant has declined to describe.',
+  'The manual consists of one page, most of which is a diagram of the handle.',
+  'A warranty is offered, voided by use.',
+  'The unit is quiet in operation except for a sound the applicant describes as "structural sighing".',
+  'Cleaning instructions are provided and are, in the examiner\'s view, wildly optimistic.',
+  'The device ships with two spare parts, neither of which corresponds to any part of the device.',
+  'It is designed to sit on a shelf and be seen, which the applicant lists as a primary function.',
+  'The applicant notes that the device has never failed a test it was told about in advance.',
+  'Long-term storage is not recommended, and neither is short-term storage.',
+  'The casing is rated for domestic use and has, on one occasion, been rated for something else entirely.',
+  'An optional carry case is available and is slightly too small.',
+  'The device improves with use, up to the fourth use.',
 ];
 const VERB = ['deferring','decanting','flattening','rerouting','compressing','duplicating','nullifying',
-  'inverting','postponing','laminating','outsourcing'];
+  'itemising','laminating','filing','reconciling','withdrawing','ventilating','sub-letting','annotating',
+  'discounting','bracketing','outsourcing','distilling','dismantling','pre-approving','reupholstering',
+  'archiving','postponing','subdividing','normalising','rehousing','depreciating','de-escalating',
+  'aerating','collateralising','abbreviating'];
 const OBJECT = ['a household argument','a Sunday afternoon','one specific regret','an inconvenient cousin',
-  'the concept of Tuesday','a small amount of momentum','somebody else\'s attention span',
-  'an unread inbox','the middle of a conversation','four minutes of an evening','a mild grudge'];
-
+  'the last four minutes of a conversation','a promise made at a wedding','somebody else\'s certainty',
+  'an unopened letter','the version of you that agreed to this','a shared memory of a holiday',
+  'a debt nobody has mentioned in years','the silence after a question','an inherited piece of furniture',
+  'a running joke that stopped being funny','the middle of a long car journey','a name you cannot place',
+  'an apology drafted but never sent','a birthday','the moment before somebody answers','a family recipe',
+  'an unfinished sentence','a grudge with no remaining participants','the smell of a house you grew up in',
+  'a decision made on a Tuesday','somebody\'s enthusiasm for a hobby','an appointment you intend to miss',
+  'the second half of an anecdote','a photograph nobody wants','an obligation acquired by standing nearby',
+  'the good chair','a conversation had entirely by text','a sum of money mentioned once'];
 const ASIDES = [
-  'and before anyone asks, yes, it has been tested, on a volunteer, loosely defined',
-  'the applicant would like it recorded that the smell is unrelated',
-  'this is the version that works, which is not the version that was demonstrated',
-  'the examiner is asked to disregard the noise it makes between 3 and 4 a.m.',
-  'the second prototype is not discussed in this filing and will not be',
-  'no, it cannot be turned off, that was raised at the time',
+  'the applicant would prefer this were not read aloud',
+  'this claim has been amended four times and gets worse each time',
+  'a footnote here has been redacted by the applicant themselves',
+  'the examiner notes the word "safely" was inserted in a different pen',
+  'the applicant was reminded this is a legal document',
+  'this section was submitted on the back of a receipt',
+  'the applicant has since disputed writing this',
+  'a diagram was attached here and has been removed by the office',
+  'the applicant asks that this not be shown to their family',
+  'this passage is identical to a filing rejected in 2011',
+  'the applicant offered to withdraw this line in exchange for the patent',
+  'the office notes the handwriting changes at this point',
+  'a smell was reported by the clerk who processed this page',
+  'the applicant has asked that the word "mostly" be treated as load-bearing',
+  'this was filed twice, with the second copy slightly different',
+  'the applicant read this aloud and then asked for it back',
+  'the margin here contains a drawing of the device winning an award',
+  'the office declines to reproduce the applicant\'s underlining',
+  'the applicant\'s attorney has asked to be removed from the record',
+  'this line was added after the interview and before the deposit cleared',
+  'the applicant describes this as the boring part',
+  'the office observes this is the only page with a page number',
 ];
-
 const CLAIMS = [
-  'An apparatus as described, comprising a housing, an aperture, and one component the applicant refuses to name.',
-  'The apparatus of claim 1, wherein the aperture is only approximately where the diagram indicates.',
-  'The apparatus of claim 1, further comprising a handle, added late, for reasons that became obvious.',
-  'A method of operating the apparatus, comprising switching it on and then leaving the room.',
-  'The apparatus of claim 1, wherein the warranty is void on first use.',
-  'The apparatus of claim 1, adapted so that it can be carried by one person at a brisk walk.',
-  'A method as described, wherein the operator is not informed of the outcome until afterwards.',
-  'The apparatus of claim 1, in which the indicator light means nothing and is included for confidence.',
+  'The device as described, operating on household current and on the user\'s reluctance.',
+  'A method according to claim 1, in which the user is not informed which of the two settings is running.',
+  'The device of claim 1, further comprising a lid, which the applicant considers the innovative element.',
+  'A method by which the result is presented as inevitable rather than as a choice made by the user.',
+  'The device of claim 1, in which the warning label is applied after the first use.',
+  'An arrangement whereby the second-worst outcome is selected automatically to save time.',
+  'A configuration in which the device declines to explain what it is doing while it is doing it.',
+  'The device of claim 1, wherein the off switch is present, labelled, and connected to nothing.',
+  'A method of operation in which the device records what it did but not why.',
+  'The device of claim 1, further comprising a chime, which sounds at completion and at other times.',
+  'A variant in which two users may operate the device simultaneously and disagree about the result.',
+  'The device of claim 1, in which any error is displayed in a font too small to read from standing.',
+  'A configuration wherein the device may be operated by a child, and works better when it is.',
+  'A method whereby the device pauses before finishing, for effect.',
+  'The device of claim 1, adapted so that removing the battery does not stop it.',
+  'An arrangement in which the device asks a clarifying question and does not wait for the answer.',
+  'The device of claim 1, wherein a copy of the input is retained for reasons that are not disclosed.',
+  'A method in which the device selects the setting the user would have chosen an hour ago.',
+  'The device of claim 1, further comprising a second dial which is decorative.',
+  'A configuration in which the device works only when it believes it is being watched.',
+  'The device of claim 1, in which the output is delivered to the room next door.',
+  'A method whereby the device completes the task and then denies having been switched on.',
+  'The device of claim 1, wherein the serial number changes between inspections.',
+  'An arrangement in which the device may be returned, though not to the address supplied.',
+  'The device of claim 1, further comprising a strap, for carrying it away quickly.',
+  'A method in which the device rounds the result to the nearest convenient figure.',
+  'The device of claim 1, wherein a third party is billed.',
+  'A configuration whereby the device improves the user\'s account of events retrospectively.',
+  'The device of claim 1, in which the instructions are printed on the inside of the casing.',
+  'A method whereby the device produces a noise instead of an error.',
+  'The device of claim 1, adapted to be mistaken for a kettle.',
+  'An arrangement in which the device requires two hands, both of them the user\'s.',
+  'The device of claim 1, in which the maintenance interval is stated as "you will know".',
+  'A method by which the device apologises, briefly, in text, at the end.',
+  'The device of claim 1, wherein a cooling period is enforced between uses and is not enforced.',
+  'A configuration in which the device is bolted down, for reasons given only verbally.',
 ];
-
 const SIDE_EFFECTS = [
-  'Prolonged use causes every clock in the building to run four minutes fast, permanently, including ones that are not plugged in.',
-  'Anyone within two metres will later be unable to remember the middle third of any anecdote they tell.',
-  'The device produces a second, smaller copy of itself roughly once a fortnight. The copies are not covered by this filing.',
-  'Operators report an ongoing conviction that they have left the oven on. They have not. They will keep checking.',
-  'Nearby houseplants grow towards the device rather than the window, and become noticeably resentful if it is moved.',
-  'The nearest other person will develop a mild and permanent preference for a decade they did not live through.',
-  'All photographs taken in the room afterwards will contain one additional chair.',
-  'The operator will find their handwriting has changed. Slightly. Legibly. Not back.',
+  'Users report a faint conviction that they have already had this conversation.',
+  'Adjacent rooms become approximately four minutes out of step with the room containing the device.',
+  'Small objects on the same shelf are found, later, in a slightly better arrangement.',
+  'The user retains the memory of the decision but not of making it.',
+  'Anyone within two metres becomes briefly and unusually agreeable.',
+  'A second copy of the user\'s handwriting appears in the household, subtly neater.',
+  'Pets refuse to enter the room and will not be discussed on the matter.',
+  'The user\'s account of the week gains a Thursday it did not previously have.',
+  'Cutlery in the drawer sorts itself by an unfamiliar principle.',
+  'Photographs in the house develop one extra person at the edge of frame, out of focus.',
+  'The user finds themselves apologising to appliances, and meaning it.',
+  'Any argument begun in the room concludes forty per cent faster and satisfies nobody.',
+  'The device\'s own instruction manual acquires a chapter overnight.',
+  'Bread goes stale in the room at roughly double the usual rate.',
+  'Two people asked to describe the device separately will describe two devices.',
+  'The user\'s phone begins autocorrecting to a word they do not use.',
+  'Doors in the house close a half-second after being released.',
+  'The user reports dreaming, repeatedly, of a corridor with the right carpet.',
+  'Guests leave earlier than intended and cannot say why when asked later.',
+  'A low hum is audible only to whoever paid for the device.',
+  'Post arrives addressed to a version of the user with a middle initial.',
+  'The user becomes unwilling, over several weeks, to sit with their back to it.',
+  'Clocks in the room agree with each other and with nothing else in the building.',
+  'A houseplant near the device grows toward it rather than toward the window.',
+  'The user\'s handwriting slants two degrees further right and stays there.',
+  'Leftovers keep better. Considerably better. Indefinitely, in one reported case.',
+  'The user acquires a firm opinion about a country they have never visited.',
+  'One stair in the house begins to creak in a different key.',
+  'Anyone who reads the serial number aloud forgets it within the hour.',
+  'The room smells faintly of a place the user has not thought about in years.',
+  'The user\'s reflection is punctual but not enthusiastic.',
+  'A drawer in the kitchen will no longer fully close, and the drawer is fine.',
 ];
-
 const OFFICE_NOTES = [
-  'Filed under protest by the examining officer.',
-  'Accepted on the third attempt, chiefly to end the correspondence.',
-  'Granted. The office wishes to record that it was outvoted.',
-  'Provisionally accepted pending a site visit nobody intends to make.',
-  'Filed. The applicant was already gone.',
+  'Application returned once for missing pages; resubmitted with more pages than before.',
+  'Examiner requested a demonstration. Examiner has requested no further demonstrations.',
+  'Prior art identified in three other timelines. Applicant asserts they are the prior art.',
+  'Approved on the condition it is never manufactured. Applicant agreed enthusiastically.',
+  'The office has received a complaint about this device from an address that does not exist.',
+  'Applicant declined to leave a contact number, citing "the obvious reason".',
+  'Filed under Unwise Devices rather than Household Goods, over the applicant\'s objection.',
+  'Examiner notes the device was already in the room when the interview began.',
+  'The applicant has filed eleven variations of this device. This is the least alarming.',
+  'A duplicate of this filing arrived yesterday, dated next month.',
+  'The office is satisfied the device works. The office is not satisfied it should.',
+  'Provisionally rejected. The rejection has been mislaid twice.',
+  'Applicant paid the fee in a currency the office has agreed not to name.',
+  'Examiner requested safety data. Applicant supplied a photograph of the handle.',
+  'Granted, then ungranted, then granted again on appeal by the device.',
+  'The office notes that this is the applicant\'s first filing not to mention their family.',
+  'Held pending clarification of what happens to the second copy.',
+  'The applicant\'s previous device is still in the building and has been given a desk.',
+  'Examiner recused themselves after the third interview and would not elaborate.',
+  'The file is heavier than the number of pages accounts for.',
+  'Applicant asked whether the patent could be granted retroactively. It has been.',
+  'Approved for domestic use only. The office declines to define "domestic".',
+  'A clerk has requested a transfer, and the request cites this application by number.',
+  'The office would like it noted that the applicant was warned.',
 ];
-
-let current = null;
+const PRIOR_ART = [
+  'Application {no}, withdrawn after the examiner asked what the second dial did.',
+  'Application {no}, rejected for describing the same device twice under different names.',
+  'Application {no}, granted and then quietly reclassified as a hazard.',
+  'Application {no}, abandoned when the applicant could not locate the prototype.',
+  'Application {no}, refused; the drawings depicted a device holding its own patent.',
+  'Application {no}, allowed to lapse after the fee was paid by the device itself.',
+  'Application {no}, rejected as insufficiently distinct from a chair.',
+  'Application {no}, still pending; the file has been open for nineteen years.',
+  'Application {no}, withdrawn on the day of the interview and refiled that evening.',
+  'Application {no}, granted in one timeline and cited as a warning in the rest.',
+  'Application {no}, rejected because the claims described what the device would like to do.',
+  'Application {no}, sealed at the applicant\'s request and reopened by the office.',
+];
+const REBUTTALS = [
+  'The applicant submits that every objection raised is, correctly understood, a feature.',
+  'The applicant contends that the office has misunderstood the device, the field, and the applicant.',
+  'The applicant declines to answer the objection and refers the office to the device.',
+  'The applicant argues that the risk is theoretical, and that theory is where risk belongs.',
+  'The applicant proposes resolving the objection by removing the page it appears on.',
+  'The applicant maintains the device is safe when operated correctly, and that nobody has yet done so.',
+  'The applicant notes the office has approved worse and offers to name it.',
+  'The applicant suggests that the examiner\'s concerns be filed as a separate application.',
+  'The applicant observes that the objection would not have arisen had the demonstration finished.',
+  'The applicant has responded with a diagram. The diagram is of the office.',
+  'The applicant insists the device cannot be dangerous, as it has not been switched on in this building.',
+  'The applicant requests that the objection be reconsidered by a different version of the examiner.',
+];
 
 function schematic(seed){
   // A plausible-looking blueprint, drawn from the filing number so each
@@ -227,14 +418,21 @@ function schematic(seed){
   return '<svg class="schema" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="schematic diagram">' + g + '</svg>';
 }
 
+let current = null;
+
+
 function makeFiling(){
   const name = pick(PREFIX) + ' ' + pick(SUBJ) + ' ' + pick(DEVICE);
   const no = ri(2,9) + ',' + ri(100,999) + ',' + ri(100,999);
   const seed = parseInt(no.replace(/,/g,''), 10);
   const abstractTpl = pick(ABSTRACT);
+  // The aside is spliced into the first sentence only. Appending the
+  // elaboration before splicing put the parenthetical inside it, which read
+  // as though the clerk had interrupted mid-clause.
   const abstract = abstractTpl
     .replace('{verb}', pick(VERB))
     .replace('{object}', pick(OBJECT));
+  const elab = pick(ELABORATION);
   // the mid-sentence aside, spliced into the abstract rather than appended
   const aside = pick(ASIDES);
   const parts = abstract.split(/(?<=,)\s/);
@@ -250,17 +448,29 @@ function makeFiling(){
 
   const claims = [];
   const pool = CLAIMS.slice();
-  const want = ri(3,4);
+  const want = ri(4,6);
   while (claims.length < want && pool.length){
     claims.push(pool.splice(Math.floor(Math.random()*pool.length), 1)[0]);
   }
 
+  // two prior filings, numbered near this one so the office looks like it has a memory
+  const priorPool = PRIOR_ART.slice();
+  const prior = [];
+  for (let i = 0; i < 2 && priorPool.length; i++){
+    const tpl = priorPool.splice(Math.floor(Math.random() * priorPool.length), 1)[0];
+    prior.push(tpl.replace('{no}', ri(1,9) + ',' + ri(100,999) + ',' + ri(100,999)));
+  }
+
+  withAside += ' ' + elab;
+
   return {
     name, no, seed,
+    prior,
+    rebuttal: pick(REBUTTALS),
     classif: 'Class ' + String.fromCharCode(65 + ri(0,25)) + ri(10,99) + '/' + ri(100,999) +
              ' · unclassifiable subgroup ' + ri(2,88),
     abstractHtml: withAside,
-    abstractText: abstract + ' (' + aside + ')',
+    abstractText: abstract + ' (' + aside + ') ' + elab,
     claims,
     side: pick(SIDE_EFFECTS),
     note: pick(OFFICE_NOTES),
@@ -288,6 +498,9 @@ function render(){
       '<div class="sec"><h3>Claims</h3><ol class="claims">' +
         f.claims.map(c => '<li>' + esc(c) + '</li>').join('') + '</ol></div>' +
       '<div class="warn"><h3>Side effect · not listed by the applicant</h3><p>' + esc(f.side) + '</p></div>' +
+      '<div class="sec"><h3>Prior art cited</h3><ul class="prior">' +
+        f.prior.map(c => '<li>' + esc(c) + '</li>').join('') + '</ul></div>' +
+      '<div class="sec"><h3>Applicant\'s response to objections</h3><p>' + esc(f.rebuttal) + '</p></div>' +
       '<div class="sec"><h3>Examiner\'s note</h3><p>' + esc(f.note) + '</p></div>' +
     '</div>';
 }
