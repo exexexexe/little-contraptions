@@ -156,50 +156,72 @@ function tidy(raw){
 }
 
 const DID = [
-  'went ahead with it', 'did it, quietly, on a Tuesday', 'did it and told nobody for a month',
-  'did it twice, to be sure', 'did it the expensive way', 'did it before anyone could talk you out of it',
+  'went through with it', 'did it on a Tuesday, badly, and it worked anyway',
+  'did it eleven months later than you should have', 'did it before you could talk yourself out of it',
+  'did it twice', 'did it, and told your mother first, which was the mistake',
+  'did it in the wrong order and got away with it', 'did it drunk, and stood by it sober',
 ];
 const DIDNT = [
-  'left it alone', 'talked yourself out of it on the walk home', 'decided next year would do',
-  'wrote a list of reasons not to and believed the list', 'let the deadline pass and felt fine about it',
-  'told everyone you would, and then did not',
+  'did not', 'left the message unsent and it is still in the drafts folder',
+  'decided to wait until spring, and then until the spring after',
+  'talked yourself out of it in a car park', 'let somebody else decide, which is its own decision',
+  'wrote the pros and cons, then lost the paper', 'said you would, and never mentioned it again',
 ];
 const DIVERGE = [
-  'where the coin landed on its edge',
-  'where you asked one more person first',
-  'where you slept on it and woke up certain',
-  'where the weather was worse that week',
-  'where you read the email an hour later',
-  'where somebody else got there first',
-  'where you had slightly more money',
-  'where the train was cancelled',
-  'where you never learned to drive',
-  'where you said it out loud instead of thinking it',
-  'where the flat had better light',
+  'where you flipped at 3am instead of noon',
+  'where you asked your sister first',
+  'where the train was cancelled and you had four hours to think',
+  'where you read the message an hour later',
+  'where somebody beat you to it by a week',
+  'where you had eight hundred pounds more',
+  'where you said it out loud in the kitchen',
+  'where the flat had a garden',
   'where you were three years older',
+  'where your phone was dead all afternoon',
+  'where it rained and you stayed in',
+  'where you never learned to drive',
+  'where you took the job in Leeds',
+  'where the coin landed on its edge and you had to actually decide',
 ];
+
+/* Concrete outcomes — a specific thing that happened, not a gesture at one. */
 const OUTCOMES_GOOD = [
-  'It worked. Not immediately, and not in the way advertised, but it worked.',
-  'It turned out to be the least interesting good decision of the decade, which is the best kind.',
-  'Nothing dramatic happened. That version of you is simply slightly harder to worry.',
-  'It went well enough that they stopped mentioning it, which is how you know.',
-  'It cost more than expected and was still, on balance, correct.',
-  'They are fine. Annoyingly, provably fine.',
+  'They said yes in a car park, badly lit, and you both still describe it as the good version.',
+  'It worked. Four years on there is a dog named after the day it happened.',
+  'It went well enough that your mother has started claiming it was her idea.',
+  'You were right. Everyone who told you otherwise has quietly rewritten their memory of it.',
+  'It made you about nine hundred pounds and one very good friend.',
+  'You moved. The new place has bad plumbing and you have never once regretted it.',
+  'It worked, and the only cost was one friendship you had already outgrown.',
+  'They said yes. There is a photograph. You look terrified in it, and delighted.',
+  'It took two years to pay off and then it paid off all at once, on a Thursday.',
+  'You got the job. The office is beige and you are, by every measure, happier.',
 ];
 const OUTCOMES_BAD = [
-  'It did not work, and they talk about it at parties, which is a kind of return.',
-  'It went badly for about eight months and then stopped mattering entirely.',
-  'They regret it in a small, manageable way, roughly twice a year.',
-  'It was a mistake, but a load-bearing one — everything after it depended on it.',
-  'Briefly disastrous. Now a good story with a reliable laugh in the middle.',
-  'They would do it again, which tells you less than you would hope.',
+  'They said no, in a restaurant, on a Tuesday, and the waiter heard every word of it.',
+  'They married your cousin instead. You were at the wedding. You gave a reading.',
+  'They laughed, which you could have survived, and then walked away, which took longer.',
+  'It cost four thousand pounds and eleven months, and you got a good anecdote out of it.',
+  'You moved for it. It ended in March and you stayed anyway, out of spite, for a year.',
+  'It failed publicly, in front of about forty people, two of whom still bring it up.',
+  'Your cousin did it first, did it better, and has never once mentioned it.',
+  'It went wrong in a way nobody had thought to warn you about, which was almost interesting.',
+  'You were let go in October. The email had your name spelled wrong.',
+  'It worked for eight months. The eight months were genuinely good. Then it did not.',
+];
+const OUTCOMES_STRANGE = [
+  'It worked, but for entirely the wrong reasons, and you have never told anyone which.',
+  'Nothing happened for six years and then everything happened in a fortnight.',
+  'You got exactly what you asked for, which turned out to be a lesson about asking.',
+  'It ended badly and led directly to the best thing in that version of your life.',
+  'They said yes and you said "are you sure", which is its own small disaster.',
+  'You did it, forgot you had done it, and were reminded by a letter in 2034.',
 ];
 const OUTCOMES_FLAT = [
-  'Nothing measurable changed. The universe declined to comment.',
-  'Same flat, same job, marginally different opinions about it.',
-  'It made no difference at all, which is itself worth knowing.',
-  'The outcome was identical. Some doors open onto the same room.',
-  'Indistinguishable from here, apart from the haircut.',
+  'Nothing measurable changed. Same flat, same job, marginally different opinions about it.',
+  'It made no difference at all, which took you four years to find out.',
+  'Indistinguishable from here, apart from the haircut and one strong opinion about parking.',
+  'You cannot now remember whether you did it. Neither can anyone else.',
 ];
 
 function uid(){
@@ -229,7 +251,10 @@ function branches(thing, heads){
     used.add(d);
     const theyDid = Math.random() < 0.5;
     const roll = Math.random();
-    const out = roll < 0.4 ? pick(OUTCOMES_GOOD) : (roll < 0.78 ? pick(OUTCOMES_BAD) : pick(OUTCOMES_FLAT));
+    const out = roll < 0.34 ? pick(OUTCOMES_GOOD)
+              : roll < 0.70 ? pick(OUTCOMES_BAD)
+              : roll < 0.90 ? pick(OUTCOMES_STRANGE)
+              : pick(OUTCOMES_FLAT);
     rows.push({
       id: uid(),
       here: false,
@@ -247,7 +272,7 @@ function settle(heads, thing){
     '<div class="call">the coin has an opinion</div>' +
     '<h2>' + (heads ? 'Do it.' : 'Don\'t.') + '</h2>' +
     '<p>' + (thing
-      ? 'On the question of ' + esc(thing) + '. Binding in this universe only.'
+      ? 'On whether to ' + esc(thing) + '. Binding in this universe only.'
       : 'On whatever it was. Binding in this universe only.') + '</p>';
 
   const rows = branches(thing, heads);
