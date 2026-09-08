@@ -29,6 +29,22 @@ body{
   display:flex;align-items:center;justify-content:center;
   padding:32px 16px;
 }
+/* --- weather backdrop: two crossfading tint layers, then the particle
+       canvas, then a soft scrim that keeps the card legible over the
+       brightest and busiest effects. All behind .frame. --- */
+.bg-layer{
+  position:fixed;inset:0;z-index:-3;opacity:0;
+  transition:opacity 1s ease;
+}
+.bg-layer.on{ opacity:1 }
+#fx{
+  position:fixed;inset:0;z-index:-2;display:block;pointer-events:none;
+}
+.scrim{
+  position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:radial-gradient(720px 600px at 50% 50%,
+    rgba(6,10,8,.60) 0%, rgba(6,10,8,.34) 46%, rgba(6,10,8,0) 78%);
+}
 .frame{
   width:100%;max-width:560px;
   background:
@@ -111,7 +127,14 @@ body{
   text-align:center;margin-top:16px;font-family:var(--mono);
   font-size:11px;color:var(--text-soft);font-style:italic;
 }
-.actions{ display:flex;justify-content:center;margin-top:18px }
+.actions{ display:flex;justify-content:center;gap:10px;margin-top:18px;flex-wrap:wrap }
+button.consult.ghost{
+  background:transparent;color:var(--ink-2);
+  border:1px solid rgba(44,42,30,.42);
+  box-shadow:none;
+}
+button.consult.ghost:hover{ background:rgba(255,255,255,.34) }
+button.consult.ghost:active{ transform:translateY(2px);box-shadow:none }
 button.consult{
   font-family:var(--serif);font-style:italic;font-size:15px;
   background:var(--rust);color:var(--paper);border:0;
@@ -135,6 +158,11 @@ button.consult:focus-visible{ outline:2px solid var(--brass-hi);outline-offset:3
 </style>
 </head>
 <body>
+
+<div class="bg-layer" id="bgA" aria-hidden="true"></div>
+<div class="bg-layer" id="bgB" aria-hidden="true"></div>
+<canvas id="fx" aria-hidden="true"></canvas>
+<div class="scrim" aria-hidden="true"></div>
 
 <div class="frame">
   <div class="masthead">
@@ -161,6 +189,7 @@ button.consult:focus-visible{ outline:2px solid var(--brass-hi);outline-offset:3
 
   <div class="actions">
     <button class="consult" id="go">Consult the almanac</button>
+    <button class="consult ghost" id="surprise">Surprise me</button>
   </div>
 </div>
 
@@ -179,10 +208,10 @@ const PLACES = [
     meteorologist: "Elrond's third apprentice",
     unit: "°", tempRange: [8, 17],
     conditions: [
-      { adj: "gently overcast", phenomenon: "a low silver mist off the waterfalls", mood: "unhurried", advice: "leave your cloak by the door, not on it", intensity: .15 },
-      { adj: "clear and cool", phenomenon: "a faint harp-note carried on the wind from the last house", mood: "wistful", advice: "sit somewhere with a view and stay a while", intensity: .1 },
-      { adj: "softly golden", phenomenon: "leaf-fall drifting past the library windows", mood: "unbothered by time", advice: "postpone anything you were in a hurry about", intensity: .2 },
-      { adj: "still and starlit", phenomenon: "an unusual quiet even for here", mood: "watchful", advice: "keep an ear out for riders on the east road", intensity: .35 },
+      { adj: "gently overcast", phenomenon: "a low silver mist off the waterfalls", mood: "unhurried", advice: "leave your cloak by the door, not on it", intensity: .15, effect: "fog" },
+      { adj: "clear and cool", phenomenon: "a faint harp-note carried on the wind from the last house", mood: "wistful", advice: "sit somewhere with a view and stay a while", intensity: .1, effect: "calm" },
+      { adj: "softly golden", phenomenon: "leaf-fall drifting past the library windows", mood: "unbothered by time", advice: "postpone anything you were in a hurry about", intensity: .2, effect: "calm" },
+      { adj: "still and starlit", phenomenon: "an unusual quiet even for here", mood: "watchful", advice: "keep an ear out for riders on the east road", intensity: .35, effect: "starfield" },
     ],
     windOptions: ["a breath, barely", "light, smelling of pine", "coming down off the mountains, cold at the edges"],
     pressureOptions: ["steady, as it has been for an age", "dropping — someone important is arriving", "unremarkable"],
@@ -193,10 +222,10 @@ const PLACES = [
     meteorologist: "a Madam Puddifoot's regular with strong opinions",
     unit: "°", tempRange: [-2, 9],
     conditions: [
-      { adj: "brisk", phenomenon: "broom traffic backed up over the high street", mood: "a bit chaotic", advice: "mind the airspace above the post office", intensity: .5 },
-      { adj: "snow-dusted", phenomenon: "butterbeer steam fogging every window in the village", mood: "cosy", advice: "book a table early, everyone had the same idea", intensity: .2 },
-      { adj: "overcast", phenomenon: "owl post running about forty minutes behind schedule", mood: "mildly apologetic", advice: "don't expect that parcel before lunch", intensity: .3 },
-      { adj: "unexpectedly warm", phenomenon: "something in Zonko's window smoking faintly", mood: "suspicious", advice: "walk on the other side of the street, just in case", intensity: .6 },
+      { adj: "brisk", phenomenon: "broom traffic backed up over the high street", mood: "a bit chaotic", advice: "mind the airspace above the post office", intensity: .5, effect: "calm" },
+      { adj: "snow-dusted", phenomenon: "butterbeer steam fogging every window in the village", mood: "cosy", advice: "book a table early, everyone had the same idea", intensity: .2, effect: "snow" },
+      { adj: "overcast", phenomenon: "owl post running about forty minutes behind schedule", mood: "mildly apologetic", advice: "don't expect that parcel before lunch", intensity: .3, effect: "fog" },
+      { adj: "unexpectedly warm", phenomenon: "something in Zonko's window smoking faintly", mood: "suspicious", advice: "walk on the other side of the street, just in case", intensity: .6, effect: "ash" },
     ],
     windOptions: ["gusting from the direction of the Shrieking Shack", "still, which nobody trusts", "sharp, coming off the hills"],
     pressureOptions: ["falling — full moon in three days", "steady", "climbing, oddly, for the season"],
@@ -207,9 +236,9 @@ const PLACES = [
     meteorologist: "a very tired watchtower orc",
     unit: "°", tempRange: [21, 34],
     conditions: [
-      { adj: "ash-choked", phenomenon: "a fine grey fallout settling on everything, as usual", mood: "grim, unremarkably so", advice: "don't drink the rainwater, it's not rain", intensity: .8 },
-      { adj: "hazy", phenomenon: "the mountain glowing a little more than average", mood: "tense", advice: "the night shift is being extended again", intensity: .9 },
-      { adj: "dry and still", phenomenon: "visibility down to almost nothing beyond the gate", mood: "flat and unloved", advice: "nobody's coming to visit, don't wait up", intensity: .55 },
+      { adj: "ash-choked", phenomenon: "a fine grey fallout settling on everything, as usual", mood: "grim, unremarkably so", advice: "don't drink the rainwater, it's not rain", intensity: .8, effect: "ash" },
+      { adj: "hazy", phenomenon: "the mountain glowing a little more than average", mood: "tense", advice: "the night shift is being extended again", intensity: .9, effect: "embers" },
+      { adj: "dry and still", phenomenon: "visibility down to almost nothing beyond the gate", mood: "flat and unloved", advice: "nobody's coming to visit, don't wait up", intensity: .55, effect: "fog" },
     ],
     windOptions: ["a hot easterly, smelling of sulfur", "nonexistent — the air just sits here", "gritty, stinging the eyes"],
     pressureOptions: ["low and heavy, has been for years", "unreadable — the instrument keeps melting"],
@@ -220,9 +249,9 @@ const PLACES = [
     meteorologist: "a Fremen weather-sense, translated loosely",
     unit: "°", tempRange: [38, 55],
     conditions: [
-      { adj: "brutally clear", phenomenon: "spice static crackling along the dunes at dusk", mood: "sharpened, alert", advice: "check your stillsuit seals before you check anything else", intensity: .7 },
-      { adj: "a coriolis storm building", phenomenon: "sand climbing the horizon in a wall", mood: "urgent", advice: "get under rock, not under canvas", intensity: 1 },
-      { adj: "dry and merciless as always", phenomenon: "worm sign three ridges out and closing slowly", mood: "watchful", advice: "walk without rhythm", intensity: .65 },
+      { adj: "brutally clear", phenomenon: "spice static crackling along the dunes at dusk", mood: "sharpened, alert", advice: "check your stillsuit seals before you check anything else", intensity: .7, effect: "starfield" },
+      { adj: "a coriolis storm building", phenomenon: "sand climbing the horizon in a wall", mood: "urgent", advice: "get under rock, not under canvas", intensity: 1, effect: "sand" },
+      { adj: "dry and merciless as always", phenomenon: "worm sign three ridges out and closing slowly", mood: "watchful", advice: "walk without rhythm", intensity: .65, effect: "sand" },
     ],
     windOptions: ["hot and abrasive from the deep desert", "still before the storm, which is worse", "carrying grit that finds every gap in your suit"],
     pressureOptions: ["dropping fast — storm's building past the ridge", "steady, for what that's worth out here"],
@@ -233,9 +262,9 @@ const PLACES = [
     meteorologist: "the maester on kitchen-smoke duty",
     unit: "°", tempRange: [-6, 4],
     conditions: [
-      { adj: "iron-grey", phenomenon: "hearth smoke lying flat over the courtyard", mood: "settled, indoor kind of day", advice: "the godswood can wait until it clears", intensity: .25 },
-      { adj: "sharply cold", phenomenon: "a raven grounded twice already this morning, wind's too strong up high", mood: "delayed", advice: "any messages will have to wait for the wind to drop", intensity: .55 },
-      { adj: "still and bone-cold", phenomenon: "the direwolves unsettled since before dawn", mood: "wary", advice: "double the watch on the northern wall tonight", intensity: .7 },
+      { adj: "iron-grey", phenomenon: "hearth smoke lying flat over the courtyard", mood: "settled, indoor kind of day", advice: "the godswood can wait until it clears", intensity: .25, effect: "fog" },
+      { adj: "sharply cold", phenomenon: "a raven grounded twice already this morning, wind's too strong up high", mood: "delayed", advice: "any messages will have to wait for the wind to drop", intensity: .55, effect: "snow" },
+      { adj: "still and bone-cold", phenomenon: "the direwolves unsettled since before dawn", mood: "wary", advice: "double the watch on the northern wall tonight", intensity: .7, effect: "snow" },
     ],
     windOptions: ["coming down hard off the wall", "biting, out of the true north", "quiet for once, which unnerves the older guards"],
     pressureOptions: ["falling, and everyone's noticed", "steady, holding for now"],
@@ -246,9 +275,9 @@ const PLACES = [
     meteorologist: "a Theed weather-drone, mildly bored",
     unit: "°", tempRange: [22, 29],
     conditions: [
-      { adj: "gorgeous, suspiciously so", phenomenon: "plasma tides lighting the lake shallows at dusk", mood: "postcard-perfect", advice: "enjoy it, this never lasts through a whole news cycle", intensity: .1 },
-      { adj: "humid", phenomenon: "Gungan bog-mist creeping up into the plaza by mid-morning", mood: "sluggish", advice: "reschedule anything outdoors before noon", intensity: .3 },
-      { adj: "unsettled", phenomenon: "orbital shipping traffic heavier than the forecast expected", mood: "distracted", advice: "keep half an eye on the sky regardless of the report", intensity: .5 },
+      { adj: "gorgeous, suspiciously so", phenomenon: "plasma tides lighting the lake shallows at dusk", mood: "postcard-perfect", advice: "enjoy it, this never lasts through a whole news cycle", intensity: .1, effect: "aurora" },
+      { adj: "humid", phenomenon: "Gungan bog-mist creeping up into the plaza by mid-morning", mood: "sluggish", advice: "reschedule anything outdoors before noon", intensity: .3, effect: "fog" },
+      { adj: "unsettled", phenomenon: "orbital shipping traffic heavier than the forecast expected", mood: "distracted", advice: "keep half an eye on the sky regardless of the report", intensity: .5, effect: "calm" },
     ],
     windOptions: ["a warm lake breeze, nothing notable", "still, and the drone hates admitting that's suspicious"],
     pressureOptions: ["steady", "reading fine, for now, is all the drone will commit to"],
@@ -259,9 +288,9 @@ const PLACES = [
     meteorologist: "whichever lost boy drew the short straw",
     unit: "°", tempRange: [18, 25],
     conditions: [
-      { adj: "gold and glittering", phenomenon: "pixie dust hanging thicker than usual over the lagoon", mood: "giddy", advice: "don't sneeze near an open window, you'll end up somewhere else", intensity: .3 },
-      { adj: "warm", phenomenon: "shadows detaching more easily than they should", mood: "playfully alarming", advice: "check yours is still attached before bed", intensity: .5 },
-      { adj: "clear", phenomenon: "mermaid lagoon running colder than the rest of the island, again, nobody knows why", mood: "unbothered", advice: "swim on the far side if you'd rather stay warm", intensity: .2 },
+      { adj: "gold and glittering", phenomenon: "pixie dust hanging thicker than usual over the lagoon", mood: "giddy", advice: "don't sneeze near an open window, you'll end up somewhere else", intensity: .3, effect: "spore" },
+      { adj: "warm", phenomenon: "shadows detaching more easily than they should", mood: "playfully alarming", advice: "check yours is still attached before bed", intensity: .5, effect: "calm" },
+      { adj: "clear", phenomenon: "mermaid lagoon running colder than the rest of the island, again, nobody knows why", mood: "unbothered", advice: "swim on the far side if you'd rather stay warm", intensity: .2, effect: "starfield" },
     ],
     windOptions: ["just enough to fly on, if you're in the mood", "still, good day for staying exactly your age"],
     pressureOptions: ["doesn't apply here, the island declined to participate"],
@@ -272,9 +301,9 @@ const PLACES = [
     meteorologist: "the guild clerk who drew the weather shift",
     unit: "°", tempRange: [26, 40],
     conditions: [
-      { adj: "warm and sulfur-tinged", phenomenon: "heat-shimmer off the forge district blurring the skyline", mood: "industrious", advice: "the upper terraces are cooler, trade up there if you can", intensity: .4 },
-      { adj: "smoky", phenomenon: "the vents running hotter than the almanac's models expected", mood: "cautiously fine", advice: "the geologists say it's normal, the innkeepers disagree", intensity: .6 },
-      { adj: "clear", phenomenon: "market dust hanging gold in the afternoon light", mood: "busy, pleasant", advice: "buy the fruit before the heat gets to it", intensity: .2 },
+      { adj: "warm and sulfur-tinged", phenomenon: "heat-shimmer off the forge district blurring the skyline", mood: "industrious", advice: "the upper terraces are cooler, trade up there if you can", intensity: .4, effect: "embers" },
+      { adj: "smoky", phenomenon: "the vents running hotter than the almanac's models expected", mood: "cautiously fine", advice: "the geologists say it's normal, the innkeepers disagree", intensity: .6, effect: "ash" },
+      { adj: "clear", phenomenon: "market dust hanging gold in the afternoon light", mood: "busy, pleasant", advice: "buy the fruit before the heat gets to it", intensity: .2, effect: "calm" },
     ],
     windOptions: ["a dry updraft off the crater rim", "still in the lower city, brisk on the terraces above"],
     pressureOptions: ["steady", "climbing slightly, worth a glance if you live near the rim"],
@@ -285,9 +314,9 @@ const PLACES = [
     meteorologist: "whoever's manning the mooring lines today",
     unit: "°", tempRange: [10, 16],
     conditions: [
-      { adj: "thin and clear", phenomenon: "the bazaar drifting a little further east than scheduled", mood: "leisurely", advice: "check the mooring board before you plan your route home", intensity: .3 },
-      { adj: "gusty at altitude", phenomenon: "stallholders lashing down the lighter tents early", mood: "brisk", advice: "leave the paper lanterns packed away today", intensity: .5 },
-      { adj: "calm", phenomenon: "cloud pooling in the valley below, market floating clean above it", mood: "serene", advice: "best light of the season for the upper walkways", intensity: .15 },
+      { adj: "thin and clear", phenomenon: "the bazaar drifting a little further east than scheduled", mood: "leisurely", advice: "check the mooring board before you plan your route home", intensity: .3, effect: "starfield" },
+      { adj: "gusty at altitude", phenomenon: "stallholders lashing down the lighter tents early", mood: "brisk", advice: "leave the paper lanterns packed away today", intensity: .5, effect: "calm" },
+      { adj: "calm", phenomenon: "cloud pooling in the valley below, market floating clean above it", mood: "serene", advice: "best light of the season for the upper walkways", intensity: .15, effect: "fog" },
     ],
     windOptions: ["a steady crosswind, standard for this altitude", "unusually calm, the whole bazaar's holding still"],
     pressureOptions: ["steady", "dropping slightly as the bazaar climbs for the evening market"],
@@ -298,10 +327,10 @@ const PLACES = [
     meteorologist: "an unkindled ash, filling in for the shift",
     unit: "°", tempRange: [4, 13],
     conditions: [
-      { adj: "grey and unmoving", phenomenon: "ash falling steadily over the undead parish", mood: "resigned", advice: "rest at the nearest bonfire before going further, not after", intensity: .3 },
-      { adj: "damp", phenomenon: "the fog gate thickening near the old ruins again", mood: "uneasy", advice: "assume something is standing just past what you can see", intensity: .7 },
-      { adj: "still", phenomenon: "the bells ringing twice, from two different directions", mood: "ominous, unremarked upon by locals", advice: "keep your estus flask topped up regardless", intensity: .55 },
-      { adj: "faintly lit", phenomenon: "the flame guttering lower over the capital than the almanac's records show for this season", mood: "quietly worsening", advice: "don't read too much into it, or do, it won't change anything", intensity: .8 },
+      { adj: "grey and unmoving", phenomenon: "ash falling steadily over the undead parish", mood: "resigned", advice: "rest at the nearest bonfire before going further, not after", intensity: .3, effect: "ash" },
+      { adj: "damp", phenomenon: "the fog gate thickening near the old ruins again", mood: "uneasy", advice: "assume something is standing just past what you can see", intensity: .7, effect: "fog" },
+      { adj: "still", phenomenon: "the bells ringing twice, from two different directions", mood: "ominous, unremarked upon by locals", advice: "keep your estus flask topped up regardless", intensity: .55, effect: "calm" },
+      { adj: "faintly lit", phenomenon: "the flame guttering lower over the capital than the almanac's records show for this season", mood: "quietly worsening", advice: "don't read too much into it, or do, it won't change anything", intensity: .8, effect: "embers" },
     ],
     windOptions: ["barely moving the ash as it falls", "cold, coming up from somewhere below the cathedral", "still, in the way that precedes an ambush"],
     pressureOptions: ["unrecorded — the last three instruments were lost to the swamp", "low, and has been for several ages"],
@@ -312,10 +341,10 @@ const PLACES = [
     meteorologist: "an RPD dispatcher who should have left days ago",
     unit: "°", tempRange: [9, 17],
     conditions: [
-      { adj: "overcast", phenomenon: "a fine rain keeping most of downtown indoors, which is for the best", mood: "tense", advice: "stay off the main street after dark, full stop", intensity: .6 },
-      { adj: "foggy", phenomenon: "visibility down to a block or two near the old lab district", mood: "not great, frankly", advice: "if you hear a low groan, that's not the wind", intensity: .85 },
-      { adj: "unseasonably warm", phenomenon: "the smell from the sewage plant traveling further than usual", mood: "concerning", advice: "keep windows shut regardless of the heat", intensity: .5 },
-      { adj: "quiet", phenomenon: "no birds reported anywhere in the city since Tuesday", mood: "very quiet", advice: "that's not a good sign, evacuate if you still can", intensity: 1 },
+      { adj: "overcast", phenomenon: "a fine rain keeping most of downtown indoors, which is for the best", mood: "tense", advice: "stay off the main street after dark, full stop", intensity: .6, effect: "rain" },
+      { adj: "foggy", phenomenon: "visibility down to a block or two near the old lab district", mood: "not great, frankly", advice: "if you hear a low groan, that's not the wind", intensity: .85, effect: "fog" },
+      { adj: "unseasonably warm", phenomenon: "the smell from the sewage plant traveling further than usual", mood: "concerning", advice: "keep windows shut regardless of the heat", intensity: .5, effect: "calm" },
+      { adj: "quiet", phenomenon: "no birds reported anywhere in the city since Tuesday", mood: "very quiet", advice: "that's not a good sign, evacuate if you still can", intensity: 1, effect: "calm" },
     ],
     windOptions: ["light, out of the northeast, past the Arklay Mountains", "still — even the sirens have stopped for now"],
     pressureOptions: ["dropping ahead of the weekend", "reading normally, for whatever that's worth here"],
@@ -326,10 +355,10 @@ const PLACES = [
     meteorologist: "a weather drone sponsored this week by a beverage nobody asked for",
     unit: "°", tempRange: [19, 28],
     conditions: [
-      { adj: "smog-hazed", phenomenon: "corp tower reflections doubling the glare over the combat zone", mood: "abrasive", advice: "polarize your optics or just squint, your call", intensity: .5 },
-      { adj: "acid-rained", phenomenon: "runoff pooling green along Jig-Jig Street by evening", mood: "unpleasant, business as usual", advice: "get under an awning, any awning, this one's not the fun kind", intensity: .65 },
-      { adj: "clear for once", phenomenon: "the badlands wind finally cutting through the smog belt", mood: "almost pleasant", advice: "enjoy the view of the city, it won't last past sundown", intensity: .2 },
-      { adj: "electric", phenomenon: "a rooftop firefight sending stray rounds further than the block it started in", mood: "hostile", advice: "reroute two blocks south, the ads will still find you there", intensity: .9 },
+      { adj: "smog-hazed", phenomenon: "corp tower reflections doubling the glare over the combat zone", mood: "abrasive", advice: "polarize your optics or just squint, your call", intensity: .5, effect: "fog" },
+      { adj: "acid-rained", phenomenon: "runoff pooling green along Jig-Jig Street by evening", mood: "unpleasant, business as usual", advice: "get under an awning, any awning, this one's not the fun kind", intensity: .65, effect: "acid-rain" },
+      { adj: "clear for once", phenomenon: "the badlands wind finally cutting through the smog belt", mood: "almost pleasant", advice: "enjoy the view of the city, it won't last past sundown", intensity: .2, effect: "calm" },
+      { adj: "electric", phenomenon: "a rooftop firefight sending stray rounds further than the block it started in", mood: "hostile", advice: "reroute two blocks south, the ads will still find you there", intensity: .9, effect: "embers" },
     ],
     windOptions: ["a hot downtown updraft off the megabuildings", "still at street level, howling forty floors up"],
     pressureOptions: ["steady, the drone insists", "dropping, but the sponsor asked us not to alarm anyone"],
@@ -340,10 +369,10 @@ const PLACES = [
     meteorologist: "a shrine terminal, mostly guessing",
     unit: "°", tempRange: [12, 22],
     conditions: [
-      { adj: "clear and warm", phenomenon: "a strange red haze building right on the horizon, on schedule", mood: "quietly dreadful", advice: "recall your horse and get somewhere safe before moonrise", intensity: .6 },
-      { adj: "breezy", phenomenon: "cucco activity well above the recommended level near the stables", mood: "one wrong move from chaos", advice: "do not, under any circumstances, hit a cucco", intensity: .3 },
-      { adj: "stormy", phenomenon: "lightning forking oddly close to anything metal on the ridgeline", mood: "hazardous", advice: "put away the metal gear before you climb any higher", intensity: .8 },
-      { adj: "calm", phenomenon: "a faint melody drifting from the nearest shrine", mood: "contemplative", advice: "good day for korok hunting, bring patience", intensity: .15 },
+      { adj: "clear and warm", phenomenon: "a strange red haze building right on the horizon, on schedule", mood: "quietly dreadful", advice: "recall your horse and get somewhere safe before moonrise", intensity: .6, effect: "embers" },
+      { adj: "breezy", phenomenon: "cucco activity well above the recommended level near the stables", mood: "one wrong move from chaos", advice: "do not, under any circumstances, hit a cucco", intensity: .3, effect: "calm" },
+      { adj: "stormy", phenomenon: "lightning forking oddly close to anything metal on the ridgeline", mood: "hazardous", advice: "put away the metal gear before you climb any higher", intensity: .8, effect: "rain" },
+      { adj: "calm", phenomenon: "a faint melody drifting from the nearest shrine", mood: "contemplative", advice: "good day for korok hunting, bring patience", intensity: .15, effect: "calm" },
     ],
     windOptions: ["gentle, off the plateau", "gusting ahead of the storm front", "still, right before the blood moon"],
     pressureOptions: ["dropping ahead of the storm", "steady, for now"],
@@ -354,9 +383,9 @@ const PLACES = [
     meteorologist: "whoever's radio still gets a signal",
     unit: "°", tempRange: [4, 11],
     conditions: [
-      { adj: "thick with fog", phenomenon: "visibility down to about ten feet on the main road", mood: "deeply unsettling", advice: "stay on the road, don't follow anything you hear", intensity: .8 },
-      { adj: "ash-fallen", phenomenon: "fine grey flakes drifting down with no fire anywhere nearby", mood: "wrong, in a way nobody can name", advice: "check for static before you turn any corner", intensity: .9 },
-      { adj: "unusually quiet", phenomenon: "the fog thinning just enough to see the water tower and nothing past it", mood: "held breath", advice: "enjoy the visibility, it won't last", intensity: .5 },
+      { adj: "thick with fog", phenomenon: "visibility down to about ten feet on the main road", mood: "deeply unsettling", advice: "stay on the road, don't follow anything you hear", intensity: .8, effect: "fog" },
+      { adj: "ash-fallen", phenomenon: "fine grey flakes drifting down with no fire anywhere nearby", mood: "wrong, in a way nobody can name", advice: "check for static before you turn any corner", intensity: .9, effect: "ash" },
+      { adj: "unusually quiet", phenomenon: "the fog thinning just enough to see the water tower and nothing past it", mood: "held breath", advice: "enjoy the visibility, it won't last", intensity: .5, effect: "fog" },
     ],
     windOptions: ["nonexistent — the fog just sits", "faint, carrying something like a siren from somewhere"],
     pressureOptions: ["unreadable", "dropping, which the old-timers say means it's close"],
@@ -367,9 +396,9 @@ const PLACES = [
     meteorologist: "a guard who took an arrow to the knee and does weather now",
     unit: "°", tempRange: [-4, 9],
     conditions: [
-      { adj: "snow-flurried", phenomenon: "a distant roar echoing off the mountain, again", mood: "concerning, again", advice: "report it to the Jarl, they never believe the first guard who does", intensity: .6 },
-      { adj: "clear and cold", phenomenon: "aurora visible well before nightfall, unseasonably early", mood: "beautiful, mildly ominous", advice: "worth the walk up to see it properly", intensity: .2 },
-      { adj: "windy", phenomenon: "shout practice rattling shutters clear across the district", mood: "routine, if loud", advice: "keep the market stalls tied down today", intensity: .4 },
+      { adj: "snow-flurried", phenomenon: "a distant roar echoing off the mountain, again", mood: "concerning, again", advice: "report it to the Jarl, they never believe the first guard who does", intensity: .6, effect: "snow" },
+      { adj: "clear and cold", phenomenon: "aurora visible well before nightfall, unseasonably early", mood: "beautiful, mildly ominous", advice: "worth the walk up to see it properly", intensity: .2, effect: "aurora" },
+      { adj: "windy", phenomenon: "shout practice rattling shutters clear across the district", mood: "routine, if loud", advice: "keep the market stalls tied down today", intensity: .4, effect: "snow" },
     ],
     windOptions: ["cold, sweeping down off the mountain", "calm in the city, brutal on the tundra"],
     pressureOptions: ["steady", "dropping ahead of a storm off the sea"],
@@ -380,13 +409,111 @@ const PLACES = [
     meteorologist: "the channel 6 weatherman, unlicensed",
     unit: "°", tempRange: [15, 26],
     conditions: [
-      { adj: "hazy", phenomenon: "a faint green glow over the east side, management says it's fine", mood: "shrug-worthy", advice: "don't ask, it's never worth asking", intensity: .3 },
-      { adj: "sunny", phenomenon: "unusually high turnout expected at the town meeting, again, for some reason", mood: "chaotic but harmless", advice: "arrive early if you want an actual seat", intensity: .4 },
-      { adj: "overcast", phenomenon: "a minor incident at the plant, contained, allegedly, again", mood: "business as usual", advice: "nothing to see here, same as most weeks", intensity: .5 },
+      { adj: "hazy", phenomenon: "a faint green glow over the east side, management says it's fine", mood: "shrug-worthy", advice: "don't ask, it's never worth asking", intensity: .3, effect: "fluorescent" },
+      { adj: "sunny", phenomenon: "unusually high turnout expected at the town meeting, again, for some reason", mood: "chaotic but harmless", advice: "arrive early if you want an actual seat", intensity: .4, effect: "calm" },
+      { adj: "overcast", phenomenon: "a minor incident at the plant, contained, allegedly, again", mood: "business as usual", advice: "nothing to see here, same as most weeks", intensity: .5, effect: "fluorescent" },
     ],
     windOptions: ["mild, smells faintly of donuts downtown", "gusty by the plant, nobody's ever explained why"],
     pressureOptions: ["steady, same as every week", "unremarkable"],
     omenLabel: "minor plant incident, this week", omenRange: [10, 60],
+  },
+  {
+    name: "Hallownest", tag: "a buried kingdom, quiet in the way ruins are quiet",
+    meteorologist: "a vessel, keeping watch",
+    unit: "°", tempRange: [5, 12],
+    conditions: [
+      { adj: "still and lightless", phenomenon: "nothing moving in the lower passages for a full day now", mood: "hushed", advice: "rest at a bench while the quiet holds", intensity: .12, effect: "calm" },
+      { adj: "cold and echoing", phenomenon: "water running somewhere below, further off than it sounds", mood: "lonely", advice: "mark your route, these tunnels repeat themselves", intensity: .35, effect: "fog" },
+      { adj: "faintly luminous", phenomenon: "a warm orange light seeping through the walls of the eastern tunnels", mood: "wrong, and worsening", advice: "seal your mask before going any deeper", intensity: .65, effect: "spore" },
+      { adj: "thick with infection-haze", phenomenon: "spores drifting down the old highway in slow bright clouds", mood: "dangerous", advice: "turn back, this district is lost for the season", intensity: .95, effect: "spore" },
+    ],
+    windOptions: ["nothing at all, this far down", "a faint draft out of a passage nobody has mapped", "cold, rising from the deep wells"],
+    pressureOptions: ["unchanging, as it has been since the kingdom emptied", "heavy, the way still air gets underground"],
+    omenLabel: "infection spread, this district", omenRange: [6, 54],
+  },
+  {
+    name: "Shadow Moses Island", tag: "decommissioned facility, officially",
+    meteorologist: "a comms officer reading off the sensor mast",
+    unit: "°", tempRange: [-16, -3],
+    conditions: [
+      { adj: "clear and freezing", phenomenon: "the sky wide open over the heliport, no cover at all for anyone crossing it", mood: "exposed", advice: "wait for weather before you move across open ground", intensity: .2, effect: "starfield" },
+      { adj: "snow-driven", phenomenon: "drifts building against the eastern service doors faster than they can be cleared", mood: "grim but workable", advice: "the vents stay passable longer than the doors do", intensity: .5, effect: "snow" },
+      { adj: "whiteout", phenomenon: "the perimeter cameras down to a few meters of useful range", mood: "tense", advice: "good cover, if you trust your own navigation", intensity: .75, effect: "snow" },
+      { adj: "blizzard-locked", phenomenon: "outer patrol routes suspended, radio traffic dropping in and out", mood: "on edge", advice: "nobody is coming or going until this breaks", intensity: .9, effect: "snow" },
+    ],
+    windOptions: ["hard off the water, straight through the fencing", "gusting across the hangar apron", "briefly still, which the guards like even less"],
+    pressureOptions: ["falling, another front inbound", "steady, holding through the shift"],
+    omenLabel: "alert status, facility-wide", omenPrefix: "LEVEL ", omenUnit: "", omenRange: [1, 5],
+  },
+  {
+    name: "Los Santos", tag: "sprawl on the coast, smog included at no extra charge",
+    meteorologist: "a drive-time radio host who has not stopped talking since six",
+    unit: "°", tempRange: [17, 34],
+    conditions: [
+      { adj: "blazing and clear", phenomenon: "not a cloud from the beach to the hills, and the freeway already at a standstill", mood: "bright and faintly hostile", advice: "leave an hour early or do not leave at all", intensity: .15, effect: "calm" },
+      { adj: "smog-thick", phenomenon: "the downtown towers going soft-edged by mid-afternoon", mood: "hazy, unbothered", advice: "the coast road is clearer, if you have got the time", intensity: .45, effect: "fog" },
+      { adj: "smoke-hazed", phenomenon: "hill fires north of the valley pushing ash clear across the basin", mood: "apocalyptic, briefly", advice: "windows up, vents on recirculate, and no jogging", intensity: .7, effect: "ash" },
+      { adj: "raining, genuinely", phenomenon: "the entire city forgetting how to drive inside of four minutes", mood: "chaotic", advice: "stay home, and so should everyone currently merging", intensity: .55, effect: "rain" },
+    ],
+    windOptions: ["a warm onshore breeze doing nothing whatsoever about the smog", "hot and dry, down off the canyons", "still, and the air quality board has noticed"],
+    pressureOptions: ["steady, same as most of the year", "dropping, which around here counts as news"],
+    omenLabel: "wanted stars, city-wide", omenUnit: "", omenRange: [0, 5],
+  },
+  {
+    name: "Mustafar", tag: "volcanic mining world, atmosphere technically breathable",
+    meteorologist: "a mining droid, entirely unbothered",
+    unit: "°", tempRange: [46, 72],
+    conditions: [
+      { adj: "stable, by local standards", phenomenon: "the lava rivers running their usual channels, give or take a bank", mood: "unremarkable", advice: "standard shift, standard shielding", intensity: .3, effect: "embers" },
+      { adj: "incandescent", phenomenon: "fresh spatter reaching the lower gantries on the southern platform", mood: "operationally inconvenient", advice: "reroute the ore carts around platform six", intensity: .55, effect: "embers" },
+      { adj: "ash-veiled", phenomenon: "fallout heavy enough that the collection rigs need clearing twice a shift", mood: "tedious", advice: "carry a spare filter, you will want it by midday", intensity: .7, effect: "ash" },
+      { adj: "violently active", phenomenon: "a new vent opening roughly where the survey promised there would be none", mood: "the droid declines to record a mood", advice: "evacuate the platform, or do not, the droid files the same report either way", intensity: 1, effect: "embers" },
+    ],
+    windOptions: ["a superheated updraft straight off the flows", "gritty, carrying fresh ash from the northern vents", "still, which does nothing at all for the heat"],
+    pressureOptions: ["steady, per the last gauge still functioning", "rising near the vents, as expected"],
+    omenLabel: "droid attrition, this shift", omenRange: [7, 44],
+  },
+  {
+    name: "Hoth", tag: "ice world, no permanent settlements on record",
+    meteorologist: "a technician on the sensor array, third rotation running",
+    unit: "°", tempRange: [-58, -22],
+    conditions: [
+      { adj: "clear, briefly", phenomenon: "the ice fields visible all the way to the horizon for once", mood: "deceptively pleasant", advice: "make the run now, this window is short", intensity: .2, effect: "starfield" },
+      { adj: "wind-scoured", phenomenon: "loose snow moving across the flats faster than a person can walk", mood: "harsh", advice: "goggles down before you clear the hangar mouth", intensity: .5, effect: "snow" },
+      { adj: "blizzard-bound", phenomenon: "the array losing everything past the near markers", mood: "grim", advice: "no patrols past the ridge until this clears", intensity: .85, effect: "snow" },
+      { adj: "night falling", phenomenon: "the temperature dropping past the point where the suits are any help", mood: "genuinely lethal", advice: "be inside before dark, there is no second option", intensity: .95, effect: "snow" },
+    ],
+    windOptions: ["constant, out of the north, stripping heat off everything it touches", "gusting hard across the open ice", "briefly still, which nobody trusts either"],
+    pressureOptions: ["dropping, with another front stacked behind this one", "steady, cold, and no help to anyone"],
+    omenLabel: "wampa activity, perimeter", omenRange: [4, 37],
+  },
+  {
+    name: "the Death Star", tag: "artificial world, climate entirely a policy decision",
+    meteorologist: "a weather officer reassigned from a moon that is no longer there",
+    unit: "°", tempRange: [19, 23],
+    conditions: [
+      { adj: "climate-controlled", phenomenon: "nothing whatsoever, which is rather the point of the installation", mood: "flat", advice: "the officer has filed this identical report for six weeks", intensity: .1, effect: "starfield" },
+      { adj: "half a degree warm", phenomenon: "decks fourteen through twenty-two running above tolerance since the last shift change", mood: "mildly irritated", advice: "environmental has been notified, twice", intensity: .3, effect: "fluorescent" },
+      { adj: "recycled and faintly metallic", phenomenon: "the air handlers cycling something up from the lower levels that nobody will name", mood: "resigned", advice: "breathe through your teeth on the maintenance decks", intensity: .45, effect: "fluorescent" },
+      { adj: "klaxon-lit", phenomenon: "alarms on three sectors and a hull section reading vacuum where it should not", mood: "professionally calm", advice: "the officer notes this is above their pay grade and below their notice", intensity: .8, effect: "starfield" },
+    ],
+    windOptions: ["circulated at a fixed rate, as scheduled", "none whatsoever, the concept does not apply here", "a draft near the hangar shields, which is not supposed to happen"],
+    pressureOptions: ["held constant by the environmental systems", "fluctuating on the outer decks, under review"],
+    omenLabel: "structural vulnerability, unconfirmed", omenRange: [1, 4],
+  },
+  {
+    name: "The Backrooms", tag: "some hundreds of millions of square feet of empty room",
+    meteorologist: "an announcement playing on a loop, source not located",
+    unit: "°", tempRange: [23, 29],
+    conditions: [
+      { adj: "uniformly lit", phenomenon: "light with no visible source, even and shadowless in every direction", mood: "wrong in a way that takes an hour to name", advice: "pick a wall and follow it, any wall will do", intensity: .3, effect: "fluorescent" },
+      { adj: "humming", phenomenon: "the buzz of the ceiling panels rising a half-step, everywhere at once", mood: "grating", advice: "the hum is not a direction, do not follow it", intensity: .5, effect: "fluorescent" },
+      { adj: "damp", phenomenon: "the carpet soaked through in a corridor that was dry an hour ago", mood: "unsettled", advice: "note the room, you will most likely pass it again", intensity: .65, effect: "fog" },
+      { adj: "one panel out", phenomenon: "a single dead light at the far end of a corridor, and no corner between here and it", mood: "quietly urgent", advice: "go the other way, there is always another way", intensity: .85, effect: "fluorescent" },
+    ],
+    windOptions: ["none, though the air moves whenever you stop walking", "a faint circulation from vents that cannot be located"],
+    pressureOptions: ["unchanging in every room measured so far", "unreadable — the instrument agrees with itself too often"],
+    omenLabel: "entity proximity, sector unclear", omenRange: [8, 66],
   },
 ];
 
@@ -403,7 +530,8 @@ const CLOSERS = [
 
 /* ------------------------------ state ------------------------------- */
 let current = PLACES[0];
-let reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const motionQuery = matchMedia('(prefers-reduced-motion: reduce)');
+let reduceMotion = motionQuery.matches;
 
 const $ = (id) => document.getElementById(id);
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
@@ -429,6 +557,208 @@ function setNeedle(intensity){
   $('needle').style.transform = `rotate(${deg}deg)`;
 }
 
+
+/* ------------------------ background weather ------------------------ *
+ *  One canvas behind the card. Twelve named effects, each a small
+ *  spawn/step pair over one shared particle loop, plus a paired gradient
+ *  tint that crossfades between the two .bg-layer divs.
+ * -------------------------------------------------------------------- */
+
+// effect name -> [inner, mid, outer] stops of the body gradient
+const THEMES = {
+  snow:        ['#3D5670', '#1B2A38', '#080D13'],
+  sand:        ['#7A5A2A', '#3B2C14', '#140E06'],
+  rain:        ['#2A3D4A', '#141F27', '#070C10'],
+  'acid-rain': ['#2E4A32', '#16281A', '#060F08'],
+  ash:         ['#3A3A38', '#1E1E1D', '#0B0B0B'],
+  embers:      ['#6B2412', '#33100A', '#120503'],
+  fog:         ['#4A5450', '#252B29', '#0D100F'],
+  spore:       ['#6B4A16', '#33220C', '#110B04'],
+  starfield:   ['#121A26', '#080C12', '#03050A'],
+  fluorescent: ['#5E6A2C', '#2C3315', '#0E1107'],
+  aurora:      ['#1C4A46', '#122A32', '#050D12'],
+  calm:        ['#1E3229', '#101C18', '#0B140F'],  // the almanac's original backdrop
+};
+
+const fxCanvas = $('fx');
+const fxCtx = fxCanvas.getContext('2d');
+let VW = 0, VH = 0;
+
+function sizeCanvas(){
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  VW = window.innerWidth; VH = window.innerHeight;
+  fxCanvas.width = Math.round(VW * dpr);
+  fxCanvas.height = Math.round(VH * dpr);
+  fxCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+const rnd = (lo, hi) => lo + Math.random() * (hi - lo);
+function dot(x, y, r, fill){
+  fxCtx.beginPath(); fxCtx.arc(x, y, r, 0, 6.2832); fxCtx.fillStyle = fill; fxCtx.fill();
+}
+function streak(x, y, dx, dy, w, stroke){
+  fxCtx.beginPath(); fxCtx.moveTo(x, y); fxCtx.lineTo(x + dx, y + dy);
+  fxCtx.strokeStyle = stroke; fxCtx.lineWidth = w; fxCtx.stroke();
+}
+
+// Each effect: n particles, spawn() to seed one, step() to move + draw it.
+// Same loop throughout — these are stylistic variations, not 12 systems.
+const EFFECTS = {
+  snow: { n: 70,
+    spawn(p){ p.x=rnd(0,VW); p.y=rnd(-VH,VH); p.r=rnd(1,2.6); p.v=rnd(16,46); p.d=rnd(-10,10); p.a=rnd(.3,.85); p.ph=rnd(0,6.3); },
+    step(p,dt,t){ p.y+=p.v*dt; p.x+=p.d*dt+Math.sin(t*.8+p.ph)*.4;
+      if(p.y>VH+4){ p.y=-4; p.x=rnd(0,VW); }
+      dot(p.x,p.y,p.r,'rgba(226,240,252,'+p.a+')'); } },
+
+  sand: { n: 64,
+    spawn(p){ p.x=rnd(0,VW); p.y=rnd(0,VH); p.len=rnd(30,120); p.v=rnd(140,330); p.a=rnd(.06,.2); p.w=rnd(1,4); },
+    step(p,dt){ p.x+=p.v*dt;
+      if(p.x-p.len>VW){ p.x=-p.len; p.y=rnd(0,VH); }
+      streak(p.x,p.y,-p.len,0,p.w,'rgba(214,170,92,'+p.a+')'); } },
+
+  rain: { n: 80,
+    spawn(p){ p.x=rnd(-40,VW); p.y=rnd(-VH,VH); p.len=rnd(10,26); p.v=rnd(520,900); p.a=rnd(.16,.42); },
+    step(p,dt){ p.y+=p.v*dt; p.x+=p.v*dt*.12;
+      if(p.y>VH+p.len){ p.y=-p.len; p.x=rnd(-40,VW); }
+      streak(p.x,p.y,-p.len*.12,-p.len,1,'rgba(178,206,226,'+p.a+')'); } },
+
+  'acid-rain': { n: 72,
+    spawn(p){ p.x=rnd(-40,VW); p.y=rnd(-VH,VH); p.len=rnd(12,30); p.v=rnd(420,760); p.a=rnd(.2,.5); },
+    step(p,dt){ p.y+=p.v*dt; p.x+=p.v*dt*.1;
+      if(p.y>VH+p.len){ p.y=-p.len; p.x=rnd(-40,VW); }
+      streak(p.x,p.y,-p.len*.1,-p.len,1.4,'rgba(150,226,120,'+p.a+')'); } },
+
+  ash: { n: 62,
+    spawn(p){ p.x=rnd(0,VW); p.y=rnd(-VH,VH); p.r=rnd(.8,2.4); p.v=rnd(10,32); p.ph=rnd(0,6.3); p.a=rnd(.2,.55); },
+    step(p,dt,t){ p.y+=p.v*dt; p.x+=Math.sin(t*.5+p.ph)*.5;
+      if(p.y>VH+4){ p.y=-4; p.x=rnd(0,VW); }
+      dot(p.x,p.y,p.r,'rgba(196,190,182,'+p.a+')'); } },
+
+  embers: { n: 56,
+    spawn(p){ p.x=rnd(0,VW); p.y=rnd(0,VH+80); p.r=rnd(.9,2.3); p.v=rnd(24,72); p.ph=rnd(0,6.3); p.a=rnd(.35,.9); },
+    step(p,dt,t){ p.y-=p.v*dt; p.x+=Math.sin(t*1.3+p.ph)*.7;
+      if(p.y<-6){ p.y=VH+rnd(0,60); p.x=rnd(0,VW); }
+      dot(p.x,p.y,p.r,'rgba(255,150,60,'+(p.a*(.55+.45*Math.sin(t*4+p.ph)))+')'); } },
+
+  fog: { n: 30,
+    spawn(p){ p.x=rnd(-100,VW+100); p.y=rnd(0,VH); p.r=rnd(70,190); p.v=rnd(4,16)*(Math.random()<.5?-1:1); p.a=rnd(.03,.09); },
+    step(p,dt){ p.x+=p.v*dt;
+      if(p.x-p.r>VW) p.x=-p.r;
+      if(p.x+p.r<0) p.x=VW+p.r;
+      const g=fxCtx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r);
+      g.addColorStop(0,'rgba(198,208,204,'+p.a+')');
+      g.addColorStop(1,'rgba(198,208,204,0)');
+      fxCtx.fillStyle=g; fxCtx.beginPath(); fxCtx.arc(p.x,p.y,p.r,0,6.2832); fxCtx.fill(); } },
+
+  spore: { n: 58,
+    spawn(p){ p.x=rnd(0,VW); p.y=rnd(0,VH); p.r=rnd(1,2.8); p.v=rnd(6,22); p.d=rnd(-12,12); p.ph=rnd(0,6.3); p.a=rnd(.3,.8); },
+    step(p,dt,t){ p.y-=p.v*dt*.5; p.x+=p.d*dt*.4+Math.sin(t*.7+p.ph)*.5;
+      if(p.y<-6){ p.y=VH+6; p.x=rnd(0,VW); }
+      dot(p.x,p.y,p.r,'rgba(246,186,86,'+(p.a*(.6+.4*Math.sin(t*2+p.ph)))+')'); } },
+
+  starfield: { n: 78,
+    spawn(p){ p.x=rnd(0,VW); p.y=rnd(0,VH); p.r=rnd(.5,1.5); p.v=rnd(1,4); p.ph=rnd(0,6.3); p.a=rnd(.3,.95); },
+    step(p,dt,t){ p.x+=p.v*dt*.15;
+      if(p.x>VW+2) p.x=-2;
+      dot(p.x,p.y,p.r,'rgba(232,238,255,'+(p.a*(.55+.45*Math.sin(t*1.6+p.ph)))+')'); } },
+
+  fluorescent: { n: 44,
+    spawn(p){ p.x=rnd(0,VW); p.y=rnd(0,VH); p.r=rnd(.6,1.8); p.v=rnd(3,12); p.d=rnd(-6,6); p.a=rnd(.15,.45); },
+    step(p,dt){ p.y+=p.v*dt*.3; p.x+=p.d*dt*.3;
+      if(p.y>VH+4){ p.y=-4; p.x=rnd(0,VW); }
+      dot(p.x,p.y,p.r,'rgba(232,236,150,'+p.a+')'); },
+    // the buzz: a faint irregular flicker over the whole field
+    after(t){ const j=.04+.04*Math.abs(Math.sin(t*17)+Math.sin(t*31)*.4);
+      fxCtx.fillStyle='rgba(198,206,96,'+j+')'; fxCtx.fillRect(0,0,VW,VH); } },
+
+  aurora: { n: 40,
+    spawn(p,i,n){ p.i=i; p.n=n; p.ph=rnd(0,6.3); p.a=rnd(.05,.14); p.w=rnd(14,44); },
+    step(p,dt,t){
+      const x=(p.i/p.n)*VW+Math.sin(t*.3+p.ph)*40;
+      const top=VH*.06+Math.sin(t*.45+p.ph*1.7)*VH*.08;
+      const h=VH*(.3+.16*Math.sin(t*.25+p.ph));
+      const g=fxCtx.createLinearGradient(0,top,0,top+h);
+      g.addColorStop(0,'rgba(120,255,205,0)');
+      g.addColorStop(.4,'rgba(120,255,205,'+p.a+')');
+      g.addColorStop(1,'rgba(90,170,255,0)');
+      fxCtx.fillStyle=g; fxCtx.fillRect(x,top,p.w,h); } },
+
+  calm: { n: 34,
+    spawn(p){ p.x=rnd(0,VW); p.y=rnd(0,VH); p.r=rnd(.8,2); p.v=rnd(4,14); p.d=rnd(-6,6); p.ph=rnd(0,6.3); p.a=rnd(.15,.42); },
+    step(p,dt,t){ p.y+=p.v*dt*.5; p.x+=p.d*dt*.3+Math.sin(t*.4+p.ph)*.2;
+      if(p.y>VH+4){ p.y=-4; p.x=rnd(0,VW); }
+      dot(p.x,p.y,p.r,'rgba(214,224,218,'+p.a+')'); } },
+};
+
+let particles = [];
+let activeEffect = null;
+let rafId = 0, lastTs = 0;
+
+function seedParticles(name){
+  const e = EFFECTS[name] || EFFECTS.calm;
+  particles = [];
+  for (let i = 0; i < e.n; i++){ const p = {}; e.spawn(p, i, e.n); particles.push(p); }
+}
+
+function frame(ts){
+  // Hidden tab: drop the loop entirely rather than idling in it.
+  // visibilitychange restarts it when the tab comes back.
+  if (document.hidden){ rafId = 0; return; }
+  rafId = requestAnimationFrame(frame);
+  const dt = Math.min((ts - lastTs) / 1000, .05) || 0;
+  lastTs = ts;
+  const t = ts / 1000;
+  const e = EFFECTS[activeEffect] || EFFECTS.calm;
+  fxCtx.clearRect(0, 0, VW, VH);
+  for (let i = 0; i < particles.length; i++) e.step(particles[i], dt, t);
+  if (e.after) e.after(t);
+}
+
+function startLoop(){
+  if (rafId || reduceMotion || document.hidden) return;
+  lastTs = performance.now();
+  rafId = requestAnimationFrame(frame);
+}
+function stopLoop(){
+  if (rafId) cancelAnimationFrame(rafId);
+  rafId = 0;
+}
+
+/* two layers, crossfaded — the incoming one is painted then faded up */
+let tintTop = $('bgA'), tintBack = $('bgB');
+function gradientFor(name){
+  const t = THEMES[name] || THEMES.calm;
+  return 'radial-gradient(1100px 700px at 50% -10%, ' +
+    t[0] + ' 0%, ' + t[1] + ' 55%, ' + t[2] + ' 100%)';
+}
+function setTint(name){
+  tintBack.style.backgroundImage = gradientFor(name);
+  tintBack.classList.add('on');
+  tintTop.classList.remove('on');
+  const swap = tintTop; tintTop = tintBack; tintBack = swap;
+}
+
+function setEffect(name){
+  if (!EFFECTS[name]) name = 'calm';
+  if (name === activeEffect) return;
+  activeEffect = name;
+  setTint(name);                        // crossfades under reduced motion too
+  if (!reduceMotion) seedParticles(name);
+}
+
+// Reduced motion: tint crossfade only, canvas hidden and loop stopped.
+function applyMotionPref(){
+  if (reduceMotion){
+    stopLoop();
+    fxCtx.clearRect(0, 0, VW, VH);
+    fxCanvas.style.display = 'none';
+  } else {
+    fxCanvas.style.display = '';
+    seedParticles(activeEffect || 'calm');
+    startLoop();
+  }
+}
+
 /* --------------------------- rendering ------------------------------ */
 function renderPlaces(){
   const wrap = $('places');
@@ -442,6 +772,23 @@ function renderPlaces(){
   });
 }
 
+function revealActivePlate(){
+  const el = $('places').querySelector('.plate.on');
+  if (el) el.scrollIntoView({ inline: 'center', block: 'nearest',
+                              behavior: reduceMotion ? 'auto' : 'smooth' });
+}
+
+function surpriseMe(){
+  if (PLACES.length > 1){
+    let next = current;
+    while (next === current) next = pick(PLACES);
+    current = next;
+  }
+  renderPlaces();
+  roll();
+  revealActivePlate();
+}
+
 function roll(){
   const p = current;
   const c = pick(p.conditions);
@@ -449,6 +796,8 @@ function roll(){
   const wind = pick(p.windOptions);
   const pressure = pick(p.pressureOptions);
   const omen = between(p.omenRange);
+  // most places read as a percentage; a few carry their own prefix/unit
+  const omenText = (p.omenPrefix || '') + omen + (p.omenUnit === undefined ? '%' : p.omenUnit);
   const opener = pick(OPENERS)(p, c);
   const closer = pick(CLOSERS)(c);
 
@@ -462,18 +811,38 @@ function roll(){
     <dl class="ledger fade">
       <dt>wind</dt><dd>${wind}</dd>
       <dt>pressure</dt><dd>${pressure}</dd>
-      <dt>${p.omenLabel}</dt><dd>${omen}%</dd>
+      <dt>${p.omenLabel}</dt><dd>${omenText}</dd>
     </dl>
     <div class="byline fade">filed by ${p.meteorologist}</div>
   `;
   $('report').innerHTML = html;
   setNeedle(reduceMotion ? c.intensity : c.intensity);
+  setEffect(c.effect);
 }
 
 /* ------------------------------ boot -------------------------------- */
+sizeCanvas();
+tintTop.style.backgroundImage = gradientFor('calm');
+tintTop.classList.add('on');
+
 renderPlaces();
 roll();
+applyMotionPref();
+
 $('go').addEventListener('click', roll);
+$('surprise').addEventListener('click', surpriseMe);
+
+window.addEventListener('resize', () => {
+  sizeCanvas();
+  if (!reduceMotion) seedParticles(activeEffect || 'calm');
+});
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) stopLoop(); else startLoop();
+});
+motionQuery.addEventListener('change', (e) => {
+  reduceMotion = e.matches;
+  applyMotionPref();
+});
 </script>
 </body>
 </html>
