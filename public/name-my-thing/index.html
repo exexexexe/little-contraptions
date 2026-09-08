@@ -6,6 +6,11 @@
 <title>Name My Thing</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23F7F3E8'/><text x='16' y='24' font-size='22' font-family='Georgia,serif' font-weight='700' text-anchor='middle' fill='%23B3221E'>N</text></svg>">
 <style>
+/* Declare the scheme this toy is actually drawn in. Without it a browser
+   running forced dark mode will invert the whole page — the cream card
+   comes back dark brown, the ink comes back pale, and the illustrated
+   background is flattened to black. */
+:root{ color-scheme: light; }
 :root{
   --paper:#F7F3E8;
   --paper-2:#EFE9D9;

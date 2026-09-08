@@ -9,6 +9,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,600&family=Inter+Tight:wght@400;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23FFD9A0'/><circle cx='16' cy='18' r='7' fill='%23F08A24'/></svg>">
 <style>
+/* Declare the scheme this toy is actually drawn in. Without it a browser
+   running forced dark mode will invert the whole page — the cream card
+   comes back dark brown, the ink comes back pale, and the illustrated
+   background is flattened to black. */
+:root{ color-scheme: light dark; }
 :root{
   --sky-1:#8FC4E8; --sky-2:#DCEAF3; --ground:#F6EFE2;
   --ink:#2A2620; --ink-2:#5C5449; --dim:#8B8277;

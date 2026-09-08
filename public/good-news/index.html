@@ -6,6 +6,11 @@
 <title>The Good News Wire</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23E6F4EA'/><path d='M8 17 l5 5 l11 -12' stroke='%231E7A4C' stroke-width='3.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
 <style>
+/* Declare the scheme this toy is actually drawn in. Without it a browser
+   running forced dark mode will invert the whole page — the cream card
+   comes back dark brown, the ink comes back pale, and the illustrated
+   background is flattened to black. */
+:root{ color-scheme: light; }
 :root{
   --mint:#E8F5EC;
   --mint-2:#D3EBDC;

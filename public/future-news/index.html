@@ -6,6 +6,11 @@
 <title>The Daily Hence</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23E8EDE5'/><rect x='6' y='8' width='20' height='3' fill='%23155E52'/><rect x='6' y='14' width='14' height='2' fill='%231A1D19'/><rect x='6' y='19' width='20' height='2' fill='%231A1D19'/><rect x='6' y='24' width='11' height='2' fill='%231A1D19'/></svg>">
 <style>
+/* Declare the scheme this toy is actually drawn in. Without it a browser
+   running forced dark mode will invert the whole page — the cream card
+   comes back dark brown, the ink comes back pale, and the illustrated
+   background is flattened to black. */
+:root{ color-scheme: dark; }
 :root{
   --paper:#E8EDE5;
   --paper-2:#DDE4D9;

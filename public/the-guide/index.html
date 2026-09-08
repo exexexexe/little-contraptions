@@ -6,6 +6,11 @@
 <title>The Guide Entry</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%232B2A26'/><rect x='6' y='8' width='20' height='16' rx='3' fill='%230A1A0E'/><rect x='9' y='12' width='11' height='2' fill='%237FE28A'/><rect x='9' y='17' width='14' height='2' fill='%237FE28A' opacity='.6'/></svg>">
 <style>
+/* Declare the scheme this toy is actually drawn in. Without it a browser
+   running forced dark mode will invert the whole page — the cream card
+   comes back dark brown, the ink comes back pale, and the illustrated
+   background is flattened to black. */
+:root{ color-scheme: dark; }
 :root{
   --room:#2B2A26;
   --room-2:#38362F;

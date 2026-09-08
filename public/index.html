@@ -6,6 +6,11 @@
 <title>Little Contraptions</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%2320162E'/><circle cx='16' cy='16' r='7.5' fill='none' stroke='%23E0A548' stroke-width='2.5'/><circle cx='16' cy='16' r='2.2' fill='%23E0A548'/></svg>">
 <style>
+/* Declare the scheme this toy is actually drawn in. Without it a browser
+   running forced dark mode will invert the whole page — the cream card
+   comes back dark brown, the ink comes back pale, and the illustrated
+   background is flattened to black. */
+:root{ color-scheme: dark; }
 :root{
   --bg:#20162E;
   --bg-2:#2A1E3D;

@@ -6,6 +6,11 @@
 <title>Your Dreams</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23F3E3DA'/><path d='M16 25 C6 17 7 8 13 8 c2 0 3 1 3 2 0-1 1-2 3-2 6 0 7 9-3 17z' fill='%23C4543F'/></svg>">
 <style>
+/* Declare the scheme this toy is actually drawn in. Without it a browser
+   running forced dark mode will invert the whole page — the cream card
+   comes back dark brown, the ink comes back pale, and the illustrated
+   background is flattened to black. */
+:root{ color-scheme: light; }
 :root{
   --wall:#F3E3DA;
   --wall-2:#EAD5C9;
