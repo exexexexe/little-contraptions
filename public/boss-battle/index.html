@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Today, But It Is A Boss</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23140E1C'/><rect x='5' y='8' width='22' height='5' fill='%23D8324A'/><path d='M9 20h4v4H9zM19 20h4v4h-4z' fill='%23E8D06A'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --void:#140E1C;
+  --void-2:#1E1529;
+  --hp:#D8324A;
+  --hp-2:#8A1E30;
+  --gold:#E8D06A;
+  --paper:#E8E2F0;
+  --dim:#8A80A0;
+  --green:#7FD88A;
+  --rule:#2E2440;
+  --sans:ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --display:"Avenir Next Condensed","Roboto Condensed","Arial Narrow",Impact,var(--sans);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{ background:radial-gradient(700px 460px at 50% 0%, var(--void-2), var(--void) 62%);
+  color:var(--paper);font-family:var(--sans);min-height:100vh;padding:24px 18px 64px }
+.wrap{ max-width:720px;margin:0 auto }
+h1{ font-family:var(--display);font-size:clamp(24px,5.2vw,36px);margin:0;letter-spacing:.08em;text-transform:uppercase;font-weight:700 }
+.sub{ font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin-top:8px }
+
+/* ---------- the boss ---------- */
+.arena{
+  margin-top:20px;background:var(--void-2);border:1px solid var(--rule);border-radius:5px;
+  padding:22px;position:relative;overflow:hidden;
+}
+.arena.dead{ border-color:rgba(127,216,138,.5) }
+.bossname{
+  font-family:var(--display);font-size:clamp(22px,5vw,34px);letter-spacing:.05em;text-transform:uppercase;
+  text-align:center;margin:0 0 4px;font-weight:700;
+}
+.epithet{ text-align:center;font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin-bottom:16px }
+.sprite{ display:block;width:132px;height:132px;margin:0 auto 16px }
+.sprite.hit{ animation:hit .28s ease-out }
+@keyframes hit{ 0%{ transform:translateX(0) } 25%{ transform:translateX(-9px) } 55%{ transform:translateX(7px) } 100%{ transform:none } }
+
+.hpwrap{ margin-bottom:12px }
+.hpbar{
+  height:22px;background:#0E0A16;border:2px solid var(--rule);border-radius:3px;overflow:hidden;position:relative;
+}
+.hpbar i{
+  display:block;height:100%;background:linear-gradient(180deg,#F04A60,var(--hp) 40%,var(--hp-2));
+  transition:width .55s cubic-bezier(.2,.8,.3,1);
+}
+.hpbar .ghost{
+  position:absolute;top:0;bottom:0;background:rgba(255,255,255,.22);
+  transition:width 1.1s ease .25s;
+}
+.hpnum{
+  display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;
+  letter-spacing:.13em;text-transform:uppercase;color:var(--dim);margin-top:7px;
+}
+.hpnum b{ color:var(--paper) }
+.phase{ text-align:center;font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-top:10px;min-height:14px }
+
+.say{
+  margin-top:16px;background:#0E0A16;border:1px solid var(--rule);border-left:3px solid var(--gold);
+  border-radius:3px;padding:13px 15px;font-family:var(--mono);font-size:12.5px;line-height:1.75;color:#D8CCEC;
+  min-height:44px;
+}
+
+/* ---------- tasks ---------- */
+.bar{ display:flex;gap:9px;flex-wrap:wrap;margin-top:20px }
+input[type=text]{
+  flex:1;min-width:190px;background:#0E0A16;border:1px solid var(--rule);color:var(--paper);
+  font-family:var(--sans);font-size:15px;padding:11px 13px;border-radius:2px;
+}
+input:focus{ outline:2px solid var(--gold);outline-offset:-1px }
+.btn{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
+  background:var(--gold);color:#1A1400;border:0;padding:11px 17px;cursor:pointer;font-weight:700;border-radius:2px;
+}
+.btn:hover{ background:#F2DC82 }
+.btn.sec{ background:transparent;color:var(--paper);border:1px solid var(--rule);font-weight:400 }
+.btn.sec:hover{ border-color:var(--gold);color:var(--gold) }
+.btn:focus-visible{ outline:2px solid var(--gold);outline-offset:3px }
+
+.tasks{ margin-top:16px;display:flex;flex-direction:column;gap:8px }
+.task{
+  display:flex;align-items:center;gap:12px;background:var(--void-2);border:1px solid var(--rule);
+  border-radius:3px;padding:12px 14px;cursor:pointer;
+}
+.task:hover{ border-color:rgba(232,208,106,.45) }
+.task .box{
+  width:20px;height:20px;flex:0 0 auto;border:2px solid var(--rule);border-radius:3px;
+  display:grid;place-items:center;font-size:13px;color:var(--void);
+}
+.task.done .box{ background:var(--green);border-color:var(--green);color:#0A1A0C }
+.task .t{ flex:1;font-size:15px;line-height:1.4 }
+.task.done .t{ text-decoration:line-through;color:var(--dim) }
+.task .dmg{ font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:.1em }
+.task .rm{
+  background:transparent;border:0;color:var(--dim);font-family:var(--mono);font-size:14px;cursor:pointer;padding:2px 4px;
+}
+.task .rm:hover{ color:var(--hp) }
+.empty{ font-family:var(--mono);font-size:11.5px;color:var(--dim);opacity:.7;padding:8px 0 }
+
+.victory{
+  margin-top:18px;border:1px solid rgba(127,216,138,.5);background:rgba(127,216,138,.08);
+  border-radius:4px;padding:18px 20px;text-align:center;
+}
+.victory h2{ font-family:var(--display);font-size:26px;letter-spacing:.14em;text-transform:uppercase;margin:0 0 8px;color:var(--green) }
+.victory p{ margin:0;font-size:14.5px;line-height:1.65;color:#C8D8CC }
+
+footer{
+  max-width:720px;margin:26px auto 0;padding-top:14px;border-top:1px solid var(--rule);
+  font-family:var(--mono);font-size:10.5px;line-height:1.8;color:var(--dim);
+}
+footer a{ color:#C8B8E8 }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+body{ padding-bottom:64px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media print{ #lc-back{ display:none } }
+@media (prefers-reduced-motion: reduce){
+  #lc-back, .hpbar i, .hpbar .ghost{ transition:none }
+  .sprite.hit{ animation:none }
+}
+</style>
+</head>
+<body>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<div class="wrap">
+  <h1>Today, But It Is A Boss</h1>
+  <div class="sub">your list has a health bar now</div>
+
+  <div class="arena" id="arena">
+    <svg class="sprite" id="sprite" viewBox="0 0 132 132" aria-hidden="true"></svg>
+    <h2 class="bossname" id="bossname">—</h2>
+    <div class="epithet" id="epithet"></div>
+    <div class="hpwrap">
+      <div class="hpbar"><span class="ghost" id="ghost" style="width:100%"></span><i id="hp" style="width:100%"></i></div>
+      <div class="hpnum"><span>hp <b id="hpnow">0</b> / <b id="hpmax">0</b></span><span id="pct">100%</span></div>
+    </div>
+    <div class="phase" id="phase"></div>
+    <div class="say" id="say">Add what you have to do today. It will become a problem with a name.</div>
+  </div>
+
+  <div class="bar">
+    <input type="text" id="task" maxlength="70" placeholder="a thing you have to do today">
+    <button class="btn" id="add">Add</button>
+    <button class="btn sec" id="reset">New day</button>
+  </div>
+
+  <div class="tasks" id="tasks"><div class="empty">nothing on the list yet</div></div>
+  <div id="victory"></div>
+</div>
+
+<footer>
+  Your list stays in this browser. Damage is proportional — each task takes an equal share of the
+  boss's health, so finishing the list is what kills it, not any particular item.
+  <a href="/">← back to the cabinet</a>
+</footer>
+
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+const pick = (a) => a[Math.floor(Math.random() * a.length)];
+const ri = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+const KEY = 'lc:boss-battle:v1';
+
+const PRE = ['THE UNREAD','THE ACCUMULATED','THE DEFERRED','THE SLOWLY GATHERING','THE PATIENT',
+  'THE UNANSWERED','THE QUIETLY GROWING','THE INHERITED','THE UNDISPUTED','THE THIRD'];
+const CORE = ['TUESDAY','BACKLOG','INBOX','SATCHEL','LEDGER','PILE','REMAINDER','ARREARS','SUM','DRAWER'];
+const EPITHETS = ['it has been waiting since Thursday','it does not sleep and neither do you',
+  'no known weakness · several known excuses','last defeated in March, briefly',
+  'it grows one item every time you look away','it is not personal, it is procedural',
+  'it was smaller this morning','veteran of eleven previous attempts'];
+
+const OPENERS = [
+  'It notices you have opened the list. It was not expecting that.',
+  'It has been here since breakfast and is in no hurry.',
+  'It rearranges itself so the hardest thing is at the top.',
+  'It does nothing. That is its entire move set.',
+];
+const HITS = [
+  'It takes the hit and pretends it did not.',
+  'Solid. It shifts about an inch.',
+  'That one actually hurt it.',
+  'It looks at the remaining items and recalculates.',
+  'A clean strike. Something else moves up the list.',
+  'It concedes that one and quietly adds nothing.',
+  'It flinches. This is going better than expected.',
+];
+const UNDOS = [
+  'It recovers. That item is back and looking smug.',
+  'You unticked it. It grows back at full size.',
+  'The thing returns, unchanged, slightly heavier.',
+];
+const PHASES = [
+  { at: 1.00, t: '' },
+  { at: 0.75, t: 'phase two — it starts checking its watch' },
+  { at: 0.50, t: 'phase three — halfway, and it knows it' },
+  { at: 0.25, t: 'phase four — it is negotiating now' },
+  { at: 0.10, t: 'final phase — one good afternoon and it is over' },
+];
+const VICTORY = [
+  'The list is empty. Nothing has replaced it yet, which is the rarest part of the day.',
+  'Defeated. It will be back tomorrow with a slightly different name, and that is fine.',
+  'Cleared. Somewhere a version of you who did not do this is having a worse evening.',
+  'Down. Note that it did not get harder — you just kept going.',
+];
+
+const SPRITES = [
+  (c, g) => '<circle cx="66" cy="66" r="42" fill="none" stroke="' + c + '" stroke-width="4"/>' +
+    '<circle cx="52" cy="58" r="6" fill="' + g + '"/><circle cx="80" cy="58" r="6" fill="' + g + '"/>' +
+    '<path d="M46 86q20 12 40 0" fill="none" stroke="' + c + '" stroke-width="4" stroke-linecap="round"/>',
+  (c, g) => '<path d="M20 108 L66 20 L112 108 Z" fill="none" stroke="' + c + '" stroke-width="4"/>' +
+    '<circle cx="56" cy="80" r="5" fill="' + g + '"/><circle cx="78" cy="80" r="5" fill="' + g + '"/>' +
+    '<path d="M50 96h32" stroke="' + c + '" stroke-width="4"/>',
+  (c, g) => '<rect x="22" y="30" width="88" height="72" rx="8" fill="none" stroke="' + c + '" stroke-width="4"/>' +
+    '<rect x="40" y="52" width="16" height="12" fill="' + g + '"/><rect x="76" y="52" width="16" height="12" fill="' + g + '"/>' +
+    '<path d="M42 84h48" stroke="' + c + '" stroke-width="4"/><path d="M40 30V16M92 30V16" stroke="' + c + '" stroke-width="4"/>',
+  (c, g) => '<path d="M66 16 L106 40 V92 L66 116 L26 92 V40 Z" fill="none" stroke="' + c + '" stroke-width="4"/>' +
+    '<circle cx="66" cy="60" r="12" fill="none" stroke="' + g + '" stroke-width="4"/><circle cx="66" cy="60" r="4" fill="' + g + '"/>' +
+    '<path d="M46 90h40" stroke="' + c + '" stroke-width="4"/>',
+  (c, g) => '<path d="M30 104V52a36 36 0 0 1 72 0v52z" fill="none" stroke="' + c + '" stroke-width="4"/>' +
+    '<circle cx="52" cy="56" r="5" fill="' + g + '"/><circle cx="80" cy="56" r="5" fill="' + g + '"/>' +
+    '<path d="M44 78q22 14 44 0" fill="none" stroke="' + g + '" stroke-width="3"/>',
+];
+
+let state = { name:'', epithet:'', sprite:0, tasks:[] };
+try { const s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s && s.tasks) state = s; } catch (e) {}
+
+function persist(){ try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+
+function newBoss(){
+  state.name = pick(PRE) + ' ' + pick(CORE);
+  state.epithet = pick(EPITHETS);
+  state.sprite = ri(0, SPRITES.length - 1);
+}
+if (!state.name) newBoss();
+
+let lastPhase = '';
+
+function render(hitIndex){
+  const total = state.tasks.length;
+  const done = state.tasks.filter(t => t.done).length;
+  const max = Math.max(total, 1) * 100;
+  const now = (total - done) * 100;
+  const frac = total ? (total - done) / total : 1;
+
+  $('sprite').innerHTML = SPRITES[state.sprite](
+    frac > 0.5 ? '#D8324A' : frac > 0.15 ? '#E8843C' : '#E8D06A',
+    '#E8D06A');
+  $('bossname').textContent = state.name;
+  $('epithet').textContent = state.epithet;
+  $('hp').style.width = (frac * 100) + '%';
+  $('hpnow').textContent = now;
+  $('hpmax').textContent = max;
+  $('pct').textContent = Math.round(frac * 100) + '%';
+  // the trailing white bar catches up a beat later, the way they do
+  setTimeout(() => { $('ghost').style.width = (frac * 100) + '%'; }, 30);
+
+  const ph = PHASES.slice().reverse().find(p => frac <= p.at && p.t) ;
+  $('phase').textContent = total && frac > 0 ? (ph ? ph.t : '') : '';
+
+  if (!total){
+    $('tasks').innerHTML = '<div class="empty">nothing on the list yet</div>';
+  } else {
+    $('tasks').innerHTML = state.tasks.map((t, i) =>
+      '<div class="task' + (t.done ? ' done' : '') + '" data-i="' + i + '">' +
+        '<span class="box">' + (t.done ? '✓' : '') + '</span>' +
+        '<span class="t">' + esc(t.text) + '</span>' +
+        '<span class="dmg">' + (t.done ? '−100' : '100 hp') + '</span>' +
+        '<button class="rm" data-rm="' + i + '" aria-label="Remove">×</button>' +
+      '</div>').join('');
+  }
+
+  if (total && done === total){
+    $('victory').innerHTML = '<div class="victory"><h2>Defeated</h2><p>' + esc(pick(VICTORY)) + '</p></div>';
+    $('arena').classList.add('dead');
+    $('say').textContent = 'It is done. Close the tab.';
+  } else {
+    $('victory').innerHTML = '';
+    $('arena').classList.remove('dead');
+  }
+  persist();
+}
+
+function say(t){ $('say').textContent = t; }
+
+$('add').addEventListener('click', () => {
+  const v = $('task').value.trim();
+  if (!v) return;
+  state.tasks.push({ text: v, done: false });
+  $('task').value = '';
+  if (state.tasks.length === 1) say(pick(OPENERS));
+  render();
+});
+$('task').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('add').click(); });
+
+$('tasks').addEventListener('click', (e) => {
+  const rm = e.target.closest('button[data-rm]');
+  if (rm){
+    state.tasks.splice(Number(rm.dataset.rm), 1);
+    render();
+    return;
+  }
+  const row = e.target.closest('.task[data-i]');
+  if (!row) return;
+  const i = Number(row.dataset.i);
+  state.tasks[i].done = !state.tasks[i].done;
+  if (state.tasks[i].done){
+    say(pick(HITS));
+    const s = $('sprite');
+    s.classList.remove('hit'); void s.offsetWidth; s.classList.add('hit');
+  } else {
+    say(pick(UNDOS));
+  }
+  render();
+});
+
+$('reset').addEventListener('click', () => {
+  state.tasks = [];
+  newBoss();
+  say('A new one. It looks a lot like the last one.');
+  render();
+});
+
+render();
+</script>
+</body>
+</html>
