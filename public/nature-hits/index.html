@@ -86,6 +86,20 @@ footer{
   font-family:var(--mono);font-size:10.5px;color:var(--dim);line-height:1.8;
 }
 footer a{ color:var(--ink-2) }
+.close{
+  margin:30px 0 0;padding:22px 24px;background:#EEF2E6;border-left:4px solid var(--green, #6B8F3E);
+}
+.close h2{
+  margin:0 0 12px;font-family:var(--mono);font-size:10px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--dim);font-weight:600;
+}
+.close p{ margin:0 0 11px;font-size:16.5px;line-height:1.66 }
+.close p:last-child{ margin-bottom:0 }
+.close .live{ font-weight:600 }
+.close .live b{ font-variant-numeric:tabular-nums }
+.exact{
+  font-family:var(--mono);font-size:9.5px;color:var(--dim);margin-top:5px;letter-spacing:.04em;
+}
 </style>
 </head>
 <body>
@@ -108,6 +122,12 @@ footer a{ color:var(--ink-2) }
 
   <div class="deck"><button class="btn" id="refresh">Read the logs again</button></div>
 
+  <section class="close" id="close" hidden>
+    <h2>while you have had this open</h2>
+    <p id="close-live" class="live"></p>
+    <p id="close-body"></p>
+  </section>
+
   <footer>
     Sources are named on every figure. Nothing on this page is estimated, rounded for effect, or
     written in advance — if a source cannot be reached, the tile says so rather than showing a number.
@@ -120,6 +140,16 @@ footer a{ color:var(--ink-2) }
 
 const $ = (id) => document.getElementById(id);
 const fmt = (n) => Number(n).toLocaleString('en-GB');
+// Four billion occurrence records will not fit in a tile at 38px, and
+// shrinking the type to suit the widest number makes every other tile
+// timid. Abbreviate the headline and keep the exact count underneath,
+// because on this page the exact count is part of the point.
+function abbr(n){
+  const a = Math.abs(n);
+  if (a >= 1e9) return (n / 1e9).toFixed(2).replace(/\.?0+$/, '') + ' billion';
+  if (a >= 1e6) return (n / 1e6).toFixed(1).replace(/\.0$/, '') + ' million';
+  return fmt(n);
+}
 const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
@@ -173,13 +203,63 @@ const TILES = [
   },
 ];
 
+const counts = {};
+let firstObs = null;
+
 function renderTiles(){
   $('tiles').innerHTML = TILES.map(t =>
     '<div class="tile' + (t.kind === 'b' ? ' b' : '') + '">' +
       '<div class="n loading" id="n-' + t.id + '">reading…</div>' +
       '<div class="lab">' + esc(t.lab) + '</div>' +
+      '<div class="exact" id="x-' + t.id + '"></div>' +
       '<div class="src">' + t.src + '</div>' +
     '</div>').join('');
+}
+
+
+/* ------------------------------------------------------------------ *
+ *  The closing panel. Every number in it is one this page actually
+ *  fetched — the growth line re-reads the observation count and reports
+ *  the difference, so if the poll fails the line is simply not shown
+ *  rather than filled with something plausible.
+ * ------------------------------------------------------------------ */
+const arrived = Date.now();
+
+function closingText(){
+  const el = document.getElementById('close');
+  const body = document.getElementById('close-body');
+  if (!counts.obs && !counts.gbif) return;
+  el.hidden = false;
+  const bits = [];
+  if (counts.obs) bits.push('Every one of those ' + fmt(counts.obs) +
+    ' observations today is somebody who stopped, looked at something, and wrote it down.');
+  if (counts.gbif) bits.push('The ' + abbr(counts.gbif) +
+    ' records in the total were gathered the same way, one at a time, mostly by people you will never meet and who were not paid for it.');
+  bits.push('None of it needed you to be watching. That is the nice part.');
+  body.textContent = bits.join(' ');
+}
+
+async function pollGrowth(){
+  if (firstObs === null) return;
+  try {
+    const r = await fetch('https://api.inaturalist.org/v1/observations?d1=' + todayUTC() + '&per_page=0');
+    if (!r.ok) return;
+    const now = (await r.json()).total_results;
+    const gained = now - firstObs;
+    const mins = Math.max(1, Math.round((Date.now() - arrived) / 60000));
+    const line = document.getElementById('close-live');
+    if (gained > 0){
+      line.innerHTML = '<b>' + fmt(gained) + '</b> more observations have been logged in the ' +
+        mins + (mins === 1 ? ' minute' : ' minutes') + ' since this page loaded.';
+    } else {
+      line.textContent = 'Nothing new has come in since this page loaded, which happens at quiet hours.';
+    }
+    counts.obs = now;
+    const el = document.getElementById('n-obs');
+    if (el) el.textContent = abbr(now);
+    const ex = document.getElementById('x-obs');
+    if (ex && abbr(now) !== fmt(now)) ex.textContent = fmt(now) + ' exactly';
+  } catch (e){ /* leave the line empty rather than invent a figure */ }
 }
 
 async function loadTiles(){
@@ -188,8 +268,12 @@ async function loadTiles(){
     try {
       const v = await t.get();
       if (typeof v !== 'number' || !isFinite(v)) throw new Error('no figure returned');
-      el.textContent = fmt(v);
+      el.textContent = abbr(v);
       el.classList.remove('loading');
+      const ex = document.getElementById('x-' + t.id);
+      if (ex && abbr(v) !== fmt(v)) ex.textContent = fmt(v) + ' exactly';
+      counts[t.id] = v;
+      if (t.id === 'obs' && firstObs === null) firstObs = v;
     } catch (err) {
       el.textContent = 'source unavailable';
       el.classList.add('loading');
@@ -231,7 +315,13 @@ async function run(){
 }
 
 $('refresh').addEventListener('click', run);
-run();
+
+run().then(() => {
+  closingText();
+  // the growth line needs a second reading to have anything to say
+  setTimeout(pollGrowth, 60000);
+  setInterval(pollGrowth, 60000);
+});
 </script>
 </body>
 </html>
