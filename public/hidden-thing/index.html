@@ -37,7 +37,7 @@ h1{ margin:0;font-size:clamp(24px,4.8vw,34px);font-weight:800;letter-spacing:-.0
   overflow:hidden;
 }
 .card .top{
-  display:grid;grid-template-columns:1fr 128px;gap:18px;align-items:start;
+  display:grid;grid-template-columns:1fr 172px;gap:18px;align-items:start;
   padding:24px 24px 0;
 }
 @media (max-width:560px){ .card .top{ grid-template-columns:1fr } }
@@ -77,6 +77,11 @@ footer{
   font-family:var(--mono);font-size:10.5px;color:#8A94A2;line-height:1.8;
 }
 footer a{ color:#C3CBD5 }
+svg.art{
+  width:100%;height:auto;display:block;background:#F7F8F9;
+  border:1px solid #E6E9ED;border-radius:3px;padding:4px;
+}
+@media (max-width:560px){ svg.art{ max-width:280px;margin-top:4px } }
 </style>
 </head>
 <body>
@@ -112,74 +117,547 @@ const esc = (s) => String(s == null ? '' : s)
 /* Each entry sticks to a documented mechanism. Where a well-known claim is
    actually a myth, it is included as a correction rather than repeated. */
 const THINGS = [
-  { n:'The bumps on F and J', where:'every keyboard you have ever used',
+  { n:'The bumps on F and J', where:'every keyboard you have ever used', art:'keyboard',
     see:'Two small raised ridges, one on F and one on J, that most people notice and then forget.',
     doing:'They mark the home row for touch typing. Your index fingers find them without looking, which anchors the other six fingers onto the correct starting keys.',
     why:'It is the reason a touch typist can look at the screen instead of their hands — the whole system needs exactly two reference points, and those are them.' },
-  { n:'The hole in an aeroplane window', where:'the middle pane, near the bottom',
+  { n:'The hole in an aeroplane window', where:'the middle pane, near the bottom', art:'planewindow',
     see:'A tiny hole in the middle of what looks like a solid window.',
     doing:'Cabin windows are several panes with a gap between. The hole lets the gap stay at cabin pressure, so the outer pane carries the pressure difference and the inner one does not.',
     why:'It also lets moisture out of the gap, which is why your window is not permanently fogged at altitude.' },
-  { n:'The arrow by the fuel gauge', where:'the dashboard of most modern cars',
+  { n:'The arrow by the fuel gauge', where:'the dashboard of most modern cars', art:'fuelarrow',
     see:'A small triangle or arrow printed beside the little petrol-pump symbol.',
     doing:'It points to the side of the car the filler cap is on.',
     why:'Added by manufacturers so drivers in unfamiliar or hire cars stop pulling up at the wrong side of the pump. Once you know, you cannot unsee it.' },
-  { n:'The ridges on coin edges', where:'in your pocket',
+  { n:'The ridges on coin edges', where:'in your pocket', art:'coinedge',
     see:'Fine vertical grooves around the rim of some coins but not others.',
     doing:'The practice is called milling or reeding. It began as an anti-fraud measure: when coins were made of precious metal, people shaved slivers off the edges, and a milled edge makes that obvious.',
     why:'The metal value argument is long gone, but the grooves stayed — they help vending machines identify coins and help blind and partially sighted people tell denominations apart by touch.' },
-  { n:'The rivets on jeans pockets', where:'the corners of every pocket',
+  { n:'The rivets on jeans pockets', where:'the corners of every pocket', art:'rivets',
     see:'Small copper studs at the points where a pocket meets the seam.',
     doing:'They reinforce the exact spots that tear first under load — the corners, where the stitching takes all the strain.',
     why:'Jacob Davis worked out the trick and patented it with Levi Strauss in 1873. Nearly every pair of jeans since has copied it.' },
-  { n:'Why manhole covers are round', where:'the middle of the road',
+  { n:'Why manhole covers are round', where:'the middle of the road', art:'manhole',
     see:'A circular lid where a square one would be easier to make.',
     doing:'A circle is the one shape that cannot fall through its own hole. A square cover turned on its diagonal will drop straight down the shaft; a round one will not, at any angle.',
     why:'They are also heavy, and a round cover can be rolled rather than carried.' },
-  { n:'The mesh in a microwave door', where:'the window you watch your dinner through',
+  { n:'The mesh in a microwave door', where:'the window you watch your dinner through', art:'mesh',
     see:'A metal screen full of small holes, which you can see straight through.',
     doing:'The holes are far smaller than the wavelength of the microwaves inside, so the waves are reflected back. Visible light has a far shorter wavelength and passes through easily.',
     why:'That is the whole reason you can watch the food without being cooked alongside it.' },
-  { n:'The coloured squares on a toothpaste tube', where:'the crimped end',
+  { n:'The coloured squares on a toothpaste tube', where:'the crimped end', art:'eyemark',
     see:'A small block of colour, usually near the seal — green, black, red or blue.',
     doing:'Nothing to do with the ingredients. They are printer\'s eye marks: registration targets that packaging machinery reads to know where to cut, fold and seal.',
     why:'This one is worth knowing precisely because the popular version — that green means natural and black means chemical — is entirely made up. The colour is chosen to contrast with the artwork, nothing more.' },
-  { n:'The aglet', where:'both ends of every shoelace',
+  { n:'The aglet', where:'both ends of every shoelace', art:'aglet',
     see:'The stiff sheath on the tip of a lace.',
     doing:'It stops the woven lace unravelling and stiffens the end enough to thread through an eyelet.',
     why:'It has a name, which is the actual surprise. Once a lace loses its aglet it becomes almost impossible to thread, which is a decent demonstration of how much work it was doing.' },
-  { n:'Dimmed cabin lights on landing', where:'the last few minutes of a night flight',
+  { n:'Dimmed cabin lights on landing', where:'the last few minutes of a night flight', art:'cabinlights',
     see:'The crew turns the cabin lights down just before landing, and pulls the blinds up.',
     doing:'It lets your eyes adjust to darkness in advance. Take-off and landing are when an evacuation is most likely, and dark-adapted eyes need no time to recover if the lighting fails.',
     why:'Raising the blinds is the same idea from the other direction: it lets the crew see outside conditions, and lets outside light in if the interior goes dark.' },
-  { n:'The brushes beside an escalator', where:'along the skirting, at foot height',
+  { n:'The brushes beside an escalator', where:'along the skirting, at foot height', art:'escalator',
     see:'Two rows of stiff bristles running the length of the moving stairs.',
     doing:'They keep feet, bags and loose clothing away from the gap where the step meets the side panel, which is where things get drawn in.',
     why:'They are not for cleaning the steps, which is the reasonable assumption almost everybody makes.' },
-  { n:'The punt in a wine bottle', where:'push your thumb into the base',
+  { n:'The punt in a wine bottle', where:'push your thumb into the base', art:'punt',
     see:'A deep dimple pushed up into the bottom of the bottle.',
     doing:'It began as a consequence of glassblowing — pushing the base up guaranteed no rough pontil scar stuck out to make the bottle wobble.',
     why:'It survives because it adds strength to the base, gives sediment somewhere to settle, and gives a server somewhere to put their thumb. It is not a measure of quality, whatever the price suggests.' },
-  { n:'The Y-shaped channel in a zip', where:'inside the slider',
+  { n:'The Y-shaped channel in a zip', where:'inside the slider', art:'zip',
     see:'A slider that somehow joins two rows of teeth going one way and parts them going the other.',
     doing:'There is a wedge inside. Pulled one way, the channels converge and force each tooth into the gap between two opposite teeth; pulled the other, the wedge drives between them and levers them apart.',
     why:'There are no moving parts beyond the slider itself. When a zip fails it is usually because the slider has widened slightly and no longer forces the teeth together hard enough.' },
-  { n:'The pins inside a lock', where:'the cylinder of your front door',
+  { n:'The pins inside a lock', where:'the cylinder of your front door', art:'lockpins',
     see:'A keyhole, and a key with an irregular toothed edge.',
     doing:'The cylinder holds several spring-loaded pin stacks, each cut into two pieces. The right key lifts every stack so that all the breaks line up exactly at the shear line — the boundary between the rotating plug and the fixed housing. Only then can the plug turn.',
     why:'Every tooth on your key corresponds to one pin stack. A wrong key lifts them to the wrong heights, so at least one pin bridges the shear line and blocks rotation.' },
-  { n:'Cat\'s eyes in the road', where:'the centre line, at night',
+  { n:'Cat\'s eyes in the road', where:'the centre line, at night', art:'whiskers',
     see:'Studs that seem to light up only when your headlights reach them.',
     doing:'They are retroreflectors: shaped so that light entering is bounced back towards where it came from, rather than scattered. That means the driver whose beam hits them is the person who sees them brightest.',
     why:'The original British design also seats the reflector in a flexible rubber housing, so a passing wheel pushes it down and a wiper wipes the lens clean.' },
-  { n:'The tittle', where:'above every lower-case i and j',
+  { n:'The tittle', where:'above every lower-case i and j', art:'tittle',
     see:'A dot.',
     doing:'It has a name: a tittle. It appeared in medieval manuscripts to stop a lone minim — a single vertical stroke — being read as part of an adjacent letter.',
     why:'In crowded handwriting, "i" next to "n" or "m" turned into an unreadable run of identical strokes. The dot was a disambiguation mark, and it simply never left.' },
+  { n:'The hole in a pen cap', where:'the top of a cheap ballpoint', art:'pencap',
+    see:'A small hole moulded straight through the end of the cap.',
+    doing:'It is an airway. Caps small enough to be swallowed are required to pass an airflow test, so the vent is designed in deliberately rather than left over from moulding.',
+    why:'It has a second job: without it the cap would seal against the barrel and push ink out of the nib when you pressed it on.' },
+  { n:'The extra eyelet on trainers', where:'the top of the shoe, set back from the rest', art:'eyelet',
+    see:'One more lace hole than you appear to need, slightly offset from the others.',
+    doing:'It makes a heel lock. Lace up to the second-from-top hole, then take each end straight up into the extra hole on the same side to form a loop, and thread the opposite lace through it.',
+    why:'It clamps the ankle without tightening the whole shoe, which is why runners use it and almost nobody else knows it is there.' },
+  { n:'The tiny pocket inside the pocket', where:'the right hip of almost every pair of jeans', art:'watchpocket',
+    see:'A pocket about the size of two fingers, sewn into the front pocket.',
+    doing:'It held a pocket watch. It has been on the design since the 1870s and simply never came off.',
+    why:'It has outlived the object it was made for by a century and a half, which makes it one of the most durable useless features in manufacturing.' },
+  { n:'The dent in a brick', where:'the top face of most bricks in a wall', art:'frog',
+    see:'A shallow rectangular hollow pressed into one side.',
+    doing:'It is called a frog. Mortar fills it and keys the courses together, and it takes clay out of the brick so it is lighter and fires more evenly.',
+    why:'Bricklayers lay them frog up, so the hollow fills. Laid frog down it becomes a void, and the wall is measurably weaker for it.' },
+  { n:'The upturned tip of a wing', where:'the end of the wing, out of the window', art:'winglet',
+    see:'A fin turning up, down, or blended round at the very end of the wing.',
+    doing:'A wing makes lift by holding a pressure difference, and at the tip that difference escapes around the end as a spinning vortex. The winglet gets in the way of that escape.',
+    why:'The vortex costs fuel — it is drag produced as a by-product of lift. Anything that weakens it pays for itself over a long enough route.' },
+  { n:'The dimples on a golf ball', where:'every golf ball ever made', art:'dimples',
+    see:'Several hundred shallow craters covering the whole surface.',
+    doing:'They trip the air into a turbulent layer that clings to the ball further round the back before it separates. A smaller wake behind means less drag.',
+    why:'A smooth ball of the same weight goes roughly half as far. The rough one wins, which is not the intuition anybody starts with.' },
+  { n:'The saw-tooth edge on a jet engine', where:'the back rim of the engine cowling', art:'chevrons',
+    see:'A row of triangular notches around the trailing edge of the nacelle.',
+    doing:'They are chevrons. They stir the fast exhaust into the slower air around it more gradually, instead of letting the two shear against each other in one abrupt boundary.',
+    why:'That shear is a large part of what a jet sounds like from the ground. Softening it is worth several decibels on takeoff.' },
+  { n:'The black dots around a windscreen', where:'the border of the glass, fading inward', art:'frit',
+    see:'A solid black band at the edge that breaks into a gradient of dots before it stops.',
+    doing:'The band is ceramic paint baked into the glass. It hides the adhesive holding the screen in and shields it from the ultraviolet that would otherwise break it down.',
+    why:'The dots are a temperature trick. Black paint heats faster than clear glass, and during forming that difference would distort the view — the gradient eases the step instead of making it all at once.' },
+  { n:'Cat’s eyes in the road', where:'the middle of an unlit road at night', art:'catseye',
+    see:'Studs that glow back at you and go dark as you pass.',
+    doing:'Each holds a pair of retroreflective lenses in a rubber housing. A wheel pressing the housing pushes the lens down past a wiper.',
+    why:'So they clean themselves every time they are run over. Percy Shaw patented that detail in the 1930s, and it is the reason they still work after a winter.' },
+  { n:'The glitter in road paint', where:'any white line, caught in headlights', art:'beads',
+    see:'A line that seems to light up only when your own beams hit it.',
+    doing:'Glass beads are dropped into the paint while it is wet. Each one bends light in, bounces it off the paint behind, and sends it back the way it came.',
+    why:'That is why lines are bright to the driver and dull to a pedestrian standing beside them. The light is being returned to its source, not scattered.' },
+  { n:'The loose hook on a tape measure', where:'the metal tab at the end', art:'tapehook',
+    see:'A hook that rattles back and forth by a couple of millimetres, as though it were badly made.',
+    doing:'It slides by exactly its own thickness. Hooked over an edge it pulls out to zero; pushed against a surface inside it presses in to zero.',
+    why:'The rattle is the calibration. Rivet it tight and every inside measurement is wrong by the thickness of the hook.' },
+  { n:'Train wheels are cones', where:'under every railway carriage', art:'wheelcone',
+    see:'A wheel that looks cylindrical and is very slightly tapered.',
+    doing:'Wander to one side and the wheel there rolls on a larger diameter while its partner rolls on a smaller one, so the pair steers itself back to the middle.',
+    why:'It also solves cornering. The outer wheel needs to travel further, and the taper gives it a bigger diameter to do it with — no differential, on an axle that cannot have one.' },
+  { n:'The bumpy paving at a kerb', where:'where the pavement meets the road', art:'tactile',
+    see:'A patch of raised dots, usually a different colour from the pavement.',
+    doing:'It is a message read through the feet or a cane. Flat-topped blisters mean a crossing or a drop; rounded bars set across your path mean steps or a platform edge.',
+    why:'The shapes are standardised so they mean the same thing in an unfamiliar town, which only works if nobody improvises.' },
+  { n:'The spare square of fabric', where:'the bag stapled to a new coat', art:'swatch',
+    see:'A small offcut of the same cloth, usually with a spare button.',
+    doing:'It is a test piece. You put the detergent, the dye, or the stain remover on that before you put it on the garment.',
+    why:'Most people file it away as a repair patch. It is more useful as the thing you are allowed to ruin.' },
+  { n:'The little table in a pizza box', where:'the middle of the pizza', art:'pizzatable',
+    see:'A three-legged plastic stool sitting on the cheese.',
+    doing:'It holds the lid up. A hot box sags in the middle, and without it the lid lands on the topping and takes it with you when you open it.',
+    why:'It was patented in 1985 and has a name — a package saver — which is more formality than the object appears to deserve.' },
+  { n:'The hole in the bottom of a padlock', where:'underneath, opposite the shackle', art:'padlock',
+    see:'A small hole in the base of an outdoor padlock.',
+    doing:'Water gets in and has to get out, or it sits in the mechanism and rusts it, or freezes and jams it.',
+    why:'It is also where the oil goes. A lock that has seized outdoors is usually a lock nobody ever put anything into that hole.' },
+  { n:'The mirrors by a lift', where:'the lobby, and inside the car', art:'liftmirror',
+    see:'Mirrors on the walls beside the doors.',
+    doing:'They give people something to do. Complaints about lift waiting times fell when mirrors went in, without any change to the lifts themselves.',
+    why:'The wait did not get shorter. The occupied wait simply gets reported as shorter, which is a real result and a slightly uncomfortable one.' },
+  { n:'The grooves along a key', where:'the flat sides of the blade', art:'keyway',
+    see:'Long channels running down the length of the key, separate from the jagged edge.',
+    doing:'They are the key’s cross-section, and they have to match the shape of the keyhole before the key will enter at all.',
+    why:'It is a filter that runs before the lock does any thinking. The wrong profile never reaches the pins to be tested against them.' },
+  { n:'The number in the recycling triangle', where:'moulded into the base of a plastic bottle', art:'resin',
+    see:'A number from 1 to 7 inside a triangle of arrows.',
+    doing:'It identifies which plastic the object is made from, so sorting can separate them. It is a material code.',
+    why:'It is not a promise that the thing is recycled, or even that anyone locally will take it. The triangle borrowed a symbol that already meant something else, and the confusion has never been cleared up.' },
+  { n:'The air in a crisp packet', where:'the bag that is mostly not crisps', art:'nitrogen',
+    see:'A bag that feels three-quarters empty.',
+    doing:'It is not air. It is nitrogen, flushed in to drive the oxygen out, because oxygen is what turns the oil rancid.',
+    why:'The volume is doing a second job as packaging. Crisps are fragile enough that the gas is the only cushioning that survives a delivery lorry.' },
 ];
 
 let i = 0;
 const seen = new Set();
+
+
+/* ------------------------------------------------------------------ *
+ *  A drawing per entry, of the actual object, animated wherever the
+ *  movement is the explanation — the key lifting pins to the shear
+ *  line, the tape hook sliding by its own thickness, the wheelset
+ *  steering itself back to the middle. Inline SVG, no assets.
+ * ------------------------------------------------------------------ */
+const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const AN = (s) => REDUCED ? '' : s;
+const R = 'repeatCount="indefinite"';
+const L1 = '#3A4450', L2 = '#8892A0', OR = '#E8843C', PL = '#DDE1E6', BG = '#F7F8F9';
+
+const ART = {
+  keyboard: () => {
+    let g = '';
+    'ASDFGHJKL'.split('').forEach((k, i) => {
+      const hot = k === 'F' || k === 'J';
+      g += '<rect x="' + (10 + i * 16) + '" y="52" width="14" height="16" rx="2.5" fill="' + (hot ? '#FBEAD9' : '#fff') +
+           '" stroke="' + (hot ? OR : PL) + '" stroke-width="1.4"/>' +
+           '<text x="' + (17 + i * 16) + '" y="64" text-anchor="middle" font-size="8" font-family="ui-monospace,monospace" fill="' + (hot ? OR : L2) + '">' + k + '</text>' +
+           (hot ? '<rect x="' + (14 + i * 16) + '" y="65" width="6" height="1.6" rx=".8" fill="' + OR + '"/>' : '');
+    });
+    return g + '<g>' + AN('<animateTransform attributeName="transform" type="translate" values="0,-14;0,0;0,0;0,-14" keyTimes="0;.3;.7;1" dur="2.6s" ' + R + '/>') +
+      '<path d="M58,40 v-16 M106,40 v-16" stroke="' + L1 + '" stroke-width="3" stroke-linecap="round"/>' +
+      '<circle cx="58" cy="42" r="4" fill="' + L1 + '"/><circle cx="106" cy="42" r="4" fill="' + L1 + '"/></g>' +
+      '<text x="80" y="88" text-anchor="middle" font-size="8" fill="' + L2 + '" font-family="ui-monospace,monospace">two ridges, eight fingers placed</text>';
+  },
+  planewindow: () =>
+    '<rect x="34" y="14" width="16" height="92" rx="8" fill="none" stroke="' + L1 + '" stroke-width="2"/>' +
+    '<rect x="62" y="14" width="16" height="92" rx="8" fill="none" stroke="' + L1 + '" stroke-width="2"/>' +
+    '<rect x="90" y="14" width="16" height="92" rx="8" fill="none" stroke="' + L1 + '" stroke-width="2"/>' +
+    '<circle cx="70" cy="92" r="3.2" fill="' + OR + '"/>' +
+    '<text x="42" y="120" text-anchor="middle" font-size="7" fill="' + L2 + '">outer</text>' +
+    '<text x="70" y="120" text-anchor="middle" font-size="7" fill="' + OR + '">vented</text>' +
+    '<text x="98" y="120" text-anchor="middle" font-size="7" fill="' + L2 + '">cabin</text>' +
+    '<g>' + AN('<animate attributeName="opacity" values="0;1;0" dur="2.2s" ' + R + '/>') +
+      '<path d="M126,60 L112,60 m0,0 l5,-4 m-5,4 l5,4" stroke="' + OR + '" stroke-width="1.6" fill="none"/></g>' +
+    '<text x="80" y="10" text-anchor="middle" font-size="7.5" fill="' + L2 + '">pressure held by the outer pane</text>',
+
+  fuelarrow: () =>
+    '<rect x="18" y="30" width="124" height="52" rx="7" fill="#fff" stroke="' + PL + '" stroke-width="1.6"/>' +
+    '<path d="M52,48 a12,12 0 1,0 .1,0" fill="none" stroke="' + L2 + '" stroke-width="2" stroke-dasharray="38 60" transform="rotate(-90 52 60)"/>' +
+    '<path d="M52,60 L44,50" stroke="' + L1 + '" stroke-width="2" stroke-linecap="round"/>' +
+    '<rect x="92" y="50" width="12" height="16" rx="2" fill="none" stroke="' + L1 + '" stroke-width="1.6"/>' +
+    '<path d="M104,54 h5 v9" fill="none" stroke="' + L1 + '" stroke-width="1.6"/>' +
+    '<path d="M112,58 l7,4 l-7,4 z" fill="' + OR + '"/>' +
+    '<g>' + AN('<animateTransform attributeName="transform" type="translate" values="0,0;0,0;6,0;0,0" keyTimes="0;.4;.6;1" dur="2.8s" ' + R + '/>') +
+      '<rect x="46" y="94" width="60" height="16" rx="5" fill="' + L1 + '"/>' +
+      '<circle cx="60" cy="112" r="4" fill="' + L2 + '"/><circle cx="94" cy="112" r="4" fill="' + L2 + '"/>' +
+      '<rect x="104" y="98" width="4" height="6" fill="' + OR + '"/></g>',
+
+  coinedge: () => {
+    let g = '<circle cx="46" cy="58" r="30" fill="#fff" stroke="' + L1 + '" stroke-width="2"/>';
+    for (let i = 0; i < 40; i++){
+      const a = i / 40 * Math.PI * 2;
+      g += '<line x1="' + (46 + Math.cos(a) * 27).toFixed(1) + '" y1="' + (58 + Math.sin(a) * 27).toFixed(1) +
+           '" x2="' + (46 + Math.cos(a) * 30).toFixed(1) + '" y2="' + (58 + Math.sin(a) * 30).toFixed(1) + '" stroke="' + OR + '" stroke-width="1.2"/>';
+    }
+    g += '<path d="M114,34 a30,30 0 1,0 0,48 z" fill="#fff" stroke="' + L1 + '" stroke-width="2" transform="translate(0,2)"/>' +
+         '<path d="M114,36 L114,80" stroke="' + OR + '" stroke-width="1.6" stroke-dasharray="3 3"/>' +
+         '<text x="46" y="104" text-anchor="middle" font-size="7.5" fill="' + L2 + '">reeded</text>' +
+         '<text x="112" y="104" text-anchor="middle" font-size="7.5" fill="' + OR + '">clipped, and it shows</text>';
+    return g;
+  },
+
+  rivets: () =>
+    '<path d="M30,24 L130,24 L120,104 L40,104 Z" fill="#EAF0F6" stroke="' + L1 + '" stroke-width="2"/>' +
+    '<path d="M44,40 L116,40" stroke="' + L2 + '" stroke-width="1.4" stroke-dasharray="4 3"/>' +
+    '<circle cx="42" cy="44" r="4" fill="' + OR + '"><' + (REDUCED ? 'set attributeName="r" to="4"/' : 'animate attributeName="r" values="4;5.6;4" dur="1.8s" ' + R + '/') + '></circle>' +
+    '<circle cx="118" cy="44" r="4" fill="' + OR + '"><' + (REDUCED ? 'set attributeName="r" to="4"/' : 'animate attributeName="r" values="4;5.6;4" dur="1.8s" begin=".4s" ' + R + '/') + '></circle>' +
+    '<path d="M42,50 q-4,14 2,26 M118,50 q4,14 -2,26" stroke="' + OR + '" stroke-width="1" fill="none" opacity=".5"/>' +
+    '<text x="80" y="120" text-anchor="middle" font-size="7.5" fill="' + L2 + '">the corners are where it tears</text>',
+
+  manhole: () =>
+    '<g><rect x="14" y="22" width="52" height="52" rx="3" fill="none" stroke="' + L1 + '" stroke-width="2"/>' +
+      '<rect x="20" y="28" width="40" height="40" rx="2" fill="' + L2 + '" opacity=".6">' +
+      AN('<animateTransform attributeName="transform" type="rotate" values="0 40 48;45 40 48;45 40 48" keyTimes="0;.45;1" dur="3.2s" ' + R + '/>') +
+      '<animate attributeName="y" values="28;28;74" keyTimes="0;.5;1" dur="3.2s" ' + (REDUCED ? '' : R) + '/></rect>' +
+      '<text x="40" y="92" text-anchor="middle" font-size="7.5" fill="' + OR + '">falls in</text></g>' +
+    '<g><circle cx="112" cy="48" r="26" fill="none" stroke="' + L1 + '" stroke-width="2"/>' +
+      '<circle cx="112" cy="48" r="21" fill="' + L2 + '" opacity=".6">' +
+      AN('<animateTransform attributeName="transform" type="rotate" from="0 112 48" to="360 112 48" dur="4s" ' + R + '/>') + '</circle>' +
+      '<text x="112" y="92" text-anchor="middle" font-size="7.5" fill="' + L2 + '">cannot</text></g>',
+
+  mesh: () => {
+    let g = '<rect x="52" y="12" width="8" height="100" fill="' + L1 + '" opacity=".15"/>';
+    for (let y = 16; y < 110; y += 8) g += '<circle cx="56" cy="' + y + '" r="2.2" fill="none" stroke="' + L1 + '" stroke-width="1"/>';
+    g += '<path d="M14,40 q10,-10 20,0 t20,0" fill="none" stroke="' + OR + '" stroke-width="2.4">' +
+      AN('<animateTransform attributeName="transform" type="translate" values="0,0;20,0;0,0" dur="2.4s" ' + R + '/>') + '</path>' +
+      '<text x="30" y="26" text-anchor="middle" font-size="7" fill="' + OR + '">12 cm wave</text>' +
+      '<path d="M64,80 h70" stroke="#F0C36A" stroke-width="1.6" stroke-dasharray="3 3"/>' +
+      '<path d="M14,80 h38" stroke="#F0C36A" stroke-width="1.6" stroke-dasharray="3 3"/>' +
+      '<text x="106" y="72" text-anchor="middle" font-size="7" fill="' + L2 + '">light gets through</text>';
+    return g;
+  },
+
+  eyemark: () =>
+    '<path d="M26,44 h108 v34 h-108 z" fill="#fff" stroke="' + L1 + '" stroke-width="1.8"/>' +
+    '<path d="M26,44 l-10,17 l10,17 z" fill="#fff" stroke="' + L1 + '" stroke-width="1.8"/>' +
+    '<rect x="118" y="52" width="10" height="18" fill="' + OR + '"/>' +
+    '<g>' + AN('<animateTransform attributeName="transform" type="translate" values="-56,0;56,0" dur="3s" ' + R + '/>') +
+      '<path d="M123,24 v18" stroke="' + L2 + '" stroke-width="1.4"/>' +
+      '<circle cx="123" cy="22" r="4" fill="none" stroke="' + L2 + '" stroke-width="1.4"/></g>' +
+    '<text x="80" y="100" text-anchor="middle" font-size="7.5" fill="' + L2 + '">the machine reads the block, not you</text>',
+
+  aglet: () =>
+    '<ellipse cx="112" cy="62" rx="20" ry="13" fill="none" stroke="' + L1 + '" stroke-width="2.4"/>' +
+    '<ellipse cx="112" cy="62" rx="11" ry="6" fill="' + BG + '" stroke="' + L2 + '" stroke-width="1.4"/>' +
+    '<g>' + AN('<animateTransform attributeName="transform" type="translate" values="-46,0;16,0;-46,0" dur="3.4s" ' + R + '/>') +
+      '<path d="M40,62 q-14,-9 -26,0 q12,9 26,0" fill="none" stroke="' + L2 + '" stroke-width="4" stroke-linecap="round"/>' +
+      '<rect x="38" y="57.5" width="18" height="9" rx="2" fill="' + OR + '"/></g>' +
+    '<text x="80" y="98" text-anchor="middle" font-size="7.5" fill="' + L2 + '">stiff enough to thread, and it has a name</text>',
+
+  cabinlights: () =>
+    '<rect x="18" y="18" width="124" height="76" rx="9" fill="' + L1 + '">' +
+      AN('<animate attributeName="fill" values="#7C8B99;#2A323C;#2A323C;#7C8B99" keyTimes="0;.3;.75;1" dur="4.4s" ' + R + '/>') + '</rect>' +
+    '<rect x="98" y="34" width="30" height="44" rx="13" fill="#9FC8E8" opacity=".9"/>' +
+    '<circle cx="44" cy="40" r="5" fill="#FFF3D8">' +
+      AN('<animate attributeName="opacity" values="1;.15;.15;1" keyTimes="0;.3;.75;1" dur="4.4s" ' + R + '/>') + '</circle>' +
+    '<circle cx="66" cy="40" r="5" fill="#FFF3D8">' +
+      AN('<animate attributeName="opacity" values="1;.15;.15;1" keyTimes="0;.3;.75;1" dur="4.4s" ' + R + '/>') + '</circle>' +
+    '<text x="80" y="112" text-anchor="middle" font-size="7.5" fill="' + L2 + '">eyes already adjusted, before they need to be</text>',
+
+  escalator: () => {
+    let g = '<path d="M18,100 L96,34 L142,34" fill="none" stroke="' + L1 + '" stroke-width="2.4"/>';
+    for (let i = 0; i < 6; i++) g += '<path d="M' + (26 + i * 13) + ',' + (94 - i * 11) + ' h13 v11" fill="none" stroke="' + L2 + '" stroke-width="1.4"/>';
+    g += '<rect x="104" y="30" width="4" height="26" fill="' + OR + '"/>';
+    for (let i = 0; i < 9; i++) g += '<line x1="108" y1="' + (32 + i * 3) + '" x2="115" y2="' + (32 + i * 3) + '" stroke="' + OR + '" stroke-width="1"/>';
+    return g + '<g>' + AN('<animateTransform attributeName="transform" type="translate" values="6,0;0,0;6,0" dur="2.6s" ' + R + '/>') +
+      '<path d="M118,50 q12,-5 18,2 l-18,4 z" fill="' + L1 + '"/></g>' +
+      '<text x="80" y="118" text-anchor="middle" font-size="7.5" fill="' + L2 + '">it is nudging your shoe, not cleaning the step</text>';
+  },
+
+  punt: () =>
+    '<path d="M64,14 h32 v26 q18,10 18,34 v34 q0,8 -8,8 h-52 q-8,0 -8,-8 v-34 q0,-24 18,-34 z" fill="none" stroke="' + L1 + '" stroke-width="2"/>' +
+    '<path d="M52,116 q28,-26 56,0" fill="' + BG + '" stroke="' + OR + '" stroke-width="2"/>' +
+    '<text x="80" y="106" text-anchor="middle" font-size="7.5" fill="' + OR + '">the punt</text>',
+
+  zip: () => {
+    let g = '';
+    for (let i = 0; i < 7; i++){
+      g += '<rect x="46" y="' + (16 + i * 13) + '" width="14" height="8" rx="2" fill="' + L2 + '">' +
+        AN('<animateTransform attributeName="transform" type="translate" values="-16,0;0,0;0,0" keyTimes="0;' + (0.1 + i * 0.1).toFixed(2) + ';1" dur="3.4s" ' + R + '/>') + '</rect>' +
+        '<rect x="100" y="' + (22 + i * 13) + '" width="14" height="8" rx="2" fill="' + L2 + '">' +
+        AN('<animateTransform attributeName="transform" type="translate" values="16,0;0,0;0,0" keyTimes="0;' + (0.1 + i * 0.1).toFixed(2) + ';1" dur="3.4s" ' + R + '/>') + '</rect>';
+    }
+    return g + '<path d="M62,112 l18,-22 l18,22 v14 h-36 z" fill="none" stroke="' + OR + '" stroke-width="2"/>' +
+      '<path d="M74,90 l6,-8 l6,8" fill="none" stroke="' + OR + '" stroke-width="1.4"/>' +
+      '<text x="80" y="10" text-anchor="middle" font-size="7.5" fill="' + L2 + '">the Y forces the teeth to interlock in order</text>';
+  },
+
+  lockpins: () => {
+    let g = '<rect x="20" y="20" width="120" height="30" fill="none" stroke="' + L1 + '" stroke-width="1.6"/>' +
+            '<line x1="20" y1="62" x2="140" y2="62" stroke="' + OR + '" stroke-width="1.4" stroke-dasharray="4 3"/>' +
+            '<text x="142" y="60" text-anchor="end" font-size="7" fill="' + OR + '">shear line</text>';
+    const lift = [16, 9, 20, 12, 6];
+    lift.forEach((h, i) => {
+      const x = 34 + i * 21;
+      g += '<rect x="' + x + '" width="9" fill="' + L2 + '" rx="2">' +
+        AN('<animate attributeName="y" values="26;' + (62 - 36 + (16 - h)) + '" dur="2.4s" ' + R + '/><animate attributeName="height" values="36;36" dur="2.4s" ' + R + '/>') +
+        '<set attributeName="y" to="' + (REDUCED ? 26 + (16 - h) : 26) + '"/><set attributeName="height" to="36"/></rect>' +
+        '<rect x="' + x + '" width="9" height="' + (14 + h) + '" rx="2" fill="' + L1 + '">' +
+        AN('<animate attributeName="y" values="' + (62) + ';' + (62 - h) + '" dur="2.4s" ' + R + '/>') +
+        '<set attributeName="y" to="' + (62 - (REDUCED ? h : 0)) + '"/></rect>';
+    });
+    return g + '<path d="M24,104 h96 l0,-8 l-8,0 l0,-6 l-10,0 l0,6 l-12,0 l0,-9 l-10,0 l0,9 l-12,0 l0,-5 l-10,0 l0,5 l-34,0 z" fill="' + OR + '">' +
+      AN('<animateTransform attributeName="transform" type="translate" values="-70,0;0,0;0,0" keyTimes="0;.5;1" dur="2.4s" ' + R + '/>') + '</path>';
+  },
+
+  whiskers: () =>
+    '<circle cx="80" cy="56" r="26" fill="none" stroke="' + L1 + '" stroke-width="2"/>' +
+    '<path d="M62,36 l-6,-14 l16,6 M98,36 l6,-14 l-16,6" fill="none" stroke="' + L1 + '" stroke-width="2"/>' +
+    '<circle cx="71" cy="52" r="2.4" fill="' + L1 + '"/><circle cx="89" cy="52" r="2.4" fill="' + L1 + '"/>' +
+    '<path d="M68,64 q-30,-6 -42,-2 M68,68 q-30,2 -42,8 M92,64 q30,-6 42,-2 M92,68 q30,2 42,8" fill="none" stroke="' + OR + '" stroke-width="1.3"/>' +
+    '<path d="M26,96 v14 M134,96 v14 M26,103 h108" stroke="' + L2 + '" stroke-width="1.2"/>' +
+    '<text x="80" y="120" text-anchor="middle" font-size="7.5" fill="' + L2 + '">a width the cat can measure without looking</text>',
+
+  tittle: () =>
+    '<text x="52" y="86" font-size="76" font-family="Georgia,serif" fill="' + L1 + '">ı</text>' +
+    '<circle cx="63" cy="36" r="8" fill="' + OR + '">' +
+      AN('<animate attributeName="r" values="8;10;8" dur="2s" ' + R + '/>') + '</circle>' +
+    '<text x="104" y="86" font-size="76" font-family="Georgia,serif" fill="' + PL + '">ı</text>' +
+    '<text x="80" y="112" text-anchor="middle" font-size="7.5" fill="' + L2 + '">it has a name, and Turkish has both letters</text>',
+  pencap: () =>
+    '<path d="M52,28 h30 q8,0 8,8 v54 q0,10 -15,18 q-15,-8 -15,-18 v-54 q0,-8 8,-8 z" fill="none" stroke="' + L1 + '" stroke-width="2"/>' +
+    '<circle cx="67" cy="38" r="4" fill="' + BG + '" stroke="' + OR + '" stroke-width="1.8"/>' +
+    '<g>' + AN('<animateTransform attributeName="transform" type="translate" values="0,16;0,-14" dur="2.2s" ' + R + '/><animate attributeName="opacity" values="0;1;0" dur="2.2s" ' + R + '/>') +
+      '<path d="M67,66 v-14 m-4,4 l4,-4 l4,4" fill="none" stroke="' + OR + '" stroke-width="1.6"/></g>' +
+    '<text x="118" y="60" text-anchor="middle" font-size="7.5" fill="' + L2 + '">air, either</text>' +
+    '<text x="118" y="70" text-anchor="middle" font-size="7.5" fill="' + L2 + '">way</text>',
+
+  eyelet: () => {
+    let g = '<path d="M22,104 q12,-56 58,-58 q46,2 58,26 v32 z" fill="#EAF0F6" stroke="' + L1 + '" stroke-width="2"/>';
+    for (let i = 0; i < 4; i++){
+      g += '<circle cx="' + (56 + i * 8) + '" cy="' + (86 - i * 14) + '" r="3" fill="none" stroke="' + L2 + '" stroke-width="1.4"/>' +
+           '<circle cx="' + (104 - i * 8) + '" cy="' + (86 - i * 14) + '" r="3" fill="none" stroke="' + L2 + '" stroke-width="1.4"/>';
+    }
+    g += '<circle cx="76" cy="34" r="3.4" fill="none" stroke="' + OR + '" stroke-width="1.8"/>' +
+         '<circle cx="92" cy="34" r="3.4" fill="none" stroke="' + OR + '" stroke-width="1.8"/>' +
+         '<path d="M80,48 q-4,-12 -4,-14 M88,48 q4,-12 4,-14" fill="none" stroke="' + OR + '" stroke-width="1.6"/>' +
+         '<path d="M76,37 q8,10 16,0" fill="none" stroke="' + OR + '" stroke-width="1.6">' +
+           AN('<animate attributeName="d" values="M76,37 q8,10 16,0;M76,37 q8,4 16,0;M76,37 q8,10 16,0" dur="2.4s" ' + R + '/>') + '</path>';
+    return g + '<text x="80" y="120" text-anchor="middle" font-size="7.5" fill="' + L2 + '">a loop each side, laces crossed through</text>';
+  },
+
+  watchpocket: () =>
+    '<path d="M26,20 h108 v92 h-108 z" fill="#EAF0F6" stroke="' + L1 + '" stroke-width="2"/>' +
+    '<path d="M96,20 q10,34 -6,52" fill="none" stroke="' + L2 + '" stroke-width="1.6"/>' +
+    '<path d="M100,20 h26 q-4,26 -12,32 h-16 q10,-16 2,-32 z" fill="#DCE6F0" stroke="' + OR + '" stroke-width="1.8"/>' +
+    '<g>' + AN('<animateTransform attributeName="transform" type="translate" values="0,-26;0,4;0,-26" dur="4s" ' + R + '/>') +
+      '<circle cx="112" cy="40" r="9" fill="none" stroke="' + L1 + '" stroke-width="1.6"/>' +
+      '<path d="M112,40 v-5 m0,5 l4,3" stroke="' + L1 + '" stroke-width="1.2"/>' +
+      '<path d="M112,31 v-4" stroke="' + L1 + '" stroke-width="2"/></g>' +
+    '<text x="62" y="104" text-anchor="middle" font-size="7.5" fill="' + L2 + '">still here, 150 years on</text>',
+
+  frog: () =>
+    '<path d="M20,52 L80,26 L140,52 L80,78 Z" fill="#D9A183" stroke="' + L1 + '" stroke-width="1.8"/>' +
+    '<path d="M20,52 v26 L80,104 V78 Z" fill="#C08D71" stroke="' + L1 + '" stroke-width="1.8"/>' +
+    '<path d="M140,52 v26 L80,104 V78 Z" fill="#B07E63" stroke="' + L1 + '" stroke-width="1.8"/>' +
+    '<path d="M50,52 L80,38 L110,52 L80,66 Z" fill="' + BG + '" stroke="' + OR + '" stroke-width="1.6"/>' +
+    '<g>' + AN('<animateTransform attributeName="transform" type="translate" values="0,-22;0,0;0,0" keyTimes="0;.4;1" dur="3s" ' + R + '/><animate attributeName="opacity" values="0;1;1" keyTimes="0;.4;1" dur="3s" ' + R + '/>') +
+      '<path d="M52,52 L80,39 L108,52 L80,65 Z" fill="' + OR + '" opacity=".75"/></g>' +
+    '<text x="80" y="122" text-anchor="middle" font-size="7.5" fill="' + L2 + '">mortar fills the hollow and keys the course</text>',
+
+  winglet: () =>
+    '<path d="M14,74 L104,52 L120,50 L118,60 L30,86 Z" fill="#DCE6F0" stroke="' + L1 + '" stroke-width="1.8"/>' +
+    '<path d="M120,50 L134,24 L138,26 L126,52 Z" fill="' + OR + '" stroke="' + L1 + '" stroke-width="1.6"/>' +
+    '<g opacity=".85">' +
+      '<path d="M126,54 q14,10 4,20 q-12,8 -20,-2" fill="none" stroke="' + OR + '" stroke-width="1.4">' +
+      AN('<animateTransform attributeName="transform" type="rotate" from="0 122 62" to="360 122 62" dur="2.6s" ' + R + '/>') + '</path></g>' +
+    '<text x="80" y="112" text-anchor="middle" font-size="7.5" fill="' + L2 + '">the vortex is drag you paid for with lift</text>',
+
+  dimples: () => {
+    let g = '<circle cx="52" cy="58" r="28" fill="#fff" stroke="' + L1 + '" stroke-width="1.8"/>';
+    for (let i = 0; i < 26; i++){
+      const a = i * 137.5 * Math.PI / 180, r = 24 * Math.sqrt(i / 26);
+      g += '<circle cx="' + (52 + Math.cos(a) * r).toFixed(1) + '" cy="' + (58 + Math.sin(a) * r).toFixed(1) + '" r="2.6" fill="none" stroke="' + L2 + '" stroke-width=".9"/>';
+    }
+    g += '<path d="M80,44 q22,14 0,28" fill="none" stroke="' + OR + '" stroke-width="1.6" stroke-dasharray="3 3"/>';
+    for (let i = 0; i < 3; i++){
+      g += '<path d="M84,' + (48 + i * 10) + ' q26,0 40,' + (i === 1 ? 0 : (i === 0 ? -6 : 6)) + '" fill="none" stroke="' + OR + '" stroke-width="1.2">' +
+        AN('<animate attributeName="opacity" values="0;1;0" dur="1.8s" begin="' + (i * 0.3).toFixed(1) + 's" ' + R + '/>') + '</path>';
+    }
+    return g + '<text x="80" y="106" text-anchor="middle" font-size="7.5" fill="' + L2 + '">the flow stays attached further round</text>';
+  },
+
+  chevrons: () => {
+    let g = '<path d="M18,40 h92 q14,0 14,18 v10 q0,18 -14,18 h-92 z" fill="#DCE6F0" stroke="' + L1 + '" stroke-width="1.8"/>';
+    for (let i = 0; i < 5; i++) g += '<path d="M124,' + (42 + i * 9) + ' l10,4.5 l-10,4.5 z" fill="' + OR + '"/>';
+    for (let i = 0; i < 3; i++){
+      g += '<path d="M136,' + (50 + i * 12) + ' q12,-5 22,0" fill="none" stroke="' + L2 + '" stroke-width="1.2">' +
+        AN('<animateTransform attributeName="transform" type="translate" values="0,0;10,0" dur="1.6s" begin="' + (i * 0.35).toFixed(2) + 's" ' + R + '/><animate attributeName="opacity" values="1;0" dur="1.6s" begin="' + (i * 0.35).toFixed(2) + 's" ' + R + '/>') + '</path>';
+    }
+    return g + '<text x="80" y="106" text-anchor="middle" font-size="7.5" fill="' + L2 + '">mixed gradually instead of all at once</text>';
+  },
+
+  frit: () => {
+    let g = '<path d="M16,86 q64,-58 128,0 z" fill="#CFE2F0" stroke="' + L1 + '" stroke-width="1.8"/>' +
+            '<path d="M16,86 q64,-58 128,0 v6 h-128 z" fill="' + L1 + '"/>';
+    for (let i = 0; i < 24; i++){
+      const t = i / 24, x = 22 + t * 116, y = 80 - Math.sin(t * Math.PI) * 44;
+      g += '<circle cx="' + x.toFixed(1) + '" cy="' + (y + 10).toFixed(1) + '" r="' + (3.4 - t * 2.2).toFixed(1) + '" fill="' + L1 + '" opacity="' + (1 - t * .7).toFixed(2) + '"/>';
+    }
+    return g + '<text x="80" y="108" text-anchor="middle" font-size="7.5" fill="' + L2 + '">the gradient eases a temperature step</text>';
+  },
+
+  catseye: () =>
+    '<rect x="14" y="70" width="132" height="44" fill="#3A4450"/>' +
+    '<rect x="60" y="86" width="40" height="6" rx="3" fill="#fff" opacity=".85"/>' +
+    '<g>' + AN('<animateTransform attributeName="transform" type="translate" values="0,0;0,7;0,0" keyTimes="0;.4;.8" dur="3s" ' + R + '/>') +
+      '<path d="M62,70 h36 q6,0 6,6 v6 h-48 v-6 q0,-6 6,-6 z" fill="' + L2 + '"/>' +
+      '<circle cx="72" cy="76" r="3.4" fill="' + OR + '"/><circle cx="88" cy="76" r="3.4" fill="' + OR + '"/></g>' +
+    '<path d="M56,72 h48" stroke="#fff" stroke-width="1.4" opacity=".6"/>' +
+    '<g>' + AN('<animateTransform attributeName="transform" type="translate" values="-70,0;90,0" dur="3s" ' + R + '/>') +
+      '<circle cx="80" cy="52" r="10" fill="none" stroke="' + L1 + '" stroke-width="2"/></g>' +
+    '<text x="80" y="128" text-anchor="middle" font-size="7.5" fill="' + L2 + '">pressed down past a wiper, every time</text>',
+
+  beads: () => {
+    let g = '<rect x="14" y="76" width="132" height="30" fill="#3A4450"/>' +
+            '<rect x="30" y="84" width="100" height="10" fill="#fff"/>';
+    for (let i = 0; i < 9; i++) g += '<circle cx="' + (38 + i * 12) + '" cy="89" r="4" fill="#EAF4FC" stroke="' + L2 + '" stroke-width=".8"/>';
+    g += '<path d="M110,30 L62,84" stroke="#F5D48A" stroke-width="2">' + AN('<animate attributeName="opacity" values=".2;1;.2" dur="2s" ' + R + '/>') + '</path>' +
+         '<path d="M62,84 L112,34" stroke="' + OR + '" stroke-width="2" stroke-dasharray="4 3">' + AN('<animate attributeName="opacity" values=".2;1;.2" dur="2s" begin=".35s" ' + R + '/>') + '</path>' +
+         '<circle cx="116" cy="28" r="7" fill="none" stroke="' + L1 + '" stroke-width="1.6"/>';
+    return g + '<text x="80" y="122" text-anchor="middle" font-size="7.5" fill="' + L2 + '">returned to the headlight it came from</text>';
+  },
+
+  tapehook: () =>
+    '<rect x="20" y="46" width="120" height="26" rx="3" fill="#F4D14E" stroke="' + L1 + '" stroke-width="1.8"/>' +
+    '<line x1="44" y1="46" x2="44" y2="58" stroke="' + L1 + '" stroke-width="1.2"/>' +
+    '<line x1="68" y1="46" x2="68" y2="58" stroke="' + L1 + '" stroke-width="1.2"/>' +
+    '<line x1="92" y1="46" x2="92" y2="58" stroke="' + L1 + '" stroke-width="1.2"/>' +
+    '<g>' + AN('<animateTransform attributeName="transform" type="translate" values="0,0;7,0;7,0;0,0" keyTimes="0;.35;.7;1" dur="3.6s" ' + R + '/>') +
+      '<path d="M20,40 h-8 v38 h8 z" fill="' + OR + '"/></g>' +
+    '<rect x="6" y="30" width="6" height="58" fill="' + L2 + '" opacity=".5"/>' +
+    '<text x="80" y="98" text-anchor="middle" font-size="7.5" fill="' + L2 + '">it slides by exactly its own thickness</text>',
+
+  wheelcone: () =>
+    '<path d="M20,86 h120" stroke="' + L1 + '" stroke-width="2"/>' +
+    '<rect x="30" y="80" width="10" height="6" fill="' + L2 + '"/><rect x="120" y="80" width="10" height="6" fill="' + L2 + '"/>' +
+    '<g>' + AN('<animateTransform attributeName="transform" type="translate" values="0,0;16,0;-16,0;0,0" keyTimes="0;.3;.65;1" dur="4.4s" ' + R + '/>') +
+      '<path d="M34,80 l6,-30 h10 l2,30 z" fill="#DCE6F0" stroke="' + L1 + '" stroke-width="1.6"/>' +
+      '<path d="M126,80 l-6,-30 h-10 l-2,30 z" fill="#DCE6F0" stroke="' + L1 + '" stroke-width="1.6"/>' +
+      '<rect x="46" y="56" width="72" height="7" rx="3" fill="' + L1 + '"/>' +
+      '<circle cx="42" cy="60" r="5" fill="' + OR + '"/><circle cx="122" cy="60" r="5" fill="' + OR + '"/></g>' +
+    '<text x="80" y="108" text-anchor="middle" font-size="7.5" fill="' + L2 + '">the taper steers it back to the middle</text>',
+
+  tactile: () => {
+    let g = '<rect x="14" y="58" width="132" height="52" fill="#E4C24A" stroke="' + L1 + '" stroke-width="1.4"/>';
+    for (let r = 0; r < 4; r++) for (let c = 0; c < 10; c++)
+      g += '<circle cx="' + (22 + c * 14) + '" cy="' + (67 + r * 12) + '" r="3.4" fill="#C9A83A" stroke="' + L1 + '" stroke-width=".7"/>';
+    g += '<rect x="14" y="110" width="132" height="14" fill="' + L1 + '"/>';
+    g += '<g>' + AN('<animateTransform attributeName="transform" type="translate" values="0,0;0,-6;0,0" dur="1.6s" ' + R + '/>') +
+      '<path d="M104,20 L118,56" stroke="' + L1 + '" stroke-width="2.4" stroke-linecap="round"/>' +
+      '<circle cx="118" cy="58" r="3.4" fill="' + OR + '"/></g>';
+    return g + '<text x="80" y="46" text-anchor="middle" font-size="7.5" fill="' + L2 + '">blisters mean a drop; bars mean steps</text>';
+  },
+
+  swatch: () =>
+    '<path d="M22,26 h64 v82 h-64 z" fill="#DCE6F0" stroke="' + L1 + '" stroke-width="1.8"/>' +
+    '<path d="M100,44 h40 v40 h-40 z" fill="#DCE6F0" stroke="' + OR + '" stroke-width="1.8" stroke-dasharray="4 3"/>' +
+    '<circle cx="120" cy="64" r="9" fill="' + OR + '" opacity="0">' +
+      AN('<animate attributeName="opacity" values="0;.75;.75;0" keyTimes="0;.2;.8;1" dur="3.2s" ' + R + '/><animate attributeName="r" values="3;10;10;3" keyTimes="0;.2;.8;1" dur="3.2s" ' + R + '/>') + '</circle>' +
+    '<text x="120" y="102" text-anchor="middle" font-size="7.5" fill="' + OR + '">ruin this one</text>' +
+    '<text x="54" y="120" text-anchor="middle" font-size="7.5" fill="' + L2 + '">not that one</text>',
+
+  pizzatable: () =>
+    '<path d="M18,96 h124 v10 h-124 z" fill="#C99A63" stroke="' + L1 + '" stroke-width="1.6"/>' +
+    '<circle cx="80" cy="90" r="46" fill="#E8C88A" stroke="' + L1 + '" stroke-width="1.4"/>' +
+    '<circle cx="62" cy="82" r="5" fill="#C8563A"/><circle cx="96" cy="86" r="5" fill="#C8563A"/><circle cx="80" cy="70" r="5" fill="#C8563A"/>' +
+    '<g>' + AN('<animateTransform attributeName="transform" type="rotate" values="-8 18 96;-30 18 96;-30 18 96;-8 18 96" keyTimes="0;.35;.7;1" dur="4s" ' + R + '/>') +
+      '<path d="M18,96 h124 v-8 h-124 z" fill="#D9AE79" stroke="' + L1 + '" stroke-width="1.6"/></g>' +
+    '<path d="M74,72 h12 v3 h-12 z M76,75 v11 M84,75 v11 M80,75 v11" fill="' + OR + '" stroke="' + OR + '" stroke-width="1.6"/>' +
+    '<text x="80" y="124" text-anchor="middle" font-size="7.5" fill="' + L2 + '">the lid sags; this is what stops it</text>',
+
+  padlock: () =>
+    '<path d="M56,56 v-12 a24,24 0 0,1 48,0 v12" fill="none" stroke="' + L1 + '" stroke-width="7"/>' +
+    '<rect x="44" y="56" width="72" height="52" rx="6" fill="#DCE6F0" stroke="' + L1 + '" stroke-width="1.8"/>' +
+    '<circle cx="80" cy="80" r="6" fill="none" stroke="' + L1 + '" stroke-width="1.6"/>' +
+    '<circle cx="80" cy="108" r="3.4" fill="' + OR + '"/>' +
+    '<g>' + AN('<animateTransform attributeName="transform" type="translate" values="0,0;0,14" dur="1.8s" ' + R + '/><animate attributeName="opacity" values="1;0" dur="1.8s" ' + R + '/>') +
+      '<circle cx="80" cy="114" r="3" fill="#7FB2D8"/></g>' +
+    '<text x="80" y="130" text-anchor="middle" font-size="7.5" fill="' + L2 + '">water out, oil in</text>',
+
+  liftmirror: () =>
+    '<rect x="20" y="20" width="52" height="88" rx="2" fill="#E7EEF5" stroke="' + L1 + '" stroke-width="1.8"/>' +
+    '<rect x="26" y="26" width="40" height="76" fill="#CFDDE9"/>' +
+    '<rect x="88" y="20" width="52" height="88" rx="2" fill="none" stroke="' + L1 + '" stroke-width="1.8"/>' +
+    '<line x1="114" y1="20" x2="114" y2="108" stroke="' + L1 + '" stroke-width="1.4"/>' +
+    '<g><circle cx="46" cy="52" r="8" fill="' + L1 + '"/><path d="M46,62 v22 M36,70 h20" stroke="' + L1 + '" stroke-width="3"/>' +
+      AN('<animateTransform attributeName="transform" type="translate" values="0,0;3,0;0,0" dur="3s" ' + R + '/>') + '</g>' +
+    '<text x="80" y="126" text-anchor="middle" font-size="7.5" fill="' + L2 + '">the wait did not change; the report did</text>',
+
+  keyway: () =>
+    '<path d="M30,44 h84 v34 h-84 z" fill="#DCE6F0" stroke="' + L1 + '" stroke-width="1.8"/>' +
+    '<path d="M38,52 h68 M38,60 h68 M38,68 h68" stroke="' + OR + '" stroke-width="1.6"/>' +
+    '<g>' + AN('<animateTransform attributeName="transform" type="translate" values="-26,0;0,0;0,0;-26,0" keyTimes="0;.3;.7;1" dur="3.4s" ' + R + '/>') +
+      '<path d="M118,44 h22 v34 h-22 z" fill="' + OR + '" opacity=".18"/>' +
+      '<path d="M118,50 h22 M118,58 h22 M118,66 h22" stroke="' + OR + '" stroke-width="1.6"/></g>' +
+    '<text x="80" y="98" text-anchor="middle" font-size="7.5" fill="' + L2 + '">the profile is tested before the pins are</text>',
+
+  resin: () =>
+    '<path d="M80,26 l26,44 h-16 l-10,-18 z" fill="none" stroke="' + L1 + '" stroke-width="2.2"/>' +
+    '<path d="M106,74 l-26,44 l-8,-14 l16,-26 z" fill="none" stroke="' + L1 + '" stroke-width="2.2"/>' +
+    '<path d="M70,118 l-26,-44 l16,-2 l10,18 z" fill="none" stroke="' + L1 + '" stroke-width="2.2"/>' +
+    [1, 2, 5, 7].map((d, k) =>
+      '<text x="80" y="82" text-anchor="middle" font-size="20" font-family="ui-monospace,monospace" fill="' + OR +
+      '" opacity="' + (REDUCED ? (k === 0 ? 1 : 0) : 0) + '">' + d +
+      AN('<animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;.05;.22;.27;1" dur="5.2s" begin="' +
+        (k * 1.3).toFixed(2) + 's" ' + R + '/>') + '</text>').join('') +
+    '<text x="80" y="18" text-anchor="middle" font-size="7.5" fill="' + L2 + '">which plastic — not whether it is recycled</text>',
+
+  nitrogen: () => {
+    let g = '<path d="M42,18 h76 v96 h-76 z" fill="#EAF2F8" stroke="' + L1 + '" stroke-width="1.8"/>' +
+            '<path d="M42,18 q38,10 76,0 M42,114 q38,-10 76,0" fill="none" stroke="' + L1 + '" stroke-width="1.8"/>';
+    for (let i = 0; i < 7; i++){
+      const x = 54 + (i % 3) * 22, y = 86 + Math.floor(i / 3) * 12;
+      g += '<ellipse cx="' + x + '" cy="' + y + '" rx="9" ry="5" fill="#E0B269" stroke="' + L1 + '" stroke-width=".9"/>';
+    }
+    for (let i = 0; i < 6; i++){
+      g += '<text x="' + (54 + (i % 3) * 22) + '" y="' + (40 + Math.floor(i / 3) * 18) + '" text-anchor="middle" font-size="9" fill="' + OR + '" font-family="ui-monospace,monospace">N₂' +
+        AN('<animateTransform attributeName="transform" type="translate" values="0,0;0,-5;0,0" dur="' + (2 + i * 0.3).toFixed(1) + 's" ' + R + '/>') + '</text>';
+    }
+    return g + '<text x="80" y="128" text-anchor="middle" font-size="7.5" fill="' + L2 + '">the gas is the packaging</text>';
+  },
+};
+
+function artFor(t){
+  const f = ART[t.art];
+  if (!f) return '';
+  return '<svg class="art" viewBox="0 0 160 132" role="img" aria-label="diagram of ' + esc(t.n) + '">' + f() + '</svg>';
+}
 
 function callout(n){
   // a generic inspection motif rather than a fake diagram of each object
@@ -207,7 +685,7 @@ function render(){
         '<h2>' + esc(t.n) + '</h2>' +
         '<div class="where">' + esc(t.where) + '</div>' +
       '</div>' +
-      callout(i) +
+      artFor(t) +
     '</div>' +
     '<div class="body">' +
       '<div class="blk"><h3>what you see</h3><p>' + esc(t.see) + '</p></div>' +
