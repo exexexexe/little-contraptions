@@ -120,3 +120,35 @@ The metrics are deliberately absurd and the footer says so — no figure here is
 
 **Verified:** 80 briefings over 4 words, 75 distinct codenames, 0 defects, the typed word appears in every document.
 
+### /operator-gen/ — Operator File
+
+**Built.** Roster card — badge panel with a generated sigil, callsign, real name, unit, speed/armour tags, gadget block, stat pips, background rows and a comms line.
+
+**Judgment calls:** every callsign, person, unit, gadget and line is invented; nothing is drawn from any actual game's roster and no real dialogue is used. Two design decisions worth noting: **speed and armour always sum to 4**, which is the genre's standard trade-off and makes the numbers mean something rather than being decorative; and **every gadget states its counter**, because a gadget without a counter is a wish, not a design ("Counters: shouting. It has always been shouting.").
+
+**Verified:** 100 generations, 28 callsigns and all 14 gadgets seen, the speed/armour trade-off held 100/100, 0 structural defects.
+
+### /case-opener/ — The Case
+
+**Built.** A 60-slot reel that spins for 5.4s on an ease-out curve and lands the winning item under the needle, then a result panel with a wear meter, and an inventory.
+
+**Judgment calls, and one I feel strongly about:** the declared odds are **printed under the inventory**. A case that hides its odds is doing something other than entertaining you, and since there is no money here there is no reason to hide them. Verified they are the real ones — 200,000 rolls of the actual function, worst deviation from declared **0.024 percentage points**.
+
+The wear value is not decoration either: each item picks a wear band and a float inside that band, and the meter shows where it falls across the five bands. 5000/5000 items had a float genuinely inside their stated band.
+
+Everything is invented — item classes, finishes, flavour text. No real game's items, artwork, collections or naming are reproduced.
+
+**Verified:** button disables during the spin and re-enables after; the slot sitting under the needle is the same item shown in the result panel (the detail that makes it feel real rather than faked).
+
+### /wanted-poster/ — Wanted
+
+**Built.** Canvas poster at 760×1060: aged paper drawn procedurally (fibre grain, blotches, edge darkening, torn top and bottom, two pin holes), the photo sepia-toned by pixel manipulation, then the headline, name, crime, reward and territorial-office footer. Downloads as PNG.
+
+**Privacy, which is the point of this one:** the photo is read with FileReader and drawn straight to canvas. There is no fetch, no upload, no server call anywhere in the file. Verified: 0 network requests beyond the page itself after loading an image.
+
+**Judgment call:** the sepia is done on pixel data rather than a CSS filter, because CSS filters do not bake into `toDataURL` — the downloaded PNG would have come out with the original colours. Verified by pushing a deliberately blue-and-red test image through the real file input: 100% of photo pixels come out with r ≥ g ≥ b and 0% still read as blue.
+
+20 crimes, all of them modern misdemeanours ("CONTINUED USE OF THE PHRASE 'CIRCLE BACK'").
+
+**Bug found and fixed:** the WANTED headline's cap height exceeded its baseline, so the tops of the letters were being cut off by the canvas edge. Baseline lowered and the layout below it shifted to match — now 0 dark pixels in the top 12px.
+
