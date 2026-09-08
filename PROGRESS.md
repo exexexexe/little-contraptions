@@ -266,3 +266,13 @@ A desktop with draggable windows, a file listing, a text editor, a doodle canvas
 
 Judgment calls: names, logos, wallpapers and icons are all invented, and the icons are inline SVG drawn for this page rather than traced from anything. What is borrowed is the era's conventions — which direction a bevel catches the light, where the bar lives, what colour a desktop was — which is the part worth evoking. The machine specifications in the About box are clearly fictional and the window says so, so no invented number is presented as a real one. Closing an edited file offers to save it and then admits there is nowhere to save it to.
 
+### /boring-day/ — The Quietest Day
+
+A calendar heat map of all 366 dates, shaded by how many events Wikipedia's on-this-day feed carries for each. It opens on the quietest day of the year — 6 March, tied with 6 November at 24 entries each, against a year average of 54 and a maximum of 121 on 1 January — and clicking any square pulls that date's actual entries live.
+
+Judgment calls, and this one took three attempts. The obvious build (scan a month live in the browser) does not work: Wikimedia rate-limits at roughly 25 requests a short window and then returns 429 with retry-after: 7, so a month scan broke a third of the way in every time. The second attempt relayed through server.js, which fixed the payload size — the raw feed is about 300 kB a date, so a month is 9 MB the browser should never pull — but not the rate limit. The build that shipped snapshots the counts for the whole year once, paced against the limiter over about an hour, and stores the 4 kB result beside the page; the year draws instantly and offline, and only the date you click goes to the network. The snapshot date is stated on the page and the live half is labelled as live.
+
+The honesty problem is the interesting one: this cannot measure how boring a day was, only how much got written down. So the page does not claim otherwise anywhere — the heading is 'the quietest day', not 'the most boring day in history', and the note under the grid says plainly that a quiet square is a fact about the encyclopedia rather than about history, using 1 January (the darkest square of the year) as the evidence of its own bias.
+
+server.js gained /api/onthisday for the live half: one date at a time, reduced to year and text, cached 24 h, with a backoff retry on 429.
+
