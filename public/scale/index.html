@@ -89,6 +89,14 @@ footer{
   font-family:var(--mono);font-size:10.5px;color:var(--dim);line-height:1.8;
 }
 footer a{ color:var(--ink-2) }
+.scene-wrap{
+  margin:16px 0 20px;background:#F3F5F1;border:1px solid var(--rule);
+  border-radius:2px;overflow:hidden;
+}
+.scene{ display:block;width:100%;height:auto }
+.scene .sl{
+  font-family:var(--mono);font-size:10px;fill:#6B7A72;letter-spacing:.05em;
+}
 </style>
 </head>
 <body>
@@ -139,12 +147,261 @@ const ANCHORS = {
   jetCruise:    { v: 900,            u: 'km/h', src: 'Typical cruising speed of a commercial jet airliner.' },
   walkPace:     { v: 5,              u: 'km/h', src: 'Commonly used average adult walking pace.' },
   carMotorway:  { v: 110,            u: 'km/h', src: 'A typical motorway cruising speed.' },
+  challenger:   { v: 10935,          u: 'm',    src: 'Challenger Deep. Sonar surveys cluster between about 10,900 and 10,935 m; this uses the upper figure and the spread is real.' },
+  sunRadius:    { v: 695700,         u: 'km',   src: 'Nominal solar radius adopted by the IAU (2015 Resolution B3).' },
+  earthRadius:  { v: 6371,           u: 'km',   src: 'Mean Earth radius, IUGG.' },
+  moonRadius:   { v: 1737.4,         u: 'km',   src: 'Mean lunar radius, NASA.' },
+  venusDay:     { v: 243.02,         u: 'Earth days', src: 'Venus sidereal rotation period, NASA (it turns backwards).' },
+  venusYear:    { v: 224.70,         u: 'Earth days', src: 'Venus orbital period, NASA.' },
+  proxima:      { v: 4.2465,         u: 'light years', src: 'Distance to Proxima Centauri, from Gaia parallax.' },
+  lightYear:    { v: 9.4607304725808e12, u: 'km', src: 'One light year, exact: the speed of light times a Julian year.' },
+  humanCells:   { v: 3.72e13,        u: 'cells', src: 'Bianconi et al., 2013 — estimated total cells in an adult human body.' },
+  starsLow:     { v: 1e11,           u: 'stars', src: 'Low end of published Milky Way star counts.' },
+  starsHigh:    { v: 4e11,           u: 'stars', src: 'High end of published Milky Way star counts. The range is genuinely this wide.' },
+  siderealDay:  { v: 23.9344696,     u: 'hours', src: 'Earth sidereal rotation period.' },
+  blueWhale:    { v: 30,             u: 'm',    src: 'A large blue whale. The longest reliably measured were a little over 33 m.' },
+  humanHeight:  { v: 1.7,            u: 'm',    src: 'A round figure for adult height, used here only as a ruler.' },
+  ridgeSpread:  { v: 2.5,            u: 'cm/yr', src: 'Typical Mid-Atlantic Ridge spreading rate.' },
+  nailGrowth:   { v: 3.5,            u: 'cm/yr', src: 'Commonly cited fingernail growth rate.' },
+  paperThick:   { v: 0.1,            u: 'mm',   src: 'A sheet of office paper, near enough. The doubling does the rest.' },
+  planetSum:    { v: 380010,         u: 'km',   src: 'Equatorial diameters of the seven other planets added together (NASA fact sheets).' },
+};
+
+
+/* ------------------------------------------------------------------ *
+ *  One scene per comparison. Each dramatises the specific thing the
+ *  card is claiming — Everest sinking into the trench, paper doubling
+ *  toward the Moon, planets failing to fit the real gap — rather than
+ *  animating the same bar sixteen ways. Inline SVG with SMIL, so there
+ *  is nothing to load; every one is stilled under prefers-reduced-motion.
+ * ------------------------------------------------------------------ */
+const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const AN = (s) => REDUCED ? '' : s;
+const RC = 'repeatCount="indefinite"';
+const INK = '#1B2A24', ACC = '#C8552F', SEA = '#2F6D8C', DIM = '#93A49C';
+
+const SCENES = {
+  // ISS laps a slow clock hand: 15.5 orbits while the day-hand goes round once
+  orbit: () =>
+    '<circle cx="150" cy="90" r="34" fill="' + SEA + '" opacity=".85"/>' +
+    '<ellipse cx="150" cy="90" rx="66" ry="66" fill="none" stroke="' + DIM + '" stroke-width="1" stroke-dasharray="3 4"/>' +
+    '<circle r="5" fill="' + ACC + '">' + AN('<animateMotion dur="1.55s" ' + RC + ' path="M216,90 a66,66 0 1,1 -132,0 a66,66 0 1,1 132,0"/>') + '</circle>' +
+    '<g transform="translate(330,90)">' +
+      '<circle r="42" fill="none" stroke="' + DIM + '" stroke-width="1.5"/>' +
+      '<circle r="3" fill="' + INK + '"/>' +
+      '<path d="M0,0 V-32" stroke="' + INK + '" stroke-width="2.5" stroke-linecap="round">' +
+        AN('<animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="24s" ' + RC + '/>') + '</path>' +
+      '<text x="0" y="62" text-anchor="middle" class="sl">one day</text>' +
+    '</g>' +
+    '<text x="150" y="172" text-anchor="middle" class="sl">15.5 orbits in that time</text>',
+
+  // a photon crosses the gap; one second here stands for one minute out there
+  light: () =>
+    '<circle cx="46" cy="90" r="26" fill="' + ACC + '"/>' +
+    '<circle cx="46" cy="90" r="26" fill="none" stroke="' + ACC + '" stroke-width="1.5" opacity=".5">' +
+      AN('<animate attributeName="r" values="26;40" dur="2.6s" ' + RC + '/><animate attributeName="opacity" values=".5;0" dur="2.6s" ' + RC + '/>') + '</circle>' +
+    '<circle cx="430" cy="90" r="11" fill="' + SEA + '"/>' +
+    '<line x1="72" y1="90" x2="418" y2="90" stroke="' + DIM + '" stroke-width="1" stroke-dasharray="2 5"/>' +
+    '<rect y="86" width="34" height="8" rx="4" fill="' + INK + '">' +
+      AN('<animate attributeName="x" values="72;384" dur="8.32s" ' + RC + '/>') + (REDUCED ? '<set attributeName="x" to="220"/>' : '') + '</rect>' +
+    '<text x="240" y="126" text-anchor="middle" class="sl">8 min 19 s, played here at a minute a second</text>',
+
+  // the plane crosses above the summit, both drawn against the same axis
+  height: () =>
+    '<path d="M0,180 L120,60 L170,110 L232,40 L330,180 Z" fill="' + INK + '" opacity=".9"/>' +
+    '<path d="M232,40 L258,72 L206,72 Z" fill="#F2F5F1"/>' +
+    '<line x1="0" y1="22" x2="480" y2="22" stroke="' + DIM + '" stroke-width="1" stroke-dasharray="4 4"/>' +
+    '<text x="476" y="16" text-anchor="end" class="sl">cruising altitude, ~11,000 m</text>' +
+    '<text x="240" y="196" text-anchor="middle" class="sl">Everest, 8,848.86 m</text>' +
+    '<g>' + AN('<animateTransform attributeName="transform" type="translate" values="-90,0;560,0" dur="7s" ' + RC + '/>') +
+      '<path d="M0,22 l26,0 l10,-9 l7,0 l-4,9 l14,0 l9,-7 l6,0 l-3,7 l9,0 l-9,5 l-56,0 z" fill="' + ACC + '"/></g>',
+
+  brain: () => {
+    let g = '<text x="240" y="18" text-anchor="middle" class="sl">86 dots · one billion neurons each</text>';
+    for (let i = 0; i < 86; i++){
+      const x = 34 + (i % 22) * 19.6, y = 44 + Math.floor(i / 22) * 34;
+      g += '<circle cx="' + x.toFixed(1) + '" cy="' + y + '" r="5" fill="' + SEA + '" opacity="0">' +
+        AN('<animate attributeName="opacity" values="0;.95;.95;0" keyTimes="0;.06;.92;1" dur="6s" begin="' + (i * 0.055).toFixed(2) + 's" ' + RC + '/>') +
+        (REDUCED ? '<set attributeName="opacity" to=".9"/>' : '') + '</circle>';
+    }
+    return g;
+  },
+
+  // Earth's whole history as one bar; recorded history is the tick at the end
+  time: () =>
+    '<rect x="20" y="72" width="440" height="34" fill="' + DIM + '" opacity=".35"/>' +
+    '<rect x="20" y="72" height="34" fill="' + SEA + '">' +
+      AN('<animate attributeName="width" values="0;440" dur="6s" ' + RC + '/>') + (REDUCED ? '<set attributeName="width" to="440"/>' : '') + '</rect>' +
+    '<rect x="459.5" y="66" width="1.6" height="46" fill="' + ACC + '">' +
+      AN('<animate attributeName="opacity" values="1;.2;1" dur="1.2s" ' + RC + '/>') + '</rect>' +
+    '<text x="20" y="60" class="sl">4.54 billion years ago</text>' +
+    '<text x="460" y="60" text-anchor="end" class="sl">now</text>' +
+    '<text x="460" y="132" text-anchor="end" class="sl">all of written history is the red line</text>',
+
+  // Everest sinks into the trench and still does not reach the surface
+  trench: () =>
+    '<rect x="0" y="14" width="480" height="166" fill="' + SEA + '" opacity=".18"/>' +
+    '<path d="M0,14 q20,-6 40,0 t40,0 t40,0 t40,0 t40,0 t40,0 t40,0 t40,0 t40,0 t40,0 t40,0 t40,0" fill="none" stroke="' + SEA + '" stroke-width="2"/>' +
+    '<path d="M0,150 L170,150 L228,180 L286,150 L480,150" fill="none" stroke="' + INK + '" stroke-width="2.5"/>' +
+    '<g>' + AN('<animateTransform attributeName="transform" type="translate" values="0,-118;0,-118;0,0;0,0" keyTimes="0;.15;.6;1" dur="5s" ' + RC + '/>') +
+      '<path d="M228,180 L200,112 L214,116 L228,58 L242,116 L256,112 Z" fill="' + INK + '"/>' +
+      '<path d="M228,58 L238,88 L218,88 Z" fill="#F2F5F1"/></g>' +
+    '<line x1="300" y1="14" x2="300" y2="58" stroke="' + ACC + '" stroke-width="1.5" stroke-dasharray="3 3"/>' +
+    '<text x="308" y="40" class="sl">2,086 m of water still above the summit</text>',
+
+  // one bar finishes early, the other keeps going off the edge
+  twobars: () =>
+    '<text x="20" y="52" class="sl">a million seconds</text>' +
+    '<rect x="20" y="60" height="20" fill="' + SEA + '">' +
+      AN('<animate attributeName="width" values="0;0.44;0.44" keyTimes="0;.02;1" dur="7s" ' + RC + '/>') + (REDUCED ? '<set attributeName="width" to=".5"/>' : '') + '</rect>' +
+    '<rect x="20" y="60" width="2" height="20" fill="' + SEA + '"/>' +
+    '<text x="20" y="120" class="sl">a billion seconds</text>' +
+    '<rect x="20" y="128" height="20" fill="' + ACC + '">' +
+      AN('<animate attributeName="width" values="0;440" dur="7s" ' + RC + '/>') + (REDUCED ? '<set attributeName="width" to="440"/>' : '') + '</rect>' +
+    '<text x="30" y="100" class="sl">11.6 days — that is the whole bar</text>' +
+    '<text x="460" y="168" text-anchor="end" class="sl">31.7 years, drawn to the same scale</text>',
+
+  // the stack doubles, step by step, until it passes the Moon
+  folding: () => {
+    let g = '<circle cx="422" cy="36" r="20" fill="' + DIM + '" opacity=".55"/>' +
+            '<text x="422" y="76" text-anchor="middle" class="sl">Moon</text>' +
+            '<line x1="20" y1="176" x2="392" y2="176" stroke="' + INK + '" stroke-width="1.5"/>';
+    for (let i = 0; i < 12; i++){
+      const x = 26 + i * 31, h = 6 * Math.pow(1.32, i);
+      g += '<rect x="' + x + '" y="' + (176 - h).toFixed(1) + '" width="20" height="' + h.toFixed(1) + '" fill="' + SEA + '" opacity="0">' +
+        AN('<animate attributeName="opacity" values="0;1;1;0" keyTimes="0;.05;.9;1" dur="5.5s" begin="' + (i * 0.34).toFixed(2) + 's" ' + RC + '/>') +
+        (REDUCED ? '<set attributeName="opacity" to=".9"/>' : '') + '</rect>';
+    }
+    return g + '<text x="26" y="196" class="sl">each fold doubles the last · 42 of them reaches the circle</text>';
+  },
+
+  // the planets slide into the gap and the last one does not fit
+  planetgap: () => {
+    const sizes = [[4879,'Mercury'],[12104,'Venus'],[6779,'Mars'],[139820,'Jupiter'],[116460,'Saturn'],[50724,'Uranus'],[49244,'Neptune']];
+    const gap = 376291.6, scale = 300 / gap;
+    let x = 96, g =
+      '<circle cx="60" cy="96" r="26" fill="' + SEA + '"/><text x="60" y="150" text-anchor="middle" class="sl">Earth</text>' +
+      '<circle cx="440" cy="96" r="11" fill="' + DIM + '"/><text x="440" y="150" text-anchor="middle" class="sl">Moon</text>' +
+      '<line x1="86" y1="96" x2="429" y2="96" stroke="' + DIM + '" stroke-width="1" stroke-dasharray="3 4"/>';
+    sizes.forEach((p, i) => {
+      const w = p[0] * scale;
+      const over = x + w > 396;
+      g += '<circle cx="' + (x + w / 2).toFixed(1) + '" cy="96" r="' + Math.max(2.5, w / 2).toFixed(1) + '" fill="' + (over ? ACC : INK) + '" opacity="0">' +
+        AN('<animate attributeName="opacity" values="0;.9;.9;0" keyTimes="0;.08;.92;1" dur="6s" begin="' + (i * 0.5).toFixed(1) + 's" ' + RC + '/>') +
+        (REDUCED ? '<set attributeName="opacity" to=".85"/>' : '') + '</circle>';
+      x += w;
+    });
+    return g + '<text x="240" y="182" text-anchor="middle" class="sl">the last of them overshoots the real gap by 3,718 km</text>';
+  },
+
+  // Earths pour into an arc of the Sun and barely register
+  sunfill: () => {
+    let g = '<path d="M-40,190 A250,250 0 0,1 460,190 Z" fill="' + ACC + '" opacity=".9"/>' +
+            '<text x="240" y="176" text-anchor="middle" class="sl" fill="#fff">1,302,097 Earths would fill this</text>';
+    for (let i = 0; i < 9; i++){
+      g += '<circle r="4" fill="' + SEA + '">' +
+        AN('<animateMotion dur="3.4s" begin="' + (i * 0.36).toFixed(2) + 's" ' + RC + ' path="M' + (40 + i * 50) + ',-14 L' + (60 + i * 44) + ',150"/>') +
+        (REDUCED ? '<set attributeName="cx" to="' + (40 + i * 50) + '"/><set attributeName="cy" to="60"/>' : '') + '</circle>';
+    }
+    return g;
+  },
+
+  // two dials, and the slower one is the day
+  venus: () =>
+    '<g transform="translate(132,96)">' +
+      '<circle r="52" fill="none" stroke="' + DIM + '" stroke-width="1.5"/>' +
+      '<path d="M0,0 V-44" stroke="' + ACC + '" stroke-width="3" stroke-linecap="round">' +
+        AN('<animateTransform attributeName="transform" type="rotate" from="360" to="0" dur="8.1s" ' + RC + '/>') + '</path>' +
+      '<circle r="4" fill="' + INK + '"/>' +
+      '<text y="76" text-anchor="middle" class="sl">one rotation · 243.02 days</text>' +
+    '</g>' +
+    '<g transform="translate(348,96)">' +
+      '<circle r="52" fill="none" stroke="' + DIM + '" stroke-width="1.5"/>' +
+      '<path d="M0,0 V-44" stroke="' + SEA + '" stroke-width="3" stroke-linecap="round">' +
+        AN('<animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="7.49s" ' + RC + '/>') + '</path>' +
+      '<circle r="4" fill="' + INK + '"/>' +
+      '<text y="76" text-anchor="middle" class="sl">one orbit · 224.70 days</text>' +
+    '</g>' +
+    '<text x="240" y="26" text-anchor="middle" class="sl">the right-hand dial finishes first, every time</text>',
+
+  // the jet crawls; light is already there
+  proxima: () =>
+    '<circle cx="34" cy="96" r="14" fill="' + ACC + '"/><text x="34" y="128" text-anchor="middle" class="sl">here</text>' +
+    '<circle cx="450" cy="96" r="9" fill="' + SEA + '"/><text x="450" y="128" text-anchor="middle" class="sl">Proxima</text>' +
+    '<line x1="52" y1="96" x2="438" y2="96" stroke="' + DIM + '" stroke-width="1" stroke-dasharray="2 6"/>' +
+    '<rect y="92" width="30" height="7" rx="3" fill="' + INK + '">' +
+      AN('<animate attributeName="x" values="52;408" dur="5.4s" ' + RC + '/>') + (REDUCED ? '<set attributeName="x" to="150"/>' : '') + '</rect>' +
+    '<circle cy="70" r="4" fill="' + ACC + '">' +
+      AN('<animate attributeName="cx" values="52;438" dur="5.4s" ' + RC + '/>') + (REDUCED ? '<set attributeName="cx" to="300"/>' : '') + '</circle>' +
+    '<text x="240" y="52" text-anchor="middle" class="sl">light, and the same trip by airliner: 5.1 million years</text>',
+
+  // a galaxy of dots beside a body of many more
+  census: () => {
+    let g = '<text x="120" y="26" text-anchor="middle" class="sl">the galaxy</text>' +
+            '<text x="360" y="26" text-anchor="middle" class="sl">one person</text>';
+    for (let i = 0; i < 90; i++){
+      const t = i / 90 * Math.PI * 4.4, r = 6 + t * 7.6;
+      g += '<circle cx="' + (120 + Math.cos(t) * r * .95).toFixed(1) + '" cy="' + (104 + Math.sin(t) * r * .58).toFixed(1) +
+           '" r="1.9" fill="' + SEA + '" opacity=".8"/>';
+    }
+    for (let i = 0; i < 260; i++){
+      const a = (i * 137.5) * Math.PI / 180, r = 4.4 * Math.sqrt(i);
+      g += '<circle cx="' + (360 + Math.cos(a) * r * .42).toFixed(1) + '" cy="' + (104 + Math.sin(a) * r * .62).toFixed(1) +
+           '" r="1.7" fill="' + ACC + '" opacity="0">' +
+        AN('<animate attributeName="opacity" values="0;.85;.85" keyTimes="0;.5;1" dur="5s" begin="' + (i * 0.016).toFixed(3) + 's" ' + RC + '/>') +
+        (REDUCED ? '<set attributeName="opacity" to=".8"/>' : '') + '</circle>';
+    }
+    return g + '<text x="240" y="188" text-anchor="middle" class="sl">drawn at the same dots-per-thing, the body would need 93 more galaxies</text>';
+  },
+
+  // someone sitting still, going supersonic
+  spin: () =>
+    '<circle cx="240" cy="290" r="230" fill="' + SEA + '" opacity=".22"/>' +
+    '<path d="M10,64 A230,230 0 0,1 470,64" fill="none" stroke="' + INK + '" stroke-width="2"/>' +
+    '<g transform="translate(240,60)">' +
+      '<circle cy="-16" r="8" fill="' + INK + '"/><path d="M0,-8 V14 M-11,0 H11 M0,14 l-8,14 M0,14 l8,14" stroke="' + INK + '" stroke-width="3" fill="none" stroke-linecap="round"/>' +
+    '</g>' +
+    '<path d="M196,30 q-40,30 0,60" fill="none" stroke="' + ACC + '" stroke-width="2" opacity=".8">' +
+      AN('<animate attributeName="opacity" values=".1;.85;.1" dur="1.5s" ' + RC + '/>') + '</path>' +
+    '<path d="M168,18 q-52,42 0,84" fill="none" stroke="' + ACC + '" stroke-width="2" opacity=".5">' +
+      AN('<animate attributeName="opacity" values=".05;.55;.05" dur="1.5s" begin=".35s" ' + RC + '/>') + '</path>' +
+    '<g>' + AN('<animateTransform attributeName="transform" type="translate" values="-70,0;540,0" dur="3s" ' + RC + '/>') +
+      '<text x="0" y="150" class="sl">1,674 km/h →</text></g>' +
+    '<text x="240" y="186" text-anchor="middle" class="sl">Mach 1.36, and you feel none of it</text>',
+
+  whale: () =>
+    '<line x1="20" y1="150" x2="460" y2="150" stroke="' + DIM + '" stroke-width="1"/>' +
+    '<g>' + AN('<animateTransform attributeName="transform" type="translate" values="-40,0;40,0;-40,0" dur="9s" ' + RC + '/>') +
+      '<path d="M60,120 q90,-40 210,-12 q60,14 96,26 q-30,10 -96,22 q-120,26 -210,-12 q-16,-12 0,-24 z" fill="' + SEA + '"/>' +
+      '<path d="M366,134 q26,-30 40,-24 q-8,22 -6,26 q2,6 8,26 q-16,4 -42,-22 z" fill="' + SEA + '"/>' +
+      '<circle cx="96" cy="128" r="3.5" fill="#F2F5F1"/>' +
+      '<path d="M110,152 q60,10 130,6 M120,158 q56,8 110,4" stroke="#F2F5F1" stroke-width="1.4" fill="none" opacity=".5"/>' +
+    '</g>' +
+    '<g transform="translate(38,132)"><circle cy="0" r="3.4" fill="' + INK + '"/>' +
+      '<path d="M0,4 V13 M-4,7 H4 M0,13 l-3.4,6 M0,13 l3.4,6" stroke="' + INK + '" stroke-width="1.6" fill="none" stroke-linecap="round"/></g>' +
+    '<text x="240" y="176" text-anchor="middle" class="sl">30 m · about 17.6 people end to end</text>',
+
+  // two coasts easing apart while a nail outgrows them
+  drift: () =>
+    '<path d="M0,40 L150,40 L176,96 L150,152 L0,152 Z" fill="' + INK + '" opacity=".85">' +
+      AN('<animateTransform attributeName="transform" type="translate" values="0,0;-18,0;0,0" dur="9s" ' + RC + '/>') + '</path>' +
+    '<path d="M480,40 L320,40 L296,96 L320,152 L480,152 Z" fill="' + INK + '" opacity=".85">' +
+      AN('<animateTransform attributeName="transform" type="translate" values="0,0;18,0;0,0" dur="9s" ' + RC + '/>') + '</path>' +
+    '<path d="M236,34 v128" stroke="' + ACC + '" stroke-width="2" stroke-dasharray="4 5"/>' +
+    '<text x="236" y="24" text-anchor="middle" class="sl">2.5 cm a year</text>' +
+    '<g transform="translate(236,104)">' +
+      '<rect x="-15" y="-16" width="30" height="34" rx="7" fill="' + DIM + '" opacity=".5"/>' +
+      '<rect x="-11" width="22" rx="5" fill="' + ACC + '" y="-13">' +
+        AN('<animate attributeName="height" values="6;26;6" dur="9s" ' + RC + '/>') + (REDUCED ? '<set attributeName="height" to="18"/>' : '') + '</rect>' +
+    '</g>' +
+    '<text x="236" y="176" text-anchor="middle" class="sl">the nail grows 1.4× faster</text>',
 };
 
 /* Cards: each derives its comparisons from the anchors above. */
 const CARDS = [
   {
     tag: 'orbit',
+    scene: 'orbit',
     fact: 'The International Space Station goes all the way round the Earth roughly every 93 minutes.',
     figure: () => fmt(1440 / ANCHORS.issPeriod.v, 1) + ' orbits a day',
     src: () => ANCHORS.issPeriod.src,
@@ -166,6 +423,7 @@ const CARDS = [
   },
   {
     tag: 'light',
+    scene: 'light',
     fact: 'Sunlight takes just over eight minutes to reach us.',
     figure: () => { const s = ANCHORS.au.v * 1000 / ANCHORS.lightSpeed.v;
       return Math.floor(s/60) + ' min ' + fmt(s % 60, 0) + ' s'; },
@@ -183,12 +441,13 @@ const CARDS = [
          fmt(ANCHORS.au.v) + ' km ÷ ' + ANCHORS.jetCruise.v + ' km/h ÷ 24 ÷ 365.25 = ' + fmt(jetYears,1) + ' years'],
         ['Sound would never make it at all, but at its speed in air it would need ' +
          fmt(ANCHORS.au.v * 1000 / ANCHORS.soundAir.v / 3600 / 24 / 365.25, 0) + ' years.',
-         fmt(ANCHORS.au.v*1000) + ' m ÷ ' + ANCHORS.soundAir.v + ' m/s ÷ 31,557,600 s per year'],
+         fmt(ANCHORS.au.v*1000) + ' m ÷ ' + ANCHORS.soundAir.v + ' m/s ÷ 31,557,600 s per year = ' + fmt(ANCHORS.au.v * 1000 / ANCHORS.soundAir.v / 31557600, 1) + ' years'],
       ];
     },
   },
   {
     tag: 'height',
+    scene: 'height',
     fact: 'Everest is 8,848.86 metres above sea level.',
     figure: () => fmt(ANCHORS.everest.v, 2) + ' m',
     src: () => ANCHORS.everest.src,
@@ -211,6 +470,7 @@ const CARDS = [
   },
   {
     tag: 'brain',
+    scene: 'brain',
     fact: 'There are roughly 86 billion neurons in an adult human brain.',
     figure: () => '≈ ' + fmt(ANCHORS.neurons.v / 1e9) + ' billion',
     src: () => ANCHORS.neurons.src + ' The figure is a measured estimate, not an exact count.',
@@ -232,6 +492,7 @@ const CARDS = [
   },
   {
     tag: 'time',
+    scene: 'time',
     fact: 'The Earth is about 4.54 billion years old.',
     figure: () => fmt(ANCHORS.earthAge.v / 1e9, 2) + ' billion years',
     src: () => ANCHORS.earthAge.src,
@@ -252,6 +513,226 @@ const CARDS = [
       ];
     },
   },
+  {
+    tag: 'depth',
+    fact: 'The deepest point in the ocean is deeper than Everest is tall.',
+    figure: () => fmt(ANCHORS.challenger.v - ANCHORS.everest.v) + ' m of water to spare',
+    src: () => ANCHORS.challenger.src,
+    bar: () => ({ big: ANCHORS.challenger.v, small: ANCHORS.everest.v, bigL: 'Challenger Deep', smallL: 'Everest' }),
+    barNote: () => 'Everest is ' + fmt(100 * ANCHORS.everest.v / ANCHORS.challenger.v, 1) + '% of the depth of the trench.',
+    scene: 'trench',
+    rows: () => {
+      const spare = ANCHORS.challenger.v - ANCHORS.everest.v;
+      return [
+        ['Drop Everest into the trench and its summit still sits ' + fmt(spare) + ' m under the surface.',
+         fmt(ANCHORS.challenger.v) + ' m − ' + fmt(ANCHORS.everest.v, 2) + ' m = ' + fmt(spare, 2) + ' m'],
+        ['That leftover water is by itself deeper than all but a few hundred of the world’s mountains are tall.',
+         fmt(spare) + ' m of water above a summit that is already ' + fmt(ANCHORS.everest.v, 2) + ' m up from the sea bed'],
+      ];
+    },
+  },
+  {
+    tag: 'counting',
+    fact: 'A million seconds and a billion seconds do not feel like the same kind of number, because they are not.',
+    figure: () => fmt(1e9 / (365.2425 * 86400), 1) + ' years vs ' + fmt(1e6 / 86400, 1) + ' days',
+    src: () => 'Arithmetic only: seconds divided by the length of a day and of a mean year.',
+    bar: () => ({ big: 1e9, small: 1e6, bigL: 'a billion seconds', smallL: 'a million seconds' }),
+    barNote: () => 'The short bar is one thousandth of the long one. It is drawn to scale, which is why you can barely see it.',
+    scene: 'twobars',
+    rows: () => {
+      const md = 1e6 / 86400, by = 1e9 / (365.2425 * 86400);
+      return [
+        ['A million seconds from now is ' + fmt(md, 1) + ' days away — still this month.',
+         '1,000,000 ÷ 86,400 s per day = ' + fmt(md, 2) + ' days'],
+        ['A billion seconds from now is ' + fmt(by, 1) + ' years away — a different stage of your life.',
+         '1,000,000,000 ÷ 31,556,952 s per year = ' + fmt(by, 2) + ' years'],
+        ['The gap between the two words is ' + fmt(by * 365.2425 / md, 0) + ' times over.',
+         fmt(by * 365.2425, 0) + ' days ÷ ' + fmt(md, 2) + ' days = ' + fmt(by * 365.2425 / md, 0)],
+      ];
+    },
+  },
+  {
+    tag: 'doubling',
+    fact: 'Fold a sheet of paper in half forty-two times and it reaches the Moon. You cannot do it, but the arithmetic is not in doubt.',
+    figure: () => fmt(ANCHORS.paperThick.v * Math.pow(2, 42) / 1e6) + ' km after 42 folds',
+    src: () => ANCHORS.paperThick.src,
+    bar: () => ({ big: ANCHORS.paperThick.v * Math.pow(2, 42) / 1e6, small: ANCHORS.moonDist.v,
+                  bigL: '42 folds', smallL: 'distance to the Moon' }),
+    barNote: () => 'Forty-one folds falls ' + fmt(ANCHORS.moonDist.v - ANCHORS.paperThick.v * Math.pow(2, 41) / 1e6) +
+                   ' km short. One more fold overshoots by ' + fmt(ANCHORS.paperThick.v * Math.pow(2, 42) / 1e6 - ANCHORS.moonDist.v) + ' km.',
+    scene: 'folding',
+    rows: () => {
+      const at = (n) => ANCHORS.paperThick.v * Math.pow(2, n) / 1e6;
+      return [
+        ['Ten folds gets you to ' + fmt(ANCHORS.paperThick.v * Math.pow(2, 10)) + ' mm — about the height of a chair.',
+         '0.1 mm × 2^10 = ' + fmt(ANCHORS.paperThick.v * Math.pow(2, 10), 1) + ' mm'],
+        ['Twenty-three folds passes the height of Everest.',
+         '0.1 mm × 2^23 = ' + fmt(ANCHORS.paperThick.v * Math.pow(2, 23) / 1e3, 1) + ' m, against Everest at ' + fmt(ANCHORS.everest.v, 2) + ' m'],
+        ['Forty-two folds passes the Moon, at ' + fmt(at(42)) + ' km against ' + fmt(ANCHORS.moonDist.v) + ' km.',
+         '0.1 mm × 2^42 = ' + fmt(at(42), 1) + ' km, against the Moon at ' + fmt(ANCHORS.moonDist.v) + ' km'],
+      ];
+    },
+  },
+  {
+    tag: 'gap',
+    fact: 'You have probably read that all seven other planets fit in the gap between the Earth and the Moon. It depends entirely on where you measure from.',
+    figure: () => fmt(ANCHORS.planetSum.v) + ' km of planets',
+    src: () => ANCHORS.planetSum.src,
+    bar: () => ({ big: ANCHORS.moonDist.v, small: ANCHORS.planetSum.v, bigL: 'Earth to Moon, centre to centre', smallL: 'the seven planets in a row' }),
+    barNote: () => 'Centre to centre there is room. Surface to surface there is not.',
+    scene: 'planetgap',
+    rows: () => {
+      const surf = ANCHORS.moonDist.v - ANCHORS.earthRadius.v - ANCHORS.moonRadius.v;
+      const over = ANCHORS.planetSum.v - surf;
+      return [
+        ['Measured centre to centre, they fit with ' + fmt(ANCHORS.moonDist.v - ANCHORS.planetSum.v) + ' km left over.',
+         fmt(ANCHORS.moonDist.v) + ' km − ' + fmt(ANCHORS.planetSum.v) + ' km = ' + fmt(ANCHORS.moonDist.v - ANCHORS.planetSum.v) + ' km'],
+        ['Measured surface to surface — the gap you could actually fly a planet through — they do not. They overshoot by ' + fmt(over) + ' km.',
+         fmt(ANCHORS.moonDist.v) + ' − ' + fmt(ANCHORS.earthRadius.v) + ' − ' + fmt(ANCHORS.moonRadius.v, 1) + ' = ' + fmt(surf, 1) +
+         ' km of gap; ' + fmt(ANCHORS.planetSum.v) + ' − ' + fmt(surf, 1) + ' = ' + fmt(over, 1) + ' km over'],
+        ['Jupiter alone takes up ' + fmt(100 * 139820 / surf, 1) + '% of the real gap.',
+         '139,820 km ÷ ' + fmt(surf, 1) + ' km = ' + fmt(100 * 139820 / surf, 1) + '%'],
+      ];
+    },
+  },
+  {
+    tag: 'volume',
+    fact: 'The Sun is not just bigger than the Earth. It is a different category of object.',
+    figure: () => fmt(Math.pow(ANCHORS.sunRadius.v / ANCHORS.earthRadius.v, 3)) + ' Earths by volume',
+    src: () => ANCHORS.sunRadius.src,
+    bar: () => ({ big: ANCHORS.sunRadius.v, small: ANCHORS.earthRadius.v, bigL: 'Sun, by radius', smallL: 'Earth, by radius' }),
+    barNote: () => 'By radius it is ' + fmt(ANCHORS.sunRadius.v / ANCHORS.earthRadius.v, 1) + ' Earths. Volume goes as the cube, which is where the millions come from.',
+    scene: 'sunfill',
+    rows: () => {
+      const r = ANCHORS.sunRadius.v / ANCHORS.earthRadius.v;
+      return [
+        ['Line Earths up across the Sun’s face and you need about ' + fmt(r) + ' of them.',
+         fmt(ANCHORS.sunRadius.v) + ' km ÷ ' + fmt(ANCHORS.earthRadius.v) + ' km = ' + fmt(r, 1)],
+        ['Pack them in three dimensions and you need ' + fmt(Math.pow(r, 3)) + '.',
+         fmt(r, 1) + '³ = ' + fmt(Math.pow(r, 3))],
+        ['Adding one Earth to the Sun changes its volume by ' + (100 / Math.pow(r, 3)).toExponential(2) + ' per cent.',
+         '100 ÷ ' + fmt(Math.pow(r, 3)) + ' = ' + (100 / Math.pow(r, 3)).toExponential(2)],
+      ];
+    },
+  },
+  {
+    tag: 'rotation',
+    fact: 'A day on Venus is longer than a year on Venus.',
+    figure: () => fmt(ANCHORS.venusDay.v, 2) + ' days to turn once, ' + fmt(ANCHORS.venusYear.v, 2) + ' to go round',
+    src: () => ANCHORS.venusDay.src,
+    bar: () => ({ big: ANCHORS.venusDay.v, small: ANCHORS.venusYear.v, bigL: 'one rotation', smallL: 'one orbit' }),
+    barNote: () => 'The orbit is ' + fmt(100 * ANCHORS.venusYear.v / ANCHORS.venusDay.v, 1) + '% of the rotation. Both are measured in Earth days.',
+    scene: 'venus',
+    rows: () => {
+      const d = ANCHORS.venusDay.v, y = ANCHORS.venusYear.v;
+      return [
+        ['Venus finishes its year ' + fmt(d - y, 2) + ' Earth days before it finishes turning around.',
+         fmt(d, 2) + ' − ' + fmt(y, 2) + ' = ' + fmt(d - y, 2) + ' days'],
+        ['It also turns the wrong way, so the sun the surface actually sees comes round every ' +
+         fmt(1 / (1 / y + 1 / d), 1) + ' Earth days, rising in the west.',
+         'Retrograde, so the periods add: 1 ÷ (1/' + fmt(y, 2) + ' + 1/' + fmt(d, 2) + ') = ' + fmt(1 / (1 / y + 1 / d), 2) + ' days'],
+      ];
+    },
+  },
+  {
+    tag: 'distance',
+    fact: 'The nearest other star is close, in the sense that nothing else is closer.',
+    figure: () => fmt(ANCHORS.proxima.v * ANCHORS.lightYear.v / 900 / 24 / 365.2425 / 1e6, 2) + ' million years by airliner',
+    src: () => ANCHORS.proxima.src,
+    bar: () => ({ big: ANCHORS.proxima.v * ANCHORS.lightYear.v, small: ANCHORS.au.v, bigL: 'to Proxima Centauri', smallL: 'to the Sun' }),
+    barNote: () => 'The Sun is ' + fmt(100 * ANCHORS.au.v / (ANCHORS.proxima.v * ANCHORS.lightYear.v), 4) + '% of the way to the next star.',
+    scene: 'proxima',
+    rows: () => {
+      const km = ANCHORS.proxima.v * ANCHORS.lightYear.v;
+      const yrs = km / 900 / 24 / 365.2425;
+      return [
+        ['At airliner speed it is ' + fmt(yrs / 1e6, 2) + ' million years away.',
+         fmt(km, 0) + ' km ÷ 900 km/h ÷ 8,766 h per year = ' + fmt(yrs, 0) + ' years'],
+        ['Light does it in ' + fmt(ANCHORS.proxima.v, 2) + ' years, which is the shortest anything can manage.',
+         'By definition: ' + fmt(ANCHORS.proxima.v, 4) + ' light years'],
+        ['It is ' + fmt(km / ANCHORS.au.v) + ' times further than the Sun.',
+         fmt(km, 0) + ' km ÷ ' + fmt(ANCHORS.au.v, 1) + ' km = ' + fmt(km / ANCHORS.au.v)],
+      ];
+    },
+  },
+  {
+    tag: 'census',
+    fact: 'There are more cells in one person than there are stars in the galaxy.',
+    figure: () => fmt(ANCHORS.humanCells.v / ANCHORS.starsHigh.v) + '× to ' + fmt(ANCHORS.humanCells.v / ANCHORS.starsLow.v) + '× as many',
+    src: () => ANCHORS.humanCells.src,
+    bar: () => ({ big: ANCHORS.humanCells.v, small: ANCHORS.starsHigh.v, bigL: 'cells in one body', smallL: 'stars, high estimate' }),
+    barNote: () => 'Star counts range from ' + fmt(ANCHORS.starsLow.v / 1e9) + ' to ' + fmt(ANCHORS.starsHigh.v / 1e9) +
+                   ' billion. Both ends are used here rather than a single number, because the uncertainty is the point.',
+    scene: 'census',
+    rows: () => [
+      ['Against the high estimate of ' + fmt(ANCHORS.starsHigh.v / 1e9) + ' billion stars, you are ' + fmt(ANCHORS.humanCells.v / ANCHORS.starsHigh.v) + ' galaxies over.',
+       fmt(ANCHORS.humanCells.v, 0) + ' ÷ ' + fmt(ANCHORS.starsHigh.v, 0) + ' = ' + fmt(ANCHORS.humanCells.v / ANCHORS.starsHigh.v)],
+      ['Against the low estimate you are ' + fmt(ANCHORS.humanCells.v / ANCHORS.starsLow.v) + ' galaxies over.',
+       fmt(ANCHORS.humanCells.v, 0) + ' ÷ ' + fmt(ANCHORS.starsLow.v, 0) + ' = ' + fmt(ANCHORS.humanCells.v / ANCHORS.starsLow.v)],
+      ['Either way the answer is the same shape: a body is not a small thing that contains a galaxy of parts. It is a large one.',
+       'The comparison holds across the whole published range, which is why it is worth making'],
+    ],
+  },
+  {
+    tag: 'speed',
+    fact: 'Standing still at the equator, you are already moving faster than sound.',
+    figure: () => fmt(ANCHORS.earthCirc.v / ANCHORS.siderealDay.v) + ' km/h, sitting down',
+    src: () => ANCHORS.siderealDay.src,
+    bar: () => ({ big: ANCHORS.earthCirc.v / ANCHORS.siderealDay.v, small: ANCHORS.soundAir.v * 3.6,
+                  bigL: 'the ground at the equator', smallL: 'the speed of sound' }),
+    barNote: () => 'That is Mach ' + fmt((ANCHORS.earthCirc.v / ANCHORS.siderealDay.v) / (ANCHORS.soundAir.v * 3.6), 2) +
+                   ', though you feel nothing, because the air is doing it too.',
+    scene: 'spin',
+    rows: () => {
+      const eq = ANCHORS.earthCirc.v / ANCHORS.siderealDay.v, snd = ANCHORS.soundAir.v * 3.6;
+      return [
+        ['The ground at the equator moves at ' + fmt(eq) + ' km/h.',
+         fmt(ANCHORS.earthCirc.v) + ' km ÷ ' + fmt(ANCHORS.siderealDay.v, 4) + ' h = ' + fmt(eq, 1) + ' km/h'],
+        ['Sound manages ' + fmt(snd) + ' km/h, so the planet is doing Mach ' + fmt(eq / snd, 2) + '.',
+         fmt(ANCHORS.soundAir.v) + ' m/s × 3.6 = ' + fmt(snd, 1) + ' km/h; ' + fmt(eq, 1) + ' ÷ ' + fmt(snd, 1) + ' = ' + fmt(eq / snd, 2)],
+        ['An airliner at ' + fmt(ANCHORS.jetCruise.v) + ' km/h is the slower object in that pairing, by some margin.',
+         fmt(eq, 1) + ' km/h ÷ ' + fmt(ANCHORS.jetCruise.v) + ' km/h = ' + fmt(eq / ANCHORS.jetCruise.v, 2)],
+      ];
+    },
+  },
+  {
+    tag: 'animal',
+    fact: 'A blue whale is longer than the room you are in, and probably longer than the building.',
+    figure: () => fmt(ANCHORS.blueWhale.v / ANCHORS.humanHeight.v, 1) + ' people, end to end',
+    src: () => ANCHORS.blueWhale.src,
+    bar: () => ({ big: ANCHORS.blueWhale.v, small: ANCHORS.humanHeight.v, bigL: 'blue whale', smallL: 'a person' }),
+    barNote: () => 'Drawn to scale. The short bar is a person lying down.',
+    scene: 'whale',
+    rows: () => {
+      const n = ANCHORS.blueWhale.v / ANCHORS.humanHeight.v;
+      return [
+        ['Lie ' + fmt(n, 1) + ' people head to toe and you have one whale.',
+         fmt(ANCHORS.blueWhale.v) + ' m ÷ ' + fmt(ANCHORS.humanHeight.v, 1) + ' m = ' + fmt(n, 2)],
+        ['It is longer than a basketball court, which is 28 m.',
+         fmt(ANCHORS.blueWhale.v) + ' m against 28 m'],
+      ];
+    },
+  },
+  {
+    tag: 'slow',
+    fact: 'The Atlantic is getting wider. Your fingernails are winning.',
+    figure: () => fmt(ANCHORS.nailGrowth.v / ANCHORS.ridgeSpread.v, 1) + '× faster than the sea floor',
+    src: () => ANCHORS.ridgeSpread.src,
+    bar: () => ({ big: ANCHORS.nailGrowth.v, small: ANCHORS.ridgeSpread.v, bigL: 'fingernails', smallL: 'the Mid-Atlantic Ridge' }),
+    barNote: () => 'Both in centimetres per year. Neither is fast; one of them moves continents.',
+    scene: 'drift',
+    rows: () => {
+      const r = ANCHORS.ridgeSpread.v, n = ANCHORS.nailGrowth.v;
+      return [
+        ['Your nails grow ' + fmt(n / r, 1) + ' times faster than the Atlantic opens.',
+         fmt(n, 1) + ' cm/yr ÷ ' + fmt(r, 1) + ' cm/yr = ' + fmt(n / r, 2)],
+        ['At that rate the Atlantic widens by ' + fmt(r * 100 / 100, 1) + ' cm a year, or ' + fmt(r * 1000 / 100, 1) + ' m per thousand years.',
+         fmt(r, 1) + ' cm/yr × 1,000 yr = ' + fmt(r * 1000, 0) + ' cm = ' + fmt(r * 10, 0) + ' m'],
+        ['Since the Romans it has opened by roughly ' + fmt(r * 2000 / 100, 0) + ' m.',
+         fmt(r, 1) + ' cm/yr × 2,000 yr = ' + fmt(r * 2000, 0) + ' cm = ' + fmt(r * 2000 / 100, 0) + ' m'],
+      ];
+    },
+  },
 ];
 
 let idx = 0;
@@ -263,6 +744,8 @@ function render(){
   $('sheet').innerHTML =
     '<span class="tag">' + esc(c.tag) + '</span>' +
     '<p class="fact">' + esc(c.fact) + '</p>' +
+    '<div class="scene-wrap"><svg class="scene" viewBox="0 0 480 200" role="img" ' +
+      'aria-label="' + esc(c.tag) + ' comparison, drawn to scale">' + SCENES[c.scene]() + '</svg></div>' +
     '<div class="figure">' + esc(c.figure()) + '</div>' +
     '<div class="src">' + esc(c.src()) + '</div>' +
     '<div class="bar-wrap">' +
