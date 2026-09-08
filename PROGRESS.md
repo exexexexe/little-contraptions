@@ -282,3 +282,9 @@ Six archetypes — the detective, the medical examiner, the captain, the profile
 
 Judgment calls: nothing is quoted from or written to resemble a line from any real programme — what is borrowed is the genre's structure (the cold open, the small detail that bothers them, the turn, the sting), filled with material written for this page, and the footnote says so. No LLM: it is a slot grammar over hand-written pools. One stage direction said 'He waits', which assumed a gender the detective does not have; it is now 'Nobody moves.'
 
+### /escape-room/ — Five Small Rooms
+
+Five one-screen escape rooms, each with its own kind of puzzle: arithmetic from a ticket and a queue display, spotting which two floor numbers a lift panel refuses to have, a shelf-book-line lookup in a bookcase of twenty openable books, an elimination puzzle among four labelled plants, and reading an eight-lamp rack as binary. Click anything in the scene to examine it; anything that carries a clue writes itself into the notebook. One hint per room, counted.
+
+Judgment calls: every room is solvable from what is inside it — no outside knowledge, no pixel-hunting, and the hint explains the method rather than giving the answer. All five re-roll their numbers on load (the queue numbers, the scratched pot number, the eight lamps, which plant is self-seeded, which shelf and book and line, and the word itself), so nothing can be memorised or looked up; the lift's missing floors are the one fixed answer, because 4 and 13 are the joke. Scenes are flat SVG drawn for the page.
+

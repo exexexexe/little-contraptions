@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Five Small Rooms</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%231C1A17'/><rect x='9' y='6' width='14' height='21' rx='1' fill='%23C8A24E'/><circle cx='19' cy='17' r='1.6' fill='%231C1A17'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --bg:#15140F;
+  --panel:#1E1C17;
+  --ink:#EDE7D8;
+  --ink-2:#B2AB99;
+  --dim:#837D6E;
+  --rule:#332F27;
+  --brass:#C8A24E;
+  --good:#7FBE8E;
+  --bad:#C77A6A;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --sans:ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif;
+  --serif:"Iowan Old Style","Palatino Linotype",Georgia,serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);color:var(--ink);font-family:var(--sans);min-height:100vh;
+  padding:20px 16px 70px;-webkit-user-select:none;user-select:none;
+}
+.wrap{ max-width:960px;margin:0 auto }
+header{ display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap }
+h1{ font-size:14px;letter-spacing:.24em;text-transform:uppercase;margin:0;font-weight:600 }
+.meta{ font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim) }
+
+.game{ display:grid;grid-template-columns:1.35fr 1fr;gap:16px;margin-top:16px;align-items:start }
+@media (max-width:760px){ .game{ grid-template-columns:1fr } }
+
+.scene{
+  background:var(--panel);border:1px solid var(--rule);border-radius:5px;overflow:hidden;position:relative;
+}
+.scene svg{ display:block;width:100%;height:auto }
+.scene [data-o]{ cursor:pointer }
+.scene [data-o]:hover .hit{ stroke:var(--brass);stroke-width:2.5;stroke-dasharray:5 4 }
+.scene [data-o] .hit{ fill:transparent;stroke:transparent;stroke-width:2 }
+.scene.found [data-o] .hit{ stroke:rgba(200,162,78,.22);stroke-width:1.5 }
+.roomname{
+  position:absolute;left:12px;top:11px;font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;
+  text-transform:uppercase;color:rgba(240,235,220,.62);
+}
+
+.side{ display:flex;flex-direction:column;gap:12px }
+.pane{ background:var(--panel);border:1px solid var(--rule);border-radius:5px;padding:14px 15px }
+.pane h2{
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.19em;text-transform:uppercase;color:var(--dim);
+  font-weight:400;margin:0 0 9px;
+}
+#look{ font-family:var(--serif);font-size:15px;line-height:1.72;color:var(--ink-2);min-height:76px }
+#look b{ color:var(--ink);font-family:var(--mono);font-size:13px;letter-spacing:.02em }
+#notes{ margin:0;padding-left:17px;font-size:13px;line-height:1.7;color:var(--ink-2) }
+#notes li{ margin-bottom:5px }
+#notes:empty:after{ content:'nothing written down yet';color:var(--dim);font-style:italic }
+
+.lock{ display:flex;gap:8px;align-items:center;flex-wrap:wrap }
+.lock input{
+  flex:1;min-width:110px;font-family:var(--mono);font-size:17px;letter-spacing:.22em;text-align:center;
+  padding:11px 12px;border-radius:3px;border:1px solid var(--rule);background:#100F0C;color:var(--brass);
+  text-transform:uppercase;
+}
+.lock input:focus{ outline:2px solid var(--brass);outline-offset:-1px }
+.btn{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
+  background:#262319;color:var(--ink);border:1px solid var(--rule);padding:12px 15px;border-radius:3px;cursor:pointer;
+}
+.btn:hover{ background:#302C20 }
+.btn.go{ background:var(--brass);border-color:var(--brass);color:#1A1509;font-weight:700 }
+.btn:focus-visible{ outline:2px solid var(--brass);outline-offset:2px }
+.msg{ font-family:var(--mono);font-size:11px;letter-spacing:.06em;margin-top:9px;min-height:16px }
+.msg.ok{ color:var(--good) }
+.msg.no{ color:var(--bad) }
+.hint{ font-size:13px;line-height:1.7;color:var(--dim);margin-top:9px;font-style:italic }
+
+.prompt{ font-size:13.5px;line-height:1.65;color:var(--ink-2);margin:0 0 10px }
+.prompt b{ color:var(--ink) }
+
+.done{ text-align:center;padding:40px 20px }
+.done h2{ font-family:var(--serif);font-size:30px;margin:0 0 10px }
+.done p{ font-size:15px;line-height:1.75;color:var(--ink-2);max-width:520px;margin:0 auto 12px }
+.done .stat{ font-family:var(--mono);font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--brass) }
+
+.progress{ display:flex;gap:5px;margin-top:12px }
+.progress i{ flex:1;height:3px;background:var(--rule);border-radius:2px }
+.progress i.on{ background:var(--brass) }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } }
+</style>
+</head>
+<body>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<div class="wrap">
+  <header>
+    <h1>Five Small Rooms</h1>
+    <div class="meta"><span id="roomno">room 1 of 5</span> · <span id="timer">0:00</span> · <span id="hints">0 hints</span></div>
+  </header>
+  <div class="progress" id="prog"></div>
+
+  <div class="game" id="game">
+    <div class="scene" id="scene"></div>
+    <div class="side">
+      <div class="pane">
+        <h2>What you are looking at</h2>
+        <div id="look">Click anything in the room. Everything that can be looked at will show you something.</div>
+      </div>
+      <div class="pane">
+        <h2>Notebook</h2>
+        <ul id="notes"></ul>
+      </div>
+      <div class="pane">
+        <h2>The way out</h2>
+        <p class="prompt" id="prompt"></p>
+        <div class="lock">
+          <input id="answer" autocomplete="off" spellcheck="false" maxlength="12">
+          <button class="btn go" id="try">Try it</button>
+          <button class="btn" id="hintbtn">Hint</button>
+        </div>
+        <div class="msg" id="msg"></div>
+        <div class="hint" id="hinttext"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const pick = (a) => a[Math.floor(Math.random() * a.length)];
+const ri = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
+
+/* ------------------------------------------------------------------ *
+ * Five rooms. Each one is solvable from what is in it — no outside    *
+ * knowledge, no guessing. Four of the five re-roll their numbers on   *
+ * every play, so the answers cannot be memorised or looked up.        *
+ * ------------------------------------------------------------------ */
+
+/* ---- room 1: the waiting room -------------------------------------- */
+function roomWaiting(){
+  const serving = ri(38, 61);
+  const wait = ri(9, 23);
+  const mine = serving + wait;
+  return {
+    name:'The Waiting Room',
+    prompt:'The door opens when you can say <b>how many minutes until you are seen</b>.',
+    answer: String(wait),
+    hint:'Your number, minus the number being served, is how many people are ahead of you. The notice says how long each one takes.',
+    svg: `
+      <rect width="640" height="440" fill="#3A3B33"/>
+      <rect y="250" width="640" height="190" fill="#4A4A40"/>
+      <rect y="246" width="640" height="6" fill="#2A2B25"/>
+      <g data-o="sign">
+        <rect x="392" y="52" width="196" height="86" rx="4" fill="#141512"/>
+        <text x="490" y="82" fill="#8B8B7C" font-family="monospace" font-size="13" text-anchor="middle" letter-spacing="3">NOW SERVING</text>
+        <text x="490" y="124" fill="#E8734A" font-family="monospace" font-size="38" text-anchor="middle" font-weight="700">${serving}</text>
+        <rect class="hit" x="386" y="46" width="208" height="98" rx="6"/>
+      </g>
+      <g data-o="ticket">
+        <rect x="60" y="150" width="120" height="150" rx="4" fill="#6E6E60"/>
+        <rect x="72" y="166" width="96" height="60" rx="2" fill="#2C2D28"/>
+        <rect x="86" y="240" width="68" height="34" rx="2" fill="#E8E3D2"/>
+        <text x="120" y="264" fill="#2A2A26" font-family="monospace" font-size="17" text-anchor="middle" font-weight="700">${mine}</text>
+        <rect class="hit" x="54" y="144" width="132" height="162" rx="6"/>
+      </g>
+      <g data-o="notice">
+        <rect x="222" y="86" width="140" height="98" rx="2" fill="#DAD5C2" transform="rotate(-2 292 135)"/>
+        <path d="M236 112h112M236 128h112M236 144h84" stroke="#8A8676" stroke-width="3" transform="rotate(-2 292 135)"/>
+        <rect class="hit" x="216" y="80" width="152" height="110" rx="4"/>
+      </g>
+      <g data-o="chairs">
+        <rect x="60" y="330" width="480" height="16" rx="4" fill="#2F3029"/>
+        <rect x="72" y="300" width="90" height="34" rx="4" fill="#5C6252"/>
+        <rect x="180" y="300" width="90" height="34" rx="4" fill="#5C6252"/>
+        <rect x="288" y="300" width="90" height="34" rx="4" fill="#5C6252"/>
+        <rect x="396" y="300" width="90" height="34" rx="4" fill="#5C6252"/>
+        <rect class="hit" x="56" y="294" width="490" height="56" rx="6"/>
+      </g>
+      <g data-o="door">
+        <rect x="470" y="176" width="120" height="76" fill="#23241F"/>
+        <rect x="470" y="176" width="120" height="10" fill="#15150F"/>
+        <rect class="hit" x="466" y="172" width="128" height="84"/>
+      </g>`,
+    objects: {
+      sign:   { t:'The display', d:'A dot-matrix display above the counter. <b>NOW SERVING ' + serving + '</b>. It has not changed since you sat down.', note:'Now serving: ' + serving },
+      ticket: { t:'The ticket machine', d:'A paper tongue with your number on it: <b>' + mine + '</b>. The machine makes a noise like it is thinking about something else.', note:'My ticket: ' + mine },
+      notice: { t:'A laminated notice', d:'"Please be patient. We allow <b>one minute</b> for each person ahead of you." Somebody has written underneath, in biro: this is optimistic.', note:'One minute per person ahead' },
+      chairs: { t:'Four bolted chairs', d:'All facing the same way, all empty, all slightly warm.' },
+      door:   { t:'The door', d:'No handle on this side. A small grille at head height, and a keypad expecting a number.' },
+    },
+  };
+}
+
+/* ---- room 2: the lift ---------------------------------------------- */
+function roomLift(){
+  // two floors are missing from the panel; the note asks for both, low first
+  const floors = [];
+  for (let f = 1; f <= 15; f++) floors.push(f);
+  const missA = 4, missB = 13;                 // the two nobody wants to number
+  const shown = floors.filter(f => f !== missA && f !== missB);
+  const buttons = shown.map((f, i) => {
+    const col = i % 2, row = Math.floor(i / 2);
+    return `<g><circle cx="${300 + col * 54}" cy="${120 + row * 42}" r="17" fill="#2B2C27" stroke="#7E8072" stroke-width="2"/>` +
+      `<text x="${300 + col * 54}" y="${126 + row * 42}" fill="#D8D6C8" font-family="monospace" font-size="14" text-anchor="middle">${f}</text></g>`;
+  }).join('');
+  return {
+    name:'The Lift',
+    prompt:'A keypad under the buttons wants <b>the floors that are not there</b>, lower one first, no space.',
+    answer: String(missA) + String(missB),
+    hint:'Read the buttons in order and say which numbers are skipped. There are two of them.',
+    svg: `
+      <rect width="640" height="440" fill="#2E312C"/>
+      <rect x="24" y="20" width="592" height="400" rx="3" fill="#3A3E37"/>
+      <path d="M24 20h592v400H24z" fill="none" stroke="#22251F" stroke-width="4"/>
+      <g data-o="panel">
+        <rect x="266" y="76" width="126" height="330" rx="6" fill="#22241F" stroke="#585B50" stroke-width="2"/>
+        ${buttons}
+        <rect class="hit" x="260" y="70" width="138" height="342" rx="8"/>
+      </g>
+      <g data-o="indicator">
+        <rect x="266" y="34" width="126" height="34" rx="3" fill="#101210"/>
+        <text x="329" y="59" fill="#E8A34A" font-family="monospace" font-size="19" text-anchor="middle" letter-spacing="4">— —</text>
+        <rect class="hit" x="260" y="28" width="138" height="46" rx="5"/>
+      </g>
+      <g data-o="note">
+        <rect x="58" y="150" width="150" height="104" rx="2" fill="#E4DFCC" transform="rotate(3 133 202)"/>
+        <path d="M74 180h116M74 198h116M74 216h74" stroke="#95917F" stroke-width="3" transform="rotate(3 133 202)"/>
+        <rect class="hit" x="52" y="144" width="162" height="118" rx="4"/>
+      </g>
+      <g data-o="cert">
+        <rect x="448" y="176" width="130" height="90" rx="2" fill="#CFD6D2"/>
+        <path d="M462 198h102M462 214h102M462 230h64" stroke="#8A9490" stroke-width="3"/>
+        <rect class="hit" x="442" y="170" width="142" height="102" rx="4"/>
+      </g>
+      <g data-o="mirror">
+        <rect x="60" y="290" width="150" height="110" rx="3" fill="#4B534E" opacity=".8"/>
+        <path d="M66 386l50-60 26 30 18-20 34 50z" fill="#5A635D"/>
+        <rect class="hit" x="54" y="284" width="162" height="122" rx="5"/>
+      </g>`,
+    objects: {
+      panel:     { t:'The button panel', d:'Fifteen floors in this building. Thirteen buttons on the panel. Somebody has decided which numbers people are willing to press.', note:'Two floor numbers are missing from the panel' },
+      indicator: { t:'The floor indicator', d:'Two dashes. The lift does not currently believe it is anywhere.' },
+      note:      { t:'A note taped inside', d:'In careful handwriting: "Meet me on the floors that are not there. <b>Low one first. No space between.</b>"', note:'Low missing floor first, then the high one' },
+      cert:      { t:'The inspection certificate', d:'Signed, dated, and laminated. Passed. The signature is illegible in the way that signatures are meant to be.' },
+      mirror:    { t:'The mirror', d:'You look like somebody who has been in a lift for a while.' },
+    },
+  };
+}
+
+/* ---- room 3: the library ------------------------------------------- */
+function roomLibrary(){
+  const WORDS = ['HERRING','LANTERN','MARROW','THISTLE','CANDLE','PLOVER','QUARRY','WREN'];
+  const word = pick(WORDS);
+  const shelf = ri(2, 4), book = ri(2, 4);
+  const line = ri(2, 3);
+  const filler = ['the tide had gone out further than usual','nobody had swept the steps in weeks',
+                  'the harbour lights came on one at a time','it rained for the whole of that summer'];
+  // build the text of the target book: the chosen line begins with the word
+  const lines = [];
+  for (let i = 1; i <= 4; i++){
+    lines.push(i === line ? word.toLowerCase() + ' — and then ' + pick(filler) : pick(filler));
+  }
+  const shelfY = [110, 180, 250, 320];
+  let shelves = '';
+  for (let s = 1; s <= 4; s++){
+    const y = shelfY[s - 1];
+    shelves += `<rect x="60" y="${y + 46}" width="330" height="8" fill="#3A2F22"/>`;
+    for (let b = 1; b <= 5; b++){
+      const x = 70 + (b - 1) * 62;
+      const h = 40 + ((s * 7 + b * 5) % 9);
+      const cols = ['#7C5A3E','#5C6E52','#7A4A46','#4E5E73','#8A7440'];
+      const isTarget = (s === shelf && b === book);
+      shelves += `<g data-o="book-${s}-${b}"><rect x="${x}" y="${y + 46 - h}" width="46" height="${h}" rx="1"` +
+        ` fill="${cols[(s + b) % 5]}" stroke="#241C13" stroke-width="1.5"/>` +
+        `<rect class="hit" x="${x - 2}" y="${y + 44 - h}" width="50" height="${h + 4}"/></g>`;
+    }
+  }
+  return {
+    name:'The Reading Room',
+    shelf, book, line, word, lines,
+    prompt:'The lock on the door is a word. The card in the drawer says which one.',
+    answer: word,
+    hint:'Shelves count from the top. Books count from the left. Open exactly the one the card names, and read the line it asks for.',
+    svg: `
+      <rect width="640" height="440" fill="#241F19"/>
+      <rect x="40" y="70" width="370" height="320" rx="3" fill="#2E271F" stroke="#4A3D2C" stroke-width="3"/>
+      ${shelves}
+      <g data-o="card">
+        <rect x="452" y="120" width="150" height="96" rx="2" fill="#E8E1CC" transform="rotate(-3 527 168)"/>
+        <path d="M468 148h116M468 166h116M468 184h78" stroke="#9C9581" stroke-width="3" transform="rotate(-3 527 168)"/>
+        <rect class="hit" x="446" y="114" width="162" height="110" rx="4"/>
+      </g>
+      <g data-o="lamp">
+        <path d="M520 300v-52" stroke="#5E5442" stroke-width="5"/>
+        <path d="M492 248h56l-14-28h-28z" fill="#8A7A4E"/>
+        <ellipse cx="520" cy="302" rx="34" ry="9" fill="#4A4232"/>
+        <rect class="hit" x="486" y="214" width="70" height="98"/>
+      </g>
+      <g data-o="door">
+        <rect x="452" y="330" width="150" height="70" fill="#1A1611" stroke="#3E3427" stroke-width="3"/>
+        <circle cx="470" cy="366" r="6" fill="#C8A24E"/>
+        <rect class="hit" x="448" y="326" width="158" height="78"/>
+      </g>`,
+    objects: {
+      card: { t:'A card in the drawer', d:'Typed, then corrected in pencil: "Shelf <b>' + shelf + '</b> from the top. Book <b>' + book + '</b> from the left. Line <b>' + line + '</b>. First word."',
+              note:'Shelf ' + shelf + ' (from top), book ' + book + ' (from left), line ' + line + ', first word' },
+      lamp: { t:'A reading lamp', d:'Warm, and on, and pointed at nothing in particular.' },
+      door: { t:'The door', d:'A word lock — five to seven letters, brass, older than the building.' },
+    },
+    // books are wired up dynamically
+    dynamic: true,
+  };
+}
+
+/* ---- room 4: the greenhouse ---------------------------------------- */
+function roomGreen(){
+  const plants = [
+    { id:'p1', label:'Ficus lyrata',       h:'tall',   berries:false, planted:true },
+    { id:'p2', label:'Solanum dulcamara',  h:'medium', berries:true,  planted:true },
+    { id:'p3', label:'Buddleja davidii',   h:'medium', berries:false, planted:false },
+    { id:'p4', label:'Pelargonium',        h:'short',  berries:false, planted:true },
+  ];
+  // shuffle which pot is which
+  for (let i = plants.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [plants[i], plants[j]] = [plants[j], plants[i]];
+  }
+  const target = plants.find(p => !p.planted);
+  const code = ri(20, 89);
+  const shapes = { tall: 96, medium: 66, short: 42 };
+  let pots = '';
+  plants.forEach((p, i) => {
+    const x = 90 + i * 130;
+    const h = shapes[p.h];
+    pots += `<g data-o="${p.id}">` +
+      `<path d="M${x - 26} 330 L${x + 26} 330 L${x + 20} 372 L${x - 20} 372 Z" fill="#8A5A3C" stroke="#4E2F1C" stroke-width="2"/>` +
+      `<rect x="${x - 28}" y="322" width="56" height="12" rx="2" fill="#9C6743"/>` +
+      `<path d="M${x} 330 V${330 - h}" stroke="#4E7A44" stroke-width="5"/>` +
+      `<ellipse cx="${x - 17}" cy="${330 - h * .55}" rx="19" ry="11" fill="#5C8F52" transform="rotate(-22 ${x - 17} ${330 - h * .55})"/>` +
+      `<ellipse cx="${x + 17}" cy="${330 - h * .78}" rx="19" ry="11" fill="#4F8047" transform="rotate(20 ${x + 17} ${330 - h * .78})"/>` +
+      (p.berries ? `<circle cx="${x + 9}" cy="${330 - h * .38}" r="5" fill="#B03A34"/><circle cx="${x - 5}" cy="${330 - h * .3}" r="5" fill="#B03A34"/>` : '') +
+      `<rect class="hit" x="${x - 34}" y="${330 - h - 20}" width="68" height="${h + 60}" rx="5"/></g>`;
+  });
+  return {
+    name:'The Glasshouse',
+    prompt:'A number is scratched into one of the pots. The rota says which pot to look in.',
+    answer: String(code),
+    code, target: target.id,
+    hint:'Three of these were put there on purpose. Read the labels: one of them tells you it arrived on its own.',
+    svg: `
+      <rect width="640" height="440" fill="#2A3830"/>
+      <path d="M0 0h640v250H0z" fill="#33463C"/>
+      <g stroke="#1E2A24" stroke-width="3" opacity=".8">
+        <path d="M107 0v250M213 0v250M320 0v250M427 0v250M533 0v250M0 84h640M0 168h640"/>
+      </g>
+      <rect y="248" width="640" height="8" fill="#1E2A24"/>
+      <rect y="256" width="640" height="184" fill="#3D4A40"/>
+      <rect y="368" width="640" height="72" fill="#33403A"/>
+      ${pots}
+      <g data-o="rota">
+        <rect x="452" y="66" width="156" height="110" rx="2" fill="#DCD9C6" transform="rotate(2 530 121)"/>
+        <path d="M468 96h124M468 116h124M468 136h124M468 156h84" stroke="#93917E" stroke-width="3" transform="rotate(2 530 121)"/>
+        <rect class="hit" x="446" y="60" width="168" height="124" rx="4"/>
+      </g>
+      <g data-o="can">
+        <path d="M40 372h64v-40H40z" fill="#7E8A82" stroke="#4A544D" stroke-width="2"/>
+        <path d="M104 344l34-14v10l-30 14z" fill="#7E8A82" stroke="#4A544D" stroke-width="2"/>
+        <rect class="hit" x="34" y="322" width="112" height="58" rx="4"/>
+      </g>`,
+    objects: Object.assign({
+      rota: { t:'The watering rota', d:'"Monday: the tall one. Wednesday: the one with berries. Friday: <b>the one nobody planted</b>." Friday is circled twice.',
+              note:'Friday: the one nobody planted' },
+      can:  { t:'A watering can', d:'Empty, and dusty on the inside, which takes some doing.' },
+    }, plants.reduce((acc, p) => {
+      acc[p.id] = {
+        t: p.label,
+        d: 'A handwritten label: <i>' + p.label + '</i>. ' +
+           (p.planted
+             ? 'Underneath, in the same hand: "potted on, ' + pick(['March','April','September']) + '."'
+             : 'Underneath, in the same hand: "<b>self-seeded — came up on its own, left it alone</b>."') +
+           (p.planted ? '' : ' Scratched into the clay near the base: <b>' + code + '</b>.'),
+        note: p.planted ? null : 'Number scratched on the self-seeded pot: ' + code,
+      };
+      return acc;
+    }, {})),
+  };
+}
+
+/* ---- room 5: the server room --------------------------------------- */
+function roomServer(){
+  const value = ri(37, 250);
+  const bits = value.toString(2).padStart(8, '0').split('');
+  const leds = bits.map((b, i) =>
+    `<g><circle cx="${140 + i * 46}" cy="196" r="13" fill="${b === '1' ? '#7FE07F' : '#26302A'}"` +
+    ` stroke="#4A5A4E" stroke-width="2"/>` +
+    (b === '1' ? `<circle cx="${140 + i * 46}" cy="196" r="21" fill="#7FE07F" opacity=".16"/>` : '') +
+    `</g>`).join('');
+  return {
+    name:'The Comms Cupboard',
+    prompt:'The door wants <b>one number</b>. The rack is already showing it.',
+    answer: String(value),
+    hint:'Eight lamps, left to right, lit for one and dark for zero. That is a binary number; the label says to give it in decimal. Left-most lamp is worth 128, then 64, 32, 16, 8, 4, 2, 1.',
+    svg: `
+      <rect width="640" height="440" fill="#16191A"/>
+      <rect x="60" y="40" width="520" height="360" rx="4" fill="#1E2325" stroke="#333B3E" stroke-width="3"/>
+      <g data-o="rack">
+        <rect x="100" y="150" width="440" height="92" rx="4" fill="#232A2C" stroke="#3C464A" stroke-width="2"/>
+        <rect x="100" y="150" width="440" height="18" fill="#1A2022"/>
+        ${leds}
+        <rect class="hit" x="94" y="144" width="452" height="104" rx="6"/>
+      </g>
+      <g data-o="label">
+        <rect x="100" y="266" width="250" height="70" rx="2" fill="#E6E2D4"/>
+        <path d="M116 292h218M116 310h218M116 326h140" stroke="#96917F" stroke-width="3"/>
+        <rect class="hit" x="94" y="260" width="262" height="82" rx="4"/>
+      </g>
+      <g data-o="fan">
+        <circle cx="470" cy="300" r="42" fill="#20272A" stroke="#3C464A" stroke-width="3"/>
+        <path d="M470 262v76M432 300h76M443 273l54 54M497 273l-54 54" stroke="#37454A" stroke-width="6"/>
+        <rect class="hit" x="424" y="254" width="92" height="92" rx="46"/>
+      </g>
+      <g data-o="cables">
+        <path d="M100 70c80 40 160-20 240 20s160 0 200 30" stroke="#3E4A4E" stroke-width="7" fill="none"/>
+        <path d="M100 92c90 44 150-14 250 24s140 4 190 26" stroke="#4A3A3A" stroke-width="7" fill="none"/>
+        <rect class="hit" x="94" y="52" width="452" height="94" rx="6"/>
+      </g>`,
+    objects: {
+      rack:   { t:'The status rack', d:'Eight lamps in a row. Some lit, some not. They have not changed since you came in.', note:'Eight lamps: ' + bits.join('') + ' (lit = 1)' },
+      label:  { t:'A label on the rack', d:'Printed, then laminated, then ignored for years: "Door code: <b>read the lamps as ones and zeros, left to right, and give the number in decimal</b>."',
+                note:'Read the lamps as binary, answer in decimal' },
+      fan:    { t:'An extractor fan', d:'Turning slowly, and out of time with itself.' },
+      cables: { t:'The cable run', d:'Two hundred cables, four labels, none of them recent.' },
+    },
+  };
+}
+
+/* ---- the game ------------------------------------------------------ */
+
+const BUILDERS = [roomWaiting, roomLift, roomLibrary, roomGreen, roomServer];
+let idx = 0, room = null, notes = [], hintCount = 0, started = Date.now(), timer = null;
+
+function setRoom(i){
+  idx = i;
+  room = BUILDERS[i]();
+  notes = [];
+  $('scene').innerHTML =
+    '<svg viewBox="0 0 640 440" role="img" aria-label="' + esc(room.name) + '">' + room.svg + '</svg>' +
+    '<div class="roomname">' + esc(room.name) + '</div>';
+  $('look').innerHTML = 'Click anything in the room.';
+  $('notes').innerHTML = '';
+  $('prompt').innerHTML = room.prompt;
+  $('answer').value = '';
+  $('msg').textContent = '';
+  $('msg').className = 'msg';
+  $('hinttext').textContent = '';
+  $('roomno').textContent = 'room ' + (i + 1) + ' of 5';
+  $('prog').innerHTML = BUILDERS.map((_, k) => '<i class="' + (k <= i ? 'on' : '') + '"></i>').join('');
+  $('answer').focus();
+}
+
+$('scene').addEventListener('click', (e) => {
+  const g = e.target.closest('[data-o]');
+  if (!g) return;
+  const key = g.dataset.o;
+  let obj = room.objects[key];
+
+  // the library's books are generated, so they are described here
+  if (!obj && /^book-(\d)-(\d)$/.test(key)){
+    const [, s, b] = key.match(/^book-(\d)-(\d)$/).map(Number);
+    if (s === room.shelf && b === room.book){
+      obj = {
+        t: 'Shelf ' + s + ', book ' + b,
+        d: 'You open it in the middle. Four lines on the page:<br><br>' +
+           room.lines.map((l, i) => '<b>' + (i + 1) + '.</b> ' + esc(l)).join('<br>'),
+        note: 'Line ' + room.line + ' of that book begins: ' + room.word.toLowerCase(),
+      };
+    } else {
+      obj = { t: 'Shelf ' + s + ', book ' + b,
+              d: pick(['Water damage, and a name in the front that has been crossed out.',
+                       'A ledger. Columns of numbers that add up to nothing in particular.',
+                       'Blank. All of it. Somebody bound two hundred empty pages.',
+                       'A book about drainage. It is more interesting than that sounds, but not now.',
+                       'Stuck to the one beside it. You leave them to it.']) };
+    }
+  }
+  if (!obj) return;
+
+  $('look').innerHTML = '<b>' + esc(obj.t) + '</b><br>' + obj.d;
+  $('scene').classList.add('found');
+  if (obj.note && notes.indexOf(obj.note) < 0){
+    notes.push(obj.note);
+    $('notes').innerHTML = notes.map(n => '<li>' + esc(n) + '</li>').join('');
+  }
+});
+
+function normalise(s){
+  return String(s || '').trim().toUpperCase().replace(/\s+/g, '');
+}
+
+$('try').addEventListener('click', tryAnswer);
+$('answer').addEventListener('keydown', (e) => { if (e.key === 'Enter') tryAnswer(); });
+
+function tryAnswer(){
+  const given = normalise($('answer').value);
+  if (!given) return;
+  if (given === normalise(room.answer)){
+    $('msg').className = 'msg ok';
+    $('msg').textContent = 'The door opens.';
+    setTimeout(() => {
+      if (idx + 1 < BUILDERS.length) setRoom(idx + 1);
+      else finish();
+    }, 900);
+  } else {
+    $('msg').className = 'msg no';
+    $('msg').textContent = 'Nothing happens.';
+  }
+}
+
+$('hintbtn').addEventListener('click', () => {
+  if ($('hinttext').textContent) return;
+  hintCount++;
+  $('hints').textContent = hintCount + (hintCount === 1 ? ' hint' : ' hints');
+  $('hinttext').textContent = room.hint;
+});
+
+function finish(){
+  clearInterval(timer);
+  const secs = Math.round((Date.now() - started) / 1000);
+  const mins = Math.floor(secs / 60), rest = secs % 60;
+  $('game').innerHTML =
+    '<div class="pane done" style="grid-column:1/-1">' +
+      '<h2>You are outside.</h2>' +
+      '<p>It is the same weather it was when you went in, which is somehow the worst part.</p>' +
+      '<p class="stat">' + mins + ' min ' + String(rest).padStart(2, '0') + ' sec · ' +
+        (hintCount ? hintCount + (hintCount === 1 ? ' hint' : ' hints') : 'no hints') + '</p>' +
+      '<p style="margin-top:18px"><button class="btn go" id="again">Go back in</button></p>' +
+    '</div>';
+  $('again').addEventListener('click', () => location.reload());
+}
+
+timer = setInterval(() => {
+  const secs = Math.round((Date.now() - started) / 1000);
+  $('timer').textContent = Math.floor(secs / 60) + ':' + String(secs % 60).padStart(2, '0');
+}, 1000);
+
+setRoom(0);
+</script>
+</body>
+</html>
