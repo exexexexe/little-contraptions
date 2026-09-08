@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Name My Thing</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23F7F3E8'/><text x='16' y='24' font-size='22' font-family='Georgia,serif' font-weight='700' text-anchor='middle' fill='%23B3221E'>N</text></svg>">
+<style>
+:root{
+  --paper:#F7F3E8;
+  --paper-2:#EFE9D9;
+  --ink:#1A1815;
+  --ink-2:#4A453C;
+  --dim:#8B8272;
+  --red:#B3221E;
+  --rule:#CFC6AF;
+  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Georgia,"Times New Roman",serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);
+  background-image:
+    radial-gradient(circle at 20% 10%, rgba(0,0,0,.018) 0 1px, transparent 1px),
+    radial-gradient(circle at 70% 60%, rgba(0,0,0,.015) 0 1px, transparent 1px);
+  background-size:13px 13px, 17px 17px;
+  color:var(--ink);
+  font-family:var(--serif);
+  min-height:100vh;padding:34px 18px 60px;
+}
+.sheet{
+  max-width:760px;margin:0 auto;
+  border:1px solid var(--rule);
+  background:var(--paper);
+  padding:34px 34px 30px;
+  box-shadow:0 1px 0 var(--rule), 0 14px 40px rgba(60,50,30,.09);
+}
+@media (max-width:560px){ .sheet{ padding:24px 20px } }
+
+/* ---------- masthead ---------- */
+.crest{ text-align:center;border-bottom:3px double var(--rule);padding-bottom:16px;margin-bottom:20px }
+.crest .over{
+  font-family:var(--mono);font-size:10px;letter-spacing:.34em;
+  text-transform:uppercase;color:var(--dim);
+}
+h1{
+  margin:8px 0 4px;font-size:clamp(30px,6vw,46px);font-weight:400;
+  letter-spacing:-.01em;line-height:1;
+}
+h1 em{ font-style:italic;color:var(--red) }
+.crest .under{ font-size:13.5px;color:var(--ink-2);font-style:italic;margin-top:6px }
+
+/* ---------- category picker ---------- */
+.cats{ display:flex;flex-wrap:wrap;gap:0;border:1px solid var(--rule);margin-bottom:18px }
+.cats button{
+  flex:1 1 auto;min-width:88px;
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
+  background:transparent;color:var(--ink-2);border:0;border-right:1px solid var(--rule);
+  padding:11px 8px;cursor:pointer;
+}
+.cats button:last-child{ border-right:0 }
+.cats button:hover{ background:var(--paper-2) }
+.cats button[aria-pressed="true"]{ background:var(--ink);color:var(--paper) }
+.cats button:focus-visible{ outline:2px solid var(--red);outline-offset:-2px }
+
+/* ---------- specimen list ---------- */
+.blurb{
+  font-size:13.5px;color:var(--ink-2);font-style:italic;
+  margin:0 0 16px;padding-left:12px;border-left:2px solid var(--red);
+}
+ol.names{ list-style:none;margin:0;padding:0;border-top:1px solid var(--rule) }
+ol.names li{
+  display:flex;align-items:baseline;gap:14px;
+  border-bottom:1px solid var(--rule);padding:11px 4px;
+  cursor:pointer;transition:background .12s;
+}
+ol.names li:hover{ background:var(--paper-2) }
+ol.names li .n{
+  font-family:var(--mono);font-size:10.5px;color:var(--dim);
+  min-width:22px;flex:none;
+}
+ol.names li .t{
+  font-size:clamp(18px,3.4vw,25px);line-height:1.25;flex:1;
+}
+ol.names li .keep{
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--dim);flex:none;opacity:0;transition:opacity .12s;
+}
+ol.names li:hover .keep{ opacity:1 }
+ol.names li.kept .t{ color:var(--red) }
+ol.names li.kept .keep{ opacity:1;color:var(--red) }
+
+/* ---------- kept ---------- */
+.kept-box{ margin-top:22px;border:1px solid var(--rule);background:var(--paper-2);padding:15px 17px;display:none }
+.kept-box.on{ display:block }
+.kept-box h2{
+  margin:0 0 9px;font-family:var(--mono);font-size:10px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--dim);font-weight:400;
+}
+.kept-box ul{ margin:0;padding:0;list-style:none;columns:2;column-gap:22px }
+@media (max-width:520px){ .kept-box ul{ columns:1 } }
+.kept-box li{ font-size:16px;padding:2px 0;break-inside:avoid }
+.kept-box li button{
+  background:none;border:0;color:var(--dim);cursor:pointer;font-family:var(--mono);
+  font-size:11px;padding:0 0 0 6px;
+}
+.kept-box li button:hover{ color:var(--red) }
+
+/* ---------- deck ---------- */
+.deck{ display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:22px;padding-top:18px;border-top:3px double var(--rule) }
+.btn{
+  font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+  background:var(--ink);color:var(--paper);border:0;padding:12px 18px;cursor:pointer;
+}
+.btn:hover{ background:#000 }
+.btn.sec{ background:transparent;color:var(--ink);border:1px solid var(--rule) }
+.btn.sec:hover{ background:var(--paper-2) }
+.btn:focus-visible{ outline:2px solid var(--red);outline-offset:2px }
+.note{ font-family:var(--mono);font-size:10.5px;color:var(--dim);margin-left:auto }
+
+footer{
+  max-width:760px;margin:18px auto 0;
+  font-family:var(--mono);font-size:10.5px;color:var(--dim);line-height:1.8;
+}
+footer a{ color:var(--ink-2) }
+</style>
+</head>
+<body>
+<div class="sheet">
+  <div class="crest">
+    <div class="over">specimen sheet no. 5</div>
+    <h1>Name My <em>Thing</em></h1>
+    <div class="under" id="under">Names for things that do not exist yet.</div>
+  </div>
+
+  <div class="cats" id="cats"></div>
+  <p class="blurb" id="blurb"></p>
+
+  <ol class="names" id="list"></ol>
+
+  <div class="kept-box" id="kept-box">
+    <h2>Kept <span id="kept-n"></span></h2>
+    <ul id="kept"></ul>
+  </div>
+
+  <div class="deck">
+    <button class="btn" id="more">Set another dozen</button>
+    <button class="btn sec" id="copy">Copy kept</button>
+    <button class="btn sec" id="clear">Clear kept</button>
+    <span class="note" id="note"></span>
+  </div>
+</div>
+
+<footer>
+  Every name is assembled here in the browser from word lists and a handful of patterns —
+  nothing is looked up, and no two sheets are set the same way twice.
+  Click a line to keep it. <a href="/">← back to the cabinet</a>
+</footer>
+
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+const pick = (a) => a[Math.floor(Math.random() * a.length)];
+const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+
+/* ------------------------------ word stock ------------------------- */
+const W = {
+  adj: ['Gilded','Hollow','Crooked','Silent','Patient','Brazen','Weeping','Idle','Salted','Amber','Fallow','Restless','Thirteenth','Drowned','Wandering','Bitter','Glass','Iron','Velvet','Quiet','Stubborn','Last','Furthest','Unlit','Copper','Grateful'],
+  colour: ['Crimson','Verdant','Ash','Indigo','Bone','Ochre','Sable','Pewter','Rust','Cobalt'],
+  noun: ['Lantern','Compass','Anvil','Ledger','Kettle','Thorn','Harbour','Cellar','Bell','Key','Mast','Orchard','Furnace','Almanac','Spindle','Gate','Tide','Ember','Sextant','Cairn','Loom','Hearth'],
+  nounPl: ['Lanterns','Anchors','Magpies','Thistles','Bellringers','Cartographers','Wheelwrights','Sparrows','Ferrymen','Locksmiths','Ravens','Millwrights','Weathervanes','Nightjars','Coopers','Beekeepers'],
+  animal: ['Fox','Hare','Heron','Stag','Boar','Magpie','Otter','Raven','Badger','Wolf','Owl','Pike','Goose','Mare'],
+  place: ['the Low Fens','Ninebridge','the Salt Road','Ashgate','Caldermoor','the Sunken Ward','Thornwick','the Long Shelf','Rookhaven','the Ninth Quarter'],
+  surname: ['Ashcombe','Vell','Marrow','Prentice','Holloway','Dunn','Bexley','Quill','Sarn','Grieve','Thorne','Wicklow','Peale','Harrow'],
+  abstract: ['Patience','Reckoning','Providence','Small Mercies','Second Thoughts','Long Odds','Fair Warning','Better Judgement','Due Course','Plain Dealing'],
+  object: ['Whistle','Kettle','Spade','Fiddle','Candle','Wheel','Barrel','Crown','Shilling','Anchor'],
+  numberWord: ['Two','Three','Seven','Nine','Twelve','Thirteen'],
+  trade: ['Ironmongers','Stationers','Apothecaries','Glaziers','Coopers','Chandlers','Cartwrights','Fishmongers'],
+  bandAdj: ['Velvet','Static','Paper','Neon','Slow','Concrete','Wet','Holy','Cheap','Total','Modern','Blue','Plastic','Soft'],
+  bandNoun: ['Sunday','Machine','Harbour','Cinema','Weather','Signal','Chapel','Motorway','Static','Garden','Alibi','Tourist','Ceiling','Fever'],
+  bandPl: ['Wolves','Tourists','Ceilings','Saints','Radios','Balconies','Lifeguards','Ghosts','Fountains','Antennas','Postcards','Sirens'],
+  firstName: ['Ida','Nico','June','Wren','Marlow','Odette','Silas','Vera','Otis','Nell'],
+  shopGood: ['Books','Tea','Records','Bicycles','Bread','Flowers','Buttons','Clocks','Maps','Coffee','Paint','Wool','Knives','Plants'],
+  shopWord: ['& Daughters','& Sons','& Co.','Supply','Provisions','Emporium','Works','Trading','Goods','Depot'],
+  techVerb: ['Sort','Stack','Nudge','Ferry','Tally','Hatch','Drift','Loop','Pare','Vault'],
+  techNoun: ['Otter','Kiln','Beacon','Quarry','Lattice','Harbor','Pillar','Meadow','Cobble','Anchor'],
+  techSuffix: ['ly','io','base','works','labs','kit','deck','loop'],
+  shipPrefix: ['The','The Good Ship','The Lady'],
+};
+
+/* Each category is a set of patterns over that stock. */
+const CATS = [
+  { key:'guild', label:'Guild', blurb:'For orders, chapters, and companies of people with a shared and slightly ominous purpose.',
+    make: () => pick([
+      () => 'The ' + pick(W.adj) + ' ' + pick(W.nounPl),
+      () => 'Order of the ' + pick(W.adj) + ' ' + pick(W.noun),
+      () => 'The ' + pick(W.colour) + ' ' + pick(W.noun),
+      () => 'The ' + pick(W.trade) + ' of ' + pick(W.place),
+      () => 'The ' + pick(W.adj) + ' ' + pick(W.noun) + ' Society',
+      () => pick(W.noun) + 'wardens of ' + pick(W.place),
+      () => 'The Company of ' + pick(W.abstract),
+    ])() },
+  { key:'band', label:'Band', blurb:'For four people who have not yet agreed on a genre, let alone a logo.',
+    make: () => pick([
+      () => pick(W.bandAdj) + ' ' + pick(W.bandPl),
+      () => 'The ' + pick(W.bandPl),
+      () => pick(W.firstName) + ' and the ' + pick(W.bandPl),
+      () => pick(W.bandAdj) + ' ' + pick(W.bandNoun),
+      () => 'The ' + pick(W.bandAdj) + ' ' + pick(W.bandNoun) + ' Club',
+      () => pick(W.bandNoun) + ', ' + pick(W.bandNoun),
+      () => 'Everyone Except ' + pick(W.firstName),
+    ])() },
+  { key:'shop', label:'Shop', blurb:'For a narrow frontage with a good window and an unreliable opening time.',
+    make: () => pick([
+      () => pick(W.surname) + ' ' + pick(W.shopWord),
+      () => pick(W.surname) + ' & ' + pick(W.surname),
+      () => 'The ' + pick(W.adj) + ' ' + pick(W.shopGood.map(s=>s.replace(/s$/,''))) + ' Shop',
+      () => pick(W.shopGood) + ' & ' + pick(W.shopGood),
+      () => 'The ' + pick(W.adj) + ' ' + pick(W.noun),
+      () => pick(W.surname) + "'s " + pick(W.shopGood),
+    ])() },
+  { key:'tavern', label:'Tavern', blurb:'For a low ceiling, a bad fire, and one regular who will not be moved.',
+    make: () => pick([
+      () => 'The ' + pick(W.adj) + ' ' + pick(W.animal),
+      () => 'The ' + pick(W.animal) + ' & ' + pick(W.object),
+      () => 'The ' + pick(W.numberWord) + ' ' + pick(W.nounPl),
+      () => 'The ' + pick(W.colour) + ' ' + pick(W.animal),
+      () => 'The ' + pick(W.abstract),
+      () => 'The ' + pick(W.animal) + ' at ' + pick(W.place),
+    ])() },
+  { key:'ship', label:'Ship', blurb:'For anything with a hull, and for a few things without one.',
+    make: () => pick([
+      () => pick(W.shipPrefix) + ' ' + pick(W.abstract),
+      () => pick(W.shipPrefix) + ' ' + pick(W.adj) + ' ' + pick(W.animal),
+      () => pick(W.shipPrefix) + ' ' + pick(W.noun) + ' of ' + pick(W.place),
+      () => pick(W.shipPrefix) + ' ' + pick(W.colour) + ' ' + pick(W.noun),
+      () => pick(W.shipPrefix) + ' ' + pick(W.firstName) + ' ' + pick(W.surname),
+    ])() },
+  { key:'startup', label:'Startup', blurb:'For a landing page with one button and a waiting list of eleven people.',
+    make: () => pick([
+      () => pick(W.techVerb) + pick(W.techSuffix),
+      () => pick(W.techNoun) + pick(W.techSuffix),
+      () => pick(W.techVerb) + pick(W.techNoun),
+      () => pick(W.techNoun) + ' & ' + pick(W.techNoun),
+      () => cap(pick(W.techVerb).toLowerCase()) + '.' + pick(['io','co','app','sh']),
+      () => 'The ' + pick(W.adj) + ' ' + pick(W.techNoun) + ' Company',
+    ])() },
+];
+
+let cat = CATS[0];
+let kept = [];
+
+/* ------------------------------ render ----------------------------- */
+function batch(n){
+  const seen = new Set();
+  const out = [];
+  let guard = 0;
+  while (out.length < n && guard++ < n * 40){
+    const s = cat.make();
+    if (!seen.has(s)) { seen.add(s); out.push(s); }
+  }
+  return out;
+}
+
+function renderCats(){
+  $('cats').innerHTML = '';
+  CATS.forEach(c => {
+    const b = document.createElement('button');
+    b.textContent = c.label;
+    b.setAttribute('aria-pressed', String(c === cat));
+    b.onclick = () => { cat = c; renderCats(); renderList(); };
+    $('cats').appendChild(b);
+  });
+  $('blurb').textContent = cat.blurb;
+}
+
+function renderList(){
+  const names = batch(12);
+  $('list').innerHTML = '';
+  names.forEach((name, i) => {
+    const li = document.createElement('li');
+    li.innerHTML = '<span class="n">' + String(i + 1).padStart(2, '0') + '</span>' +
+                   '<span class="t"></span><span class="keep">keep</span>';
+    li.querySelector('.t').textContent = name;
+    if (kept.includes(name)) li.classList.add('kept');
+    li.onclick = () => {
+      const at = kept.indexOf(name);
+      if (at >= 0) kept.splice(at, 1); else kept.push(name);
+      li.classList.toggle('kept');
+      renderKept();
+    };
+    $('list').appendChild(li);
+  });
+}
+
+function renderKept(){
+  $('kept-box').classList.toggle('on', kept.length > 0);
+  $('kept-n').textContent = kept.length ? '(' + kept.length + ')' : '';
+  $('kept').innerHTML = '';
+  kept.forEach((name, i) => {
+    const li = document.createElement('li');
+    li.textContent = name;
+    const x = document.createElement('button');
+    x.textContent = '×';
+    x.title = 'remove';
+    x.onclick = () => { kept.splice(i, 1); renderKept(); renderList(); };
+    li.appendChild(x);
+    $('kept').appendChild(li);
+  });
+}
+
+function flash(msg){
+  $('note').textContent = msg;
+  setTimeout(() => { if ($('note').textContent === msg) $('note').textContent = ''; }, 2200);
+}
+
+$('more').addEventListener('click', renderList);
+$('clear').addEventListener('click', () => { kept = []; renderKept(); renderList(); });
+$('copy').addEventListener('click', async () => {
+  if (!kept.length) return flash('nothing kept yet');
+  const text = kept.join('\n');
+  try {
+    await navigator.clipboard.writeText(text);
+    flash('copied ' + kept.length + ' name' + (kept.length === 1 ? '' : 's'));
+  } catch (e) {
+    // clipboard permission can be refused; fall back to a selectable prompt
+    flash('clipboard blocked — select and copy');
+    window.prompt('Copy your kept names:', text);
+  }
+});
+
+renderCats();
+renderList();
+renderKept();
+</script>
+</body>
+</html>
