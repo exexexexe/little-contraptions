@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Drawer not found — Little Contraptions</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%2320162E'/><circle cx='16' cy='16' r='7.5' fill='none' stroke='%23E0A548' stroke-width='2.5'/><circle cx='16' cy='16' r='2.2' fill='%23E0A548'/></svg>">
+<style>
+:root{
+  --bg:#20162E;
+  --bg-2:#2A1E3D;
+  --card:#F4EFE2;
+  --ink:#241B33;
+  --ink-soft:#5B5473;
+  --accent:#E0A548;
+  --accent-dark:#8A6420;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:radial-gradient(900px 500px at 15% -10%, var(--bg-2) 0%, var(--bg) 60%);
+  min-height:100vh;
+  font-family:ui-serif,Georgia,Cambria,"Times New Roman",serif;
+  color:var(--card);
+  padding:64px 24px 40px;
+  display:flex;align-items:center;justify-content:center;
+}
+.slot{ position:relative;max-width:420px;width:100% }
+.stack{
+  position:absolute;inset:6px -6px -6px 6px;
+  background:var(--ink);border:1px solid rgba(0,0,0,.4);
+}
+.card{
+  position:relative;background:var(--card);color:var(--ink);
+  border:1px solid #D9CFB8;padding:26px 24px 24px;
+}
+.card::after{
+  content:"";position:absolute;top:0;right:0;
+  width:0;height:0;border-style:solid;border-width:0 26px 26px 0;
+  border-color:transparent var(--accent) transparent transparent;
+  filter:drop-shadow(-1px 1px 0 rgba(0,0,0,.12));
+}
+.num{
+  font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  font-size:11.5px;letter-spacing:.06em;color:var(--accent-dark);
+}
+h1{ margin:10px 0 10px;font-size:24px;font-style:italic;font-weight:600;line-height:1.25;padding-right:20px }
+p{ margin:0;font-size:14px;line-height:1.6;color:var(--ink-soft);
+   font-family:ui-sans-serif,system-ui,sans-serif }
+a.back{
+  display:inline-block;margin-top:20px;
+  font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  font-size:11.5px;letter-spacing:.05em;
+  color:#4F8C82;border:1px solid #4F8C82;padding:6px 12px;text-decoration:none;
+}
+a.back:hover{ background:#4F8C82;color:var(--card) }
+a.back:focus-visible{ outline:2px solid var(--accent);outline-offset:3px }
+</style>
+</head>
+<body>
+  <div class="slot">
+    <div class="stack"></div>
+    <div class="card">
+      <div class="num">No. 404</div>
+      <h1>This drawer is empty</h1>
+      <p>Whatever used to be filed here has been moved, renamed, or was
+         never built in the first place. The cabinet only has so many drawers.</p>
+      <a class="back" href="/">back to the cabinet</a>
+    </div>
+  </div>
+</body>
+</html>

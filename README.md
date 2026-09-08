@@ -13,6 +13,7 @@ Opens on http://localhost:3000.
 
     server.js            static file server, respects $PORT
     public/index.html    the hub / card grid
+    public/404.html      served for any unknown path
     public/weather/      "The Elsewhere Almanac"
     public/inventions/   "The Inventions of Humanity"
 
