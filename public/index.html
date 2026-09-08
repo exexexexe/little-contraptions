@@ -201,6 +201,33 @@ footer{
   .fade{ opacity:1;transform:none;animation:none }
   .card{ transition:none }
 }
+
+/* ---------- hover preview ---------- */
+#lc-preview{
+  position:absolute;z-index:60;width:352px;pointer-events:none;
+  opacity:0;transform:translateY(4px);transition:opacity .16s ease, transform .16s ease;
+}
+#lc-preview.on{ opacity:1;transform:translateY(0) }
+#lc-preview .lcp-frame{
+  width:352px;height:236px;overflow:hidden;position:relative;
+  background:#0E1014;border:1px solid rgba(255,255,255,.22);border-radius:4px;
+  box-shadow:0 18px 46px rgba(0,0,0,.5);
+}
+#lc-preview iframe{
+  position:absolute;left:0;top:0;border:0;
+  transform:scale(0.275);transform-origin:0 0;   /* 1280×860 shown at 352×236 */
+}
+#lc-preview .lcp-fallback{
+  display:none;position:absolute;inset:0;align-items:center;justify-content:center;
+  font-family:var(--mono, ui-monospace, monospace);font-size:11px;letter-spacing:.1em;
+  text-transform:uppercase;color:rgba(255,255,255,.6);
+  background:#0E1014;border:1px solid rgba(255,255,255,.22);border-radius:4px;
+}
+#lc-preview.failed .lcp-fallback{ display:flex }
+#lc-preview.failed .lcp-frame{ visibility:hidden }
+@media (prefers-reduced-motion: reduce){
+  #lc-preview{ transition:none }
+}
 </style>
 </head>
 <body>
@@ -369,7 +396,7 @@ footer{
       <a class="card" href="/explain-to-an-era/">
         <div class="num">No. 16</div>
         <h2>Explain It To An Era</h2>
-        <p>Type a modern thing and watch a medieval blacksmith, a Roman engineer or 1986 middle management fail to be impressed by it.</p>
+        <p>Explain something modern to twelve listeners from other centuries. Each one wants to know a different thing about it — what it is made of, whose budget it comes from, whether there is a play in it.</p>
         <span class="tag">generator</span>
       </a>
     </div>
@@ -379,7 +406,7 @@ footer{
       <a class="card" href="/unknown-sport/">
         <div class="num">No. 17</div>
         <h2>Unknown Sport of the Day</h2>
-        <p>Forty-eight real sports you may never have heard of, from hornussen to underwater hockey — what each one actually is, and where.</p>
+        <p>A hundred and seven real sports you have probably never watched, each with a small animated icon of the thing it actually involves. Kabaddi, hornussen, kyykkä, worm charming.</p>
         <span class="tag">reference</span>
       </a>
     </div>
@@ -399,7 +426,7 @@ footer{
       <a class="card" href="/future-news/">
         <div class="num">No. 19</div>
         <h2>The Daily Hence</h2>
-        <p>Tomorrow&#x27;s paper, a century late. A front page from a hundred years hence, where the Committee on Remaining Coastlines has missed another deadline.</p>
+        <p>Tomorrow's paper, retrieved rather than printed: a hundred and one headline shapes, a masthead from 2126, and a ticker of things that are still pending.</p>
         <span class="tag">generator</span>
       </a>
     </div>
@@ -409,7 +436,7 @@ footer{
       <a class="card" href="/scale/">
         <div class="num">No. 20</div>
         <h2>Scale Comparison Machine</h2>
-        <p>Real measurements turned into things you can picture — with the arithmetic shown underneath, so you can check every one.</p>
+        <p>Sixteen comparisons where the arithmetic is shown and the animation does the explaining. Everest sinks into the trench, paper folds to the Moon, the planets fail to fit the gap.</p>
         <span class="tag">reference</span>
       </a>
     </div>
@@ -419,7 +446,7 @@ footer{
       <a class="card" href="/hidden-thing/">
         <div class="num">No. 21</div>
         <h2>The Everyday Hidden Thing</h2>
-        <p>Sixteen ordinary objects and the part of each that is quietly doing something nobody told you about. Includes one popular myth, corrected.</p>
+        <p>Thirty-six ordinary objects and the part of them quietly doing something you were never told about, each with a drawing of the mechanism actually working.</p>
         <span class="tag">reference</span>
       </a>
     </div>
@@ -429,7 +456,7 @@ footer{
       <a class="card" href="/perfume-match/">
         <div class="num">No. 22</div>
         <h2>Perfume Match</h2>
-        <p>Pick the notes you actually like the smell of and find out whose shelf they belong on. Sherlock, Morticia, or a naturalist in the rain.</p>
+        <p>Pick the notes you actually like the smell of and find out whose shelf they belong on. Forty-seven of them, from Sherlock to Obi-Wan to a stalker in the rain.</p>
         <span class="tag">game</span>
       </a>
     </div>
@@ -449,7 +476,7 @@ footer{
       <a class="card" href="/iss/">
         <div class="num">No. 24</div>
         <h2>ISS Tracker</h2>
-        <p>Where the station is this second, the ground track either side of it, and the next time it crosses your sky bright enough to see. Orbit propagated in your browser.</p>
+        <p>Where the station is this second, on a globe you can turn, and the next time it crosses your sky bright enough to see. Orbit propagated in your browser.</p>
         <span class="tag">real data</span>
       </a>
     </div>
@@ -459,7 +486,7 @@ footer{
       <a class="card" href="/the-zone/">
         <div class="num">No. 25</div>
         <h2>Field PDA — Zone Survey</h2>
-        <p>A survey terminal for six sectors, four of which are the Zone. Radiation, an anomaly, an artefact and a flat institutional advisory. Geiger audio optional.</p>
+        <p>A survey terminal for twenty-six places in the Zone, the reactor and the sarcophagus included. Radiation, an anomaly, an artefact, a flat institutional advisory — and an unmarked catch on the bezel.</p>
         <span class="tag">generator</span>
       </a>
     </div>
@@ -469,7 +496,7 @@ footer{
       <a class="card" href="/city-day/">
         <div class="num">No. 26</div>
         <h2>A Sunny Afternoon in the City</h2>
-        <p>Real San Francisco photographs from Wikimedia Commons, each properly credited, under a warm teal-and-orange overlay that is entirely made up and says so.</p>
+        <p>A sunny afternoon somewhere real, under a surveillance overlay that is entirely invented and says so. Ninety-six photographs across twelve San Francisco landmarks.</p>
         <span class="tag">real data</span>
       </a>
     </div>
@@ -479,7 +506,7 @@ footer{
       <a class="card" href="/radio/">
         <div class="num">No. 27</div>
         <h2>The Radio Hub</h2>
-        <p>Seven stations that do not exist, on a wooden set that does. Invented DJs and running orders — or switch the sound on for real Creative Commons records, properly credited.</p>
+        <p>Fourteen stations that do not exist, on a wooden set that does. Drag the needle across the band: invented running orders with the sound off, real Creative Commons records with it on, properly credited.</p>
         <span class="tag">generator</span>
       </a>
     </div>
@@ -489,7 +516,7 @@ footer{
       <a class="card" href="/civilizations/">
         <div class="num">No. 28</div>
         <h2>Civilizations, Ranked</h2>
-        <p>A scroll up the Kardashev scale, from the twenty terawatts we actually draw to the rungs nobody has any business drawing. The companion piece to the Inventions, pointing forward.</p>
+        <p>A scroll up the Kardashev scale, from the twenty terawatts we actually draw to the rungs nobody has any business drawing. Build a Dyson swarm and send a message through a wormhole on the way.</p>
         <span class="tag">scroll story</span>
       </a>
     </div>
@@ -573,6 +600,83 @@ footer{
   tags.forEach(function(t){ bar.appendChild(chip(t, t, counts[t])); });
   bar.hidden = false;
   apply();
+})();
+</script>
+<script>
+
+/* ------------------------------------------------------------------ *
+ *  Hover previews. One iframe at a time, built on hover after a short
+ *  delay so that brushing past a row does not load thirty toys, and
+ *  torn down on the way out. Pointer-fine devices only — on a phone
+ *  there is no hover and the tap should just open the thing.
+ * ------------------------------------------------------------------ */
+(function previews(){
+  if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+
+  const PREVIEW_W = 1280, PREVIEW_H = 860;   // the viewport the toy is given
+  let box = null, timer = 0, current = null;
+
+  function build(){
+    box = document.createElement('div');
+    box.id = 'lc-preview';
+    box.innerHTML = '<div class="lcp-frame"><iframe title="Preview" tabindex="-1" ' +
+      'loading="lazy" scrolling="no"></iframe></div>' +
+      '<div class="lcp-fallback">preview unavailable — open it instead</div>';
+    document.body.appendChild(box);
+  }
+
+  function place(card){
+    const r = card.getBoundingClientRect();
+    const w = box.offsetWidth, h = box.offsetHeight;
+    let left = r.right + 14;
+    if (left + w > innerWidth - 12) left = r.left - w - 14;      // flip to the other side
+    if (left < 12) left = Math.max(12, Math.min(innerWidth - w - 12, r.left));
+    let top = r.top + scrollY + (r.height - h) / 2;
+    top = Math.max(scrollY + 12, Math.min(top, scrollY + innerHeight - h - 12));
+    box.style.left = left + 'px';
+    box.style.top = top + 'px';
+  }
+
+  function show(card){
+    if (!box) build();
+    const href = card.getAttribute('href');
+    if (current === href && box.classList.contains('on')) return;
+    current = href;
+    const frame = box.querySelector('iframe');
+    box.classList.remove('failed');
+    // a toy that will not frame gets a plain message rather than a blank box
+    const guard = setTimeout(() => box.classList.add('failed'), 4000);
+    frame.onload = () => clearTimeout(guard);
+    frame.onerror = () => { clearTimeout(guard); box.classList.add('failed'); };
+    frame.style.width = PREVIEW_W + 'px';
+    frame.style.height = PREVIEW_H + 'px';
+    frame.src = href;
+    box.classList.add('on');
+    place(card);
+  }
+
+  function hide(){
+    if (!box) return;
+    box.classList.remove('on');
+    current = null;
+    const frame = box.querySelector('iframe');
+    frame.removeAttribute('src');      // stop whatever it started
+  }
+
+  document.addEventListener('mouseover', (e) => {
+    const card = e.target.closest && e.target.closest('.card');
+    if (!card) return;
+    clearTimeout(timer);
+    timer = setTimeout(() => show(card), 320);
+  });
+  document.addEventListener('mouseout', (e) => {
+    const card = e.target.closest && e.target.closest('.card');
+    if (!card) return;
+    if (e.relatedTarget && card.contains(e.relatedTarget)) return;
+    clearTimeout(timer);
+    hide();
+  });
+  addEventListener('scroll', () => { clearTimeout(timer); hide(); }, { passive: true });
 })();
 </script>
 </body>
