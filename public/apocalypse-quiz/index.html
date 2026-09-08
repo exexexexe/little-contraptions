@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Apocalypse Readiness</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23F2C438'/><path d='M16 6 L28 26 H4 Z' fill='none' stroke='%231A1A16' stroke-width='2.6' stroke-linejoin='round'/><rect x='14.7' y='13' width='2.6' height='7' fill='%231A1A16'/><rect x='14.7' y='21.4' width='2.6' height='2.6' fill='%231A1A16'/></svg>">
+<style>
+:root{
+  --hazard:#F2C438;
+  --hazard-2:#E0AF1E;
+  --ink:#1A1A16;
+  --ink-2:#45443A;
+  --paper:#F7F4E9;
+  --paper-2:#EDE8D6;
+  --dim:#7C7A69;
+  --red:#C0392B;
+  --green:#3F7D4E;
+  --sans:ui-sans-serif,system-ui,"Helvetica Neue",Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);color:var(--ink);font-family:var(--sans);
+  min-height:100vh;padding:0 0 60px;
+}
+.stripes{
+  height:16px;
+  background:repeating-linear-gradient(45deg, var(--ink) 0 14px, var(--hazard) 14px 28px);
+}
+.wrap{ max-width:760px;margin:0 auto;padding:0 18px }
+
+header{ text-align:center;padding:30px 0 20px;border-bottom:3px solid var(--ink) }
+.dept{
+  font-family:var(--mono);font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:var(--ink-2);
+}
+h1{
+  margin:9px 0 0;font-size:clamp(29px,6.4vw,48px);font-weight:900;
+  letter-spacing:-.03em;text-transform:uppercase;line-height:.95;
+}
+.form-no{ font-family:var(--mono);font-size:10.5px;color:var(--dim);margin-top:9px;letter-spacing:.1em }
+
+/* ---------- scenario ---------- */
+.pick{ padding:24px 0 4px }
+.pick h2, .qwrap h2{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--ink-2);margin:0 0 12px;font-weight:400;
+}
+.scenarios{ display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px }
+.sc{
+  background:var(--paper-2);border:2px solid var(--ink);padding:15px 14px;cursor:pointer;
+  text-align:left;font-family:var(--sans);color:var(--ink);
+  box-shadow:4px 4px 0 var(--ink);transition:transform .1s, box-shadow .1s;
+}
+.sc:hover{ transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink) }
+.sc:active{ transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink) }
+.sc:focus-visible{ outline:3px solid var(--red);outline-offset:2px }
+.sc b{ display:block;font-size:15.5px;font-weight:800;margin-bottom:4px }
+.sc span{ font-size:12px;color:var(--ink-2);line-height:1.45 }
+.sc.rand{ background:var(--hazard) }
+
+/* ---------- quiz ---------- */
+.qwrap{ padding:26px 0 0;display:none }
+.qwrap.on{ display:block }
+.prog{ height:8px;background:var(--paper-2);border:2px solid var(--ink);margin-bottom:20px }
+.prog i{ display:block;height:100%;background:var(--hazard);width:0;transition:width .25s }
+.qnum{ font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase }
+.q{ font-size:clamp(18px,3.6vw,24px);font-weight:800;line-height:1.32;margin:8px 0 18px;letter-spacing:-.01em }
+.opts{ display:flex;flex-direction:column;gap:9px }
+.opt{
+  text-align:left;background:var(--paper);border:2px solid var(--ink);padding:13px 15px;
+  cursor:pointer;font-family:var(--sans);font-size:14.5px;color:var(--ink);line-height:1.4;
+  display:flex;gap:12px;align-items:baseline;
+}
+.opt:hover{ background:var(--hazard) }
+.opt:focus-visible{ outline:3px solid var(--red);outline-offset:2px }
+.opt i{ font-family:var(--mono);font-size:11px;font-style:normal;color:var(--dim);flex:none }
+.opt:hover i{ color:var(--ink) }
+
+/* ---------- result ---------- */
+.result{ padding:26px 0 0;display:none }
+.result.on{ display:block }
+.scorebox{ border:3px solid var(--ink);background:var(--paper-2);padding:22px;text-align:center;box-shadow:6px 6px 0 var(--ink) }
+.scorebox .pct{ font-size:clamp(52px,13vw,86px);font-weight:900;line-height:.9;letter-spacing:-.05em }
+.scorebox .tier{ font-size:clamp(17px,3.6vw,23px);font-weight:800;text-transform:uppercase;margin-top:8px;letter-spacing:-.01em }
+.scorebox .verdict{ font-size:14.5px;color:var(--ink-2);margin:10px auto 0;max-width:46ch;line-height:1.6 }
+.tags{ display:flex;gap:7px;flex-wrap:wrap;justify-content:center;margin-top:15px }
+.tags span{
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+  border:1px solid var(--ink);padding:4px 9px;
+}
+.tags span.good{ background:var(--green);color:#fff;border-color:var(--green) }
+.tags span.bad{ background:var(--red);color:#fff;border-color:var(--red) }
+
+.breakdown{ margin-top:20px;border:2px solid var(--ink) }
+.breakdown .r{ display:grid;grid-template-columns:1fr auto;gap:12px;padding:10px 14px;border-bottom:1px solid var(--ink);font-size:13px;align-items:baseline }
+.breakdown .r:last-child{ border-bottom:0 }
+.breakdown .r span{ font-family:var(--mono);font-size:11px;color:var(--dim);white-space:nowrap }
+.breakdown .r b{ font-weight:400;line-height:1.4 }
+
+.deck{ display:flex;gap:9px;flex-wrap:wrap;margin-top:20px }
+.btn{
+  font-family:var(--mono);font-size:11px;letter-spacing:.11em;text-transform:uppercase;
+  background:var(--ink);color:var(--paper);border:2px solid var(--ink);padding:12px 18px;cursor:pointer;font-weight:700;
+}
+.btn:hover{ background:#000 }
+.btn.sec{ background:transparent;color:var(--ink) }
+.btn.sec:hover{ background:var(--hazard) }
+.btn:focus-visible{ outline:3px solid var(--red);outline-offset:2px }
+canvas#card{ display:none }
+.msg{ font-family:var(--mono);font-size:11px;color:var(--ink-2);margin-top:11px;min-height:15px }
+
+footer{
+  max-width:760px;margin:32px auto 0;padding:15px 18px 0;border-top:2px solid var(--ink);
+  font-family:var(--mono);font-size:10.5px;color:var(--dim);line-height:1.8;
+}
+footer a{ color:var(--ink-2) }
+</style>
+</head>
+<body>
+<div class="stripes"></div>
+<div class="wrap">
+  <header>
+    <div class="dept">Department of Unlikely Events · Preparedness Division</div>
+    <h1>Apocalypse<br>Readiness</h1>
+    <div class="form-no">Form 7-B · self-assessment · non-binding</div>
+  </header>
+
+  <div class="pick" id="pick">
+    <h2>Select an event</h2>
+    <div class="scenarios" id="scenarios"></div>
+  </div>
+
+  <div class="qwrap" id="qwrap">
+    <div class="prog"><i id="bar"></i></div>
+    <div class="qnum" id="qnum"></div>
+    <div class="q" id="q"></div>
+    <div class="opts" id="opts"></div>
+  </div>
+
+  <div class="result" id="result">
+    <div class="scorebox">
+      <div class="pct" id="r-pct">0%</div>
+      <div class="tier" id="r-tier"></div>
+      <p class="verdict" id="r-verdict"></p>
+      <div class="tags" id="r-tags"></div>
+    </div>
+    <div class="breakdown" id="r-break"></div>
+    <div class="deck">
+      <button class="btn" id="save">Download result card</button>
+      <button class="btn sec" id="retry">Try another event</button>
+    </div>
+    <div class="msg" id="msg"></div>
+    <canvas id="card" width="1000" height="560"></canvas>
+  </div>
+</div>
+
+<footer>
+  A joke form for an imaginary department. Nothing here is real emergency guidance —
+  for the genuine kind, your local authority publishes far better and much less amusing advice.
+  <a href="/">← back to the cabinet</a>
+</footer>
+
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+/* Each option scores 0-3. Deliberately silly: this measures nothing. */
+const SHARED = [
+  { q: 'How many days of food are in your home right now, without shopping?',
+    a: [['Today, maybe.',0],['Two or three, if you like beans.',1],['A week, if standards drop.',2],['I have a shelf. It has a system.',3]] },
+  { q: 'Your phone dies. Do you know anyone\'s number?',
+    a: [['Not one.',0],['My own, mostly.',1],['One, from childhood.',2],['Several, written on paper somewhere I could find.',3]] },
+  { q: 'Can you get out of your building without power?',
+    a: [['I would be in the lift, thinking.',0],['Eventually, loudly.',1],['Yes, I know the stairs.',2],['Yes, and I know two other ways out.',3]] },
+  { q: 'Water goes off. What is your plan?',
+    a: [['Complain online.',0],['Drink whatever is in the fridge.',1],['Fill the bath the moment I hear about it.',2],['There are containers. They are already full.',3]] },
+  { q: 'Somebody has to make a decision in the first ten minutes. Is it you?',
+    a: [['Absolutely not.',0],['Only if nobody else speaks.',1],['Probably, reluctantly.',2],['Yes, and I will be insufferable about it.',3]] },
+];
+
+const SCENARIOS = {
+  zombie: {
+    label: 'Zombie outbreak', blurb: 'Slow ones. Probably.',
+    extra: [
+      { q: 'Your front door. Honestly.',
+        a: [['Glass. Lovely light, though.',0],['Standard, single lock.',1],['Solid, deadbolt, opens inward.',2],['I have thought about this more than is normal.',3]] },
+      { q: 'Nearest useful object to where you are sitting?',
+        a: [['A cushion.',0],['A lamp, I suppose.',1],['Something heavy with a handle.',2],['A fire extinguisher, and I know it works.',3]] },
+      { q: 'Somebody in your group gets bitten. It is day one.',
+        a: [['Say nothing. It will be fine.',0],['Panic, then say nothing.',1],['Tell everyone immediately and feel awful.',2],['We agreed a rule about this in advance.',3]] },
+    ],
+  },
+  robot: {
+    label: 'Robot uprising', blurb: 'It starts with the doorbell.',
+    extra: [
+      { q: 'How many devices in your home have a microphone?',
+        a: [['No idea. Loads.',0],['Six? Seven?',1],['I could list them.',2],['I could list them and unplug them in under a minute.',3]] },
+      { q: 'Can you open your front door with no electricity and no phone?',
+        a: [['It is a smart lock. So, no.',0],['There is a key. Somewhere.',1],['Yes, physical key, on me.',2],['Yes, and everyone in the house has one.',3]] },
+      { q: 'Could you navigate to the next town without a map app?',
+        a: [['I could not navigate to the shops.',0],['Roughly, by vibes.',1],['Yes, by road signs.',2],['Yes, and I own an actual paper map.',3]] },
+    ],
+  },
+  kaiju: {
+    label: 'Kaiju', blurb: 'Very large. Getting closer.',
+    extra: [
+      { q: 'Do you know which way is away from the water?',
+        a: [['I do not know where the water is.',0],['Vaguely. Downhill?',1],['Yes, and roughly how far.',2],['Yes, and two routes to higher ground.',3]] },
+      { q: 'Evacuation is announced. What do you take?',
+        a: [['Everything. I will be there some time.',0],['Phone and charger, then freeze.',1],['A bag I would have to pack.',2],['A bag that is already packed.',3]] },
+      { q: 'The building shakes. First instinct?',
+        a: [['Film it.',0],['Stand in the doorway, as seen on television.',1],['Get under something solid.',2],['Get under something solid, then check on the neighbours.',3]] },
+    ],
+  },
+};
+
+const TIERS = [
+  { min: 90, name: 'Unsettlingly prepared', v: 'You have thought about this before. Possibly recently. The Department finds this reassuring and slightly concerning in equal measure.' },
+  { min: 72, name: 'Would probably manage', v: 'Competent, unglamorous, likely to still be here in a fortnight. The Department has no notes.' },
+  { min: 52, name: 'Adequate, with gaps', v: 'You would get through the first day on nerve and the second on improvisation. The third is where it gets interesting.' },
+  { min: 32, name: 'Optimistic', v: 'Your plan is largely that it will not happen, which is statistically excellent reasoning and no help at all.' },
+  { min: 0,  name: 'A cautionary example', v: 'The Department has filed your responses under "useful for training purposes". You would be fine. Everything is usually fine.' },
+];
+
+let scenario = null, questions = [], idx = 0, answers = [];
+
+function renderScenarios(){
+  $('scenarios').innerHTML = '';
+  Object.keys(SCENARIOS).forEach(k => {
+    const s = SCENARIOS[k];
+    const b = document.createElement('button');
+    b.className = 'sc';
+    b.innerHTML = '<b>' + esc(s.label) + '</b><span>' + esc(s.blurb) + '</span>';
+    b.onclick = () => start(k);
+    $('scenarios').appendChild(b);
+  });
+  const r = document.createElement('button');
+  r.className = 'sc rand';
+  r.innerHTML = '<b>Surprise me</b><span>The Department will choose.</span>';
+  r.onclick = () => {
+    const keys = Object.keys(SCENARIOS);
+    start(keys[Math.floor(Math.random() * keys.length)]);
+  };
+  $('scenarios').appendChild(r);
+}
+
+function shuffle(a){
+  a = a.slice();
+  for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+
+function start(key){
+  scenario = key;
+  questions = shuffle(SHARED).slice(0, 5).concat(SCENARIOS[key].extra);
+  idx = 0; answers = [];
+  $('pick').style.display = 'none';
+  $('result').classList.remove('on');
+  $('qwrap').classList.add('on');
+  ask();
+}
+
+function ask(){
+  const q = questions[idx];
+  $('bar').style.width = (idx / questions.length * 100) + '%';
+  $('qnum').textContent = 'Question ' + (idx + 1) + ' of ' + questions.length +
+                          ' · ' + SCENARIOS[scenario].label;
+  $('q').textContent = q.q;
+  $('opts').innerHTML = '';
+  q.a.forEach((opt, i) => {
+    const b = document.createElement('button');
+    b.className = 'opt';
+    b.innerHTML = '<i>' + String.fromCharCode(65 + i) + '</i><span></span>';
+    b.querySelector('span').textContent = opt[0];
+    b.onclick = () => { answers.push({ q: q.q, pick: opt[0], score: opt[1] }); next(); };
+    $('opts').appendChild(b);
+  });
+}
+
+function next(){
+  idx++;
+  if (idx < questions.length) ask();
+  else finish();
+}
+
+function finish(){
+  $('qwrap').classList.remove('on');
+  const max = questions.length * 3;
+  const got = answers.reduce((n, a) => n + a.score, 0);
+  const pct = Math.round(100 * got / max);
+  const tier = TIERS.find(t => pct >= t.min);
+
+  $('r-pct').textContent = pct + '%';
+  $('r-tier').textContent = tier.name;
+  $('r-verdict').textContent = tier.v;
+
+  const best = answers.reduce((a, b) => b.score >= a.score ? b : a);
+  const worst = answers.reduce((a, b) => b.score <= a.score ? b : a);
+  let tags = '<span>' + esc(SCENARIOS[scenario].label) + '</span>';
+  // With a flat score there is no strongest or weakest — saying both about
+  // the same question just looks broken.
+  if (best.score !== worst.score){
+    tags += '<span class="good">strongest: ' + esc(shortQ(best.q)) + '</span>' +
+            '<span class="bad">weakest: ' + esc(shortQ(worst.q)) + '</span>';
+  } else {
+    tags += '<span>' + (best.score >= 2 ? 'strong across the board' : 'consistent, at least') + '</span>';
+  }
+  $('r-tags').innerHTML = tags;
+
+  $('r-break').innerHTML = answers.map(a =>
+    '<div class="r"><b>' + esc(a.pick) + '</b><span>' + a.score + '/3</span></div>').join('');
+
+  drawCard(pct, tier.name);
+  $('result').classList.add('on');
+  $('msg').textContent = '';
+}
+
+function shortQ(q){
+  const w = q.replace(/[?.]/g,'').split(' ').slice(0, 3).join(' ');
+  return w.toLowerCase();
+}
+
+/* A small shareable card, drawn rather than screenshotted. */
+function drawCard(pct, tier){
+  const c = $('card'), x = c.getContext('2d');
+  const W = c.width, H = c.height;
+  x.fillStyle = '#F7F4E9'; x.fillRect(0,0,W,H);
+  // hazard stripe
+  for (let i = -H; i < W; i += 56){
+    x.fillStyle = '#1A1A16';
+    x.beginPath(); x.moveTo(i,0); x.lineTo(i+28,0); x.lineTo(i+28+H,H); x.lineTo(i+H,H); x.closePath(); x.fill();
+  }
+  x.fillStyle = '#F2C438'; x.fillRect(0, 26, W, H - 52);
+  x.fillStyle = '#F7F4E9'; x.fillRect(22, 48, W - 44, H - 96);
+  x.strokeStyle = '#1A1A16'; x.lineWidth = 5; x.strokeRect(22, 48, W - 44, H - 96);
+
+  x.fillStyle = '#45443A';
+  x.font = '500 17px ui-monospace, SFMono-Regular, Menlo, monospace';
+  x.fillText('DEPARTMENT OF UNLIKELY EVENTS · FORM 7-B', 56, 104);
+
+  x.fillStyle = '#1A1A16';
+  x.font = '900 132px ui-sans-serif, system-ui, Helvetica, Arial, sans-serif';
+  x.fillText(pct + '%', 56, 246);
+
+  x.font = '800 40px ui-sans-serif, system-ui, Helvetica, Arial, sans-serif';
+  x.fillText(tier.toUpperCase(), 56, 306);
+
+  x.fillStyle = '#45443A';
+  x.font = '400 21px ui-sans-serif, system-ui, Helvetica, Arial, sans-serif';
+  x.fillText('readiness for: ' + SCENARIOS[scenario].label.toLowerCase(), 56, 350);
+
+  x.fillStyle = '#7C7A69';
+  x.font = '500 15px ui-monospace, SFMono-Regular, Menlo, monospace';
+  x.fillText('self-assessed · non-binding · little contraptions', 56, H - 84);
+}
+
+$('retry').addEventListener('click', () => {
+  $('result').classList.remove('on');
+  $('pick').style.display = '';
+  $('bar').style.width = '0%';
+});
+
+$('save').addEventListener('click', () => {
+  try {
+    const a = document.createElement('a');
+    a.download = 'apocalypse-readiness.png';
+    a.href = $('card').toDataURL('image/png');
+    document.body.appendChild(a); a.click(); a.remove();
+    $('msg').textContent = 'Saved apocalypse-readiness.png';
+  } catch (e) {
+    $('msg').textContent = 'The browser blocked the download (' + e.message + ').';
+  }
+});
+
+renderScenarios();
+</script>
+</body>
+</html>

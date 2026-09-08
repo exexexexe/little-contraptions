@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Explain It To An Era</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%232E2A26'/><path d='M7 22 L14 10 L18 18 L21 14 L25 22' stroke='%23D9B36C' stroke-width='2.2' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+<style>
+:root{
+  --room:#2E2A26;
+  --room-2:#3A3530;
+  --chrome:#5A544C;
+  --text:#E7E0D4;
+  --dim:#9A9184;
+  --brass:#D9B36C;
+  --sans:ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--room);
+  background-image:radial-gradient(900px 520px at 50% -12%, var(--room-2) 0%, transparent 65%);
+  color:var(--text);font-family:var(--sans);min-height:100vh;padding:30px 18px 60px;
+}
+.wrap{ max-width:760px;margin:0 auto }
+
+header{ text-align:center;margin-bottom:20px }
+h1{ margin:0;font-size:clamp(25px,5.2vw,38px);font-weight:300;letter-spacing:-.02em }
+h1 b{ font-weight:800;color:var(--brass) }
+.sub{ margin-top:8px;font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:.08em }
+
+.console{
+  background:linear-gradient(180deg,#4A443D,#3B362F);
+  border:1px solid #262320;border-radius:14px;padding:15px;
+  box-shadow:0 18px 46px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.1);
+}
+.io{ display:flex;gap:9px;flex-wrap:wrap }
+.io input{
+  flex:1;min-width:200px;font-family:var(--sans);font-size:15.5px;
+  background:#2B2723;border:1px solid #211E1B;color:var(--text);padding:13px 14px;border-radius:8px;
+  box-shadow:inset 0 2px 6px rgba(0,0,0,.45);
+}
+.io input::placeholder{ color:#7C7468 }
+.io input:focus-visible{ outline:2px solid var(--brass);outline-offset:1px }
+.go{
+  font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;
+  background:linear-gradient(180deg,#E0BC79,#C69B52);color:#2B2320;border:0;border-radius:8px;
+  padding:13px 20px;cursor:pointer;box-shadow:0 3px 0 #8E6E33;
+}
+.go:active{ transform:translateY(2px);box-shadow:0 1px 0 #8E6E33 }
+.go:focus-visible{ outline:2px solid var(--text);outline-offset:2px }
+
+.dial{ display:flex;gap:7px;flex-wrap:wrap;margin-top:13px }
+.dial button{
+  font-family:var(--mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;
+  background:#332F2A;border:1px solid #4B453D;color:var(--dim);padding:8px 12px;cursor:pointer;border-radius:6px;
+}
+.dial button:hover{ border-color:var(--brass);color:var(--brass) }
+.dial button[aria-pressed="true"]{ background:var(--brass);border-color:var(--brass);color:#2B2320;font-weight:700 }
+.dial button:focus-visible{ outline:2px solid var(--text);outline-offset:2px }
+
+/* ---------- the panel takes on the era ---------- */
+.panel{ margin-top:16px;padding:26px 26px 24px;min-height:236px;transition:background .4s, color .4s }
+.panel .who{
+  font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;margin-bottom:14px;opacity:.72;
+}
+.panel p{ margin:0 0 13px;line-height:1.72 }
+.panel p:last-child{ margin-bottom:0 }
+.panel .idle{ opacity:.5;font-style:italic }
+
+.era-medieval{
+  background:#E8DCC0;color:#33291B;font-family:"Iowan Old Style",Palatino,Georgia,serif;font-size:16.5px;
+  border:2px solid #6E5B3A;box-shadow:inset 0 0 40px rgba(110,91,58,.25);
+}
+.era-medieval .who{ font-family:var(--mono);color:#6E5B3A }
+.era-roman{
+  background:#D8D5CE;color:#2C2A26;font-family:"Trajan Pro",Optima,"Palatino Linotype",Georgia,serif;
+  font-size:16px;letter-spacing:.02em;border:3px double #8C877C;
+}
+.era-roman .who{ font-family:var(--mono);color:#7A756A }
+.era-roman p:first-of-type{ text-transform:uppercase;letter-spacing:.05em;font-size:14.5px }
+.era-victorian{
+  background:#F4EDE0;color:#2A2620;font-family:"Iowan Old Style",Georgia,serif;font-size:15.5px;
+  border:1px solid #8A7A5E;outline:4px solid #F4EDE0;outline-offset:-7px;
+  box-shadow:inset 0 0 0 1px #C7B694;
+}
+.era-victorian .who{ font-family:var(--mono);color:#8A7A5E }
+.era-deco{
+  background:#14110F;color:#F0E2BE;font-family:"Futura","Century Gothic",ui-sans-serif,sans-serif;
+  font-size:15.5px;border:2px solid #C8A24A;
+  background-image:repeating-linear-gradient(90deg, rgba(200,162,74,.10) 0 2px, transparent 2px 16px);
+}
+.era-deco .who{ color:#C8A24A;letter-spacing:.28em }
+.era-office{
+  background:#DAD7C8;color:#22201C;font-family:var(--mono);font-size:13.5px;line-height:1.85;
+  border:1px solid #9C998B;box-shadow:inset 0 0 0 1px #EFEDE2;
+}
+.era-office .who{ color:#6A6759 }
+.era-none{ background:#332F2A;color:var(--dim);border:1px dashed #4B453D }
+
+.deck{ display:flex;gap:8px;flex-wrap:wrap;margin-top:14px }
+.mini{
+  font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  background:transparent;border:1px solid #4B453D;color:var(--dim);padding:9px 13px;cursor:pointer;border-radius:6px;
+}
+.mini:hover{ border-color:var(--brass);color:var(--brass) }
+.mini:focus-visible{ outline:2px solid var(--brass);outline-offset:2px }
+
+footer{
+  margin-top:28px;text-align:center;font-family:var(--mono);font-size:10.5px;color:#7E766A;line-height:1.8;
+}
+footer a{ color:var(--dim) }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Explain it to <b>an era</b></h1>
+    <div class="sub">a modern thing · an older listener · limited patience</div>
+  </header>
+
+  <div class="console">
+    <div class="io">
+      <input id="q" placeholder="a modern thing — wifi, podcasts, mortgages, dating apps" autocomplete="off" maxlength="70">
+      <button class="go" id="go">Explain</button>
+    </div>
+    <div class="dial" id="dial"></div>
+
+    <div class="panel era-none" id="panel">
+      <div class="who">no listener selected</div>
+      <p class="idle">Pick somebody above, type a modern thing, and see how far you get.</p>
+    </div>
+
+    <div class="deck">
+      <button class="mini" id="again">Say it differently</button>
+      <button class="mini" id="rand">Give me something to explain</button>
+    </div>
+  </div>
+
+  <footer>
+    Written in your browser from word lists. The listeners are inventions, not quotations —
+    nobody real said any of this. <a href="/">← back to the cabinet</a>
+  </footer>
+</div>
+
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+const pick = (a) => a[Math.floor(Math.random() * a.length)];
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+const ERAS = [
+  {
+    k:'medieval', css:'era-medieval', label:'Blacksmith, 1340',
+    who:'a village blacksmith, who has work to be getting on with',
+    open:[
+      'Right. So this {thing}. You are telling me it is a thing a person can have, but not hold.',
+      'So then. {thing}. The whole village has it, and none of you made it yourselves.',
+      'I have shod four horses since dawn and now you want to talk about {thing}.',
+    ],
+    mid:[
+      'It is like the mill, then. Nobody understands the mill either, but the miller takes his cut and the bread gets made.',
+      'So it is a sort of guild. Somebody owns the {thing}, and you pay them, and in return you are permitted to use the {thing} they own.',
+      'We had a fellow come through selling something similar. Turned out to be a box of sand and a promise.',
+    ],
+    close:[
+      'I will say this for it: if it breaks, you cannot mend it, and that is a poor design.',
+      'Ask me again when it can carry water.',
+      'Fine. But it does not put a roof on anything.',
+    ],
+  },
+  {
+    k:'roman', css:'era-roman', label:'Engineer, 80 AD',
+    who:'a military engineer, Ninth Legion, on his own time',
+    open:[
+      'You have described {thing} three times and I have understood a different thing each time.',
+      'So {thing} moves nothing, carries nothing, and holds nothing up. And yet it is important.',
+      'Show me the {thing}. You cannot. This is already a poor start.',
+    ],
+    mid:[
+      'We build aqueducts. They are enormous, obvious, and they still work when the man who built them is dead. Can your {thing} say that?',
+      'Everything useful I have built rests on something else useful. What does {thing} rest on? More of the same? That is not an answer, it is a rumour.',
+      'You say it is fast. So is a rider. A rider also stops when he is tired, which is a feature.',
+    ],
+    close:[
+      'Very well. Bring it to a siege and we will see.',
+      'It will not last four hundred years. Almost nothing does. I merely note that ours did.',
+      'I remain unconvinced, but I have been unconvinced before and wrong twice.',
+    ],
+  },
+  {
+    k:'victorian', css:'era-victorian', label:'Naturalist, 1871',
+    who:'a gentleman naturalist, three glasses of sherry in',
+    open:[
+      'Extraordinary. And you say {thing} is entirely commonplace? Among the labouring classes as well?',
+      'I have catalogued eleven hundred beetles and not one of them prepared me for {thing}.',
+      'You must forgive me. I had assumed {thing} was a species. It is not, is it.',
+    ],
+    mid:[
+      'One is reminded of the telegraph, which the Society dismissed as a novelty for precisely as long as it took to become indispensable.',
+      'I shall want to know its habits. What does {thing} do when nobody is observing it? That is where the truth of a thing lives.',
+      'My colleague Pembridge would say this is a fad. Pembridge said that about the railway, and Pembridge now takes the railway.',
+    ],
+    close:[
+      'I shall write it up. The Society will be appalled, which is generally a sign of merit.',
+      'Remarkable. Faintly indecent. I should like one.',
+      'Do go on. My notes are already a shambles.',
+    ],
+  },
+  {
+    k:'deco', css:'era-deco', label:'Flapper, 1926',
+    who:'somebody at the back of a very loud room, 1926',
+    open:[
+      'Darling, say {thing} again but slower and with a drink in your hand.',
+      'So {thing} is the new thing. There is always a new thing. Last year it was somebody\'s cousin.',
+      'You have got about forty seconds before the band starts. Explain {thing} in forty seconds.',
+    ],
+    mid:[
+      'Everyone will pretend to have had one for years. That part I understand perfectly.',
+      'And it is free? Nothing is free. Somebody is being charged, and if it is not you, it is you.',
+      'I give it eighteen months before it is unfashionable and thirty before it is unavoidable.',
+    ],
+    close:[
+      'Marvellous. Write down the name, I shall claim I discovered it.',
+      'Fine, fine. Now stop talking, this is my song.',
+      'I am not against {thing}. I am simply against being explained things.',
+    ],
+  },
+  {
+    k:'office', css:'era-office', label:'Office, 1986',
+    who:'middle management, second floor, 1986',
+    open:[
+      'Run that past me again. {thing} — is that a system, a service, or a supplier?',
+      'Right, {thing}. Where does that sit? Is it under IT or is it under facilities?',
+      'I have got a meeting at eleven. Give me {thing} in one line.',
+    ],
+    mid:[
+      'The trouble with {thing} is nobody owns it. If nobody owns it, nobody fixes it, and it lands on me in March.',
+      'We piloted something similar in Bracknell. It went well, which is exactly why it was cancelled.',
+      'What is the cost per head? No, not the licence. The cost per head when it stops working.',
+    ],
+    close:[
+      'Put it in a memo. Two pages. If it needs three pages it is not a good idea.',
+      'I am not saying no. I am saying not this quarter.',
+      'Fine. But when {thing} goes down at month end, it is not my department.',
+    ],
+  },
+];
+
+const SUGGESTIONS = ['wifi','podcasts','dating apps','mortgages','crypto','streaming','open-plan offices',
+  'influencers','self-checkout','cloud storage','electric scooters','subscription razors','group chats','recycling'];
+
+let era = ERAS[0];
+let lastThing = '';
+
+function tidy(raw){
+  return (raw || '').trim().replace(/\s+/g,' ').replace(/[.?!]+$/,'').slice(0, 70);
+}
+
+function renderDial(){
+  $('dial').innerHTML = '';
+  ERAS.forEach(e => {
+    const b = document.createElement('button');
+    b.textContent = e.label;
+    b.setAttribute('aria-pressed', String(e === era));
+    b.onclick = () => { era = e; renderDial(); if (lastThing) speak(lastThing); };
+    $('dial').appendChild(b);
+  });
+}
+
+function speak(thingRaw){
+  const thing = tidy(thingRaw);
+  if (!thing){
+    $('panel').className = 'panel era-none';
+    $('panel').innerHTML = '<div class="who">nothing to explain</div>' +
+      '<p class="idle">Type a modern thing first. Anything you would struggle to justify.</p>';
+    return;
+  }
+  lastThing = thing;
+  const fill = (s) => s.replace(/\{thing\}/g, thing);
+  $('panel').className = 'panel ' + era.css;
+  $('panel').innerHTML =
+    '<div class="who">' + esc(era.who) + '</div>' +
+    '<p>' + esc(fill(pick(era.open))) + '</p>' +
+    '<p>' + esc(fill(pick(era.mid))) + '</p>' +
+    '<p>' + esc(fill(pick(era.close))) + '</p>';
+  $('q').value = thing;
+}
+
+$('go').addEventListener('click', () => speak($('q').value));
+$('q').addEventListener('keydown', (e) => { if (e.key === 'Enter') speak($('q').value); });
+$('again').addEventListener('click', () => { if (lastThing) speak(lastThing); });
+$('rand').addEventListener('click', () => {
+  const s = pick(SUGGESTIONS);
+  $('q').value = s;
+  speak(s);
+});
+
+renderDial();
+</script>
+</body>
+</html>

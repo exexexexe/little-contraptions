@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unknown Sport of the Day</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23144E8C'/><rect x='5' y='7' width='22' height='18' fill='none' stroke='%23FFF' stroke-width='1.6'/><line x1='16' y1='7' x2='16' y2='25' stroke='%23FFF' stroke-width='1.6'/><circle cx='16' cy='16' r='4' fill='none' stroke='%23E2703A' stroke-width='1.6'/></svg>">
+<style>
+:root{
+  --court:#144E8C;
+  --court-2:#0F3E71;
+  --clay:#E2703A;
+  --line:rgba(255,255,255,.32);
+  --paper:#FBFAF7;
+  --ink:#16202B;
+  --ink-2:#4A5865;
+  --dim:#8794A1;
+  --sans:ui-sans-serif,system-ui,"Helvetica Neue",Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--court);
+  background-image:
+    linear-gradient(180deg, var(--court) 0%, var(--court-2) 100%);
+  color:#fff;font-family:var(--sans);min-height:100vh;padding:28px 18px 60px;
+}
+.wrap{ max-width:760px;margin:0 auto;position:relative }
+/* court markings behind everything */
+.wrap::before{
+  content:"";position:absolute;inset:-14px 0 40px;pointer-events:none;
+  border:2px solid var(--line);border-radius:2px;
+  background:
+    linear-gradient(90deg, transparent calc(50% - 1px), var(--line) calc(50% - 1px), var(--line) calc(50% + 1px), transparent calc(50% + 1px));
+  opacity:.5;
+}
+.inner{ position:relative }
+
+header{ text-align:center;margin-bottom:20px }
+h1{ margin:0;font-size:clamp(24px,5vw,36px);font-weight:800;letter-spacing:-.03em;line-height:1.05 }
+.sub{ margin-top:8px;font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;opacity:.7 }
+
+/* ---------- card ---------- */
+.card{
+  background:var(--paper);color:var(--ink);
+  padding:26px 26px 22px;box-shadow:0 18px 44px rgba(0,0,0,.32);
+  position:relative;overflow:hidden;
+}
+.card::before{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:7px;background:var(--clay);
+}
+.cat{
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--clay);margin-bottom:9px;
+}
+.card h2{ margin:0 0 3px;font-size:clamp(25px,5.4vw,38px);font-weight:800;letter-spacing:-.03em;line-height:1.06 }
+.card .native{ font-size:13.5px;color:var(--dim);font-style:italic;margin-bottom:14px }
+.card .what{ font-size:16px;line-height:1.62;margin:0 0 13px }
+.card .detail{
+  font-size:14px;line-height:1.62;color:var(--ink-2);
+  border-left:2px solid #E4E7EB;padding-left:13px;margin:0;
+}
+.meta{ display:flex;gap:20px;flex-wrap:wrap;margin-top:18px;padding-top:14px;border-top:1px solid #E4E7EB }
+.meta div{ font-family:var(--mono);font-size:11px;color:var(--dim) }
+.meta div b{ display:block;color:var(--ink);font-size:13px;font-weight:600;margin-top:2px;font-family:var(--sans) }
+
+/* ---------- controls ---------- */
+.deck{ display:flex;gap:9px;flex-wrap:wrap;margin-top:16px }
+.btn{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;
+  background:rgba(255,255,255,.1);color:#fff;border:1px solid var(--line);
+  padding:12px 17px;cursor:pointer;
+}
+.btn:hover{ background:rgba(255,255,255,.2);border-color:#fff }
+.btn.go{ background:var(--clay);border-color:var(--clay);font-weight:700 }
+.btn.go:hover{ background:#EC7F49 }
+.btn:focus-visible{ outline:2px solid #fff;outline-offset:2px }
+
+.tally{
+  display:flex;gap:22px;flex-wrap:wrap;margin-top:20px;padding-top:16px;
+  border-top:1px solid var(--line);font-family:var(--mono);font-size:10.5px;
+  letter-spacing:.1em;text-transform:uppercase;opacity:.85;
+}
+.tally b{ display:block;font-family:var(--sans);font-size:21px;font-weight:800;letter-spacing:-.02em;margin-top:3px;text-transform:none }
+
+footer{
+  margin-top:30px;padding-top:15px;border-top:1px solid var(--line);
+  font-family:var(--mono);font-size:10.5px;line-height:1.8;opacity:.6;
+}
+footer a{ color:#fff }
+</style>
+</head>
+<body>
+<div class="wrap"><div class="inner">
+  <header>
+    <h1>Unknown Sport of the Day</h1>
+    <div class="sub">a curated deck · <span id="deck-n"></span> entries</div>
+  </header>
+
+  <div class="card" id="card"></div>
+
+  <div class="deck">
+    <button class="btn go" id="next">Another one</button>
+    <button class="btn" id="known">I know this one</button>
+    <button class="btn" id="new">Never heard of it</button>
+  </div>
+
+  <div class="tally">
+    <div>seen<b id="t-seen">0</b></div>
+    <div>knew<b id="t-knew">0</b></div>
+    <div>new to you<b id="t-new">0</b></div>
+    <div>deck left<b id="t-left">0</b></div>
+  </div>
+
+  <footer>
+    Descriptions are limited to what each sport is and where it is played — no participation
+    figures or popularity rankings, because reliable ones are harder to come by than they look.
+    Your tally is kept in this tab only and forgotten when you close it.
+    <a href="/">← back to the cabinet</a>
+  </footer>
+</div></div>
+
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+/* A curated deck. Every entry sticks to what the sport is, how it is played
+   and where it comes from — all checkable, none of it invented, and
+   deliberately no "most popular" claims. */
+const SPORTS = [
+  { n:'Sepak takraw', native:'sepak raga', cat:'ball · net', where:'Southeast Asia',
+    what:'Volleyball played with a small rattan ball, where using your hands is a foul.',
+    detail:'Players return the ball with feet, knees, chest and head, which in practice means a lot of overhead bicycle kicks.' },
+  { n:'Kabaddi', native:'', cat:'contact · team', where:'South Asia',
+    what:'A tag-and-wrestle game where the attacker must raid the other half of the court and get back without being held.',
+    detail:'Traditionally the raider had to chant continuously to prove they had not taken a breath; modern rules use a 30-second clock instead.' },
+  { n:'Hurling', native:'iománaíocht', cat:'stick · team', where:'Ireland',
+    what:'A field game played with a wooden stick called a hurley and a small hard ball called a sliotar.',
+    detail:'Points are scored over the crossbar and goals under it, so the scoreline is written as two separate numbers.' },
+  { n:'Camogie', native:'camógaíocht', cat:'stick · team', where:'Ireland',
+    what:'The women\'s code of hurling, run by its own association with slightly different rules.',
+    detail:'It has been organised separately since the early twentieth century rather than being a later addition.' },
+  { n:'Shinty', native:'camanachd', cat:'stick · team', where:'Scottish Highlands',
+    what:'A stick-and-ball field game related to hurling, played with a caman.',
+    detail:'Unlike hockey, you may play the ball in the air on both sides of the stick.' },
+  { n:'Bandy', native:'', cat:'ice · team', where:'Sweden, Russia, Finland',
+    what:'Eleven-a-side ice game played with curved sticks and a ball on a rink roughly the size of a football pitch.',
+    detail:'It predates modern ice hockey and looks far more like football on ice than hockey does.' },
+  { n:'Pesäpallo', native:'', cat:'bat · team', where:'Finland',
+    what:'Finnish baseball, where the pitcher stands beside the batter and throws the ball straight up.',
+    detail:'The bases zig-zag across the field rather than forming a diamond, so runners cross paths constantly.' },
+  { n:'Korfball', native:'korfbal', cat:'ball · team', where:'Netherlands, Belgium',
+    what:'A mixed-gender game shooting into a basket on a pole with no backboard.',
+    detail:'Teams are made up of both men and women by rule, and players may only defend an opponent of the same gender.' },
+  { n:'Underwater hockey', native:'octopush', cat:'water · team', where:'invented in England',
+    what:'Two teams push a weighted puck along the bottom of a swimming pool while holding their breath.',
+    detail:'Players wear a snorkel and a small glove, and substitute constantly because nobody can stay down for long.' },
+  { n:'Basque pelota', native:'pilota', cat:'wall · racket',  where:'Basque Country',
+    what:'A family of games hitting a ball against a wall, with bare hands, a paddle, or a long curved basket.',
+    detail:'The basket version, jai alai, produces some of the fastest ball speeds in any sport.' },
+  { n:'Buzkashi', native:'kokpar', cat:'equestrian', where:'Afghanistan, Central Asia',
+    what:'Riders on horseback compete to carry a heavy goat or calf carcass to a goal.',
+    detail:'Matches are long, chaotic and largely unrefereed by the standards of most stadium sports.' },
+  { n:'Kho kho', native:'', cat:'running · team', where:'India',
+    what:'A chasing game where seated team-mates spring up to continue the pursuit in relay.',
+    detail:'Chasers face alternate directions and may only run forwards, which is the whole tactical puzzle.' },
+  { n:'Hornussen', native:'', cat:'field · team', where:'Switzerland',
+    what:'A batter launches a small puck off a ramp at high speed while the fielding team tries to knock it down with boards.',
+    detail:'The fielders hold what look like large placards, and hurl them into the air to intercept.' },
+  { n:'Fierljeppen', native:'polsstokverspringen', cat:'jumping', where:'Friesland, Netherlands',
+    what:'Canal jumping: sprint to a pole standing in the water, climb it as it topples, and land on the far bank.',
+    detail:'Distance is measured to where you land, so climbing higher mid-flight genuinely helps.' },
+  { n:'Kaatsen', native:'Frisian handball', cat:'ball · team', where:'Friesland, Netherlands',
+    what:'A handball game where one team serves and the other tries to return the ball past a line.',
+    detail:'It belongs to the same old European family of hand-ball games as pelota and Italian pallone.' },
+  { n:'Gaelic football', native:'peil ghaelach', cat:'ball · team', where:'Ireland',
+    what:'A field game mixing carrying, hand-passing and kicking, with the same scoring posts as hurling.',
+    detail:'You may carry the ball only a few steps before bouncing or toe-tapping it back to your hands.' },
+  { n:'Australian rules football', native:'footy', cat:'ball · team', where:'Australia',
+    what:'Eighteen-a-side on an oval ground, with no offside and four goalposts at each end.',
+    detail:'Catching a kick cleanly on the full — a mark — earns you an uncontested kick.' },
+  { n:'Floorball', native:'salibandy', cat:'stick · indoor', where:'Nordic countries',
+    what:'Indoor stick game with a light plastic ball and short sticks, played on a rink with low boards.',
+    detail:'The stick blade is perforated and the ball is full of holes, which is what keeps the speed sane indoors.' },
+  { n:'Ringette', native:'', cat:'ice · team', where:'Canada',
+    what:'Ice game played with a straight stick and a rubber ring rather than a puck.',
+    detail:'The ring must be passed across each blue line rather than carried, so nobody can solo the length of the rink.' },
+  { n:'Broomball', native:'', cat:'ice · team', where:'Canada, United States',
+    what:'Played on ice in shoes rather than skates, hitting a small ball with a stick shaped like a broom.',
+    detail:'The lack of skates is the point: everyone is equally unstable.' },
+  { n:'Tchoukball', native:'', cat:'ball · team', where:'invented in Switzerland',
+    what:'Teams throw a ball at an angled rebound frame and score if it lands before the other side catches it.',
+    detail:'Designed deliberately to remove physical contact — you may not block or intercept an opponent.' },
+  { n:'Kin-Ball', native:'', cat:'ball · team', where:'invented in Canada',
+    what:'Three teams and one very large ball, roughly 1.2 metres across.',
+    detail:'The serving team calls out which colour must make the catch, so two teams are always off the hook.' },
+  { n:'Bossaball', native:'', cat:'ball · net', where:'invented in Spain',
+    what:'Volleyball on an inflatable court with a trampoline on each side of the net.',
+    detail:'Feet and head are legal, so rallies mix volleyball with something closer to gymnastics.' },
+  { n:'Goalball', native:'', cat:'paralympic · team', where:'international',
+    what:'A Paralympic team sport played by athletes with vision impairment, rolling a ball with bells inside it.',
+    detail:'Every player wears an eyeshade so the field is level, and the hall must be silent during play.' },
+  { n:'Boccia', native:'', cat:'paralympic · precision', where:'international',
+    what:'A Paralympic precision sport, throwing or rolling balls as close as possible to a target ball.',
+    detail:'Athletes who cannot throw may use a ramp, directed with a head pointer.' },
+  { n:'Wheelchair rugby', native:'murderball', cat:'paralympic · team', where:'invented in Canada',
+    what:'A full-contact indoor team sport played in reinforced wheelchairs on a basketball court.',
+    detail:'Chair-to-chair contact is legal and expected; the chairs are built with that in mind.' },
+  { n:'Sitting volleyball', native:'', cat:'paralympic · net', where:'international',
+    what:'Volleyball played on a smaller court with a lower net, with players seated throughout.',
+    detail:'Part of your torso must stay in contact with the floor whenever you play the ball.' },
+  { n:'Sumo', native:'相撲', cat:'wrestling', where:'Japan',
+    what:'Wrestling in a circular ring, won by forcing your opponent out or making anything but their feet touch down.',
+    detail:'Bouts are frequently over in seconds, and the ceremony surrounding them lasts far longer.' },
+  { n:'Ssireum', native:'씨름', cat:'wrestling', where:'Korea',
+    what:'Belt wrestling where both competitors grip a sash worn around the waist and thigh.',
+    detail:'You lose the moment any part of your body above the knee touches the sand.' },
+  { n:'Glíma', native:'', cat:'wrestling', where:'Iceland',
+    what:'A Nordic belt wrestling tradition with harnesses around the waist and thighs.',
+    detail:'Competitors step continuously around each other, so it looks oddly like a dance until someone goes down.' },
+  { n:'Schwingen', native:'Swiss wrestling', cat:'wrestling', where:'Switzerland',
+    what:'Wrestling in sawdust, gripping short canvas breeches worn over the trousers.',
+    detail:'The winner traditionally brushes the sawdust off the loser\'s back afterwards.' },
+  { n:'Yağlı güreş', native:'oil wrestling', cat:'wrestling', where:'Turkey',
+    what:'Wrestling in leather trousers while covered head to foot in olive oil.',
+    detail:'The oil makes conventional holds useless, so grips are taken inside the trousers themselves.' },
+  { n:'Mallakhamb', native:'मल्लखंब', cat:'gymnastics', where:'India',
+    what:'Gymnastics performed on a vertical wooden pole or a hanging rope.',
+    detail:'It began as conditioning for wrestlers before becoming a competitive discipline of its own.' },
+  { n:'Real tennis', native:'jeu de paume', cat:'racket', where:'England, France',
+    what:'The indoor ancestor of modern tennis, played in an asymmetric walled court with sloping roofs in play.',
+    detail:'Lawn tennis is the newcomer; this is the game it was named after.' },
+  { n:'Eton fives', native:'', cat:'wall · hand', where:'England',
+    what:'A handball game played in a three-walled court modelled on a chapel doorway.',
+    detail:'The court includes a step and a buttress because the original one, at a school, happened to have them.' },
+  { n:'Padel', native:'pádel', cat:'racket', where:'Mexico, Spain, Argentina',
+    what:'Doubles racket sport in an enclosed glass court where the walls stay in play.',
+    detail:'Serving is underarm, which keeps rallies long and the barrier to entry low.' },
+  { n:'Pickleball', native:'', cat:'racket', where:'United States',
+    what:'Paddle sport on a badminton-sized court with a perforated plastic ball.',
+    detail:'A no-volley zone by the net, universally called the kitchen, stops the game becoming pure smashing.' },
+  { n:'Petanque', native:'pétanque', cat:'precision', where:'Provence, France',
+    what:'Players throw hollow metal boules as near as possible to a small wooden marker, feet planted still.',
+    detail:'The name comes from a phrase meaning "feet planted", which is the rule that separates it from its parent game.' },
+  { n:'Curling', native:'', cat:'ice · precision', where:'Scotland',
+    what:'Granite stones slid down ice towards a target, with team-mates sweeping to steer them.',
+    detail:'Sweeping warms the ice fractionally, which is genuinely enough to change the stone\'s path.' },
+  { n:'Orienteering', native:'', cat:'endurance', where:'Sweden',
+    what:'Cross-country navigation between checkpoints using only a map and compass.',
+    detail:'Courses are kept secret until the start, so route choice is the real contest.' },
+  { n:'Ultimate', native:'ultimate frisbee', cat:'disc · team', where:'United States',
+    what:'A flying-disc team sport where you cannot run while holding the disc.',
+    detail:'Most levels are self-refereed, with players calling their own fouls.' },
+  { n:'Chess boxing', native:'', cat:'hybrid', where:'invented in the Netherlands',
+    what:'Alternating rounds of speed chess and boxing, won by checkmate, knockout or the clock.',
+    detail:'A boxer who cannot settle their pulse will lose on the board before they lose on their feet.' },
+  { n:'Bog snorkelling', native:'', cat:'endurance · odd', where:'Wales',
+    what:'Competitors swim two lengths of a peat bog trench in snorkel and flippers, without conventional strokes.',
+    detail:'A world championship has been held in Llanwrtyd Wells since the 1980s.' },
+  { n:'Wife carrying', native:'eukonkanto', cat:'endurance · odd', where:'Finland',
+    what:'An obstacle race in which one competitor carries another through water and over hurdles.',
+    detail:'The best-known carrying style hangs the passenger upside down over the runner\'s back.' },
+  { n:'Roller derby', native:'', cat:'contact · team', where:'United States',
+    what:'A contact sport on quad skates where a designated jammer scores by lapping opposing blockers.',
+    detail:'The modern amateur game was rebuilt from scratch in the 2000s and is largely skater-run.' },
+  { n:'Jianzi', native:'毽子', cat:'kick · net', where:'China',
+    what:'A weighted shuttlecock kept in the air with the feet, played casually in circles or competitively over a net.',
+    detail:'The competitive net version is closely related to sepak takraw.' },
+  { n:'Gateball', native:'ゲートボール', cat:'precision · team', where:'Japan',
+    what:'A fast team game descended from croquet, played to a strict 30-minute clock.',
+    detail:'It was devised after the second world war as a game that could be played with very little equipment.' },
+  { n:'Canoe polo', native:'kayak polo', cat:'water · team', where:'international',
+    what:'Five-a-side ball game in kayaks, with goals suspended two metres above the water.',
+    detail:'Capsizing is routine, and rolling back up while holding the ball is a basic skill.' },
+];
+
+let deck = [];
+let current = null;
+let seen = 0, knew = 0, fresh = 0;
+
+function shuffle(a){
+  a = a.slice();
+  for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+
+function draw(){
+  if (!deck.length) deck = shuffle(SPORTS.map((_, i) => i));
+  const i = deck.pop();
+  current = SPORTS[i];
+  render();
+}
+
+function render(){
+  const s = current;
+  $('card').innerHTML =
+    '<div class="cat">' + esc(s.cat) + '</div>' +
+    '<h2>' + esc(s.n) + '</h2>' +
+    (s.native ? '<div class="native">' + esc(s.native) + '</div>' : '<div class="native"></div>') +
+    '<p class="what">' + esc(s.what) + '</p>' +
+    '<p class="detail">' + esc(s.detail) + '</p>' +
+    '<div class="meta">' +
+      '<div>played in<b>' + esc(s.where) + '</b></div>' +
+      '<div>kind<b>' + esc(s.cat) + '</b></div>' +
+    '</div>';
+  $('t-seen').textContent = seen;
+  $('t-knew').textContent = knew;
+  $('t-new').textContent = fresh;
+  $('t-left').textContent = deck.length;
+}
+
+$('next').addEventListener('click', () => { seen++; draw(); });
+$('known').addEventListener('click', () => { seen++; knew++; draw(); });
+$('new').addEventListener('click', () => { seen++; fresh++; draw(); });
+
+$('deck-n').textContent = SPORTS.length;
+draw();
+seen = 0; render();
+</script>
+</body>
+</html>
