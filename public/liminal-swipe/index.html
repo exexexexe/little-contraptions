@@ -1,0 +1,1043 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Would You Sleep Here</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23161A19'/><path d='M4 28 12 13h8l8 15z' fill='%232E3A34'/><rect x='13' y='15' width='6' height='9' fill='%23D9C98A'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --bg:#101312;
+  --bg-2:#171B1A;
+  --ink:#E8E6DF;
+  --dim:#8E948F;
+  --rule:#2A2F2D;
+  --yes:#7FBE8E;
+  --no:#C77A6A;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --sans:ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%}
+body{
+  background:var(--bg);color:var(--ink);font-family:var(--sans);
+  display:flex;flex-direction:column;align-items:center;
+  padding:20px 16px 74px;min-height:100%;
+  -webkit-user-select:none;user-select:none;overflow-x:hidden;
+}
+h1{ font-size:15px;letter-spacing:.22em;text-transform:uppercase;margin:0;font-weight:600 }
+.sub{ font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin-top:7px;text-align:center }
+
+.deck{ position:relative;width:min(360px,92vw);height:calc(min(360px,92vw) * 1.42);margin:20px auto 0 }
+.card{
+  position:absolute;inset:0;border-radius:12px;overflow:hidden;
+  background:#0C100F;border:1px solid var(--rule);
+  box-shadow:0 18px 40px rgba(0,0,0,.55);
+  touch-action:none;cursor:grab;
+  display:flex;flex-direction:column;
+}
+.card .art{ flex:1 1 auto;min-height:0;position:relative;background:#000 }
+.card.behind{ transform:scale(.94) translateY(14px);opacity:.6;pointer-events:none;box-shadow:0 8px 20px rgba(0,0,0,.4) }
+.card.gone{ pointer-events:none }
+.card canvas{ display:block;width:100%;height:100% }
+/* The information sits below the picture rather than over it — the floor of
+   each room is where most of the detail is, and a gradient overlay ate it. */
+.card .meta{ flex:0 0 auto;padding:13px 15px 15px;background:#0E1211;border-top:1px solid var(--rule) }
+.card .name{ font-size:19px;font-weight:600;letter-spacing:.01em;margin-bottom:4px }
+.card .line{ font-size:13.5px;line-height:1.55;color:#C9CCC6 }
+.card .stats{ display:flex;gap:14px;margin-top:11px;flex-wrap:wrap }
+.card .stats span{ font-family:var(--mono);font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;color:#8E948F }
+.card .stats b{ color:#D6D9D2;font-weight:400 }
+
+.stamp{
+  position:absolute;top:22px;font-family:var(--mono);font-size:22px;font-weight:700;
+  letter-spacing:.16em;padding:7px 13px;border:3px solid;border-radius:6px;opacity:0;
+  text-transform:uppercase;pointer-events:none;
+}
+.stamp.y{ left:18px;transform:rotate(-13deg);color:var(--yes);border-color:var(--yes) }
+.stamp.n{ right:18px;transform:rotate(13deg);color:var(--no);border-color:var(--no) }
+
+.controls{ display:flex;gap:12px;margin-top:20px;align-items:center;justify-content:center }
+.btn{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
+  background:var(--bg-2);color:var(--ink);border:1px solid var(--rule);
+  padding:13px 20px;border-radius:999px;cursor:pointer;
+}
+.btn.y{ border-color:#3C5B45;color:var(--yes) }
+.btn.n{ border-color:#5C3A32;color:var(--no) }
+.btn:hover{ background:#1E2322 }
+.btn:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+.count{ font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--dim);margin-top:14px }
+
+.done{ width:min(430px,92vw);text-align:center;margin-top:28px;display:none }
+.done h2{ font-size:22px;margin:0 0 10px;font-weight:600 }
+.done p{ font-size:14.5px;line-height:1.72;color:#B9BDB7;margin:0 0 12px }
+.done p b{ color:#E8E6DF;font-weight:600 }
+.done .verdict{ font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--yes);margin-bottom:14px }
+
+footer{
+  position:fixed;left:0;right:0;bottom:0;padding:9px 16px;text-align:center;
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;color:#5F655F;
+  background:linear-gradient(180deg,rgba(16,19,18,0),rgba(16,19,18,.95) 40%);
+  pointer-events:none;
+}
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media (prefers-reduced-motion: reduce){ #lc-back, .card{ transition:none !important } }
+</style>
+</head>
+<body>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<h1>Would You Sleep Here</h1>
+<div class="sub">twelve rooms · drag, or use the buttons · ← no · → yes</div>
+
+<div class="deck" id="deck"></div>
+
+<div class="controls">
+  <button class="btn n" id="no">✕ &nbsp;absolutely not</button>
+  <button class="btn y" id="yes">yes, fine &nbsp;✓</button>
+</div>
+<div class="count" id="count"></div>
+
+<div class="done" id="done"></div>
+
+<footer>every room is drawn by the page from scratch — no photographs, of anywhere, by anyone</footer>
+
+<script>
+'use strict';
+
+/* ------------------------------------------------------------------ *
+ * Every image on this page is generated: a one-point perspective room *
+ * drawn to canvas from a seeded RNG. No photographs are loaded, none  *
+ * are scraped, and nothing here depicts a real place.                 *
+ * ------------------------------------------------------------------ */
+
+const $ = (id) => document.getElementById(id);
+
+function rng(seed){
+  let s = seed >>> 0 || 1;
+  return function(){
+    s ^= s << 13; s >>>= 0;
+    s ^= s >> 17;
+    s ^= s << 5;  s >>>= 0;
+    return s / 4294967296;
+  };
+}
+const pick = (r, a) => a[Math.floor(r() * a.length) % a.length];
+const rand = (r, lo, hi) => lo + r() * (hi - lo);
+
+/* ---- palettes: each room has a few lighting moods ----------------- */
+
+const MOODS = {
+  flu:   { name:'fluorescent', warm:'#F2F4E8', mid:'#C9CFC0', low:'#8E9789', cast:'rgba(214,226,205,.05)' },
+  sodium:{ name:'sodium',      warm:'#F6D79A', mid:'#C29A5C', low:'#6E5433', cast:'rgba(255,196,102,.07)' },
+  dusk:  { name:'last light',  warm:'#D9C6B0', mid:'#8C8478', low:'#4A4A47', cast:'rgba(180,160,190,.06)' },
+  emerg: { name:'emergency',   warm:'#E88C77', mid:'#8E4A40', low:'#3A211E', cast:'rgba(220,90,70,.09)' },
+  moon:  { name:'no lights',   warm:'#9FB6C4', mid:'#5C7182', low:'#2B3742', cast:'rgba(120,160,200,.07)' },
+  green: { name:'exit sign',   warm:'#B7DCB4', mid:'#5F8460', low:'#2A3B2C', cast:'rgba(120,200,130,.06)' },
+};
+
+/* ---- rooms -------------------------------------------------------- */
+
+const ROOMS = [
+  {
+    id:'pool', label:'The Drained Pool',
+    moods:['flu','green','moon'],
+    lines:[
+      'The water was let out some time ago. The tiles remember the line it stopped at.',
+      'Twelve feet at the deep end, and the ladder still goes down into it.',
+      'The filters run anyway, somewhere below, on a timer nobody reset.',
+    ],
+    draw: drawPool,
+  },
+  {
+    id:'corridor', label:'The Hotel Corridor',
+    moods:['flu','dusk','emerg'],
+    lines:[
+      'Doors on both sides, none of them numbered in a sequence that works.',
+      'The carpet pattern repeats every eleven feet. You have counted.',
+      'It bends slightly to the left, so you can never see the end of it.',
+    ],
+    draw: drawCorridor,
+  },
+  {
+    id:'office', label:'The Open Plan Floor',
+    moods:['flu','moon','dusk'],
+    lines:[
+      'Every monitor is asleep except one, four desks in, cycling a screensaver.',
+      'The chairs are all pushed in. Somebody did that on purpose.',
+      'The air handling comes on for six minutes every hour, then stops.',
+    ],
+    draw: drawOffice,
+  },
+  {
+    id:'garage', label:'Level P3',
+    moods:['sodium','emerg','moon'],
+    lines:[
+      'The painted numbers go up to 340. There are no cars in any of them.',
+      'Something drips, at a rhythm slightly too regular to be water.',
+      'The ramp down is lit. The ramp up is not.',
+    ],
+    draw: drawGarage,
+  },
+  {
+    id:'waiting', label:'The Waiting Area',
+    moods:['flu','dusk','green'],
+    lines:[
+      'Forty chairs bolted in rows, facing a screen that shows a number: yours.',
+      'The magazines on the table are all from a month that has not happened.',
+      'The reception window is open and the light behind it is on.',
+    ],
+    draw: drawWaiting,
+  },
+  {
+    id:'play', label:'The Soft Play Room',
+    moods:['flu','emerg','moon'],
+    lines:[
+      'The ball pit is full. The tubes above it go somewhere you cannot see into.',
+      'Everything is padded, including the ceiling, which is a strange choice.',
+      'A birthday banner is up. No name on it.',
+    ],
+    draw: drawPlay,
+  },
+  {
+    id:'mall', label:'The Lower Concourse',
+    moods:['flu','dusk','sodium'],
+    lines:[
+      'Every shutter is down. The music is still playing at retail volume.',
+      'The fountain runs. Coins are in it. The nearest exit sign points inward.',
+      'A directory board lists forty stores and no way out.',
+    ],
+    draw: drawMall,
+  },
+  {
+    id:'stair', label:'The Service Stairwell',
+    moods:['flu','emerg','green'],
+    lines:[
+      'The landings are numbered downward past where the building has floors.',
+      'The handrail is warm. Nothing in here should be warm.',
+      'The door at the bottom has a bar handle and opens outward.',
+    ],
+    draw: drawStair,
+  },
+];
+
+/* ---- perspective helpers ------------------------------------------ *
+ * One-point perspective. The back wall is an inset rectangle; the four *
+ * surfaces are the quads between it and the frame edge. A point at     *
+ * "depth" u (0 = at the viewer, 1 = the back wall) lerps between them. *
+ * -------------------------------------------------------------------*/
+
+function makeRoom(W, H, r){
+  const inset = rand(r, .26, .34);
+  const bx0 = W * inset, bx1 = W * (1 - inset);
+  const shift = rand(r, -.05, .05) * W;
+  const horizon = H * rand(r, .46, .53);
+  const bh = H * rand(r, .30, .38);
+  return {
+    W, H,
+    x0: bx0 + shift, x1: bx1 + shift,
+    y0: horizon - bh / 2, y1: horizon + bh / 2,
+    horizon,
+  };
+}
+// depth u in [0,1] → the rectangle of the room cross-section at that depth
+function slice(rm, u){
+  const L = (a, b) => a + (b - a) * u;
+  return { x0: L(0, rm.x0), x1: L(rm.W, rm.x1), y0: L(0, rm.y0), y1: L(rm.H, rm.y1) };
+}
+// perspective-spaced depths: closer together as they recede
+function depths(n, k){
+  const out = [];
+  for (let i = 1; i <= n; i++) out.push(i / (i + k));
+  return out;
+}
+
+function quad(ctx, pts, fill){
+  ctx.beginPath();
+  ctx.moveTo(pts[0][0], pts[0][1]);
+  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+  ctx.closePath();
+  ctx.fillStyle = fill;
+  ctx.fill();
+}
+
+function shade(hex, amt){
+  const n = parseInt(hex.slice(1), 16);
+  const c = [n >> 16 & 255, n >> 8 & 255, n & 255].map(v =>
+    Math.max(0, Math.min(255, Math.round(amt < 0 ? v * (1 + amt) : v + (255 - v) * amt))));
+  return 'rgb(' + c.join(',') + ')';
+}
+
+// The shell every room is built on: floor, ceiling, two walls, back wall.
+function shell(ctx, rm, m, opt){
+  opt = opt || {};
+  const { W, H } = rm;
+  ctx.fillStyle = shade(m.low, -.55);
+  ctx.fillRect(0, 0, W, H);
+
+  // ceiling
+  quad(ctx, [[0,0],[W,0],[rm.x1,rm.y0],[rm.x0,rm.y0]], opt.ceiling || shade(m.mid, -.35));
+  // floor
+  quad(ctx, [[0,H],[W,H],[rm.x1,rm.y1],[rm.x0,rm.y1]], opt.floor || shade(m.low, .05));
+  // left / right walls
+  quad(ctx, [[0,0],[rm.x0,rm.y0],[rm.x0,rm.y1],[0,H]], opt.wallL || shade(m.mid, -.24));
+  quad(ctx, [[W,0],[rm.x1,rm.y0],[rm.x1,rm.y1],[W,H]], opt.wallR || shade(m.mid, -.14));
+  // back wall
+  ctx.fillStyle = opt.back || shade(m.mid, -.05);
+  ctx.fillRect(rm.x0, rm.y0, rm.x1 - rm.x0, rm.y1 - rm.y0);
+}
+
+// Recession lines on floor and ceiling: the grid that sells the depth.
+function grid(ctx, rm, colour, n, k, opt){
+  opt = opt || {};
+  const { W, H } = rm;
+  ctx.strokeStyle = colour;
+  ctx.lineWidth = 1;
+  const cols = opt.cols || 8;
+  for (let i = 1; i < cols; i++){
+    const p = i / cols;
+    if (opt.floor !== false){
+      ctx.beginPath();
+      ctx.moveTo(p * W, H);
+      ctx.lineTo(rm.x0 + p * (rm.x1 - rm.x0), rm.y1);
+      ctx.stroke();
+    }
+    if (opt.ceiling){
+      ctx.beginPath();
+      ctx.moveTo(p * W, 0);
+      ctx.lineTo(rm.x0 + p * (rm.x1 - rm.x0), rm.y0);
+      ctx.stroke();
+    }
+  }
+  for (const u of depths(n, k)){
+    const s = slice(rm, u);
+    if (opt.floor !== false){
+      ctx.beginPath(); ctx.moveTo(s.x0, s.y1); ctx.lineTo(s.x1, s.y1); ctx.stroke();
+    }
+    if (opt.ceiling){
+      ctx.beginPath(); ctx.moveTo(s.x0, s.y0); ctx.lineTo(s.x1, s.y0); ctx.stroke();
+    }
+  }
+}
+
+// Ceiling light panels marching away from the viewer.
+function ceilingLights(ctx, rm, m, r, count, wide){
+  for (const u of depths(count, 1.1)){
+    const s = slice(rm, u), s2 = slice(rm, Math.min(.985, u + .07 * (1 - u)));
+    const cw = (s.x1 - s.x0) * (wide ? .30 : .16);
+    const cx = (s.x0 + s.x1) / 2, cx2 = (s2.x0 + s2.x1) / 2;
+    const cw2 = (s2.x1 - s2.x0) * (wide ? .30 : .16);
+    const dead = r() < .18;
+    quad(ctx, [
+      [cx - cw / 2, s.y0], [cx + cw / 2, s.y0],
+      [cx2 + cw2 / 2, s2.y0], [cx2 - cw2 / 2, s2.y0],
+    ], dead ? shade(m.low, -.2) : m.warm);
+    if (!dead){
+      const g = ctx.createRadialGradient(cx, s.y0, 1, cx, s.y0, (s.x1 - s.x0) * .55);
+      g.addColorStop(0, 'rgba(255,255,255,.16)');
+      g.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(s.x0 - 40, s.y0 - 10, (s.x1 - s.x0) + 80, (s.y1 - s.y0) * .8);
+    }
+  }
+}
+
+// A door on a side wall, drawn as the quad between two depths.
+function sideDoor(ctx, rm, u1, u2, side, fill, lit){
+  const a = slice(rm, u1), b = slice(rm, u2);
+  const ax = side < 0 ? a.x0 : a.x1, bx = side < 0 ? b.x0 : b.x1;
+  const top = (y0, y1) => y0 + (y1 - y0) * .13;
+  const bot = (y0, y1) => y1;
+  quad(ctx, [
+    [ax, top(a.y0, a.y1)], [bx, top(b.y0, b.y1)],
+    [bx, bot(b.y0, b.y1)], [ax, bot(a.y0, a.y1)],
+  ], fill);
+  if (lit){
+    quad(ctx, [
+      [ax, bot(a.y0, a.y1) - (a.y1 - a.y0) * .04], [bx, bot(b.y0, b.y1) - (b.y1 - b.y0) * .04],
+      [bx, bot(b.y0, b.y1)], [ax, bot(a.y0, a.y1)],
+    ], 'rgba(255,238,190,.5)');
+  }
+}
+
+/* ---- the eight rooms ---------------------------------------------- */
+
+function drawPool(ctx, rm, m, r){
+  const { W, H } = rm;
+  shell(ctx, rm, m, {
+    floor: shade(m.warm, -.28),
+    wallL: shade(m.warm, -.34), wallR: shade(m.warm, -.24),
+    back: shade(m.warm, -.18), ceiling: shade(m.mid, -.45),
+  });
+  grid(ctx, rm, 'rgba(0,0,0,.10)', 11, 1.5, { cols: 12 });
+
+  // the basin: a hole in the floor, with a lit rim and a dark bottom
+  const lip = .16, uNear = .04, uFar = .70;
+  const n = slice(rm, uNear), f = slice(rm, uFar);
+  const nx0 = n.x0 + (n.x1 - n.x0) * lip, nx1 = n.x1 - (n.x1 - n.x0) * lip;
+  const fx0 = f.x0 + (f.x1 - f.x0) * lip, fx1 = f.x1 - (f.x1 - f.x0) * lip;
+  // rim highlight, then the shell of the basin, then the bottom
+  quad(ctx, [[nx0 - 7, n.y1 + 5],[nx1 + 7, n.y1 + 5],[fx1 + 3, f.y1 - 3],[fx0 - 3, f.y1 - 3]], shade(m.warm, -.10));
+  const bx0 = nx0 + (nx1 - nx0) * .10, bx1 = nx1 - (nx1 - nx0) * .10;
+  const gx0 = fx0 + (fx1 - fx0) * .14, gx1 = fx1 - (fx1 - fx0) * .14;
+  const floorY = f.y1 + (H - f.y1) * .30;      // the bottom of the deep end
+  quad(ctx, [[bx0, n.y1],[bx1, n.y1],[gx1, f.y1],[gx0, f.y1]], shade(m.warm, -.52));  // far slope
+  quad(ctx, [[bx0, n.y1],[gx0, f.y1],[gx0, f.y1],[bx0, n.y1]], shade(m.warm, -.40));
+  quad(ctx, [[bx0, n.y1],[gx0, f.y1],[gx1, f.y1],[bx1, n.y1]], shade(m.mid, -.50));
+  ctx.strokeStyle = 'rgba(0,0,0,.45)'; ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(bx0, n.y1); ctx.lineTo(gx0, f.y1); ctx.lineTo(gx1, f.y1); ctx.lineTo(bx1, n.y1);
+  ctx.stroke();
+  // the line the water stopped at, and the tile band under it
+  const wl = (a, b, t) => a + (b - a) * t;
+  ctx.strokeStyle = 'rgba(90,120,105,.55)'; ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(wl(bx0, gx0, .30), wl(n.y1, f.y1, .30));
+  ctx.lineTo(wl(bx1, gx1, .30), wl(n.y1, f.y1, .30));
+  ctx.stroke();
+  // depth marking on the rim
+  ctx.fillStyle = 'rgba(40,50,45,.55)';
+  ctx.font = '700 ' + Math.round(H * .026) + 'px ui-monospace, monospace';
+  ctx.fillText('3.6M', nx0 + 6, n.y1 - 3);
+
+  // tile line on the back wall
+  ctx.fillStyle = shade(m.mid, -.42);
+  ctx.fillRect(rm.x0, rm.y1 - (rm.y1 - rm.y0) * .17, rm.x1 - rm.x0, (rm.y1 - rm.y0) * .045);
+
+  // ladder: two rails and four rungs, hooked over the near right rim
+  const lx = nx1 - 4, ly = n.y1;
+  const rail = Math.max(2, H * .006);
+  ctx.strokeStyle = shade(m.warm, .35); ctx.lineWidth = rail; ctx.lineCap = 'round';
+  const rails = [[lx, ly], [lx + H * .045, ly - H * .006]];
+  for (const [rx, ry] of rails){
+    ctx.beginPath();
+    ctx.moveTo(rx, ry - H * .055);
+    ctx.quadraticCurveTo(rx + H * .012, ry - H * .075, rx + H * .022, ry - H * .058);
+    ctx.lineTo(rx + H * .022, ry + H * .05);
+    ctx.stroke();
+  }
+  ctx.lineWidth = Math.max(1.5, rail * .8);
+  for (let i = 0; i < 4; i++){
+    const yy = ly - H * .036 + i * H * .022;
+    ctx.beginPath();
+    ctx.moveTo(rails[0][0] + H * .022, yy);
+    ctx.lineTo(rails[1][0] + H * .022, yy - H * .004);
+    ctx.stroke();
+  }
+
+  ceilingLights(ctx, rm, m, r, 3, true);
+  // skylight bloom on the far floor
+  const g = ctx.createLinearGradient(0, rm.y1, 0, H);
+  g.addColorStop(0, 'rgba(255,255,255,.07)');
+  g.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, rm.y1, W, H - rm.y1);
+}
+
+function drawCorridor(ctx, rm, m, r){
+  shell(ctx, rm, m, {
+    floor: shade(m.low, .12), ceiling: shade(m.mid, -.30),
+    wallL: shade(m.mid, -.30), wallR: shade(m.mid, -.16),
+    back: shade(m.mid, -.10),
+  });
+  // patterned carpet
+  const d = depths(9, 1.2);
+  for (let i = 0; i < d.length - 1; i++){
+    if (i % 2) continue;
+    const a = slice(rm, d[i]), b = slice(rm, d[i + 1]);
+    quad(ctx, [[a.x0, a.y1],[a.x1, a.y1],[b.x1, b.y1],[b.x0, b.y1]], 'rgba(0,0,0,.12)');
+  }
+  grid(ctx, rm, 'rgba(0,0,0,.09)', 9, 1.2, { cols: 5 });
+
+  // doors down both sides
+  const dd = depths(7, .9);
+  for (let i = 0; i < dd.length - 1; i++){
+    const lit = r() < .22;
+    sideDoor(ctx, rm, dd[i], dd[i + 1] - (dd[i + 1] - dd[i]) * .45, -1,
+      shade(m.low, -.10), lit);
+    sideDoor(ctx, rm, dd[i], dd[i + 1] - (dd[i + 1] - dd[i]) * .45, 1,
+      shade(m.low, .02), r() < .22);
+  }
+  ceilingLights(ctx, rm, m, r, 5, false);
+  // the far end: a fire door
+  const bw = rm.x1 - rm.x0, bh = rm.y1 - rm.y0;
+  ctx.fillStyle = shade(m.low, -.05);
+  ctx.fillRect(rm.x0 + bw * .28, rm.y0 + bh * .18, bw * .44, bh * .82);
+  ctx.fillStyle = 'rgba(150,220,160,.75)';
+  ctx.fillRect(rm.x0 + bw * .40, rm.y0 + bh * .06, bw * .20, bh * .07);
+}
+
+function drawOffice(ctx, rm, m, r){
+  shell(ctx, rm, m, {
+    floor: shade(m.low, .16), ceiling: shade(m.warm, -.30),
+    wallL: shade(m.mid, -.26), wallR: shade(m.mid, -.12),
+    back: shade(m.mid, .02),
+  });
+  // drop ceiling tile grid
+  grid(ctx, rm, 'rgba(0,0,0,.13)', 8, 1.0, { cols: 7, ceiling: true, floor: false });
+  grid(ctx, rm, 'rgba(0,0,0,.07)', 6, 1.4, { cols: 4 });
+
+  // desk blocks receding, each a slab plus a monitor
+  const dd = depths(5, .85);
+  let litDone = false;
+  for (let i = dd.length - 1; i >= 0; i--){
+    const u = dd[i], s = slice(rm, u), s2 = slice(rm, Math.min(.94, u + .10 * (1 - u)));
+    const w = (s.x1 - s.x0);
+    for (const side of [-1, 1]){
+      const cx = (s.x0 + s.x1) / 2 + side * w * .27;
+      const cx2 = (s2.x0 + s2.x1) / 2 + side * (s2.x1 - s2.x0) * .27;
+      const dw = w * .21, dw2 = (s2.x1 - s2.x0) * .21;
+      const top = s.y1 - (s.y1 - s.y0) * .13, top2 = s2.y1 - (s2.y1 - s2.y0) * .13;
+      quad(ctx, [[cx - dw/2, top],[cx + dw/2, top],[cx2 + dw2/2, top2],[cx2 - dw2/2, top2]], shade(m.low, .22));
+      quad(ctx, [[cx - dw/2, top],[cx + dw/2, top],[cx + dw/2, s.y1],[cx - dw/2, s.y1]], shade(m.low, .06));
+      // monitor
+      const mh = (s.y1 - s.y0) * .12;
+      const on = !litDone && i === 2 && side === -1;
+      if (on) litDone = true;
+      ctx.fillStyle = on ? 'rgba(140,190,230,.85)' : shade(m.low, -.25);
+      ctx.fillRect(cx - dw * .22, top - mh, dw * .44, mh);
+      if (on){
+        const g = ctx.createRadialGradient(cx, top - mh / 2, 2, cx, top - mh / 2, dw * 2);
+        g.addColorStop(0, 'rgba(140,190,230,.22)');
+        g.addColorStop(1, 'rgba(140,190,230,0)');
+        ctx.fillStyle = g; ctx.fillRect(cx - dw * 2, top - mh * 4, dw * 4, mh * 6);
+      }
+    }
+  }
+  ceilingLights(ctx, rm, m, r, 4, true);
+  // window band on the right wall
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(rm.W, rm.H * .18); ctx.lineTo(rm.x1, rm.y0 + (rm.y1 - rm.y0) * .18);
+  ctx.lineTo(rm.x1, rm.y0 + (rm.y1 - rm.y0) * .58); ctx.lineTo(rm.W, rm.H * .62);
+  ctx.closePath();
+  ctx.clip();
+  ctx.fillStyle = 'rgba(126,158,182,.34)';
+  ctx.fill();
+  // mullions, clipped to the glazing so they read as frames and not wireframe
+  ctx.strokeStyle = 'rgba(24,30,34,.55)'; ctx.lineWidth = 2.5;
+  for (let i = 1; i < 4; i++){
+    const t = i / 4;
+    const x = rm.W + (rm.x1 - rm.W) * t;
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, rm.H); ctx.stroke();
+  }
+  ctx.restore();
+  ctx.strokeStyle = 'rgba(20,26,30,.5)'; ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(rm.W, rm.H * .18); ctx.lineTo(rm.x1, rm.y0 + (rm.y1 - rm.y0) * .18);
+  ctx.lineTo(rm.x1, rm.y0 + (rm.y1 - rm.y0) * .58); ctx.lineTo(rm.W, rm.H * .62);
+  ctx.closePath(); ctx.stroke();
+}
+
+function drawGarage(ctx, rm, m, r){
+  shell(ctx, rm, m, {
+    floor: shade(m.low, .20), ceiling: shade(m.low, .06),
+    wallL: shade(m.low, .12), wallR: shade(m.low, .16),
+    back: shade(m.low, .10),
+  });
+  // painted bays
+  ctx.strokeStyle = 'rgba(240,235,200,.32)'; ctx.lineWidth = 2;
+  for (let i = 1; i < 7; i++){
+    const p = i / 7;
+    ctx.beginPath();
+    ctx.moveTo(p * rm.W, rm.H);
+    ctx.lineTo(rm.x0 + p * (rm.x1 - rm.x0), rm.y1);
+    ctx.stroke();
+  }
+  // pillars
+  const dd = depths(4, .8);
+  for (const u of dd){
+    const s = slice(rm, u);
+    const pw = (s.x1 - s.x0) * .055;
+    for (const side of [-1, 1]){
+      const cx = (s.x0 + s.x1) / 2 + side * (s.x1 - s.x0) * .33;
+      ctx.fillStyle = shade(m.low, .26);
+      ctx.fillRect(cx - pw / 2, s.y0, pw, s.y1 - s.y0);
+      ctx.fillStyle = 'rgba(240,220,120,.35)';
+      ctx.fillRect(cx - pw / 2, s.y1 - (s.y1 - s.y0) * .16, pw, (s.y1 - s.y0) * .05);
+    }
+  }
+  // low sodium strips slung under the ceiling
+  for (const u of depths(4, 1.0)){
+    const s = slice(rm, u);
+    const w = (s.x1 - s.x0) * .5;
+    const cx = (s.x0 + s.x1) / 2;
+    const y = s.y0 + (s.y1 - s.y0) * .07;
+    ctx.fillStyle = r() < .2 ? shade(m.low, .05) : m.warm;
+    ctx.fillRect(cx - w / 2, y, w, Math.max(2, (s.y1 - s.y0) * .018));
+    const g = ctx.createRadialGradient(cx, y, 2, cx, y, w);
+    g.addColorStop(0, 'rgba(255,200,110,.16)');
+    g.addColorStop(1, 'rgba(255,200,110,0)');
+    ctx.fillStyle = g; ctx.fillRect(cx - w, y - 20, w * 2, (s.y1 - s.y0) * .8);
+  }
+  // the ramp: a dark opening in the back wall
+  const bw = rm.x1 - rm.x0, bh = rm.y1 - rm.y0;
+  ctx.fillStyle = 'rgba(0,0,0,.72)';
+  ctx.fillRect(rm.x0 + bw * .58, rm.y0 + bh * .34, bw * .34, bh * .66);
+  ctx.fillStyle = 'rgba(240,235,200,.5)';
+  ctx.font = '600 ' + Math.round(bh * .16) + 'px ui-monospace, monospace';
+  ctx.fillText('P3', rm.x0 + bw * .10, rm.y0 + bh * .55);
+}
+
+function drawWaiting(ctx, rm, m, r){
+  shell(ctx, rm, m, {
+    floor: shade(m.low, .22), ceiling: shade(m.warm, -.26),
+    wallL: shade(m.mid, -.18), wallR: shade(m.mid, -.06),
+    back: shade(m.mid, .06),
+  });
+  grid(ctx, rm, 'rgba(0,0,0,.08)', 7, 1.3, { cols: 9 });
+
+  // rows of bolted chairs
+  const dd = depths(5, .9);
+  for (let i = dd.length - 1; i >= 0; i--){
+    const s = slice(rm, dd[i]);
+    const w = s.x1 - s.x0, h = s.y1 - s.y0;
+    const seatY = s.y1 - h * .11, backY = seatY - h * .13;
+    for (let j = 0; j < 5; j++){
+      const cx = s.x0 + w * (.14 + j * .18);
+      ctx.fillStyle = shade(m.low, -.05);
+      ctx.fillRect(cx - w * .06, backY, w * .12, h * .13);
+      ctx.fillStyle = shade(m.low, .12);
+      ctx.fillRect(cx - w * .07, seatY, w * .14, h * .035);
+    }
+  }
+  ceilingLights(ctx, rm, m, r, 4, true);
+  // reception window, lit from behind
+  const bw = rm.x1 - rm.x0, bh = rm.y1 - rm.y0;
+  ctx.fillStyle = 'rgba(255,246,215,.55)';
+  ctx.fillRect(rm.x0 + bw * .10, rm.y0 + bh * .30, bw * .26, bh * .26);
+  ctx.strokeStyle = 'rgba(0,0,0,.35)'; ctx.lineWidth = 2;
+  ctx.strokeRect(rm.x0 + bw * .10, rm.y0 + bh * .30, bw * .26, bh * .26);
+  // the number display
+  ctx.fillStyle = 'rgba(20,24,22,.9)';
+  ctx.fillRect(rm.x0 + bw * .56, rm.y0 + bh * .26, bw * .30, bh * .18);
+  ctx.fillStyle = '#E8734A';
+  ctx.font = '700 ' + Math.round(bh * .13) + 'px ui-monospace, monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText(String(Math.floor(rand(r, 100, 999))), rm.x0 + bw * .71, rm.y0 + bh * .40);
+  ctx.textAlign = 'left';
+}
+
+function drawPlay(ctx, rm, m, r){
+  shell(ctx, rm, m, {
+    floor: shade(m.mid, -.05), ceiling: shade(m.warm, -.36),
+    wallL: '#5E7A86', wallR: '#6C8A93', back: '#7A9AA0',
+  });
+  // padded floor mats in alternating colour
+  const mats = ['#C7644F', '#D8A24C', '#5F8F72', '#4E7188'];
+  const dd = depths(6, 1.1);
+  for (let i = 0; i < dd.length - 1; i++){
+    const a = slice(rm, dd[i]), b = slice(rm, dd[i + 1]);
+    for (let j = 0; j < 4; j++){
+      const p0 = j / 4, p1 = (j + 1) / 4;
+      quad(ctx, [
+        [a.x0 + (a.x1 - a.x0) * p0, a.y1], [a.x0 + (a.x1 - a.x0) * p1, a.y1],
+        [b.x0 + (b.x1 - b.x0) * p1, b.y1], [b.x0 + (b.x1 - b.x0) * p0, b.y1],
+      ], mats[(i + j) % 4]);
+    }
+  }
+  ctx.fillStyle = 'rgba(0,0,0,.22)';
+  ctx.fillRect(0, rm.y1, rm.W, rm.H - rm.y1);
+
+  // ball pit in the near half
+  const n = slice(rm, .05), f = slice(rm, .52);
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(n.x0 + (n.x1 - n.x0) * .12, n.y1);
+  ctx.lineTo(n.x1 - (n.x1 - n.x0) * .12, n.y1);
+  ctx.lineTo(f.x1 - (f.x1 - f.x0) * .12, f.y1);
+  ctx.lineTo(f.x0 + (f.x1 - f.x0) * .12, f.y1);
+  ctx.closePath();
+  ctx.fillStyle = '#2E4149'; ctx.fill();
+  ctx.clip();
+  const cols = ['#D9584B', '#E6B14A', '#4E9E70', '#4B7FB0', '#E8E2D2'];
+  for (let i = 0; i < 260; i++){
+    const t = r();
+    const s = slice(rm, .05 + t * .47);
+    const x = rand(r, s.x0, s.x1), y = s.y1 + rand(r, -4, 4);
+    const rad = 3 + (1 - t) * 9;
+    ctx.beginPath(); ctx.arc(x, y, rad, 0, 6.2832);
+    ctx.fillStyle = pick(r, cols); ctx.fill();
+    ctx.beginPath(); ctx.arc(x - rad * .3, y - rad * .3, rad * .3, 0, 6.2832);
+    ctx.fillStyle = 'rgba(255,255,255,.25)'; ctx.fill();
+  }
+  ctx.restore();
+
+  // a play tube coming down out of the ceiling: overlapping segment rings,
+  // so it reads as a tube rather than a single fat stroke
+  const seg = 11;
+  for (let i = 0; i <= seg; i++){
+    const t = i / seg;
+    const x = rm.W * (.88 - .19 * t * t);
+    const y = rm.H * (.02 + .62 * t);
+    const rad = rm.W * (.048 + .026 * t);
+    ctx.beginPath();
+    ctx.ellipse(x, y, rad, rad * .62, -0.35 + t * .3, 0, 6.2832);
+    ctx.fillStyle = i % 2 ? 'rgba(186,164,72,.94)' : 'rgba(158,138,58,.94)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(60,50,20,.35)'; ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+  // the mouth of it, dark inside
+  ctx.beginPath();
+  ctx.ellipse(rm.W * .70, rm.H * .68, rm.W * .062, rm.W * .040, .0, 0, 6.2832);
+  ctx.fillStyle = 'rgba(18,22,20,.85)'; ctx.fill();
+
+  ceilingLights(ctx, rm, m, r, 3, true);
+}
+
+function drawMall(ctx, rm, m, r){
+  shell(ctx, rm, m, {
+    floor: shade(m.warm, -.34), ceiling: shade(m.mid, -.28),
+    wallL: shade(m.mid, -.20), wallR: shade(m.mid, -.08),
+    back: shade(m.mid, -.02),
+  });
+  // polished tile floor with a reflection band
+  grid(ctx, rm, 'rgba(255,255,255,.07)', 10, 1.4, { cols: 10 });
+  const g = ctx.createLinearGradient(0, rm.y1, 0, rm.H);
+  g.addColorStop(0, 'rgba(255,244,210,.12)');
+  g.addColorStop(1, 'rgba(255,244,210,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, rm.y1, rm.W, rm.H - rm.y1);
+
+  // shuttered storefronts
+  const dd = depths(6, .85);
+  for (let i = 0; i < dd.length - 1; i++){
+    for (const side of [-1, 1]){
+      const a = slice(rm, dd[i]), b = slice(rm, dd[i + 1]);
+      const ax = side < 0 ? a.x0 : a.x1, bx = side < 0 ? b.x0 : b.x1;
+      quad(ctx, [
+        [ax, a.y0 + (a.y1 - a.y0) * .22], [bx, b.y0 + (b.y1 - b.y0) * .22],
+        [bx, b.y1], [ax, a.y1],
+      ], shade(m.low, -.12));
+      // shutter ribs
+      ctx.strokeStyle = 'rgba(0,0,0,.26)'; ctx.lineWidth = 1.5;
+      for (let k = 1; k < 6; k++){
+        const t = k / 6;
+        const y1 = a.y0 + (a.y1 - a.y0) * (.22 + t * .78);
+        const y2 = b.y0 + (b.y1 - b.y0) * (.22 + t * .78);
+        ctx.beginPath(); ctx.moveTo(ax, y1); ctx.lineTo(bx, y2); ctx.stroke();
+      }
+      // sign board above, still backlit in a couple of units
+      const signOn = r() < .45;
+      quad(ctx, [
+        [ax, a.y0 + (a.y1 - a.y0) * .08], [bx, b.y0 + (b.y1 - b.y0) * .08],
+        [bx, b.y0 + (b.y1 - b.y0) * .22], [ax, a.y0 + (a.y1 - a.y0) * .22],
+      ], signOn ? pick(r, ['rgba(226,178,96,.80)','rgba(150,196,206,.75)','rgba(206,132,120,.75)'])
+                : shade(m.low, -.42));
+    }
+  }
+  // skylight running down the middle of the ceiling
+  for (const u of depths(6, 1.0)){
+    const s = slice(rm, u);
+    const w = (s.x1 - s.x0) * .34, cx = (s.x0 + s.x1) / 2;
+    ctx.fillStyle = 'rgba(200,214,225,.20)';
+    ctx.fillRect(cx - w / 2, s.y0, w, Math.max(2, (s.y1 - s.y0) * .02));
+  }
+  ceilingLights(ctx, rm, m, r, 4, true);
+
+  // fountain, dead centre, still running
+  const fy = rm.H * .88, fw = rm.W * .42;
+  ctx.beginPath();
+  ctx.ellipse(rm.W / 2, fy, fw / 2, fw / 7, 0, 0, 6.2832);
+  ctx.fillStyle = shade(m.low, .10); ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(rm.W / 2, fy, fw / 2.4, fw / 9, 0, 0, 6.2832);
+  ctx.fillStyle = 'rgba(90,140,150,.75)'; ctx.fill();
+  ctx.strokeStyle = 'rgba(230,245,250,.55)'; ctx.lineWidth = 2;
+  const jet = fw * .30;
+  for (let i = 0; i < 11; i++){
+    const dir = i % 2 ? 1 : -1;
+    const spread = (.3 + (i / 11) * .7) * dir;
+    ctx.beginPath();
+    ctx.moveTo(rm.W / 2, fy - fw * .06);
+    ctx.quadraticCurveTo(rm.W / 2 + spread * jet * .6, fy - jet * 1.5,
+                         rm.W / 2 + spread * jet, fy - fw * .04);
+    ctx.stroke();
+  }
+}
+
+function drawStair(ctx, rm, m, r){
+  shell(ctx, rm, m, {
+    floor: shade(m.low, .18), ceiling: shade(m.mid, -.34),
+    wallL: shade(m.mid, -.22), wallR: shade(m.mid, -.10),
+    back: shade(m.mid, -.02),
+  });
+  // flights: a zigzag of treads dropping away on the right
+  const steps = 12;
+  let x = rm.W * .30, y = rm.H * .96, w = rm.W * .44, h = rm.H * .034;
+  for (let i = 0; i < steps; i++){
+    const t = i / steps;
+    const sw = w * (1 - t * .55), sh = h * (1 - t * .5);
+    const cx = x + (rm.W / 2 - x) * t;
+    ctx.fillStyle = shade(m.low, .28 - t * .1);
+    ctx.fillRect(cx - sw / 2, y, sw, sh);
+    ctx.fillStyle = 'rgba(0,0,0,.28)';
+    ctx.fillRect(cx - sw / 2, y + sh, sw, sh * .5);
+    // nosing stripe
+    ctx.fillStyle = 'rgba(240,220,110,.45)';
+    ctx.fillRect(cx - sw / 2, y, sw, Math.max(1, sh * .18));
+    y -= sh * 1.9;
+  }
+  // handrail
+  ctx.strokeStyle = shade(m.warm, -.22); ctx.lineWidth = 4; ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(rm.W * .09, rm.H * .86);
+  ctx.lineTo(rm.W * .40, rm.y1 - 6);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(rm.W * .93, rm.H * .80);
+  ctx.lineTo(rm.W * .62, rm.y1 - 10);
+  ctx.stroke();
+
+  // floor number stencilled on the back wall
+  const bw = rm.x1 - rm.x0, bh = rm.y1 - rm.y0;
+  ctx.fillStyle = 'rgba(255,255,255,.22)';
+  ctx.font = '700 ' + Math.round(bh * .34) + 'px ui-monospace, monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('B' + Math.floor(rand(r, 4, 19)), rm.x0 + bw / 2, rm.y0 + bh * .55);
+  ctx.textAlign = 'left';
+  // exit sign
+  ctx.fillStyle = 'rgba(120,210,130,.85)';
+  ctx.fillRect(rm.x0 + bw * .36, rm.y0 + bh * .04, bw * .28, bh * .09);
+
+  ceilingLights(ctx, rm, m, r, 2, false);
+}
+
+/* ---- post: light cast, vignette, grain ---------------------------- */
+
+function post(ctx, W, H, m, r){
+  ctx.fillStyle = m.cast;
+  ctx.fillRect(0, 0, W, H);
+
+  const v = ctx.createRadialGradient(W / 2, H * .48, Math.min(W, H) * .28, W / 2, H * .5, Math.max(W, H) * .78);
+  v.addColorStop(0, 'rgba(0,0,0,0)');
+  v.addColorStop(1, 'rgba(0,0,0,.62)');
+  ctx.fillStyle = v;
+  ctx.fillRect(0, 0, W, H);
+
+  const img = ctx.getImageData(0, 0, W, H);
+  const d = img.data;
+  for (let i = 0; i < d.length; i += 4){
+    const n = (r() - .5) * 22;
+    d[i] += n; d[i + 1] += n; d[i + 2] += n;
+  }
+  ctx.putImageData(img, 0, 0);
+}
+
+/* ---- deck --------------------------------------------------------- */
+
+const DECK_SIZE = 12;
+let deck = [], idx = 0, votes = [];
+
+function buildDeck(){
+  const seed = (Date.now() ^ (Math.random() * 1e9)) >>> 0;
+  const r = rng(seed);
+  const rooms = ROOMS.slice();
+  // shuffle, then take twelve — repeats get a different mood and line
+  for (let i = rooms.length - 1; i > 0; i--){
+    const j = Math.floor(r() * (i + 1));
+    [rooms[i], rooms[j]] = [rooms[j], rooms[i]];
+  }
+  const out = [];
+  for (let i = 0; i < DECK_SIZE; i++){
+    const room = rooms[i % rooms.length];
+    const s = (seed + i * 2654435761) >>> 0;
+    const rr = rng(s);
+    const mood = MOODS[pick(rr, room.moods)];
+    out.push({
+      room, mood, seed: s,
+      line: room.lines[Math.floor(rr() * room.lines.length)],
+      stats: {
+        light: mood.name,
+        sound: pick(rr, ['a hum', 'nothing at all', 'distant plumbing', 'a fan cycling',
+                         'the ceiling settling', 'something on a timer', 'your own footsteps']),
+        exits: pick(rr, ['one, propped open', 'one, alarmed', 'two, both locked',
+                         'unclear', 'three, all identical', 'none marked']),
+      },
+    });
+  }
+  return out;
+}
+
+function renderCard(card, el){
+  const cv = el.querySelector('canvas');
+  const box = el.querySelector('.art').getBoundingClientRect();
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const W = Math.max(280, Math.round(box.width || 340));
+  const H = Math.max(240, Math.round(box.height || 330));
+  cv.width = Math.round(W * dpr);
+  cv.height = Math.round(H * dpr);
+  const ctx = cv.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const r = rng(card.seed);
+  const rm = makeRoom(W, H, r);
+  card.room.draw(ctx, rm, card.mood, r);
+  post(ctx, cv.width, cv.height, card.mood, rng(card.seed ^ 0x9e3779b9));
+}
+
+function cardEl(card){
+  const el = document.createElement('div');
+  el.className = 'card';
+  el.innerHTML =
+    '<div class="art"><canvas></canvas>' +
+    '<div class="stamp y">sleep</div><div class="stamp n">nope</div>' +
+    '<div class="meta">' +
+      '<div class="name"></div>' +
+      '<div class="line"></div>' +
+      '<div class="stats">' +
+        '<span>light <b class="s1"></b></span>' +
+        '<span>sound <b class="s2"></b></span>' +
+        '<span>exits <b class="s3"></b></span>' +
+      '</div>' +
+    '</div>';
+  el.querySelector('.name').textContent = card.room.label;
+  el.querySelector('.line').textContent = card.line;
+  el.querySelector('.s1').textContent = card.stats.light;
+  el.querySelector('.s2').textContent = card.stats.sound;
+  el.querySelector('.s3').textContent = card.stats.exits;
+  return el;
+}
+
+function showDeck(){
+  const deckEl = $('deck');
+  deckEl.innerHTML = '';
+  const next = deck[idx + 1], cur = deck[idx];
+  if (next){
+    const b = cardEl(next);
+    b.classList.add('behind');
+    deckEl.appendChild(b);
+    requestAnimationFrame(() => renderCard(next, b));
+  }
+  if (cur){
+    const a = cardEl(cur);
+    deckEl.appendChild(a);
+    requestAnimationFrame(() => renderCard(cur, a));
+    wireDrag(a);
+  }
+  $('count').textContent = idx < deck.length
+    ? 'room ' + (idx + 1) + ' of ' + deck.length + ' · ' + votes.filter(Boolean).length + ' yes so far'
+    : '';
+}
+
+function wireDrag(el){
+  let sx = 0, sy = 0, dx = 0, dy = 0, down = false;
+  const y = el.querySelector('.stamp.y'), n = el.querySelector('.stamp.n');
+  el.addEventListener('pointerdown', (e) => {
+    down = true; sx = e.clientX; sy = e.clientY;
+    el.setPointerCapture(e.pointerId);
+    el.style.transition = 'none';
+    el.style.cursor = 'grabbing';
+  });
+  el.addEventListener('pointermove', (e) => {
+    if (!down) return;
+    dx = e.clientX - sx; dy = e.clientY - sy;
+    el.style.transform = 'translate(' + dx + 'px,' + dy * .35 + 'px) rotate(' + (dx / 22) + 'deg)';
+    y.style.opacity = String(Math.max(0, Math.min(1, dx / 90)));
+    n.style.opacity = String(Math.max(0, Math.min(1, -dx / 90)));
+  });
+  const end = () => {
+    if (!down) return;
+    down = false;
+    el.style.cursor = 'grab';
+    el.style.transition = 'transform .3s ease, opacity .3s ease';
+    if (Math.abs(dx) > 92) fly(el, dx > 0);
+    else {
+      el.style.transform = '';
+      y.style.opacity = n.style.opacity = '0';
+    }
+    dx = dy = 0;
+  };
+  el.addEventListener('pointerup', end);
+  el.addEventListener('pointercancel', end);
+}
+
+function fly(el, yes){
+  el.classList.add('gone');
+  el.style.transition = 'transform .34s ease, opacity .34s ease';
+  el.style.transform = 'translate(' + (yes ? 1 : -1) * 620 + 'px,-40px) rotate(' + (yes ? 26 : -26) + 'deg)';
+  el.style.opacity = '0';
+  votes[idx] = yes;
+  idx++;
+  setTimeout(() => { if (idx >= deck.length) finish(); else showDeck(); }, 260);
+}
+
+function vote(yes){
+  const el = $('deck').querySelector('.card:not(.behind):not(.gone)');
+  if (el) fly(el, yes);
+}
+
+function finish(){
+  $('deck').innerHTML = '';
+  $('deck').style.display = 'none';
+  document.querySelector('.controls').style.display = 'none';
+  $('count').textContent = '';
+  const yes = votes.filter(Boolean).length;
+  // A room can come up twice with different lighting, and people do change
+  // their mind about it — so split the tally into always / never / it depends.
+  const tally = new Map();
+  deck.forEach((c, i) => {
+    const t = tally.get(c.room.label) || { y: 0, n: 0 };
+    votes[i] ? t.y++ : t.n++;
+    tally.set(c.room.label, t);
+  });
+  const always = [], never = [], depends = [];
+  for (const [label, t] of tally){
+    (t.n === 0 ? always : t.y === 0 ? never : depends).push(label);
+  }
+  const verdict =
+    yes === 0 ? 'you would sleep outside' :
+    yes <= 3  ? 'discerning' :
+    yes <= 7  ? 'tired enough' :
+    yes <= 11 ? 'not fussy' : 'you would sleep anywhere';
+
+  const list = (a) => a.join(', ');
+  const d = $('done');
+  d.style.display = 'block';
+  d.innerHTML =
+    '<div class="verdict">' + verdict + '</div>' +
+    '<h2>' + yes + ' of ' + deck.length + '</h2>' +
+    (always.length  ? '<p><b>Yes, every time:</b> ' + list(always) + '.</p>' : '') +
+    (never.length   ? '<p><b>Never:</b> ' + list(never) + '.</p>' : '') +
+    (depends.length ? '<p><b>Depended on the lighting:</b> ' + list(depends) + '.</p>' : '') +
+    '<button class="btn" id="again">twelve more rooms</button>';
+  $('again').addEventListener('click', start);
+}
+
+function start(){
+  deck = buildDeck(); idx = 0; votes = [];
+  $('done').style.display = 'none';
+  $('deck').style.display = '';
+  document.querySelector('.controls').style.display = '';
+  showDeck();
+}
+
+$('yes').addEventListener('click', () => vote(true));
+$('no').addEventListener('click', () => vote(false));
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight') vote(true);
+  if (e.key === 'ArrowLeft') vote(false);
+});
+
+start();
+</script>
+</body>
+</html>

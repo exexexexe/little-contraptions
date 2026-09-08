@@ -232,6 +232,52 @@ async function handleApi(req, res, url) {
     }
   }
 
+  // --- Wikipedia "on this day", one date at a time -----------------
+  // The upstream payload is ~300 kB per date, so the browser should never
+  // pull thirty of them. Fetched here, reduced to year + text, cached for
+  // a day (the feed only changes when editors edit it). Requests are made
+  // one at a time with a retry on 429 — six in parallel gets throttled.
+  if (path === '/api/onthisday') {
+    const month = parseInt(url.searchParams.get('month'), 10);
+    const day = parseInt(url.searchParams.get('day'), 10);
+    const DAYS_IN = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    if (!(month >= 1 && month <= 12)) return sendJson(res, 400, { error: 'bad_month' });
+    if (!(day >= 1 && day <= DAYS_IN[month - 1])) return sendJson(res, 400, { error: 'bad_day' });
+
+    const key = 'otd:' + month + ':' + day;
+    const hit = cacheGet(key);
+    if (hit) {
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'X-Cache': 'hit' });
+      return res.end(hit.body);
+    }
+    const pad = (v) => String(v).padStart(2, '0');
+    const target = 'https://api.wikimedia.org/feed/v1/wikipedia/en/onthisday/events/' +
+      pad(month) + '/' + pad(day);
+    try {
+      let up = null;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        up = await fetchUpstream(target, { Accept: 'application/json' });
+        if (up.status !== 429) break;
+        await new Promise((r) => setTimeout(r, 900 * (attempt + 1)));
+      }
+      if (up.status >= 400) return sendJson(res, 502, { error: 'wikimedia_' + up.status });
+      let j;
+      try { j = JSON.parse(up.body); }
+      catch (e) { return sendJson(res, 502, { error: 'unexpected_payload' }); }
+      const events = (j.events || []).slice().sort((a, b) => (a.year || 0) - (b.year || 0));
+      const body = JSON.stringify({
+        month, day,
+        count: events.length,
+        items: events.map((e) => ({ year: e.year, text: e.text })),
+      });
+      cacheSet(key, 200, body, 24 * 60 * 60 * 1000);   // 24 h
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'X-Cache': 'miss' });
+      return res.end(body);
+    } catch (e) {
+      return sendJson(res, 502, { error: 'wikimedia_unreachable', message: String(e && e.message || e) });
+    }
+  }
+
   // --- which optional keys are configured --------------------------
   // Lets a toy render an honest "needs a key" state instead of failing.
   if (path === '/api/keys') {
