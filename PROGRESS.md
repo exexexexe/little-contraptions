@@ -260,3 +260,9 @@ Facts and fiction are kept visibly apart: blue cards are real and name their sou
 
 Judgment calls: no creature, name or piece of lore from any game is used — the unease is in the invented sonar logs, which are entirely original. Cards for stops only a few metres apart (200 and 214 m, 3,688 and 3,800 m) collide on this scale, so a layout pass pushes each one clear of the last and the printed depth carries the exact position.
 
+### /retro-os/ — Five Operating Systems
+
+A desktop with draggable windows, a file listing, a text editor, a doodle canvas and a start menu, restyled through five invented operating systems: MONO 1.0 (1984, one bit, dithered desktop, striped title bars), TILE 3.1 (1991, beige and bevelled, menu bar on top), PLATE 95 (1995, the bar moves to the bottom), GLASS 5 (2001, rounded and gradient) and FLAT (2013, every bevel deleted). The windows survive the switch — it is the same machine, redecorated — and the About box restates itself in the new system's terms.
+
+Judgment calls: names, logos, wallpapers and icons are all invented, and the icons are inline SVG drawn for this page rather than traced from anything. What is borrowed is the era's conventions — which direction a bevel catches the light, where the bar lives, what colour a desktop was — which is the part worth evoking. The machine specifications in the About box are clearly fictional and the window says so, so no invented number is presented as a real one. Closing an edited file offers to save it and then admits there is nowhere to save it to.
+
