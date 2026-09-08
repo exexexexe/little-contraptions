@@ -199,6 +199,39 @@ async function handleApi(req, res, url) {
     }
   }
 
+  // --- submarine cable map relay -----------------------------------
+  // TeleGeography publish this openly but send no CORS headers, so a browser
+  // cannot read it directly. Same rule as the RSS relay: a fixed allowlist of
+  // dataset names, never an arbitrary ?url=, so this cannot become an open
+  // proxy. Cached for six hours — the cable map does not change hourly.
+  const CABLE_SETS = {
+    cables: 'https://www.submarinecablemap.com/api/v3/cable/cable-geo.json',
+    list:   'https://www.submarinecablemap.com/api/v3/cable/all.json',
+    points: 'https://www.submarinecablemap.com/api/v3/landing-point/landing-point-geo.json',
+  };
+  if (path === '/api/cables') {
+    const set = (url.searchParams.get('set') || 'list').toLowerCase();
+    const target = CABLE_SETS[set];
+    if (!target) return sendJson(res, 400, { error: 'unknown_set', allowed: Object.keys(CABLE_SETS) });
+    const key = 'cables:' + set;
+    const hit = cacheGet(key);
+    if (hit) {
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'X-Cache': 'hit' });
+      return res.end(hit.body);
+    }
+    try {
+      const up = await fetchUpstream(target, { Accept: 'application/json' });
+      if (up.status >= 400) return sendJson(res, 502, { error: 'telegeography_' + up.status });
+      try { JSON.parse(up.body); }
+      catch (e) { return sendJson(res, 502, { error: 'unexpected_payload' }); }
+      cacheSet(key, 200, up.body, 6 * 60 * 60 * 1000);   // 6 h
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'X-Cache': 'miss' });
+      return res.end(up.body);
+    } catch (e) {
+      return sendJson(res, 502, { error: 'telegeography_unreachable', message: String(e && e.message || e) });
+    }
+  }
+
   // --- which optional keys are configured --------------------------
   // Lets a toy render an honest "needs a key" state instead of failing.
   if (path === '/api/keys') {
