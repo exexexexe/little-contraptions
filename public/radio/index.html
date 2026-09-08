@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Radio Hub</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%235C3A22'/><rect x='4' y='9' width='24' height='9' rx='2' fill='%23F2E2BE'/><rect x='15' y='9' width='2' height='9' fill='%23D4732A'/><circle cx='9' cy='24' r='3' fill='%23C9A46A'/><circle cx='23' cy='24' r='3' fill='%23C9A46A'/></svg>">
+<style>
+:root{
+  --wood:#5C3A22;
+  --wood-hi:#7A5030;
+  --wood-lo:#3C2415;
+  --plate:#F2E2BE;
+  --plate-2:#E4D0A6;
+  --amber:#D4732A;
+  --amber-hot:#F09A46;
+  --ink:#2E2013;
+  --ink-2:#5E4830;
+  --dim:#8C7554;
+  --brass:#C9A46A;
+  --green:#5C7A4A;
+  --sans:ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --serif:"Iowan Old Style",Palatino,Georgia,serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:#241608;
+  background-image:radial-gradient(900px 500px at 50% -10%, #35200E 0%, transparent 65%);
+  color:var(--plate);font-family:var(--sans);min-height:100vh;padding:26px 16px 50px;
+}
+.wrap{ max-width:840px;margin:0 auto }
+
+.hdr{ display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:16px }
+.hdr h1{ margin:0;font-family:var(--serif);font-size:clamp(21px,4vw,30px);font-weight:400;font-style:italic;letter-spacing:-.01em }
+.hdr .sub{ font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#A98B60 }
+
+/* ---------- the set ---------- */
+.set{
+  background:linear-gradient(172deg,var(--wood-hi) 0%,var(--wood) 45%,var(--wood-lo) 100%);
+  border-radius:12px;padding:16px;
+  box-shadow:0 24px 60px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.12);
+  position:relative;
+}
+.set::before,.set::after{
+  content:"";position:absolute;width:8px;height:8px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, #E0C48A, var(--brass) 60%, #6E5326);
+}
+.set::before{ left:10px;bottom:10px } .set::after{ right:10px;bottom:10px }
+
+/* dial */
+.dial{
+  background:linear-gradient(180deg,var(--plate) 0%,var(--plate-2) 100%);
+  border:1px solid #B99B62;border-radius:4px;padding:12px 14px 9px;position:relative;
+  box-shadow:inset 0 0 22px rgba(212,115,42,.20), 0 2px 0 rgba(0,0,0,.25);
+}
+.scale{ position:relative;height:52px }
+.scale .ticks{ position:absolute;inset:0 0 22px 0;border-bottom:1px solid #C0A46E }
+.scale .tick{ position:absolute;bottom:0;width:1px;background:#A98B60 }
+.scale .lab{
+  position:absolute;bottom:4px;transform:translateX(-50%);
+  font-family:var(--mono);font-size:8.5px;color:var(--ink-2);white-space:nowrap;
+}
+.scale .st{
+  position:absolute;bottom:24px;transform:translateX(-50%);
+  font-family:var(--mono);font-size:8px;letter-spacing:.06em;color:var(--ink-2);
+  cursor:pointer;padding:2px 3px;white-space:nowrap;
+}
+.scale .st:hover{ color:var(--amber) }
+.scale .st.on{ color:var(--amber);font-weight:700 }
+.needle{
+  position:absolute;top:0;bottom:18px;width:2px;background:var(--amber);
+  box-shadow:0 0 8px rgba(212,115,42,.9);transition:left .45s cubic-bezier(.4,1.3,.5,1);
+}
+.needle::after{ content:"";position:absolute;left:-3px;top:-3px;width:8px;height:8px;border-radius:50%;background:var(--amber) }
+
+/* faceplate */
+.face{ display:grid;grid-template-columns:1fr 128px;gap:16px;margin-top:14px;align-items:start }
+@media (max-width:620px){ .face{ grid-template-columns:1fr } }
+.station{
+  background:#1C1206;border:1px solid #4A3218;border-radius:4px;padding:14px 16px;
+  box-shadow:inset 0 0 26px rgba(0,0,0,.7);
+}
+.station .freq{ font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:var(--amber);text-transform:uppercase }
+.station h2{ margin:4px 0 2px;font-size:clamp(19px,3.6vw,26px);font-weight:800;letter-spacing:-.02em;color:var(--plate) }
+.station .genre{ font-family:var(--mono);font-size:10.5px;color:#A98B60;margin-bottom:11px }
+.station .dj{
+  font-size:13.5px;line-height:1.55;color:#D9C79E;border-left:2px solid var(--amber);padding-left:11px;
+}
+.station .dj b{ display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--amber);margin-bottom:4px;font-weight:400 }
+
+/* vu meters */
+.vu{ background:#1C1206;border:1px solid #4A3218;border-radius:4px;padding:11px 12px }
+.vu .lab{ font-family:var(--mono);font-size:8px;letter-spacing:.16em;color:#8C7554;text-transform:uppercase;margin-bottom:7px }
+.vu .bar{ height:7px;background:#0F0A04;margin-bottom:5px;overflow:hidden }
+.vu .bar i{ display:block;height:100%;background:linear-gradient(90deg,var(--green),var(--amber) 72%,#C43B22 96%);width:10% }
+
+/* now playing */
+.np{ margin-top:14px;background:#1C1206;border:1px solid #4A3218;border-radius:4px;padding:14px 16px }
+.np .cap{ font-family:var(--mono);font-size:8.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--amber);margin-bottom:8px;display:flex;gap:9px;align-items:center }
+.np .cap span{ margin-left:auto;color:#8C7554;letter-spacing:.1em }
+.np .track{ font-size:17px;font-weight:700;line-height:1.3;color:var(--plate) }
+.np .by{ font-size:13.5px;color:#B49A70;margin-top:3px }
+.np .lic{ font-family:var(--mono);font-size:9.5px;color:#8C7554;margin-top:7px;line-height:1.6 }
+.np .lic a{ color:var(--brass) }
+.np .prog{ height:4px;background:#0F0A04;margin-top:11px;overflow:hidden }
+.np .prog i{ display:block;height:100%;background:var(--amber);width:0 }
+.np .time{ font-family:var(--mono);font-size:9.5px;color:#8C7554;margin-top:5px;display:flex;justify-content:space-between }
+.tagfic{ display:inline-block;font-family:var(--mono);font-size:8px;letter-spacing:.12em;
+  text-transform:uppercase;border:1px solid #6E5326;color:#A98B60;padding:2px 6px }
+.tagreal{ border-color:var(--green);color:#9BBF84 }
+
+/* controls */
+.knobs{ display:flex;gap:9px;flex-wrap:wrap;margin-top:14px;align-items:center }
+.knob{
+  font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+  background:linear-gradient(180deg,#8A6A3E,#6A502C);color:#F5E7C6;border:0;border-radius:5px;
+  padding:11px 15px;cursor:pointer;box-shadow:0 3px 0 #3C2A14, inset 0 1px 0 rgba(255,255,255,.18);
+}
+.knob:active{ transform:translateY(2px);box-shadow:0 1px 0 #3C2A14 }
+.knob.on{ background:linear-gradient(180deg,#6E8A52,#51683C);color:#EAF6DF }
+.knob:focus-visible{ outline:2px solid var(--amber);outline-offset:2px }
+.knob:disabled{ opacity:.45;cursor:default }
+.vol{ display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:9.5px;color:#A98B60 }
+.vol input{ width:88px;accent-color:var(--amber) }
+
+/* ticker */
+.ticker{
+  margin-top:14px;background:#150E05;border:1px solid #3C2818;border-radius:3px;
+  overflow:hidden;white-space:nowrap;height:26px;display:flex;align-items:center;
+}
+.ticker .lbl{ background:var(--amber);color:#231404;font-family:var(--mono);font-size:8px;
+  letter-spacing:.14em;padding:0 9px;height:26px;display:flex;align-items:center;flex:none;text-transform:uppercase }
+.ticker .run{ display:inline-flex;padding-left:100%;animation:run 34s linear infinite }
+.ticker .run span{ font-family:var(--mono);font-size:10px;color:#A98B60;padding-right:36px }
+@keyframes run{ from{transform:translateX(0)} to{transform:translateX(-100%)} }
+
+footer{
+  margin-top:24px;font-family:var(--mono);font-size:10px;color:#8C7554;line-height:1.9;
+}
+footer a{ color:var(--brass) }
+
+@media (prefers-reduced-motion:reduce){
+  .ticker .run{ animation:none;padding-left:10px }
+  .needle{ transition:none }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hdr">
+    <h1>The Radio Hub</h1>
+    <span class="sub">seven stations · none of them real</span>
+  </div>
+
+  <div class="set">
+    <div class="dial">
+      <div class="scale" id="scale"><div class="needle" id="needle"></div></div>
+    </div>
+
+    <div class="face">
+      <div class="station" id="station"></div>
+      <div class="vu">
+        <div class="lab">signal</div>
+        <div class="bar"><i id="vu1"></i></div>
+        <div class="bar"><i id="vu2"></i></div>
+        <div class="lab" style="margin-top:9px">carrier</div>
+        <div class="bar"><i id="vu3"></i></div>
+      </div>
+    </div>
+
+    <div class="np" id="np"></div>
+
+    <div class="knobs">
+      <button class="knob" id="prev">◂ tune down</button>
+      <button class="knob" id="next">tune up ▸</button>
+      <button class="knob" id="skip">Skip track</button>
+      <button class="knob" id="audio">Sound: off</button>
+      <span class="vol"><label for="volr">vol</label><input type="range" id="volr" min="0" max="100" value="55"></span>
+    </div>
+
+    <div class="ticker"><div class="lbl">played</div><div class="run" id="ticker"></div></div>
+  </div>
+
+  <footer>
+    The stations, the DJs and everything they say are invented for this cabinet — no real broadcaster,
+    station identity or presenter is being reproduced. With sound off, the running order is invented too
+    and is marked as such. With sound on, the tracks are real recordings streamed from the
+    <a href="https://archive.org/details/netlabels" target="_blank" rel="noopener">Internet Archive's netlabel
+    collection</a>, released under Creative Commons licences, and each one is credited with its own title,
+    artist and licence rather than the made-up ones. <a href="/">← back to the cabinet</a>
+  </footer>
+</div>
+
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+const pick = (a) => a[Math.floor(Math.random()*a.length)];
+const ri = (a,b) => a + Math.floor(Math.random()*(b-a+1));
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const mmss = (s) => { s = Math.max(0, Math.floor(s||0));
+  return Math.floor(s/60) + ':' + String(s%60).padStart(2,'0'); };
+
+/* ---- Seven invented stations. Nothing here reproduces a real broadcaster. */
+const STATIONS = [
+  { f:88.1, name:'KELP', tag:'Coastal Drift', genre:'ambient · tide-adjacent',
+    dj:'Marguerite Voss',
+    chat:[
+      'That was forty minutes of something. I did not catch the end of it and neither did you.',
+      'A listener writes in to ask what this station is for. We have printed the letter and put it somewhere safe.',
+      'The fog came in during the last track. It is still here. We are not doing anything about it.',
+      'No traffic report tonight. There is no traffic.',
+    ],
+    words:[['Low','Slack','Salt','Pale','Long','Wet','Grey','Quiet'],
+           ['Harbour','Shelf','Drift','Signal','Marker','Channel','Bell','Shoal'],
+           ['Marram Tapes','Coast Guard Choir','Ninth Buoy','Ferrylight','The Slow Wash']] },
+
+  { f:91.7, name:'STATIC', tag:'The Dead Channel', genre:'industrial · unlicensed',
+    dj:'OPERATOR',
+    chat:[
+      'THIS TRANSMISSION IS NOT AUTHORISED. NEITHER WAS THE LAST ONE.',
+      'IF YOU CAN HEAR THIS YOU ARE WITHIN RANGE. THAT IS THE ONLY THING WE KNOW ABOUT YOU.',
+      'THE SIGNAL IMPROVES AFTER MIDNIGHT. NOBODY HAS EXPLAINED WHY.',
+      'WE HAVE BEEN ASKED TO STOP. WE HAVE NOTED THE REQUEST.',
+    ],
+    words:[['Ferrous','Cold','Dead','Blunt','Iron','Black','Hard'],
+           ['Rotor','Grid','Intake','Hammer','Duct','Relay','Furnace'],
+           ['MACHINE NINE','Cold Intake','Sub-Assembly','The Foundrymen','KLAXON']] },
+
+  { f:96.3, name:'HOT GREASE', tag:'96.3', genre:'funk · fried · loud',
+    dj:'Curtis “Two Sugars” Nyame',
+    chat:[
+      'That one goes out to whoever is double-parked outside the chicken place. You know exactly who you are.',
+      'We have a request line and a man who answers it. He is not employed here. He simply started.',
+      'Somebody brought a keyboard into the studio and now we have got a problem and a hit.',
+      'It is Thursday somewhere. It is Thursday here as well, actually.',
+    ],
+    words:[['Sticky','Hot','Double','Uptown','Greasy','Midnight','Loose'],
+           ['Business','Shuffle','Money','Groove','Situation','Handshake','Riot'],
+           ['The Cadillac Committee','Norma Jean Batiste','Big Ronnie & The Overtime','The Fryers']] },
+
+  { f:101.5, name:'LAMENT FM', tag:'101.5', genre:'country · unresolved',
+    dj:'Dolores Pike',
+    chat:[
+      'That was a song about a truck, but only if you were not listening properly.',
+      'We had a caller earlier. She is fine. She says she is fine.',
+      'Coming up, three in a row about leaving, and one about coming back that we do not believe.',
+      'The songwriter of that one has asked us to stop playing it. We understand completely.',
+    ],
+    words:[['Last','Empty','Sunday','Bitter','Cold','Half','Late'],
+           ['Highway','Kitchen','Winter','Letter','Bottle','County','Porch'],
+           ['Delia Rowe','The Hardy Brothers','Tammy Vance','June & The Long Way Home']] },
+
+  { f:104.9, name:'VECTOR', tag:'104.9', genre:'synth · night bus',
+    dj:'NIGHTBUS',
+    chat:[
+      'Twelve minutes to the depot. Nobody is getting off. Nobody is getting on.',
+      'The city looks better through this window than it does from the pavement. That is the whole format.',
+      'Next up, something that was on a compilation nobody can find any more.',
+      'Somebody pressed the bell. There is no stop here.',
+    ],
+    words:[['Neon','Chrome','Night','Vector','Soft','Late','Blue'],
+           ['Terminal','Circuit','Arcade','Boulevard','Signal','Ascent','Overpass'],
+           ['MIRRORHAUS','Ligne Bleue','Autoklub','The Night Shift Orchestra','VHS Sunday']] },
+
+  { f:107.7, name:'RADIO VERDAD', tag:'107.7', genre:'tropical · argumentative',
+    dj:'Inés Barragán',
+    chat:[
+      'My cousin says that song is about him. It is not about him. He has been told.',
+      'We are running eleven minutes late and gaining on it slowly.',
+      'That was recorded in a kitchen. You can hear the kitchen. That is the best part.',
+      'Somebody has taken the good microphone home again.',
+    ],
+    words:[['Alta','Última','Buena','Media','Nueva','Larga'],
+           ['Marea','Cocina','Vecina','Avenida','Tormenta','Frontera'],
+           ['Los Hermanos Paz','Conjunto Aguacero','Marisol y su Banda','Trío Delgado']] },
+
+  { f:1548, am:true, name:'THE LONG WAVE', tag:'1548 AM', genre:'talk · unverified',
+    dj:'Uncle Ray',
+    chat:[
+      'Line four says the lights over the reservoir were back again. Line four says a lot of things.',
+      'We are not saying it is anything. We are saying it is on the tape and the tape is on the desk.',
+      'A gentleman has sent us eleven pages. We will read the first and last and split the difference.',
+      'Back after this. If we are not, you will know why, and so will they.',
+    ],
+    words:[['The','Certain','Unnamed','Third','Quiet','Northern'],
+           ['Testimony','Frequency','Reservoir','Interview','Recording','Departure'],
+           ['recorded 1974','caller, anonymous','tape, unlabelled','archive copy','a listener']] },
+];
+
+/* ---------------------------- state ------------------------------- */
+let si = 0;                 // station index
+let track = null;           // { title, by, dur, real?, licence?, url?, page? }
+let started = 0;            // ms
+let chatting = false, chatLine = '';
+let audioOn = false, el = null, realPool = [], poolLoading = false;
+let ticker = [];
+
+function station(){ return STATIONS[si]; }
+
+function inventTrack(st){
+  const [a, b, c] = st.words;
+  const title = pick(a) + ' ' + pick(b);
+  return { title, by: pick(c), dur: ri(126, 315), real:false };
+}
+
+/* ---------------------------- dial -------------------------------- */
+function dialPos(st){
+  // FM stations laid out across the scale; the AM one parked at the far right
+  if (st.am) return 96;
+  const lo = 87, hi = 109;
+  return 3 + ((st.f - lo) / (hi - lo)) * 88;
+}
+function drawDial(){
+  const sc = $('scale');
+  [...sc.querySelectorAll('.tick,.lab,.st')].forEach(n => n.remove());
+  for (let f = 88; f <= 108; f += 2){
+    const x = 3 + ((f - 87) / 22) * 88;
+    const t = document.createElement('div');
+    t.className = 'tick'; t.style.left = x + '%'; t.style.height = (f % 4 === 0 ? '13px' : '8px');
+    sc.appendChild(t);
+    if (f % 4 === 0){
+      const l = document.createElement('div');
+      l.className = 'lab'; l.style.left = x + '%'; l.textContent = f;
+      sc.appendChild(l);
+    }
+  }
+  STATIONS.forEach((st, i) => {
+    const s = document.createElement('div');
+    s.className = 'st' + (i === si ? ' on' : '');
+    s.style.left = dialPos(st) + '%';
+    s.textContent = st.name;
+    s.onclick = () => tune(i);
+    sc.appendChild(s);
+  });
+  $('needle').style.left = dialPos(station()) + '%';
+}
+
+/* ------------------------- rendering ------------------------------ */
+function renderStation(){
+  const st = station();
+  $('station').innerHTML =
+    '<div class="freq">' + (st.am ? st.f + ' kHz AM' : st.f.toFixed(1) + ' MHz FM') + '</div>' +
+    '<h2>' + esc(st.name) + '</h2>' +
+    '<div class="genre">' + esc(st.tag) + ' · ' + esc(st.genre) + '</div>' +
+    '<div class="dj"><b>on air — ' + esc(st.dj) + '</b>' + esc(chatting ? chatLine : '…') + '</div>';
+}
+
+function renderNP(){
+  if (!track) return;
+  const elapsed = audioOn && el && !el.paused ? el.currentTime : (Date.now() - started) / 1000;
+  const dur = track.dur || 1;
+  const pct = Math.max(0, Math.min(100, elapsed / dur * 100));
+  $('np').innerHTML =
+    '<div class="cap">now playing' +
+      '<span class="' + (track.real ? 'tagfic tagreal' : 'tagfic') + '">' +
+      (track.real ? 'real recording' : 'invented running order') + '</span></div>' +
+    '<div class="track">' + esc(track.title) + '</div>' +
+    '<div class="by">' + esc(track.by) + '</div>' +
+    (track.real
+      ? '<div class="lic">Streamed from the Internet Archive under ' + esc(track.licence || 'a Creative Commons licence') +
+        (track.page ? ' · <a href="' + esc(track.page) + '" target="_blank" rel="noopener">source</a>' : '') + '</div>'
+      : '<div class="lic">Title and artist generated for this station. No such record exists.</div>') +
+    '<div class="prog"><i style="width:' + pct.toFixed(1) + '%"></i></div>' +
+    '<div class="time"><span>' + mmss(elapsed) + '</span><span>' + mmss(dur) + '</span></div>';
+}
+
+function renderTicker(){
+  const items = ticker.length ? ticker : ['nothing played yet'];
+  $('ticker').innerHTML = items.concat(items).map(t => '<span>' + esc(t) + '</span>').join('');
+}
+
+/* --------------------------- playback ----------------------------- */
+async function loadRealPool(){
+  if (poolLoading || realPool.length) return;
+  poolLoading = true;
+  try {
+    const q = 'https://archive.org/advancedsearch.php?q=' +
+      encodeURIComponent('collection:netlabels AND mediatype:audio AND licenseurl:[* TO *]') +
+      '&fl%5B%5D=identifier&fl%5B%5D=title&fl%5B%5D=creator&fl%5B%5D=licenseurl' +
+      '&rows=60&page=' + ri(1, 12) + '&output=json';
+    const r = await fetch(q);
+    const docs = (await r.json()).response.docs || [];
+    realPool = docs.filter(d => d.identifier && d.licenseurl);
+  } catch (e) { realPool = []; }
+  poolLoading = false;
+}
+
+function licenceName(url){
+  const m = String(url || '').match(/licenses\/([a-z-]+)\/([\d.]+)/i);
+  if (m) return 'CC ' + m[1].toUpperCase() + ' ' + m[2];
+  if (/publicdomain|zero/i.test(url || '')) return 'CC0 / public domain';
+  return 'a Creative Commons licence';
+}
+
+async function nextRealTrack(){
+  await loadRealPool();
+  for (let attempt = 0; attempt < 6 && realPool.length; attempt++){
+    const d = realPool[Math.floor(Math.random()*realPool.length)];
+    try {
+      const m = await (await fetch('https://archive.org/metadata/' + d.identifier)).json();
+      const f = (m.files || []).find(x => /\.mp3$/i.test(x.name) && Number(x.length) > 45);
+      if (!f) continue;
+      return {
+        title: (f.title || f.name.replace(/\.mp3$/i,'').replace(/_/g,' ')).slice(0, 70),
+        by: (Array.isArray(d.creator) ? d.creator[0] : d.creator) || m.metadata?.creator || 'unknown artist',
+        dur: Math.round(Number(f.length)) || 200,
+        real: true,
+        licence: licenceName(d.licenseurl),
+        page: 'https://archive.org/details/' + d.identifier,
+        url: 'https://archive.org/download/' + d.identifier + '/' + encodeURIComponent(f.name),
+      };
+    } catch (e) { /* try another */ }
+  }
+  return null;
+}
+
+async function newTrack(){
+  const st = station();
+  if (ticker.length > 14) ticker.length = 14;
+
+  if (audioOn){
+    const t = await nextRealTrack();
+    if (t){
+      track = t;
+      if (!el){ el = new Audio(); el.crossOrigin = 'anonymous'; el.addEventListener('ended', () => newTrack()); }
+      el.src = t.url;
+      el.volume = $('volr').value / 100;
+      el.play().catch(() => { /* browser refused; the display still runs */ });
+    } else {
+      track = inventTrack(st);   // archive unreachable — fall back to the fiction
+    }
+  } else {
+    track = inventTrack(st);
+  }
+
+  started = Date.now();
+  ticker.unshift(st.name + ' — ' + track.title + ' · ' + track.by);
+  renderNP(); renderTicker(); renderStation();
+}
+
+function tune(i){
+  si = ((i % STATIONS.length) + STATIONS.length) % STATIONS.length;
+  // the presenter should already be mid-sentence when you arrive
+  chatting = true; chatLine = pick(STATIONS[si].chat);
+  drawDial(); renderStation();
+  newTrack();
+}
+
+/* --------------------------- the clock ---------------------------- */
+setInterval(() => {
+  if (document.hidden || !track) return;
+  const elapsed = audioOn && el && !el.paused ? el.currentTime : (Date.now() - started)/1000;
+
+  // between records, the DJ says something
+  if (!audioOn && elapsed >= track.dur){
+    if (!chatting){
+      chatting = true; chatLine = pick(station().chat);
+      renderStation();
+      setTimeout(() => { chatting = false; newTrack(); }, 4200);
+    }
+    return;
+  }
+  renderNP();
+}, 500);
+
+// The DJ keeps talking whichever mode you are in. With sound off the line
+// also changes between records; this keeps the persona present with sound on.
+setInterval(() => {
+  if (document.hidden) return;
+  chatting = true;
+  chatLine = pick(station().chat);
+  renderStation();
+}, 18000);
+
+// signal meters, purely decorative and labelled as such by being a meter
+setInterval(() => {
+  if (document.hidden) return;
+  const base = audioOn && el && !el.paused ? 55 : 32;
+  ['vu1','vu2','vu3'].forEach((id, k) => {
+    const v = Math.max(6, Math.min(100, base + Math.sin(Date.now()/(240 + k*90)) * 22 + Math.random()*26));
+    $(id).style.width = v.toFixed(0) + '%';
+  });
+}, 130);
+
+/* ---------------------------- inputs ------------------------------ */
+$('prev').addEventListener('click', () => tune(si - 1));
+$('next').addEventListener('click', () => tune(si + 1));
+$('skip').addEventListener('click', () => newTrack());
+$('volr').addEventListener('input', () => { if (el) el.volume = $('volr').value / 100; });
+$('audio').addEventListener('click', async () => {
+  audioOn = !audioOn;
+  $('audio').textContent = audioOn ? 'Sound: on' : 'Sound: off';
+  $('audio').classList.toggle('on', audioOn);
+  if (!audioOn && el){ el.pause(); }
+  await newTrack();
+});
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && el && !el.paused) el.pause();
+});
+
+chatting = true; chatLine = pick(station().chat);
+drawDial(); renderStation(); newTrack(); renderTicker();
+</script>
+</body>
+</html>

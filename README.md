@@ -11,7 +11,7 @@ Opens on http://localhost:3000.
 
 ## The toys
 
-26 drawers, each a single self-contained HTML file under `public/<slug>/index.html`.
+27 drawers, each a single self-contained HTML file under `public/<slug>/index.html`.
 The hub filters them by the tag on each card.
 
 | # | Toy | Tag | What it is |
@@ -42,9 +42,10 @@ The hub filters them by the tag on each card.
 | 24 | [ISS Tracker](/iss/) | real data | Live position, ground track and visible-pass prediction by in-browser SGP4. |
 | 25 | [Field PDA — Zone Survey](/the-zone/) | generator | CRT survey terminal: radiation, anomaly, artefact, advisory, Geiger audio. |
 | 26 | [A Sunny Afternoon in the City](/city-day/) | real data | Attributed Commons photographs of San Francisco under a fictional HUD. |
+| 27 | [The Radio Hub](/radio/) | generator | Seven invented stations; optional real CC audio from the Internet Archive. |
 
 Still to build: Movie night (needs `TMDB_API_KEY`), the rest of Phase B
-(Radio hub, Civilizations ranked) and
+(Civilizations ranked) and
 Phase C (needs `GROQ_API_KEY`).
 
 ## Server routes
