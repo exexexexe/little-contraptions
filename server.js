@@ -159,6 +159,46 @@ async function handleApi(req, res, url) {
     return sendJson(res, 200, Object.keys(FEEDS).map((k) => ({ key: k, title: FEEDS[k].title, site: FEEDS[k].site })));
   }
 
+  // --- ISS position -------------------------------------------------
+  // Open Notify serves over plain HTTP only — there is no HTTPS endpoint —
+  // so a browser on this HTTPS site would refuse it as mixed content.
+  // It is fetched here instead. wheretheiss.at is the primary source and
+  // is called directly by the page; this is the documented fallback.
+  if (path === '/api/iss/position') {
+    const hit = cacheGet('iss:pos');
+    if (hit) return sendJson(res, 200, hit.body, { 'X-Cache': 'hit' });
+    try {
+      const up = await fetchUpstream('http://api.open-notify.org/iss-now.json');
+      if (up.status >= 400) return sendJson(res, 502, { error: 'upstream_' + up.status });
+      cacheSet('iss:pos', 200, up.body, 2000);   // 2 s — it moves 7.7 km a second
+      return sendJson(res, 200, up.body, { 'X-Cache': 'miss' });
+    } catch (e) {
+      return sendJson(res, 502, { error: 'open_notify_unreachable', message: String(e && e.message || e) });
+    }
+  }
+
+  // --- ISS orbital elements ----------------------------------------
+  // Celestrak does send CORS headers, but pass prediction only needs a
+  // fresh TLE every few hours, so it is cached here to stay a polite client.
+  if (path === '/api/iss/tle') {
+    const hit = cacheGet('iss:tle');
+    if (hit) {
+      res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8', 'X-Cache': 'hit' });
+      return res.end(hit.body);
+    }
+    try {
+      const up = await fetchUpstream(
+        'https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE');
+      if (up.status >= 400) return sendJson(res, 502, { error: 'celestrak_' + up.status });
+      if (!/^1 25544/m.test(up.body)) return sendJson(res, 502, { error: 'unexpected_tle_format' });
+      cacheSet('iss:tle', 200, up.body, 2 * 60 * 60 * 1000);   // 2 h
+      res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8', 'X-Cache': 'miss' });
+      return res.end(up.body);
+    } catch (e) {
+      return sendJson(res, 502, { error: 'celestrak_unreachable', message: String(e && e.message || e) });
+    }
+  }
+
   // --- which optional keys are configured --------------------------
   // Lets a toy render an honest "needs a key" state instead of failing.
   if (path === '/api/keys') {
