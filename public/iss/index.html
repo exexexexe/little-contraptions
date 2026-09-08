@@ -65,6 +65,7 @@ svg#map{ width:100%;height:auto;display:block }
 .r b{ display:block;font-family:var(--mono);font-size:clamp(15px,2.6vw,20px);font-weight:600;letter-spacing:-.01em;font-variant-numeric:tabular-nums;line-height:1.15 }
 .r span{ font-family:var(--mono);font-size:8.5px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase;display:block;margin-top:6px }
 .r.lit b{ color:var(--amber) } .r.ecl b{ color:var(--dim) }
+.r.src b{ font-size:clamp(11px,1.9vw,14px);word-break:break-all;line-height:1.25 }
 
 /* ---------- passes ---------- */
 .cols{ display:grid;grid-template-columns:1fr 300px;gap:18px;margin-top:20px;align-items:start }
@@ -117,6 +118,21 @@ footer{
 footer a{ color:var(--dim) }
 
 @media (prefers-reduced-motion:reduce){ .status i{ animation:none } }
+.viewtabs{ display:flex;gap:0;margin-bottom:-1px;position:relative;z-index:2 }
+.vt{
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;
+  background:var(--void-2);color:var(--dim);border:1px solid var(--line);border-bottom:0;
+  padding:9px 16px;cursor:pointer;
+}
+.vt[aria-pressed="true"]{ color:var(--cyan);box-shadow:inset 0 2px 0 var(--cyan) }
+.vt:focus-visible{ outline:2px solid var(--cyan);outline-offset:-2px }
+.globebox{ background:#04080F;position:relative }
+#globe{ width:100%;line-height:0 }
+#globe canvas{ display:block;width:100%;height:auto }
+.globe-hint{
+  position:absolute;left:12px;bottom:10px;font-family:var(--mono);font-size:9px;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--dim);opacity:.75;pointer-events:none;
+}
 </style>
 </head>
 <body>
@@ -127,7 +143,12 @@ footer a{ color:var(--dim) }
     <div class="epoch" id="epoch"></div>
   </header>
 
-  <div class="mapbox">
+  <div class="viewtabs" role="group" aria-label="Map view">
+    <button class="vt" id="v-map" aria-pressed="true">Flat map</button>
+    <button class="vt" id="v-globe" aria-pressed="false">Globe</button>
+  </div>
+
+  <div class="mapbox" id="mapbox">
     <svg id="map" viewBox="0 0 720 360" role="img" aria-label="World map with the ISS ground track">
       <rect width="720" height="360" fill="var(--sea)"/>
       <g id="grid"></g>
@@ -137,6 +158,12 @@ footer a{ color:var(--dim) }
       <g id="obsg"></g>
       <g id="issg"></g>
     </svg>
+  </div>
+
+  <div class="mapbox globebox" id="globebox" hidden>
+    <div id="globe"></div>
+    <div class="globe-hint">drag to turn · scroll to zoom</div>
+    <div class="msg err" id="globe-msg" hidden></div>
   </div>
 
   <div class="readout" id="readout"></div>
@@ -178,6 +205,7 @@ footer a{ color:var(--dim) }
     Coastlines from Natural Earth, simplified and embedded. <a href="/">← back to the cabinet</a>
   </footer>
 </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 'use strict';
 
@@ -480,8 +508,10 @@ function renderReadout(){
     (live.alt!=null?'<div class="r"><b>'+fmt(live.alt,1)+'</b><span>km up</span></div>':'')+
     (live.vel!=null?'<div class="r"><b>'+fmt(live.vel)+'</b><span>km/h</span></div>':'')+
     '<div class="r '+(lit?'lit':'ecl')+'"><b>'+(lit==null?'—':(lit?'sunlit':'eclipsed'))+'</b><span>right now</span></div>'+
-    '<div class="r"><b>'+esc(live.source.split(' ')[0])+'</b><span>source</span></div>';
+    '<div class="r src"><b>'+esc(live.source.split(' ')[0])+'</b><span>source</span></div>';
 }
+
+let track3d = null;
 
 function renderMap(){
   const now=new Date(), jd=dateToJD(now);
@@ -498,6 +528,7 @@ function renderMap(){
       const g=toGeodetic(p,jd+m/1440); next.push([g.lon,g.lat]);
     }
     $('trackg').innerHTML=polyline(past,'track-past')+polyline(next,'track-next');
+    track3d = past.concat(next);   // the globe draws the same arc
   }
 
   if(live){
@@ -507,6 +538,7 @@ function renderMap(){
       '<circle class="iss-dot" cx="'+px(live.lon).toFixed(1)+'" cy="'+py(live.lat).toFixed(1)+'" r="3.2"/>';
   }
 
+  if(G.ready && G.active) updateGlobe();
   if(observer){
     $('obsg').innerHTML='<circle class="obs" cx="'+px(observer.lon).toFixed(1)+'" cy="'+py(observer.lat).toFixed(1)+'" r="4.5"/>'+
       '<circle class="obs-dot" cx="'+px(observer.lon).toFixed(1)+'" cy="'+py(observer.lat).toFixed(1)+'" r="1.6"/>';
@@ -597,6 +629,232 @@ async function tick(){
   }
   renderReadout(); renderMap();
 }
+
+
+/* ------------------------------------------------------------------ *
+ *  The globe. Three.js is the only external dependency anywhere in
+ *  this cabinet, allowed for this toy specifically; everything else
+ *  here is still hand-rolled, including the SGP4 above.
+ *
+ *  The sphere's texture is painted at runtime from the same coastline
+ *  path the flat map uses, so no image is fetched and the two views
+ *  cannot disagree about where the land is. Day and night come from a
+ *  directional light pointed at the subsolar point, which means the
+ *  terminator is the real one rather than a drawn approximation.
+ * ------------------------------------------------------------------ */
+const G = {
+  ready: false, failed: false, active: false,
+  scene: null, cam: null, renderer: null, earth: null, sun: null,
+  issDot: null, track: null, foot: null, obs: null, raf: 0,
+  rot: { lon: 20, lat: 18, dist: 3.1 }, drag: null, idle: 0,
+};
+
+function latLonToVec3(lat, lon, r){
+  const phi = (90 - lat) * DEG, theta = (lon + 180) * DEG;
+  return new THREE.Vector3(
+    -r * Math.sin(phi) * Math.cos(theta),
+     r * Math.cos(phi),
+     r * Math.sin(phi) * Math.sin(theta)
+  );
+}
+
+// Repaint the equirectangular map into a canvas we can wrap on a sphere.
+function earthTexture(){
+  const W = 2048, H = 1024, c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const x = c.getContext('2d');
+  x.fillStyle = '#10314B'; x.fillRect(0, 0, W, H);
+  const d = document.getElementById('land').getAttribute('d');
+  x.save();
+  x.scale(W / 720, H / 360);
+  const p = new Path2D(d);
+  x.fillStyle = '#1D4F3C';
+  x.fill(p, 'evenodd');
+  x.strokeStyle = '#3E6A8B'; x.lineWidth = 0.5; x.lineJoin = 'round';
+  x.stroke(p);
+  // graticule, faint, so rotation reads as rotation
+  x.strokeStyle = 'rgba(120,160,190,.18)'; x.lineWidth = 0.4;
+  for (let lon = -180; lon <= 180; lon += 30){ const px = (lon + 180) * 2; x.beginPath(); x.moveTo(px, 0); x.lineTo(px, 360); x.stroke(); }
+  for (let lat = -60; lat <= 60; lat += 30){ const py = (90 - lat) * 2; x.beginPath(); x.moveTo(0, py); x.lineTo(720, py); x.stroke(); }
+  x.strokeStyle = 'rgba(120,180,210,.35)'; x.lineWidth = 0.7;
+  x.beginPath(); x.moveTo(0, 180); x.lineTo(720, 180); x.stroke();
+  x.restore();
+  const t = new THREE.CanvasTexture(c);
+  t.anisotropy = 4;
+  return t;
+}
+
+function initGlobe(){
+  if (G.ready || G.failed) return;
+  if (typeof THREE === 'undefined'){
+    G.failed = true;
+    $('globe-msg').textContent =
+      'The 3D view needs a library from a CDN, and it did not load. The flat map above works without it.';
+    $('globe-msg').hidden = false;
+    return;
+  }
+  const host = $('globe');
+  const w = host.clientWidth || 720, h = Math.round(w * 0.62);
+
+  G.scene = new THREE.Scene();
+  G.cam = new THREE.PerspectiveCamera(38, w / h, 0.1, 100);
+  G.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  G.renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+  G.renderer.setSize(w, h);
+  host.appendChild(G.renderer.domElement);
+
+  G.earth = new THREE.Mesh(
+    new THREE.SphereGeometry(1, 96, 64),
+    new THREE.MeshPhongMaterial({ map: earthTexture(), shininess: 6, specular: 0x0b1a26 })
+  );
+  G.scene.add(G.earth);
+
+  // a thin halo so the limb reads against the black
+  G.scene.add(new THREE.Mesh(
+    new THREE.SphereGeometry(1.035, 64, 48),
+    new THREE.MeshBasicMaterial({ color: 0x2E6C8E, transparent: true, opacity: 0.09, side: THREE.BackSide })
+  ));
+
+  G.sun = new THREE.DirectionalLight(0xfff3dd, 1.25);
+  G.scene.add(G.sun);
+  G.scene.add(new THREE.AmbientLight(0x35506b, 0.5));   // night side stays legible
+
+  const dot = new THREE.Mesh(new THREE.SphereGeometry(0.017, 16, 12),
+    new THREE.MeshBasicMaterial({ color: 0xF5A623 }));
+  const halo = new THREE.Mesh(new THREE.SphereGeometry(0.036, 16, 12),
+    new THREE.MeshBasicMaterial({ color: 0xF5A623, transparent: true, opacity: 0.25 }));
+  G.issDot = new THREE.Group(); G.issDot.add(dot); G.issDot.add(halo);
+  G.issDot.visible = false; G.scene.add(G.issDot);
+
+  G.obs = new THREE.Mesh(new THREE.SphereGeometry(0.012, 12, 10),
+    new THREE.MeshBasicMaterial({ color: 0x8CE0A0 }));
+  G.obs.visible = false; G.scene.add(G.obs);
+
+  bindGlobeInput(host);
+  G.ready = true;
+  updateGlobe();
+  loopGlobe();
+  addEventListener('resize', resizeGlobe);
+}
+
+function resizeGlobe(){
+  if (!G.ready) return;
+  const host = $('globe'), w = host.clientWidth || 720, h = Math.round(w * 0.62);
+  G.cam.aspect = w / h; G.cam.updateProjectionMatrix(); G.renderer.setSize(w, h);
+}
+
+function bindGlobeInput(host){
+  const el = G.renderer.domElement;
+  el.style.touchAction = 'none';
+  el.style.cursor = 'grab';
+  el.addEventListener('pointerdown', (e) => {
+    G.drag = { x: e.clientX, y: e.clientY, lon: G.rot.lon, lat: G.rot.lat };
+    el.setPointerCapture(e.pointerId); el.style.cursor = 'grabbing';
+  });
+  el.addEventListener('pointermove', (e) => {
+    if (!G.drag) return;
+    G.rot.lon = G.drag.lon + (e.clientX - G.drag.x) * 0.32;
+    G.rot.lat = Math.max(-84, Math.min(84, G.drag.lat - (e.clientY - G.drag.y) * 0.28));
+    G.idle = 0;
+  });
+  const stop = (e) => { G.drag = null; el.style.cursor = 'grab'; };
+  el.addEventListener('pointerup', stop);
+  el.addEventListener('pointercancel', stop);
+  el.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    G.rot.dist = Math.max(1.55, Math.min(6, G.rot.dist + (e.deltaY > 0 ? 0.22 : -0.22)));
+    G.idle = 0;
+  }, { passive: false });
+}
+
+// Rebuild the ISS track, footprint and markers from the same figures the
+// flat map uses, so the two views are always showing one truth.
+function updateGlobe(){
+  if (!G.ready) return;
+  const jd = dateToJD(new Date());
+  const ss = subsolar(jd);
+  G.sun.position.copy(latLonToVec3(ss.lat, ss.lon, 12));
+
+  if (track3d && track3d.length > 1){
+    if (G.track){ G.scene.remove(G.track); G.track.geometry.dispose(); G.track.material.dispose(); }
+    const alt = (live && live.alt ? live.alt : 420) / RE_KM;
+    const pts = track3d.map(p => latLonToVec3(p[1], p[0], 1 + alt));
+    G.track = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints(pts),
+      new THREE.LineBasicMaterial({ color: 0x40C4D6, transparent: true, opacity: 0.8 })
+    );
+    G.scene.add(G.track);
+  }
+
+  if (live){
+    const alt = (live.alt || 420) / RE_KM;
+    G.issDot.position.copy(latLonToVec3(live.lat, live.lon, 1 + alt));
+    G.issDot.visible = true;
+    if (G.foot){ G.scene.remove(G.foot); G.foot.geometry.dispose(); G.foot.material.dispose(); }
+    // the horizon circle: everywhere the station is above 0° elevation
+    const ang = Math.acos(RE_KM / (RE_KM + (live.alt || 420)));
+    const centre = latLonToVec3(live.lat, live.lon, 1).normalize();
+    const up = Math.abs(centre.y) > 0.95 ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(0, 1, 0);
+    const a = new THREE.Vector3().crossVectors(centre, up).normalize();
+    const b = new THREE.Vector3().crossVectors(centre, a).normalize();
+    const ring = [];
+    for (let i = 0; i <= 96; i++){
+      const t = i / 96 * TWOPI;
+      ring.push(new THREE.Vector3()
+        .addScaledVector(centre, Math.cos(ang))
+        .addScaledVector(a, Math.sin(ang) * Math.cos(t))
+        .addScaledVector(b, Math.sin(ang) * Math.sin(t))
+        .multiplyScalar(1.004));
+    }
+    G.foot = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints(ring),
+      new THREE.LineBasicMaterial({ color: 0x40C4D6, transparent: true, opacity: 0.45 })
+    );
+    G.scene.add(G.foot);
+  }
+
+  if (observer){
+    G.obs.position.copy(latLonToVec3(observer.lat, observer.lon, 1.006));
+    G.obs.visible = true;
+  }
+}
+
+function loopGlobe(){
+  G.raf = requestAnimationFrame(loopGlobe);
+  if (!G.active || document.hidden) return;
+  if (!G.drag){
+    G.idle++;
+    if (G.idle > 90) G.rot.lon += 0.045;         // drifts again once you let go
+  }
+  const la = G.rot.lat * DEG, lo = G.rot.lon * DEG;
+  G.cam.position.set(
+    G.rot.dist * Math.cos(la) * Math.sin(lo),
+    G.rot.dist * Math.sin(la),
+    G.rot.dist * Math.cos(la) * Math.cos(lo)
+  );
+  G.cam.lookAt(0, 0, 0);
+  G.renderer.render(G.scene, G.cam);
+}
+
+function setView(which){
+  const isGlobe = which === 'globe';
+  G.active = isGlobe;
+  $('mapbox').hidden = isGlobe;
+  $('globebox').hidden = !isGlobe;
+  $('v-map').setAttribute('aria-pressed', String(!isGlobe));
+  $('v-globe').setAttribute('aria-pressed', String(isGlobe));
+  if (isGlobe){
+    initGlobe();
+    if (G.failed){ setView('map'); $('globe-msg').hidden = false; return; }
+    resizeGlobe(); updateGlobe();
+  }
+}
+
+$('v-map').addEventListener('click', () => setView('map'));
+$('v-globe').addEventListener('click', () => setView('globe'));
+
+// open on the globe; setView drops back to the flat map if Three.js is absent
+addEventListener('load', () => setView('globe'));
 
 (async function boot(){
   drawGrid();
