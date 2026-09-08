@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Static Channel</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23191713'/><rect x='5' y='9' width='22' height='15' rx='3' fill='%23CBB98E'/><rect x='7' y='11' width='18' height='11' rx='2' fill='%232A2E28'/><path d='M8 13h16M8 16h16M8 19h16' stroke='%23596056' stroke-width='.8'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --room:#14120F;
+  --wood:#4B3A28;
+  --wood-2:#6B5238;
+  --bezel:#C4B492;
+  --bezel-2:#9E8E6E;
+  --ink:#EAE4D6;
+  --dim:#948C7C;
+  --amber:#E8A94B;
+  --rule:#2E2A24;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --sans:ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:
+    radial-gradient(120% 90% at 50% 8%, #26221B 0%, #14120F 62%, #0B0A08 100%);
+  color:var(--ink);font-family:var(--sans);min-height:100vh;
+  padding:24px 16px 78px;display:flex;flex-direction:column;align-items:center;
+}
+h1{ font-size:14px;letter-spacing:.24em;text-transform:uppercase;margin:0;font-weight:600 }
+.sub{ font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin-top:7px;text-align:center }
+
+/* ---- the set ---- */
+.tv{
+  width:min(700px,94vw);margin:22px auto 0;
+  background:linear-gradient(170deg,var(--wood-2),var(--wood) 42%,#33261A);
+  border-radius:22px;padding:20px 20px 16px;
+  box-shadow:0 26px 60px rgba(0,0,0,.62), inset 0 1px 0 rgba(255,255,255,.12);
+  position:relative;
+}
+.screenwrap{
+  position:relative;border-radius:26px/34px;overflow:hidden;
+  background:#0A0C0A;aspect-ratio:4/3;
+  box-shadow:inset 0 0 0 9px var(--bezel), inset 0 0 0 11px var(--bezel-2), inset 0 0 60px rgba(0,0,0,.9);
+}
+.screenwrap video, .screenwrap canvas{
+  position:absolute;inset:9px;width:calc(100% - 18px);height:calc(100% - 18px);
+  object-fit:cover;background:#000;
+}
+.screenwrap video{ opacity:0;transition:opacity .35s ease }
+.screenwrap.on video{ opacity:1 }
+#noise{ pointer-events:none;opacity:1;transition:opacity .3s ease }
+.screenwrap.on #noise{ opacity:0 }
+
+.scan{
+  position:absolute;inset:9px;pointer-events:none;
+  background:
+    repeating-linear-gradient(0deg, rgba(0,0,0,.28) 0px, rgba(0,0,0,.28) 1px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 3px),
+    radial-gradient(120% 100% at 50% 45%, rgba(255,255,255,.06) 0%, rgba(0,0,0,0) 55%, rgba(0,0,0,.62) 100%);
+  mix-blend-mode:normal;
+}
+.roll{
+  position:absolute;left:9px;right:9px;height:70px;pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,255,255,0),rgba(255,255,255,.045),rgba(255,255,255,0));
+  animation:roll 7.5s linear infinite;
+}
+@keyframes roll{ from{ top:-70px } to{ top:100% } }
+
+.osd{
+  position:absolute;top:22px;left:24px;font-family:var(--mono);font-weight:700;
+  font-size:clamp(20px,3.4vw,30px);letter-spacing:.06em;color:#DFF3D8;
+  text-shadow:0 0 12px rgba(150,255,150,.5);pointer-events:none;
+}
+.osd small{ display:block;font-size:10px;letter-spacing:.22em;opacity:.75;font-weight:400;margin-top:3px }
+.caption{
+  position:absolute;left:24px;right:24px;bottom:22px;pointer-events:auto;
+  background:rgba(8,10,8,.72);border-left:3px solid var(--amber);
+  padding:9px 12px;opacity:0;transition:opacity .4s ease;backdrop-filter:blur(2px);
+}
+.caption.show{ opacity:1 }
+.caption .t{ font-size:14.5px;font-weight:600;line-height:1.35 }
+.caption .m{ font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:#B6AF9E;margin-top:4px }
+.caption a{ color:var(--amber) }
+
+/* ---- controls ---- */
+.panel{ display:flex;gap:14px;align-items:center;justify-content:space-between;margin-top:16px;flex-wrap:wrap }
+.knobs{ display:flex;gap:10px;align-items:center;flex-wrap:wrap }
+.btn{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
+  background:#241B12;color:#E7DCC6;border:1px solid #6B5238;padding:12px 16px;border-radius:6px;cursor:pointer;
+  box-shadow:0 2px 0 #1A140D, inset 0 1px 0 rgba(255,255,255,.08);
+}
+.btn:hover{ background:#2E231717 }
+.btn:active{ transform:translateY(1px);box-shadow:0 1px 0 #1A140D }
+.btn.big{ font-size:12px;padding:13px 22px;background:#3B2A1A;font-weight:700 }
+.btn:focus-visible{ outline:2px solid var(--amber);outline-offset:3px }
+.vol{ display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;color:#C0B49B;text-transform:uppercase }
+input[type=range]{ width:96px;accent-color:var(--amber) }
+
+.log{ width:min(700px,94vw);margin:18px auto 0 }
+.log h2{ font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);font-weight:400;margin:0 0 8px }
+.log ol{ margin:0;padding-left:20px }
+.log li{ font-size:13px;line-height:1.7;color:#C4BCAC }
+.log li a{ color:#D9CDB6 }
+.log li span{ font-family:var(--mono);font-size:10px;color:var(--dim) }
+
+.note{
+  width:min(700px,94vw);margin:20px auto 0;border-top:1px solid var(--rule);padding-top:14px;
+  font-size:12.5px;line-height:1.75;color:#8F877A;
+}
+.note a{ color:#B6AC98 }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media (prefers-reduced-motion: reduce){ .roll{ animation:none;display:none } #lc-back{ transition:none } }
+</style>
+</head>
+<body>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<h1>The Static Channel</h1>
+<div class="sub">turn it on · you always arrive halfway through</div>
+
+<div class="tv">
+  <div class="screenwrap" id="screen">
+    <canvas id="noise" width="320" height="240"></canvas>
+    <video id="vid" playsinline preload="metadata"></video>
+    <div class="scan"></div>
+    <div class="roll"></div>
+    <div class="osd" id="osd">CH 00<small id="osdsub">no signal</small></div>
+    <div class="caption" id="cap"></div>
+  </div>
+
+  <div class="panel">
+    <div class="knobs">
+      <button class="btn big" id="tune">Turn it on</button>
+      <button class="btn" id="prev">◀ ch</button>
+      <button class="btn" id="next">ch ▶</button>
+    </div>
+    <div class="knobs">
+      <div class="vol">
+        <label for="volume">vol</label>
+        <input type="range" id="volume" min="0" max="100" value="65">
+      </div>
+      <button class="btn" id="mute">mute</button>
+    </div>
+  </div>
+</div>
+
+<div class="log" id="log" hidden>
+  <h2>what you have tuned through</h2>
+  <ol id="loglist"></ol>
+</div>
+
+<div class="note">
+  Everything on this set comes from the <a href="https://archive.org/details/prelinger" target="_blank" rel="noopener">Prelinger Archives</a>
+  at the Internet Archive — a collection of ephemeral film (advertising, educational, industrial and amateur)
+  that the archive makes freely available for reuse. Nothing is downloaded or re-hosted here: the video streams
+  straight from archive.org, and every channel links back to its item page. Films are picked at random and
+  started somewhere in the middle, which is why you never get a beginning. They are historical documents, and
+  some of them carry the assumptions of the year they were made.
+</div>
+
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+const SEARCH = 'https://archive.org/advancedsearch.php';
+const COLLECTION = 'prelinger';       // Rick Prelinger's ephemeral film collection
+const ROWS = 50;
+const PAGES = 180;                    // ~10.4k items in the collection
+
+const vid = $('vid'), screen = $('screen'), noise = $('noise');
+let pool = [], seen = new Set(), history = [], channel = 0, tuning = false;
+let hiss = null, ctxAudio = null, hissGain = null;
+
+/* ---- the static: canvas noise, and a matching hiss ---------------- */
+
+const nctx = noise.getContext('2d');
+let noiseOn = true;
+function paintNoise(){
+  const w = noise.width, h = noise.height;
+  const img = nctx.createImageData(w, h);
+  const d = img.data;
+  for (let i = 0; i < d.length; i += 4){
+    const v = (Math.random() * 255) | 0;
+    d[i] = d[i+1] = d[i+2] = v;
+    d[i+3] = 255;
+  }
+  nctx.putImageData(img, 0, 0);
+  // the occasional rolling band, the way an untuned set behaves
+  if (Math.random() < .3){
+    nctx.fillStyle = 'rgba(255,255,255,.10)';
+    nctx.fillRect(0, Math.random() * h, w, 2 + Math.random() * 8);
+  }
+}
+function noiseLoop(){
+  if (noiseOn) paintNoise();
+  requestAnimationFrame(noiseLoop);
+}
+noiseLoop();
+
+// White noise through a gain node. Built on the first click, because
+// browsers will not let a page make sound before you touch it.
+function audio(){
+  if (ctxAudio) return ctxAudio;
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return null;
+  ctxAudio = new AC();
+  const len = ctxAudio.sampleRate * 2;
+  const buf = ctxAudio.createBuffer(1, len, ctxAudio.sampleRate);
+  const ch = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) ch[i] = (Math.random() * 2 - 1) * .5;
+  hiss = ctxAudio.createBufferSource();
+  hiss.buffer = buf;
+  hiss.loop = true;
+  hissGain = ctxAudio.createGain();
+  hissGain.gain.value = 0;
+  // roll the top off so it hisses rather than sizzles
+  const lp = ctxAudio.createBiquadFilter();
+  lp.type = 'lowpass'; lp.frequency.value = 5200;
+  hiss.connect(lp).connect(hissGain).connect(ctxAudio.destination);
+  hiss.start();
+  return ctxAudio;
+}
+function hissTo(v, t){
+  if (!hissGain || !ctxAudio) return;
+  hissGain.gain.cancelScheduledValues(ctxAudio.currentTime);
+  hissGain.gain.setTargetAtTime(v, ctxAudio.currentTime, Math.max(.01, t));
+}
+
+/* ---- the archive ------------------------------------------------- */
+
+async function loadPool(){
+  const page = 1 + Math.floor(Math.random() * PAGES);
+  const q = 'collection:"' + COLLECTION + '" AND mediatype:"movies"';
+  const u = SEARCH + '?q=' + encodeURIComponent(q) +
+    '&fl%5B%5D=identifier&fl%5B%5D=title&fl%5B%5D=year&fl%5B%5D=description' +
+    '&rows=' + ROWS + '&page=' + page + '&output=json&sort%5B%5D=identifier+asc';
+  const r = await fetch(u);
+  if (!r.ok) throw new Error('search ' + r.status);
+  const j = await r.json();
+  const docs = (j.response && j.response.docs) || [];
+  // shuffle so the alphabetical page order does not show
+  for (let i = docs.length - 1; i > 0; i--){
+    const k = Math.floor(Math.random() * (i + 1));
+    [docs[i], docs[k]] = [docs[k], docs[i]];
+  }
+  // A good part of the collection is unlabelled reels with numeric ids.
+  // They stay in — an unmarked reel is very much the point — but titled
+  // films get drawn first, since we pop from the end.
+  const untitled = (d) => !d.title || /^[\d_\-\s.]+$/.test(String(d.title));
+  pool = docs.filter(d => !seen.has(d.identifier))
+             .sort((a, b) => (untitled(b) ? 1 : 0) - (untitled(a) ? 1 : 0));
+}
+
+// Prefer the small derivative: a 40 MB stream that starts quickly beats
+// a 500 MB master nobody will ever see the end of.
+function pickFile(files){
+  const vids = (files || []).filter(f => /\.(mp4|webm|ogv)$/i.test(f.name || ''));
+  const score = (f) => {
+    const fmt = (f.format || '').toLowerCase();
+    if (/512kb/.test(fmt)) return 0;
+    if (/h\.264/.test(fmt) && !/edit/.test(f.name)) return 1;
+    if (/mpeg4/.test(fmt)) return 2;
+    if (/ogg/.test(fmt)) return 3;
+    return 4;
+  };
+  vids.sort((a, b) => score(a) - score(b) || (+a.size || 0) - (+b.size || 0));
+  return vids[0] || null;
+}
+
+async function nextItem(){
+  for (let attempt = 0; attempt < 8; attempt++){
+    if (!pool.length) await loadPool();
+    const doc = pool.pop();
+    if (!doc) continue;
+    seen.add(doc.identifier);
+    try {
+      const m = await fetch('https://archive.org/metadata/' + doc.identifier);
+      if (!m.ok) continue;
+      const mj = await m.json();
+      const f = pickFile(mj.files);
+      if (!f) continue;
+      const length = parseFloat(f.length) || 0;
+      if (length && length < 25) continue;          // too short to arrive halfway through
+      const meta = mj.metadata || {};
+      const rawYear = doc.year || meta.year || meta.date || '';
+      const y = String(rawYear).match(/\b(1[89]\d{2}|20\d{2})\b/);
+      const rawTitle = doc.title || meta.title || '';
+      const bare = !rawTitle || /^[\d_\-\s.]+$/.test(String(rawTitle));
+      return {
+        id: doc.identifier,
+        title: bare ? 'Unlabelled reel — Prelinger no. ' + doc.identifier : rawTitle,
+        year: y ? y[1] : '',
+        desc: doc.description || '',
+        src: 'https://archive.org/download/' + doc.identifier + '/' + encodeURIComponent(f.name),
+        length,
+      };
+    } catch (e) { /* try the next one */ }
+  }
+  return null;
+}
+
+/* ---- tuning ------------------------------------------------------ */
+
+function setOsd(n, sub){
+  $('osd').innerHTML = 'CH ' + String(n).padStart(2, '0') +
+    '<small>' + esc(sub) + '</small>';
+}
+
+async function tune(dir){
+  if (tuning) return;
+  tuning = true;
+  audio();
+  if (ctxAudio && ctxAudio.state === 'suspended') ctxAudio.resume();
+
+  screen.classList.remove('on');
+  $('cap').classList.remove('show');
+  noiseOn = true;
+  hissTo(0.11 * (vid.muted ? 0 : vid.volume), .05);
+  channel = Math.max(1, channel + (dir || 1));
+  setOsd(channel, 'tuning…');
+  vid.pause();
+
+  const item = await nextItem();
+  if (!item){
+    setOsd(channel, 'no signal — archive.org not answering');
+    hissTo(0, .4);
+    tuning = false;
+    return;
+  }
+
+  vid.src = item.src;
+  const started = Date.now();
+  const onMeta = () => {
+    const dur = isFinite(vid.duration) && vid.duration > 0 ? vid.duration : item.length;
+    if (dur > 40) vid.currentTime = dur * (0.10 + Math.random() * 0.65);
+    vid.play().catch(() => {});
+  };
+  vid.addEventListener('loadedmetadata', onMeta, { once: true });
+
+  const settle = () => {
+    noiseOn = false;
+    screen.classList.add('on');
+    hissTo(0, .5);
+    setOsd(channel, (item.year ? item.year + ' · ' : '') + 'prelinger archives');
+    $('cap').innerHTML =
+      '<div class="t">' + esc(item.title) + '</div>' +
+      '<div class="m">' + (item.year ? esc(String(item.year)) + ' · ' : '') +
+      'Prelinger Archives · <a href="https://archive.org/details/' + encodeURIComponent(item.id) +
+      '" target="_blank" rel="noopener">item page ↗</a></div>';
+    $('cap').classList.add('show');
+    clearTimeout(capTimer);
+    capTimer = setTimeout(() => $('cap').classList.remove('show'), 9000);
+    addToLog(item);
+    tuning = false;
+  };
+  const fail = () => {
+    tuning = false;
+    // that print is broken; keep turning the dial
+    setTimeout(() => tune(dir), 200);
+  };
+  vid.addEventListener('playing', settle, { once: true });
+  vid.addEventListener('error', fail, { once: true });
+  // if nothing has arrived in fifteen seconds, move on
+  setTimeout(() => { if (tuning && Date.now() - started > 14500) { vid.removeEventListener('playing', settle); fail(); } }, 15000);
+}
+
+function addToLog(item){
+  history.unshift(item);
+  history = history.slice(0, 8);
+  $('log').hidden = false;
+  $('loglist').innerHTML = history.map(h =>
+    '<li><a href="https://archive.org/details/' + encodeURIComponent(h.id) + '" target="_blank" rel="noopener">' +
+    esc(h.title) + '</a> ' + (h.year ? '<span>' + esc(String(h.year)) + '</span>' : '') + '</li>').join('');
+}
+
+/* ---- controls ---------------------------------------------------- */
+
+$('tune').addEventListener('click', () => {
+  $('tune').textContent = 'Another channel';
+  tune(1);
+});
+$('next').addEventListener('click', () => tune(1));
+$('prev').addEventListener('click', () => tune(-1));
+$('volume').addEventListener('input', (e) => {
+  vid.volume = e.target.value / 100;
+  vid.muted = false;
+  $('mute').textContent = 'mute';
+});
+$('mute').addEventListener('click', () => {
+  vid.muted = !vid.muted;
+  $('mute').textContent = vid.muted ? 'unmute' : 'mute';
+});
+vid.volume = .65;
+// the caption fades out after a few seconds; a tap on the picture brings it back
+let capTimer = null;
+screen.addEventListener('click', (e) => {
+  if (e.target.closest('a')) return;
+  const c = $('cap');
+  if (!c.innerHTML) return;
+  c.classList.toggle('show');
+  clearTimeout(capTimer);
+  if (c.classList.contains('show')) capTimer = setTimeout(() => c.classList.remove('show'), 9000);
+});
+window.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.key === 'ArrowRight' || e.key === 'ArrowUp') tune(1);
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') tune(-1);
+});
+
+setOsd(0, 'no signal');
+</script>
+</body>
+</html>
