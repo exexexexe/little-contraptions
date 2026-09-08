@@ -176,3 +176,34 @@ Everything is invented — item classes, finishes, flavour text. No real game's 
 
 **Verified:** 12 slips added and settled (total drift 3.2px over 700ms, so they genuinely come to rest rather than jittering), all bodies inside the jar bounds, a drag displaced them by 1,529px combined, take-one-out returns a stored note with its date.
 
+### /boss-battle/ — Today, But It Is A Boss
+
+**Built.** Add tasks, they become the boss's HP. Ticking one deals damage with a hit-shake, a trailing white bar catches up a beat later the way fighting games do, and the boss loses phases as it drops. A drawn sprite shifts colour red → orange → gold as its health falls. Persists in localStorage.
+
+**Judgment call:** damage is **proportional, not fixed** — each task is worth an equal share, so a four-item day and a twelve-item day both start at 100% and both end at zero. Fixed damage would mean a long list could not be beaten, which gets the psychology backwards: the point is that finishing your actual list is the win condition, whatever size it is.
+
+Unticking restores the health and the boss comments on it, because that is funnier than silently rolling back.
+
+**Verified:** 4 tasks → 400 HP, ticking gave exactly 300 / 200 / 100 / 0 with phases two, three and four firing at the right thresholds, victory panel on completion, untick restored 100 HP and removed the victory, list survives in localStorage.
+
+### /speedrun-anything/ — Any% Daily Life
+
+**Built.** Category input with suggestions, a centisecond clock on requestAnimationFrame, space bar to start/stop, a live delta against your personal best while the run is going, a records panel and a run table with the best per category starred.
+
+**Judgment calls:**
+- **No invented world records.** The obvious joke would be "WR: 4.21s by some legend", but that would be fabricating a statistic and presenting it as real, which the project rules rule out. You race only your own previous best, and the footer says so.
+- Runs under 300ms are rejected as "too quick to count" — otherwise a double-tap pollutes your records with a 0.04s best you can never beat.
+- The live delta turns green when you are ahead of your best and pink when behind, which is the whole reason to watch the clock.
+
+**Verified:** a 0.89s run recorded as first PB; a slower 1.48s run correctly *not* a PB and reported 0.59s behind; a 0.40s run took the record with the delta stated exactly (0.49s off the previous best); best row starred; sub-300ms run rejected without polluting the table.
+
+### /interview-beyond/ — The Interview Room
+
+**Built.** Four hand-authored branching conversations — 31 nodes, 76 question links, no model in the loop. Each answer has an optional stage direction, and a transcript builds underneath as you go.
+
+**The judgment call worth reviewing.** The brief said "a historical or invented figure". I went entirely invented-people-in-real-roles rather than named historical figures, because a scripted interview with a real person means writing quotations they never said — and the project rule about real people is about not putting words in their mouths. So: Verecunda the water overseer, Master Aldous, Ellen Marrow, Dorothy Sanne. Nobody real is ventriloquised, and the footer says the working details are accurate but the people are not.
+
+The *jobs* are researched and the details are the real ones: the chorobates and the few-feet-per-mile gradient; miasma theory and why sealing windows was exactly wrong; winding the clockwork every two hours and the log being evidence rather than a diary; hand-verifying flight code and a sign error nobody recorded.
+
+**Verified:** every option points at a node that exists, every node is reachable from its start, no dead ends, no answer under 40 characters, and an eight-question walk-through builds a correct transcript.
+
