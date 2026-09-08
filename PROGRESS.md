@@ -152,3 +152,27 @@ Everything is invented — item classes, finishes, flavour text. No real game's 
 
 **Bug found and fixed:** the WANTED headline's cap height exceeded its baseline, so the tops of the letters were being cut off by the canvas edge. Baseline lowered and the layout below it shifted to match — now 0 dark pixels in the top 12px.
 
+### /time-capsule/ — Time Capsule
+
+**Built.** Write, choose a date (or *seal for a year*), label it, seal it. The drawer lists capsules by date with a countdown; sealed ones show only length and dates, and the text appears once the date passes.
+
+**Judgment calls:**
+- A sealed capsule's text is **not written into the page at all** until it is due — the locked view renders a character count instead. Verified: the string does not appear anywhere in the DOM while sealed.
+- Refuses a date of today or earlier: "A capsule that opens today is just a note."
+- The storage warning is prominent rather than buried, because this is localStorage and people will assume otherwise. The footer states plainly that this is a courtesy, not security — anyone who can open the browser's storage can read them. I would rather say that than imply a vault.
+- If `localStorage` throws (private mode, quota), the warning panel changes to say the save failed rather than silently losing the capsule.
+
+**Verified:** future text hidden while sealed, countdown shown, past-dated capsules open and are marked, today's date refused, and the capsule survives in localStorage.
+
+### /gratitude-jar/ — The Jar
+
+**Built with Matter.js** (the approved CDN exception). Each note is a real rigid body — they drop through the neck, funnel down the sloped shoulders, collide, stack and come to rest. Matter runs the simulation; the drawing is ours, so each slip is a folded paper rectangle with a fold line and a shadow rather than a debug rectangle.
+
+**Judgment calls:**
+- Dragging moves *the contents*, not the jar — the slips take the impulse directly, which reads as a shake without needing to animate the glass.
+- The jar has sloped shoulders so slips funnel toward the middle instead of piling on the rim.
+- If the CDN fails, the toy degrades: the hint says the physics library is unavailable, notes still save and the jar still draws.
+- localStorage only, with the same honest storage warning as the time capsule, and a visible message if the browser refuses to save.
+
+**Verified:** 12 slips added and settled (total drift 3.2px over 700ms, so they genuinely come to rest rather than jittering), all bodies inside the jar bounds, a drag displaced them by 1,529px combined, take-one-out returns a stored note with its date.
+
