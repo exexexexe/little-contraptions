@@ -252,3 +252,11 @@ You can type. Forty-five percent of the time somebody answers within a few secon
 
 Judgment calls: no model generates any of this — it is a beat queue over hand-written topics, which is stated on the page so nobody assumes there is an LLM behind it. All names are invented and no real person or real group is depicted.
 
+### /ocean-depths/ — The Descent
+
+A scroll-driven descent to 10,935 m with a live instrument panel (depth, calculated pressure, a typical temperature profile, a daylight curve, and the pelagic zone), water colour interpolated through eight stops, marine snow on canvas that drifts with your scroll speed, and bioluminescent flashes below 900 m. A 'descend' button does the whole thing hands-free in about 35 seconds, and the bottom compares that to Trieste's 4 h 47 min.
+
+Facts and fiction are kept visibly apart: blue cards are real and name their source on the card; amber cards are marked INVENTED and come from a survey vessel that does not exist. Every figure was checked before it went in, and three were corrected in the process — the Challenger Deep depth is attributed to the 2021 survey (10,935 ± 6 m) with the disagreeing surveys listed in the footnote rather than one number asserted as the answer; 'more people have walked on the Moon' was cut because it stopped being true in 2019, replaced with the actual counts (three before 2019, 27 by July 2022); Ahmed Gabr's ascent is 'close to fourteen hours', not fifteen. The pressure gauge is labelled as calculated from depth rather than measured, and the temperature line as a typical profile rather than a reading.
+
+Judgment calls: no creature, name or piece of lore from any game is used — the unease is in the invented sonar logs, which are entirely original. Cards for stops only a few metres apart (200 and 214 m, 3,688 and 3,800 m) collide on this scale, so a layout pass pushes each one clear of the last and the printed depth carries the exact position.
+
