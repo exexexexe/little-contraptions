@@ -294,3 +294,11 @@ Eight genre archetypes — the rain-coat detective, the sergeant, the debutante,
 
 Judgment calls: nobody here is from anything. These are the shapes genres reuse, not characters from any work — no named property, character, place or catchphrase appears anywhere on the page, nothing is quoted or written to echo a real line, and the footnote says so plainly. The comedy comes from the collision of registers, which needs no borrowed material at all.
 
+### /doppelganger/ — Your Painted Double
+
+Drop or paste a photograph and the page finds its closest match among 220 public-domain paintings from the Art Institute of Chicago, then explains the match in terms you can check: which side the light comes from, whether the picture is brighter at the top, how dark it is overall, how hard the modelling is, and whether it leans warm. Four runners-up underneath, each linking to the artwork page.
+
+Judgment calls, and the honesty one matters most. A face-recognition doppelganger finder would need a model this project is not allowed to add and would send the photograph somewhere. So it does not do that, and it does not pretend to: the measurement is a four-by-four grid of brightness plus overall tone, contrast and warmth, taken identically from the paintings (offline, here) and from your photo (in your tab). The page says exactly that under the result — a match means the two pictures are lit alike, which is a real thing to share with a stranger from 1640 and is not the same as looking like them. The photograph genuinely never leaves the browser: it is read into a canvas and reduced to twenty numbers.
+
+The corpus was built by querying the Art Institute's public API for public-domain paintings, keeping 220 with usable images and measuring each one here rather than in the browser. Their IIIF server sits behind Cloudflare and sends cross-origin-resource-policy: same-origin, so the images cannot be displayed from another origin at all — server.js gained /api/art, which fetches them with the user-agent header their API asks for and hands them to the browser with a day of cache. It accepts only their IIIF host, only a UUID of the shape they issue, and only the three widths they keep derivatives for (an unusual width makes the server render one on the spot, which was timing out).
+
