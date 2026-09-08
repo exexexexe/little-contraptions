@@ -244,3 +244,11 @@ A CRT set that tunes into random public-domain ephemeral film streamed straight 
 
 Judgment calls: the brief said Prelinger specifically, not a general Internet Archive search, so the query is pinned to collection:"prelinger" AND mediatype:"movies" — 10,461 items. Nothing is downloaded or re-hosted: the video element points at archive.org and every card links back. The player prefers the 512Kb derivative (about 40 MB) over the masters (up to 500 MB) so a channel starts quickly. Roughly a third of the collection is unlabelled scanned reels with numeric identifiers; those stay in, since an unmarked reel is very much the point, but titled films are drawn first and unlabelled ones are captioned 'Unlabelled reel — Prelinger no. NNNN' rather than showing a bare number. The footnote says plainly that these are historical documents carrying the assumptions of their year.
 
+### /eternal-groupchat/ — The Group Chat
+
+A group chat that is always mid-argument. Seven roles (the one who makes plans, the one who is never serious, the lurker, the one who checks in on people, the one who posts at 4am, the one who answers the literal question, and the one who is six hours behind) get shuffled onto twelve possible names, so the same personalities appear under different names each visit. Ten topics, every one of them written to end without resolving. Typing indicators, drifting timestamps with day dividers, emoji reactions that land a few seconds late, and quoted replies to messages from much earlier.
+
+You can type. Forty-five percent of the time somebody answers within a few seconds; the rest of the time your message resurfaces as a quoted reply four or five messages later, which is worse. Pressing leave gets you removed and then added back by somebody, followed by 'nobody leaves'.
+
+Judgment calls: no model generates any of this — it is a beat queue over hand-written topics, which is stated on the page so nobody assumes there is an LLM behind it. All names are invented and no real person or real group is depicted.
+
