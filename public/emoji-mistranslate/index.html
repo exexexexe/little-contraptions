@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Literalist</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23FCF6E8'/><circle cx='16' cy='16' r='9' fill='%23F0C24A'/><circle cx='12.5' cy='14' r='1.4' fill='%23241A08'/><circle cx='19.5' cy='14' r='1.4' fill='%23241A08'/><path d='M12 20.5h8' stroke='%23241A08' stroke-width='1.8' stroke-linecap='round'/></svg>">
+<style>
+:root{ color-scheme: light; }
+:root{
+  --paper:#FCF6E8;
+  --paper-2:#F2E9D6;
+  --ink:#241E14;
+  --ink-2:#5A4E38;
+  --dim:#8E8168;
+  --accent:#C4562E;
+  --rule:#DCCFB4;
+  --sans:ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --display:"Avenir Next Condensed","Roboto Condensed","Arial Narrow",var(--sans);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);color:var(--ink);font-family:var(--sans);
+  min-height:100vh;padding:30px 18px 64px;
+}
+.wrap{ max-width:720px;margin:0 auto }
+header{ margin-bottom:20px }
+h1{ font-family:var(--display);font-size:clamp(28px,6vw,44px);margin:0;letter-spacing:.02em;text-transform:uppercase;font-weight:700 }
+.sub{ font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-top:8px }
+
+textarea{
+  width:100%;min-height:78px;resize:vertical;background:#fff;color:var(--ink);
+  border:1px solid var(--rule);border-radius:3px;padding:14px;
+  font-family:var(--sans);font-size:16.5px;line-height:1.5;
+}
+textarea:focus{ outline:2px solid var(--accent);outline-offset:-1px }
+
+.deck{ display:flex;gap:9px;flex-wrap:wrap;margin-top:12px }
+.btn{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
+  background:var(--ink);color:var(--paper);border:0;padding:12px 18px;cursor:pointer;font-weight:700;border-radius:2px;
+}
+.btn:hover{ background:#000 }
+.btn.sec{ background:transparent;color:var(--ink);border:1px solid var(--rule);font-weight:400 }
+.btn.sec:hover{ border-color:var(--accent);color:var(--accent) }
+.btn:focus-visible{ outline:2px solid var(--accent);outline-offset:3px }
+
+.out{ margin-top:22px }
+.lbl{
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:9px;
+}
+.emoji{
+  background:#fff;border:1px solid var(--rule);border-radius:3px;padding:20px 18px;
+  font-size:clamp(26px,6.5vw,38px);line-height:1.55;word-break:break-word;min-height:82px;
+}
+.emoji .tok{ display:inline-block;margin-right:6px;position:relative;cursor:help }
+.emoji .tok[data-src]:hover::after{
+  content:attr(data-src);position:absolute;left:50%;top:-24px;transform:translateX(-50%);
+  background:var(--ink);color:var(--paper);font-family:var(--mono);font-size:10px;
+  padding:3px 7px;border-radius:2px;white-space:nowrap;letter-spacing:.06em;
+}
+.emoji .kept{ font-size:.5em;vertical-align:middle;color:var(--dim);font-family:var(--sans) }
+
+.back{
+  margin-top:18px;background:var(--paper-2);border-left:4px solid var(--accent);
+  padding:15px 17px;font-size:16px;line-height:1.65;
+}
+.back i{ color:var(--ink-2);font-style:italic }
+
+.notes{ margin-top:18px;border-top:1px solid var(--rule);padding-top:14px }
+.notes h2{ font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);font-weight:400;margin:0 0 10px }
+.notes ul{ margin:0;padding-left:18px }
+.notes li{ font-size:14px;line-height:1.62;color:var(--ink-2);margin-bottom:6px }
+.notes li b{ color:var(--ink) }
+
+.examples{ display:flex;gap:7px;flex-wrap:wrap;margin-top:14px }
+.ex{
+  font-family:var(--mono);font-size:11px;background:transparent;border:1px dashed var(--rule);
+  color:var(--ink-2);padding:7px 11px;cursor:pointer;border-radius:2px;
+}
+.ex:hover{ border-color:var(--accent);color:var(--accent);border-style:solid }
+
+footer{
+  max-width:720px;margin:26px auto 0;padding-top:14px;border-top:1px solid var(--rule);
+  font-family:var(--mono);font-size:10.5px;line-height:1.8;color:var(--dim);
+}
+footer a{ color:var(--ink-2) }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+body{ padding-bottom:64px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media print{ #lc-back{ display:none } }
+@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } }
+</style>
+</head>
+<body>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<div class="wrap">
+  <header>
+    <h1>The Literalist</h1>
+    <div class="sub">a translator with no sense of figurative language whatsoever</div>
+  </header>
+
+  <textarea id="in" placeholder="Write a sentence. Idioms strongly encouraged.">I'm going to hit the hay, this meeting could have been an email</textarea>
+
+  <div class="deck">
+    <button class="btn" id="go">Translate</button>
+    <button class="btn sec" id="rand">Give me a sentence</button>
+  </div>
+
+  <div class="examples" id="examples"></div>
+
+  <div class="out">
+    <div class="lbl">what it says now</div>
+    <div class="emoji" id="emoji"></div>
+
+    <div class="lbl" style="margin-top:18px">read back, literally</div>
+    <div class="back" id="back"></div>
+
+    <div class="notes" id="notes" hidden>
+      <h2>where it went wrong</h2>
+      <ul id="notelist"></ul>
+    </div>
+  </div>
+</div>
+
+<footer>
+  Everything happens in your browser — nothing is sent anywhere. The translator is deliberately
+  incompetent: it takes every idiom at face value, splits compound phrases into their parts, and
+  swaps homophones without checking. That is the joke, not a bug.
+  <a href="/">← back to the cabinet</a>
+</footer>
+
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+const pick = (a) => a[Math.floor(Math.random() * a.length)];
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+/* ------------------------------------------------------------------ *
+ *  Idioms first, and always taken at face value. Each entry gives the
+ *  emoji and the wrong-but-literal reading that goes with it.
+ * ------------------------------------------------------------------ */
+const IDIOMS = [
+  ['hit the hay',        '👊🌾', 'assault some dried grass'],
+  ['hit the sack',       '👊🎒', 'punch a bag'],
+  ['break a leg',        '💔🦵', 'fracture a limb, deliberately'],
+  ['piece of cake',      '🍰🔪', 'one slice of actual cake'],
+  ['spill the beans',    '🫘💦', 'drop legumes on the floor'],
+  ['under the weather',  '⬇️🌦️', 'standing beneath some rain'],
+  ['cost an arm and a leg','💰🦾🦵','payable in limbs'],
+  ['let the cat out of the bag','🐈🎒➡️','release a cat from luggage'],
+  ['bite the bullet',    '🦷🔫', 'chew ammunition'],
+  ['once in a blue moon','1️⃣🔵🌙', 'when the moon is literally blue'],
+  ['raining cats and dogs','🌧️🐈🐕','livestock falling from the sky'],
+  ['throw in the towel', '🤾🧺', 'launch laundry'],
+  ['barking up the wrong tree','🐕🌲❌','a dog addressing the incorrect plant'],
+  ['the ball is in your court','⚽🎾📍','sports equipment, now yours'],
+  ['on the same page',   '📄👥', 'two people standing on paper'],
+  ['touch base',         '🫳⚾', 'make physical contact with a base'],
+  ['circle back',        '⭕⬅️', 'draw a circle, walking backwards'],
+  ['low hanging fruit',  '🍇⬇️', 'fruit at a convenient height'],
+  ['move the needle',    '🪡➡️', 'physically relocate a needle'],
+  ['boil the ocean',     '🌊🔥', 'heat the entire sea'],
+  ['ballpark figure',    '⚾🏟️🔢','a number that lives at a stadium'],
+  ['drop the ball',      '⚽⬇️', 'release a ball, gravity does the rest'],
+  ['back to the drawing board','⬅️✏️📋','return to a specific board'],
+  ['burn the midnight oil','🔥🕛🛢️','set fire to oil, at midnight'],
+  ['cut corners',        '✂️📐', 'remove corners with scissors'],
+  ['hit the ground running','👊🌍🏃','strike the earth, then flee'],
+  ['pull your socks up', '🧦⬆️', 'adjust hosiery'],
+  ['bend over backwards','🤸⬅️', 'perform gymnastics'],
+  ['a blessing in disguise','🙏🥸','a benediction wearing a moustache'],
+  ['beat around the bush','🥊🌳','assault shrubbery, indirectly'],
+  ['when pigs fly',      '🐖🛫', 'aviation, but for pigs'],
+  ['kill two birds with one stone','🪨🐦🐦','ornithological crime, efficiently'],
+  ['a piece of my mind', '🧠🍰', 'a slice of brain'],
+  ['on thin ice',        '🧊🩰', 'skating irresponsibly'],
+  ['the elephant in the room','🐘🚪','an actual elephant, indoors'],
+  ['reach out',          '🫳➡️', 'physically extend an arm'],
+  ['double down',        '2️⃣⬇️', 'the number two, descending'],
+  ['deep dive',          '🤿🌊', 'submerge yourself'],
+  ['moving forward',     '🚶➡️', 'ambulation, northward'],
+  ['bandwidth',          '📶📏', 'the width of a band'],
+  ['keep me in the loop','🪢👤', 'imprison me in rope'],
+  ['at the end of the day','🌇🕛','sunset, specifically'],
+  ['this meeting could have been an email','👥❌📧','a gathering, replaced by post'],
+];
+
+/* ---------- single words, deliberately over-literal ---------- */
+const WORDS = {
+  i:'👁️', me:'👁️', my:'👁️🔒', you:'🫵', your:'🫵🔒', we:'👥', us:'👥', they:'👤👤',
+  am:'🟰', is:'🟰', are:'🟰', was:'🟰⏪', be:'🐝', been:'🐝', being:'🐝',
+  to:'2️⃣', too:'2️⃣', two:'2️⃣', for:'4️⃣', four:'4️⃣', ate:'8️⃣', eight:'8️⃣', one:'1️⃣', won:'1️⃣',
+  see:'🌊', sea:'🌊', know:'🚫', no:'🚫', not:'🚫', new:'🆕', knew:'🆕',
+  right:'➡️', write:'➡️', wright:'➡️', left:'⬅️', hi:'👋', high:'👋', bye:'🛒',
+  buy:'🛒', by:'🛒', here:'👂', hear:'👂', there:'👉', their:'👉',
+  work:'⛏️', working:'⛏️', job:'⛏️', boss:'👑', meeting:'👥🪑', email:'📧', deadline:'⚰️📏',
+  monday:'😩', friday:'🎉', weekend:'🛌', morning:'🌅', night:'🌙', today:'📅', tomorrow:'📅➡️',
+  coffee:'☕', tea:'🫖', food:'🍽️', lunch:'🥪', dinner:'🍝', breakfast:'🥣', hungry:'🍽️❓',
+  home:'🏠', house:'🏠', office:'🏢', city:'🏙️', road:'🛣️', car:'🚗', train:'🚆', plane:'✈️',
+  dog:'🐕', cat:'🐈', bird:'🐦', fish:'🐟', horse:'🐎', bear:'🐻', mouse:'🖱️',
+  love:'❤️', hate:'💢', happy:'😀', sad:'😢', tired:'🥱', angry:'😠', fine:'💵',
+  good:'👍', bad:'👎', great:'🗻', big:'🐘', small:'🐜', hot:'🔥', cold:'🧊', fast:'🐇', slow:'🐌',
+  money:'💰', time:'⏰', day:'☀️', week:'7️⃣☀️', year:'🎆', hour:'⏳', minute:'⏱️',
+  think:'💭', thought:'💭', idea:'💡', brain:'🧠', head:'🗿', heart:'🫀', hand:'✋', eye:'👁️',
+  water:'💧', fire:'🔥', earth:'🌍', air:'💨', tree:'🌳', flower:'🌸', sun:'☀️', moon:'🌙', star:'⭐',
+  book:'📕', phone:'📱', computer:'💻', internet:'🕸️', code:'🔣', bug:'🐛', ship:'🚢',
+  going:'🚶', go:'🚶', went:'🚶⏪', come:'🫴', run:'🏃', walk:'🚶', sleep:'😴', eat:'🍴', drink:'🥤',
+  say:'🗣️', said:'🗣️', talk:'🗣️', ask:'❓', tell:'📢', call:'📞', send:'📤', get:'🫳',
+  make:'🔨', made:'🔨', build:'🏗️', fix:'🔧', break:'💥', broken:'💥', help:'🆘',
+  please:'🥺', thanks:'🙏', sorry:'😬', yes:'✅', maybe:'🤷', never:'🚫⏰', always:'♾️',
+  very:'‼️', really:'‼️', just:'⚖️', still:'🗿', already:'⏩', soon:'⏳', late:'🐌⏰', early:'🐓',
+  can:'🥫', cant:'🚫🥫', will:'📜', would:'🪵', should:'🎽', could:'🥶', must:'🍇',
+  bear2:'🐻', match:'🔥', wave:'👋', bat:'🦇', spring:'🌱', fall:'🍂', rock:'🪨', bank:'🏦',
+  light:'💡', mine:'⛏️', park:'🅿️', pen:'🖊️', ring:'💍', watch:'⌚', wave2:'🌊', felt:'🧶',
+};
+
+const FALLBACKS = ['🔷','🔶','🔺','🔻','⬛','⬜','🟣','🟤','🟨','🟩','🟦','🟧'];
+
+const EXAMPLES = [
+  "let's circle back tomorrow and touch base",
+  "I'm under the weather so I'm going to hit the hay",
+  "we need to move the needle on this by Friday",
+  "the elephant in the room is that the code is broken",
+  "she told me to break a leg, which felt aggressive",
+  "this meeting could have been an email",
+  "it costs an arm and a leg but I love it",
+  "I have the bandwidth to boil the ocean this week",
+];
+
+function translate(text){
+  const notes = [];
+  let s = ' ' + text.toLowerCase().replace(/[""]/g, '"').replace(/['']/g, "'") + ' ';
+  const tokens = [];
+
+  // idioms first, longest first so "hit the hay" wins over "hit"
+  const sorted = IDIOMS.slice().sort((a, b) => b[0].length - a[0].length);
+  const marks = [];
+  sorted.forEach(([phrase, emo, reading]) => {
+    let idx;
+    const needle = ' ' + phrase + ' ';
+    while ((idx = s.indexOf(needle)) !== -1){
+      const id = marks.length;
+      marks.push({ emo, reading, phrase });
+      s = s.slice(0, idx + 1) + ' ' + id + ' ' + s.slice(idx + needle.length - 1);
+    }
+  });
+
+  // then word by word
+  const parts = s.trim().split(/\s+/);
+  parts.forEach(raw => {
+    const m = raw.match(/^ (\d+) $/);
+    if (m){
+      const mk = marks[Number(m[1])];
+      tokens.push({ emo: mk.emo, src: mk.phrase, literal: mk.reading, idiom: true });
+      notes.push({ from: mk.phrase, to: mk.reading });
+      return;
+    }
+    const clean = raw.replace(/[^a-z0-9']/g, '');
+    if (!clean){ return; }
+    const key = clean.replace(/'/g, '');
+    if (WORDS[key]){
+      tokens.push({ emo: WORDS[key], src: clean, literal: null });
+      // flag the homophone swaps, since those are the funniest failures
+      const HOMO = { be:'a bee', to:'the number two', too:'the number two', for:'the number four',
+        see:'the sea', sea:'the sea', know:'a refusal', no:'a refusal', hear:'an ear', here:'an ear',
+        buy:'shopping', by:'shopping', bye:'shopping', right:'a direction', write:'a direction',
+        one:'the number one', won:'the number one', ate:'the number eight', can:'a tin',
+        fine:'money', mine:'a mine', felt:'fabric', will:'a legal document' };
+      if (HOMO[key]) notes.push({ from: clean, to: HOMO[key] });
+    } else {
+      tokens.push({ emo: null, src: clean, literal: null });
+    }
+  });
+  return { tokens, notes };
+}
+
+function render(){
+  const text = $('in').value.trim();
+  if (!text){
+    $('emoji').innerHTML = '<span style="font-size:15px;color:var(--dim);font-family:var(--sans)">nothing to mistranslate</span>';
+    $('back').innerHTML = '';
+    $('notes').hidden = true;
+    $('notelist').innerHTML = '';
+    return;
+  }
+  const { tokens, notes } = translate(text);
+
+  $('emoji').innerHTML = tokens.map(t => t.emo
+    ? '<span class="tok" data-src="' + esc(t.src) + '">' + t.emo + '</span>'
+    : '<span class="tok kept" data-src="no symbol for this">' + esc(t.src) + '</span>'
+  ).join('') || '<span class="kept">…</span>';
+
+  // read it back the way the machine understood it
+  const readBack = tokens.map(t => {
+    if (t.literal) return t.literal;
+    if (!t.emo) return t.src;
+    const HOMO = { be:'a bee', to:'two', too:'two', for:'four', see:'the sea', sea:'the sea',
+      know:'no', no:'no', hear:'an ear', here:'an ear', buy:'a shopping trolley', by:'a shopping trolley',
+      bye:'a shopping trolley', right:'rightwards', write:'rightwards', one:'one', won:'one',
+      ate:'eight', can:'a tin can', fine:'banknotes', mine:'a pickaxe', felt:'felt, the fabric',
+      will:'a scroll', would:'a log of wood', should:'a sports vest', could:'a shivering person',
+      must:'grapes', great:'a mountain', still:'a statue', just:'a set of scales' };
+    return HOMO[t.src.replace(/'/g, '')] || t.src;
+  }).join(' ');
+  $('back').innerHTML = '<i>' + esc(readBack) + '</i>';
+
+  if (notes.length){
+    $('notes').hidden = false;
+    const seen = new Set();
+    $('notelist').innerHTML = notes.filter(n => {
+      if (seen.has(n.from)) return false; seen.add(n.from); return true;
+    }).map(n => '<li><b>' + esc(n.from) + '</b> → ' + esc(n.to) + '</li>').join('');
+  } else {
+    $('notes').hidden = true;
+    $('notelist').innerHTML = '';      // don't keep the previous sentence's notes around
+  }
+}
+
+$('go').addEventListener('click', render);
+$('in').addEventListener('input', render);
+$('rand').addEventListener('click', () => { $('in').value = pick(EXAMPLES); render(); });
+$('examples').innerHTML = EXAMPLES.slice(0, 4).map((e, i) =>
+  '<button class="ex" data-i="' + i + '">' + esc(e.length > 40 ? e.slice(0, 38) + '…' : e) + '</button>').join('');
+$('examples').addEventListener('click', (e) => {
+  const b = e.target.closest('.ex');
+  if (!b) return;
+  $('in').value = EXAMPLES[Number(b.dataset.i)];
+  render();
+});
+
+render();
+</script>
+</body>
+</html>

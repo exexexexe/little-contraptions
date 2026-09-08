@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Fortune Cookie</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23200E12'/><path d='M6 20c4-8 16-8 20 0-5 4-15 4-20 0z' fill='%23E8B25C'/><rect x='12' y='16' width='8' height='4' fill='%23FBF3E2'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --lac:#200E12;
+  --lac-2:#31151B;
+  --gold:#E8B25C;
+  --gold-2:#B98634;
+  --slip:#FBF3E2;
+  --ink:#241C14;
+  --dim:#9C8770;
+  --red:#B8342C;
+  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --display:"Avenir Next Condensed","Roboto Condensed","Arial Narrow",var(--serif);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:radial-gradient(700px 520px at 50% 8%, var(--lac-2) 0%, var(--lac) 62%);
+  color:var(--slip);font-family:var(--serif);min-height:100vh;
+  padding:34px 18px 64px;display:flex;flex-direction:column;align-items:center;
+}
+.wrap{ max-width:620px;width:100%;text-align:center }
+h1{
+  font-family:var(--display);font-size:clamp(24px,5.4vw,36px);margin:0;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:700;
+}
+.sub{ font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;opacity:.5;margin-top:9px }
+
+/* ---------- the cookie ---------- */
+.stage{ position:relative;height:230px;width:100%;margin:26px 0 6px;display:flex;align-items:center;justify-content:center }
+.cookie{
+  position:relative;width:210px;height:130px;cursor:pointer;border:0;background:transparent;padding:0;
+}
+.cookie:focus-visible{ outline:2px solid var(--gold);outline-offset:8px;border-radius:8px }
+.half{
+  position:absolute;top:0;width:118px;height:130px;
+  transition:transform .55s cubic-bezier(.3,.9,.35,1), opacity .4s;
+}
+.half svg{ width:100%;height:100%;display:block }
+.h-l{ left:-4px;transform-origin:100% 50% }
+.h-r{ right:-4px;transform-origin:0 50% }
+.cracked .h-l{ transform:translateX(-172px) rotate(-28deg) scale(.86) }
+.cracked .h-r{ transform:translateX(172px) rotate(28deg) scale(.86) }
+.crumbs{ position:absolute;inset:0;pointer-events:none }
+.crumb{ position:absolute;width:5px;height:5px;background:var(--gold-2);border-radius:1px;opacity:0 }
+.cracked .crumb{ animation:crumb .7s ease-out forwards }
+@keyframes crumb{ 0%{opacity:1;transform:translate(0,0) rotate(0)} 100%{opacity:0;transform:translate(var(--dx),64px) rotate(220deg)} }
+
+/* ---------- the slip ---------- */
+.slip{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.6);
+  width:min(430px,88vw);background:var(--slip);color:var(--ink);
+  padding:22px 24px;border-radius:2px;opacity:0;pointer-events:none;
+  box-shadow:0 16px 40px rgba(0,0,0,.55);
+  transition:opacity .5s .28s, transform .6s .28s cubic-bezier(.2,.9,.3,1);
+}
+.cracked .slip{ opacity:1;transform:translate(-50%,-50%) scale(1);pointer-events:auto }
+.slip .f{ font-size:clamp(17px,3.4vw,22px);line-height:1.5;margin:0 }
+.slip .lucky{
+  margin-top:15px;padding-top:12px;border-top:1px dashed #D4C7AC;
+  font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:#8A7458;
+  display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
+}
+.slip .lucky b{ color:var(--red);font-weight:700 }
+
+.deck{ display:flex;gap:9px;flex-wrap:wrap;justify-content:center;margin-top:26px }
+.btn{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
+  background:var(--gold);color:#221403;border:0;padding:12px 20px;cursor:pointer;font-weight:700;border-radius:2px;
+}
+.btn:hover{ background:#F2C578 }
+.btn.sec{ background:transparent;color:var(--slip);border:1px solid rgba(251,243,226,.28);font-weight:400 }
+.btn.sec:hover{ border-color:var(--gold);color:var(--gold) }
+.btn:focus-visible{ outline:2px solid var(--gold);outline-offset:3px }
+.hint{ font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;opacity:.4;margin-top:16px }
+
+.tally{ font-family:var(--mono);font-size:10.5px;color:var(--dim);margin-top:20px;letter-spacing:.08em }
+
+footer{
+  max-width:620px;margin:26px auto 0;padding-top:14px;border-top:1px solid rgba(251,243,226,.14);
+  font-family:var(--mono);font-size:10.5px;line-height:1.8;color:var(--dim);text-align:left;
+}
+footer a{ color:var(--gold) }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+body{ padding-bottom:64px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media print{ #lc-back{ display:none } }
+@media (prefers-reduced-motion: reduce){
+  #lc-back, .half, .slip{ transition:none }
+  .cracked .crumb{ animation:none;opacity:0 }
+}
+</style>
+</head>
+<body>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<div class="wrap">
+  <h1>The Fortune Cookie</h1>
+  <div class="sub">crack it and see</div>
+
+  <div class="stage">
+    <button class="cookie" id="cookie" aria-label="Crack the cookie">
+      <div class="half h-l">
+        <svg viewBox="0 0 120 130" aria-hidden="true">
+          <path d="M116 22c-38-16-84-6-104 26 10 34 44 56 84 60 12-26 18-56 20-86z" fill="#E8B25C"/>
+          <path d="M116 22c-38-16-84-6-104 26 22-14 62-22 104-26z" fill="#F2C97E"/>
+          <path d="M12 48c10 34 44 56 84 60-40-14-70-34-84-60z" fill="#C2913F"/>
+        </svg>
+      </div>
+      <div class="half h-r">
+        <svg viewBox="0 0 120 130" aria-hidden="true">
+          <path d="M4 22c38-16 84-6 104 26-10 34-44 56-84 60-12-26-18-56-20-86z" fill="#E0A94F"/>
+          <path d="M4 22c38-16 84-6 104 26-22-14-62-22-104-26z" fill="#EEC176"/>
+          <path d="M108 48c-10 34-44 56-84 60 40-14 70-34 84-60z" fill="#B8862F"/>
+        </svg>
+      </div>
+      <div class="crumbs" id="crumbs" aria-hidden="true"></div>
+    </button>
+    <div class="slip" id="slip" role="status" aria-live="polite"></div>
+  </div>
+
+  <div class="deck">
+    <button class="btn" id="again">Another cookie</button>
+    <button class="btn sec" id="copy">Copy the fortune</button>
+  </div>
+  <div class="hint" id="hint">click the cookie</div>
+  <div class="tally" id="tally"></div>
+</div>
+
+<footer>
+  Every fortune here was written for this cabinet. They are not translations, and they are not
+  advice — a cookie has no way of knowing anything about your week.
+  <a href="/">← back to the cabinet</a>
+</footer>
+
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+const pick = (a) => a[Math.floor(Math.random() * a.length)];
+const ri = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+/* ------------------------------------------------------------------ *
+ *  Written for this cabinet. The register is the one real cookies use
+ *  — flat, confident, faintly ominous — but none of these are copied
+ *  from anywhere; a slip is short enough that borrowing one would be
+ *  the whole thing.
+ * ------------------------------------------------------------------ */
+const FORTUNES = [
+  'You will shortly be proven right about something nobody remembers you saying.',
+  'The thing you have been putting off is smaller than the putting off.',
+  'A door will open. It is the wrong door, and you should go through it anyway.',
+  'Someone is about to give you credit for a decision you made by accident.',
+  'You are not behind. You are simply the only one keeping score.',
+  'The next conversation you dread will last four minutes.',
+  'You will find it in the second place you look, which is why you should look there first.',
+  'A small kindness of yours is still working, three years later, in a room you have never seen.',
+  'Say the thing. The version in your head is worse than the version out loud.',
+  'You will be old for far longer than you were young. Buy the good chair.',
+  'The person you are avoiding is avoiding you. One of you should give in; it will be you.',
+  'A skill you abandoned is closer to the surface than you think.',
+  'Something you own is quietly broken and you have adapted around it. Fix it this week.',
+  'You will receive advice from somebody with no relevant experience. Take some of it.',
+  'The road is under construction. It has always been under construction. Drive anyway.',
+  'Your instinct about that person was correct on the first day.',
+  'You will laugh at this in a year, and not before.',
+  'What you are calling laziness is a decision you have not admitted to making.',
+  'A message you never sent has stopped mattering. You may delete the draft.',
+  'The good years were not the ones you noticed at the time.',
+  'You will be asked to explain something you understand perfectly and cannot describe.',
+  'Something is going right that you have not checked on in months.',
+  'You will meet someone who is exactly as tired as you are. Be kind to them.',
+  'The plan will not survive Tuesday. Make it anyway; the plan is not the point.',
+  'A thing you threw away will be needed on the eleventh of some month.',
+  'You are better at this than you were, and the improvement is invisible from inside.',
+  'Somebody has been meaning to thank you and will not get around to it. Take the thanks anyway.',
+  'The shortcut is longer. You know this. You will take it regardless.',
+  'You will spend money on something foolish and it will be the correct decision.',
+  'Nothing is wrong. This is what it feels like when nothing is wrong.',
+  'An old friend is about to become a current one, with no ceremony at all.',
+  'You will remember this week for a reason that has not happened yet.',
+  'Your worst habit is protecting you from something. Find out what before you break it.',
+  'There is one email standing between you and a considerably better month.',
+  'The story you tell about yourself has an error in the third sentence.',
+  'You will be interrupted at exactly the wrong moment, and it will save you.',
+  'Two things you believe cannot both be true. You have known this for some time.',
+  'Somebody is copying you and it is a compliment you will not enjoy.',
+  'You will find the receipt. It will be too late, and it will not matter.',
+  'What you want is on the other side of one uncomfortable afternoon.',
+  'Rest is not a reward for finishing. Nobody finishes.',
+  'A door you thought was locked was simply heavy.',
+  'You will out-stubborn the problem. This is not the same as solving it.',
+  'The reason is more boring than the theory you have built about it.',
+  'You are going to be fine, in an ordinary way, on an ordinary Thursday.',
+  'Somebody will misunderstand you generously. Let them.',
+  'The next thing you buy to solve this will not solve this.',
+  'You have been waiting for permission from someone who is waiting for yours.',
+  'A quiet week is coming. Do not fill it.',
+  'You will be the most competent person in a room and the last to notice.',
+  'That noise the car makes is real and you should mention it to someone.',
+  'Your future self has already forgiven you for this.',
+];
+
+const LESSONS = ['patience','the long way','saying less','a second attempt','the boring option',
+  'asking directly','waiting a day','doing it badly first','leaving early','writing it down'];
+
+let cracked = 0, currentFortune = '';
+
+function crumbs(){
+  const box = $('crumbs');
+  box.innerHTML = '';
+  for (let i = 0; i < 10; i++){
+    const c = document.createElement('div');
+    c.className = 'crumb';
+    c.style.left = (34 + Math.random() * 140) + 'px';
+    c.style.top = (48 + Math.random() * 40) + 'px';
+    c.style.setProperty('--dx', (Math.random() * 90 - 45).toFixed(0) + 'px');
+    c.style.animationDelay = (Math.random() * 0.18).toFixed(2) + 's';
+    box.appendChild(c);
+  }
+}
+
+function crack(){
+  const stage = $('cookie').parentElement;
+  if (stage.classList.contains('cracked')) return;
+  currentFortune = pick(FORTUNES);
+  const nums = [];
+  while (nums.length < 6){
+    const n = ri(1, 49);
+    if (!nums.includes(n)) nums.push(n);
+  }
+  nums.sort((a, b) => a - b);
+  $('slip').innerHTML =
+    '<p class="f">' + esc(currentFortune) + '</p>' +
+    '<div class="lucky"><span>lucky numbers <b>' + nums.join(' · ') + '</b></span>' +
+    '<span>learn <b>' + esc(pick(LESSONS)) + '</b></span></div>';
+  crumbs();
+  stage.classList.add('cracked');
+  cracked++;
+  $('hint').textContent = 'another?';
+  $('tally').textContent = cracked === 1 ? '1 cookie opened' : cracked + ' cookies opened';
+}
+
+function reset(){
+  const stage = $('cookie').parentElement;
+  stage.classList.remove('cracked');
+  setTimeout(crack, 260);
+}
+
+$('cookie').addEventListener('click', () => {
+  const stage = $('cookie').parentElement;
+  stage.classList.contains('cracked') ? reset() : crack();
+});
+$('again').addEventListener('click', reset);
+$('copy').addEventListener('click', async () => {
+  if (!currentFortune) return;
+  try { await navigator.clipboard.writeText(currentFortune); $('copy').textContent = 'Copied'; }
+  catch (e) { window.prompt('Copy the fortune:', currentFortune); }
+  setTimeout(() => { $('copy').textContent = 'Copy the fortune'; }, 1400);
+});
+</script>
+</body>
+</html>
