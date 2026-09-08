@@ -232,3 +232,9 @@ The 2009 collision note uses the *current* tracked counts (585 + 111 = 696 fragm
 
 **Verified:** 246 recent objects, 21 station objects, 942 plotted, 25 table rows, geostationary and low-orbit sanity checks both pass.
 
+### /liminal-swipe/ — Would You Sleep Here
+
+Eight room types (drained pool, hotel corridor, open-plan office, car park level P3, waiting area, soft play, lower concourse, service stairwell), each drawn as a one-point perspective canvas scene from a seeded RNG, with six lighting moods and per-scene props. Twelve cards a run, drag or buttons or arrow keys, and a final tally split into always / never / depended-on-the-lighting.
+
+Judgment calls: the brief said not to scrape Reddit or anyone's photographs, so there are no images on the page at all — every room is drawn by code, and the footer says so. First pass put the caption over the picture as a gradient overlay, which hid the floor, where nearly all the detail of a liminal room lives; the caption moved below the art instead. The pool basin, the play tube, the mall shutters and the office glazing all needed a second pass — the first versions read as a flat floor, a banana, blank walls and a wireframe respectively.
+
