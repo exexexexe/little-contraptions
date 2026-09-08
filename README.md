@@ -3,6 +3,10 @@
 A small hub of self-contained web toys. Zero dependencies — one Node
 static file server, one HTML page per toy.
 
+The single exception is the ISS tracker's 3D globe, which loads Three.js from
+a CDN. Every other toy is dependency-free, and that one falls back to its flat
+map if the CDN does not answer.
+
 ## Run locally
 
     node server.js
@@ -31,24 +35,26 @@ The hub filters them by the tag on each card.
 | 13 | [Your Dreams](/your-dreams/) | reflection | A localStorage pinboard of everything you want. |
 | 14 | [The Guide Entry](/the-guide/) | generator | Dry encyclopedia entries for any noun, stable per word. |
 | 15 | [Apocalypse Readiness](/apocalypse-quiz/) | game | Form 7-B, scored, with a downloadable result card. |
-| 16 | [Explain It To An Era](/explain-to-an-era/) | generator | Five listeners who each restyle the page to their period. |
-| 17 | [Unknown Sport of the Day](/unknown-sport/) | reference | 48 real sports, described without popularity claims. |
+| 16 | [Explain It To An Era](/explain-to-an-era/) | generator | Twelve listeners, each asking the thing they'd actually want to know. |
+| 17 | [Unknown Sport of the Day](/unknown-sport/) | reference | 107 real sports, each with an animated icon of what it involves. |
 | 18 | [Rick's Wiki](/ricks-wiki/) | generator | Patent filings with schematics and unlisted side effects. |
-| 19 | [The Daily Hence](/future-news/) | generator | A front page from a century hence. |
-| 20 | [Scale Comparison Machine](/scale/) | reference | Real measurements, with the arithmetic shown. |
-| 21 | [The Everyday Hidden Thing](/hidden-thing/) | reference | 16 objects and what they're quietly doing. |
-| 22 | [Perfume Match](/perfume-match/) | game | Notes in, character out. Real people clearly framed. |
+| 19 | [The Daily Hence](/future-news/) | generator | A front page from a century hence, 101 headline shapes. |
+| 20 | [Scale Comparison Machine](/scale/) | reference | 16 comparisons, each with its own animation and its arithmetic shown. |
+| 21 | [The Everyday Hidden Thing](/hidden-thing/) | reference | 36 objects and what they're quietly doing, drawn and mostly animated. |
+| 22 | [Perfume Match](/perfume-match/) | game | Notes in, character out — 47 of them. Real people clearly framed. |
 | 23 | [Nature's Greatest Hits](/nature-hits/) | real data | Today's tally from iNaturalist, GBIF and USGS. |
-| 24 | [ISS Tracker](/iss/) | real data | Live position, ground track and visible-pass prediction by in-browser SGP4. |
-| 25 | [Field PDA — Zone Survey](/the-zone/) | generator | CRT survey terminal: radiation, anomaly, artefact, advisory, Geiger audio. |
-| 26 | [A Sunny Afternoon in the City](/city-day/) | real data | Attributed Commons photographs of San Francisco under a fictional HUD. |
-| 27 | [The Radio Hub](/radio/) | generator | Seven invented stations; optional real CC audio from the Internet Archive. |
-| 28 | [Civilizations, Ranked](/civilizations/) | scroll story | Scrollytelling up the Kardashev scale, with the arithmetic shown. |
+| 24 | [ISS Tracker](/iss/) | real data | Live position on a 3D globe, ground track, and visible-pass prediction by in-browser SGP4. |
+| 25 | [Field PDA — Zone Survey](/the-zone/) | generator | 26 places in the Zone, Geiger audio, and an unmarked catch on the bezel. |
+| 26 | [A Sunny Afternoon in the City](/city-day/) | real data | 96 attributed Commons photographs across 12 SF landmarks, under a fictional HUD. |
+| 27 | [The Radio Hub](/radio/) | generator | Fourteen invented stations on a draggable dial; optional real CC audio. |
+| 28 | [Civilizations, Ranked](/civilizations/) | scroll story | Up the Kardashev scale — build a Dyson swarm, send a message through a wormhole. |
 | 29 | [The Loot Terminal](/loot-terminal/) | generator | Fantasy item appraisal with a compendium that persists in the browser. |
 
-Still to build: Movie night (needs `TMDB_API_KEY`), the rest of Phase B
-(Civilizations ranked) and
-Phase C (needs `GROQ_API_KEY`).
+Still to build: Movie night (needs `TMDB_API_KEY`) and Phase C (needs
+`GROQ_API_KEY`). `/api/keys` reports both as unset.
+
+Every toy carries the same back-to-the-hub control in the bottom-left corner,
+and the hub shows a live preview of a toy when you hover its card.
 
 ## Server routes
 
@@ -84,12 +90,22 @@ open proxy.
 
 https://hub-production-c107.up.railway.app
 
-Railway project `little-contraptions`, service `hub`, deploying from
-`main`. Pushes to `main` redeploy automatically.
+Railway project `little-contraptions`, service `hub`, deploying from `main`.
+
+**Pushes to `main` do not currently redeploy on their own.** Every deployment
+so far has been triggered manually. The evidence: the repository has no
+webhooks, there are no `SKIPPED` deployments in the service history, and all
+19 deployments carry `reason: deploy` rather than a push trigger — so push
+events are not reaching Railway at all, rather than arriving and being
+filtered. The likely cause is that this repository was created after the
+Railway project, so the Railway GitHub App does not have access to it. Fix it
+in GitHub under Settings -> Applications -> Railway -> Repository access, then
+reconnect the repo in the Railway service settings.
 
 ## Deploy
 
-Push to GitHub, then point Railway's create-deployment (or
-connect-service-source) at the repo. Railway detects the Node app via
+Push to GitHub, then trigger the deploy manually — either **Deploy Latest
+Commit** from Railway's command palette, or point `connect-service-source` at
+the repo again. Railway detects the Node app via
 `package.json` and runs `npm start` automatically — no build config
 needed.
