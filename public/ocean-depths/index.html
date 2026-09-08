@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Descent</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23041018'/><path d='M0 8h32v6H0z' fill='%231D6E86'/><path d='M0 14h32v7H0z' fill='%230F4257'/><circle cx='16' cy='25' r='2' fill='%237FE3D0'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --ink:#DCEAF0;
+  --dim:#7C97A3;
+  --amber:#E4A84C;
+  --cold:#7FD8E8;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --sans:ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{ background:#020609;color:var(--ink);font-family:var(--sans) }
+
+#water{ position:fixed;inset:0;z-index:0;background:#0B4F73;transition:background-color .18s linear }
+#snow{ position:fixed;inset:0;z-index:1;pointer-events:none }
+#beam{
+  position:fixed;inset:0;z-index:1;pointer-events:none;opacity:0;
+  background:radial-gradient(58% 42% at 50% 42%, rgba(190,230,245,.16) 0%, rgba(0,0,0,0) 70%);
+}
+
+/* ---- the instrument panel ---- */
+#hud{
+  position:fixed;left:0;right:0;top:0;z-index:5;
+  display:flex;gap:0;flex-wrap:wrap;align-items:stretch;
+  background:linear-gradient(180deg,rgba(3,10,14,.92),rgba(3,10,14,.72) 70%,rgba(3,10,14,0));
+  padding:10px 14px 20px;
+}
+#hud .cell{ flex:1 1 auto;min-width:96px;padding:2px 10px;border-left:1px solid rgba(140,180,195,.16) }
+#hud .cell:first-child{ border-left:0 }
+#hud .k{ font-family:var(--mono);font-size:8.5px;letter-spacing:.19em;text-transform:uppercase;color:var(--dim) }
+#hud .v{ font-family:var(--mono);font-size:clamp(15px,2.6vw,21px);font-weight:700;margin-top:3px;letter-spacing:.02em }
+#hud .v small{ font-size:10px;font-weight:400;color:var(--dim);letter-spacing:.1em;margin-left:3px }
+#hud .zone{ color:var(--cold) }
+
+#rail{
+  position:fixed;right:12px;top:96px;bottom:80px;width:3px;z-index:5;
+  background:rgba(150,190,205,.16);border-radius:3px;
+}
+#rail i{ position:absolute;left:-3px;width:9px;height:9px;border-radius:50%;background:var(--cold);box-shadow:0 0 10px var(--cold) }
+#rail b{ position:absolute;left:-2px;width:7px;height:1px;background:rgba(150,190,205,.4) }
+
+/* ---- the column ---- */
+main{ position:relative;z-index:3 }
+.card{
+  width:min(560px,90vw);margin:0 auto;position:absolute;left:50%;transform:translateX(-50%);
+  background:rgba(6,17,23,.72);border:1px solid rgba(150,190,205,.20);border-left:3px solid var(--cold);
+  border-radius:5px;padding:16px 18px;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+  opacity:0;transition:opacity .5s ease, transform .5s ease;
+}
+.card.in{ opacity:1 }
+.card .d{ font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--cold);text-transform:uppercase }
+.card h2{ font-size:19px;margin:7px 0 8px;font-weight:600;line-height:1.3 }
+.card p{ font-size:14.5px;line-height:1.72;margin:0;color:#C6D9E1 }
+.card .src{ font-family:var(--mono);font-size:9.5px;letter-spacing:.09em;color:var(--dim);margin-top:10px }
+
+.card.log{ border-left-color:var(--amber);background:rgba(20,14,4,.68) }
+.card.log .d{ color:var(--amber) }
+.card.log p{ font-family:var(--mono);font-size:13px;line-height:1.75;color:#E5D3B0 }
+.card.log .tag{
+  display:inline-block;font-family:var(--mono);font-size:8.5px;letter-spacing:.2em;text-transform:uppercase;
+  color:#1A1206;background:var(--amber);padding:2px 7px;border-radius:2px;margin-bottom:9px;font-weight:700;
+}
+
+#lede{
+  position:relative;z-index:3;width:min(560px,90vw);margin:0 auto;padding:120px 0 0;text-align:center;
+}
+#lede h1{ font-size:clamp(26px,6vw,40px);margin:0 0 12px;font-weight:600;letter-spacing:.01em }
+#lede p{ font-size:15px;line-height:1.75;color:#BCD2DB;margin:0 auto 18px;max-width:460px }
+#lede .hint{ font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim) }
+
+#floor{
+  position:relative;z-index:3;width:min(620px,92vw);margin:0 auto;padding:40px 0 140px;text-align:center;
+}
+#floor h2{ font-size:24px;margin:0 0 12px;font-weight:600 }
+#floor p{ font-size:14.5px;line-height:1.75;color:#B7CCD6;margin:0 auto 14px;max-width:520px }
+#floor .stat{ font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--cold);text-transform:uppercase }
+
+.controls{
+  position:fixed;left:50%;transform:translateX(-50%);bottom:16px;z-index:6;display:flex;gap:9px;
+}
+.btn{
+  font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  background:rgba(8,20,26,.86);color:var(--ink);border:1px solid rgba(150,190,205,.3);
+  padding:11px 15px;border-radius:999px;cursor:pointer;backdrop-filter:blur(6px);
+}
+.btn:hover{ background:rgba(16,38,48,.92) }
+.btn:focus-visible{ outline:2px solid var(--cold);outline-offset:3px }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+@media (max-width:560px){ #lc-back{ left:10px;bottom:62px } .controls{ bottom:12px } #rail{ display:none } }
+@media (prefers-reduced-motion: reduce){ .card{ transition:none } }
+</style>
+</head>
+<body>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<div id="water"></div>
+<canvas id="snow"></canvas>
+<div id="beam"></div>
+
+<div id="hud">
+  <div class="cell"><div class="k">depth</div><div class="v" id="d">0<small>m</small></div></div>
+  <div class="cell"><div class="k">pressure</div><div class="v" id="p">1.0<small>atm</small></div></div>
+  <div class="cell"><div class="k">water temp</div><div class="v" id="t">18<small>°C</small></div></div>
+  <div class="cell"><div class="k">daylight</div><div class="v" id="l">100<small>%</small></div></div>
+  <div class="cell"><div class="k">zone</div><div class="v zone" id="z">epipelagic</div></div>
+</div>
+<div id="rail"><i id="raildot"></i></div>
+
+<div class="controls">
+  <button class="btn" id="auto">descend</button>
+  <button class="btn" id="top">surface</button>
+</div>
+
+<main id="main">
+  <div id="lede">
+    <h1>The Descent</h1>
+    <p>
+      Scroll down. Everything in the blue panels is real and sourced; everything in the amber
+      panels is invented — a survey that never happened, from a ship that does not exist.
+    </p>
+    <div class="hint">↓ 10,935 metres ↓</div>
+  </div>
+</main>
+
+<div id="floor">
+  <h2>The bottom.</h2>
+  <p id="floortext"></p>
+  <p class="stat" id="floorstat"></p>
+  <p style="font-size:13px;color:#8FA8B2">
+    Surveys of the Challenger Deep disagree by tens of metres, because the answer depends on the sonar
+    and on the sound-speed model used to turn echo timings into a depth: 10,920&nbsp;±&nbsp;10&nbsp;m
+    (Takuyo, 1984), 10,994&nbsp;m (USNS Sumner, 2010), 10,925&nbsp;m (RV Sonne, 2016),
+    10,935&nbsp;±&nbsp;6&nbsp;m (2021). This page uses the last of those. Pressure on the gauge is
+    calculated from depth — about one extra atmosphere per ten metres of seawater — and is not a
+    measurement. The temperature line is a typical open-ocean profile rather than a reading from any
+    particular place, and the daylight figure is an idealised curve for clear open water.
+  </p>
+</div>
+
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+
+/* ------------------------------------------------------------------ *
+ * Blue cards: real, checkable, with the source named on the card.     *
+ * Amber cards: fiction, labelled as fiction, from an invented survey  *
+ * vessel. No real creature is given invented behaviour, and no real   *
+ * expedition is given invented findings.                              *
+ * ------------------------------------------------------------------ */
+
+const STOPS = [
+  { d: 0, kind:'fact', h:'The surface', t:'Sea level. One atmosphere of air is pressing on you, and you have never once noticed it.' },
+  { d: 10, kind:'fact', h:'Twice the pressure of the surface', t:'Ten metres of seawater weighs about as much as the entire atmosphere above it. Every ten metres you descend adds roughly one more atmosphere.', s:'basic hydrostatics' },
+  { d: 40, kind:'fact', h:'The end of recreational diving', t:'Forty metres is the depth limit recreational scuba training agencies set for certified divers. Past it you are into technical diving, with gas mixes and staged decompression.', s:'PADI / BSAC recreational limits' },
+  { d: 100, kind:'log', h:'Survey log', t:'0412. Lights on. Nothing yet but the snow going up past the ports. Nobody on this boat calls it snow.' },
+  { d: 200, kind:'fact', h:'The sunlit zone ends', t:'Around 200 metres is the usual boundary of the epipelagic zone — the last depth where there is enough light for photosynthesis. Below it, the twilight zone.', s:'standard pelagic zone boundaries' },
+  { d: 214, kind:'fact', h:'The deepest breath-hold dive', t:'The deepest no-limits freedive on record is 214 metres, set by Herbert Nitsch in 2007 — down on a weighted sled, back up on a lift bag, on one breath.', s:'AIDA world record, 2007' },
+  { d: 332, kind:'fact', h:'The deepest scuba dive', t:'332.35 metres, by Ahmed Gabr in the Red Sea in 2014. The descent took about twelve minutes. The ascent, decompressing the whole way, took close to fourteen hours.', s:'Guinness World Records · 18 September 2014' },
+  { d: 500, kind:'log', h:'Survey log', t:'0455. Hydrophone picking up something structured. Three pulses, a gap, three pulses. Chief says it is the ship. The ship is off.' },
+  { d: 1000, kind:'fact', h:'The last of the light', t:'By about 1,000 metres no sunlight remains at all. This is the bathypelagic — the midnight zone. Most of the light down here is made by animals.', s:'standard pelagic zone boundaries' },
+  { d: 1200, kind:'fact', h:'Where sperm whales hunt', t:'Sperm whales routinely forage several hundred to over a thousand metres down, hunting squid on breath-hold dives that can last well over an hour.', s:'published dive-tag studies' },
+  { d: 2000, kind:'log', h:'Survey log', t:'0538. Sonar return at 2,040 m, forty metres off the port beam. Held station with us for eleven minutes. Then it did not.' },
+  { d: 2500, kind:'fact', h:'Hydrothermal vents', t:'Along the mid-ocean ridges, vents push out water heated far past boiling and kept liquid by pressure. Whole communities live there on chemistry rather than sunlight.', s:'first observed at the Galápagos Rift, 1977' },
+  { d: 3688, kind:'fact', h:'The average depth of the ocean', t:'The mean depth of the world ocean is about 3,700 metres. You are now deeper than most of the sea floor on Earth.', s:'NOAA / general oceanographic figure' },
+  { d: 3800, kind:'fact', h:'The Titanic', t:'The wreck lies at roughly 3,800 metres in the North Atlantic, found in 1985. At this depth the water is a few degrees above freezing and completely dark.', s:'Ballard/IFREMER expedition, 1985' },
+  { d: 4000, kind:'fact', h:'The abyss begins', t:'The abyssopelagic zone runs from about 4,000 to 6,000 metres. Water temperature here sits close to 2–4 °C almost everywhere on Earth, regardless of the weather 4 km above.', s:'standard pelagic zone boundaries' },
+  { d: 5000, kind:'log', h:'Survey log', t:'0621. We have stopped calling out the returns. Everyone can hear them.' },
+  { d: 6000, kind:'fact', h:'The hadal zone', t:'Below 6,000 metres you are only ever inside a trench. The hadal zone is not a layer of the ocean so much as a scatter of deep cracks in it, named after Hades.', s:'standard pelagic zone boundaries' },
+  { d: 8336, kind:'fact', h:'The deepest fish ever filmed', t:'A juvenile snailfish was filmed at 8,336 metres in the Izu-Ogasawara Trench off Japan in August 2022, announced the following April. It is thought to be near the physiological limit for a fish.', s:'Univ. of Western Australia & Tokyo Univ. of Marine Science and Technology' },
+  { d: 9000, kind:'log', h:'Survey log', t:'0703. Pilot asked me to log that the return is now following the descent rate exactly. Matching us to the metre. I have logged it.' },
+  { d: 10935, kind:'fact', h:'Challenger Deep', t:'The deepest known point of the ocean, in the Mariana Trench. Roughly 1,100 times the pressure at the surface. Three people had been to the bottom before 2019 — two in 1960, one in 2012. By July 2022 that number was 27.', s:'depth: a 2021 survey, 10,935 ± 6 m' },
+];
+
+/* ---- the depth scale: compressed, so the top 200 m is not a pixel --- */
+const K = 0.62, A = 44;
+const pxOf   = (d) => A * Math.pow(d, K);
+const depthOf = (px) => Math.pow(Math.max(0, px) / A, 1 / K);
+
+const TOP_PAD = 460;            // room for the lede
+const BOTTOM = pxOf(10935);
+const main = $('main');
+main.style.height = (TOP_PAD + BOTTOM + 240) + 'px';
+
+for (const st of STOPS){
+  const el = document.createElement('div');
+  el.className = 'card' + (st.kind === 'log' ? ' log' : '');
+  el.style.top = (TOP_PAD + pxOf(st.d) - 40) + 'px';
+  el.innerHTML =
+    (st.kind === 'log' ? '<span class="tag">invented</span><br>' : '') +
+    '<div class="d">' + st.d.toLocaleString() + ' m</div>' +
+    '<h2>' + st.h + '</h2>' +
+    '<p>' + st.t + '</p>' +
+    (st.s ? '<div class="src">source · ' + st.s + '</div>' : '');
+  main.appendChild(el);
+  st.el = el;
+}
+
+// Two or three of the stops sit only a few metres apart (200 and 214, 3,688
+// and 3,800), which on this scale puts their cards on top of each other.
+// Nudge each one down until it clears the last, and let the printed depth
+// carry the exact position.
+function layoutCards(){
+  let last = -1e9;
+  for (const st of STOPS){
+    let top = TOP_PAD + pxOf(st.d) - 40;
+    if (top < last) top = last;
+    st.el.style.top = top + 'px';
+    last = top + st.el.offsetHeight + 46;
+  }
+  main.style.height = Math.max(TOP_PAD + BOTTOM + 240, last + 160) + 'px';
+}
+layoutCards();
+window.addEventListener('resize', layoutCards);
+
+/* ---- the readouts -------------------------------------------------- */
+
+// Typical open-ocean temperature profile, in °C. Labelled on the page as
+// typical rather than measured, because it is.
+const TEMP = [[0,18],[100,15],[200,12],[500,7],[1000,4.5],[2000,3],[4000,2.2],[6000,1.8],[11000,1.6]];
+function tempAt(d){
+  for (let i = 1; i < TEMP.length; i++){
+    if (d <= TEMP[i][0]){
+      const [d0,t0] = TEMP[i-1], [d1,t1] = TEMP[i];
+      return t0 + (t1 - t0) * (d - d0) / (d1 - d0);
+    }
+  }
+  return 1.6;
+}
+function zoneAt(d){
+  if (d < 200) return 'epipelagic';
+  if (d < 1000) return 'mesopelagic';
+  if (d < 4000) return 'bathypelagic';
+  if (d < 6000) return 'abyssopelagic';
+  return 'hadal';
+}
+// Clear open ocean loses roughly an order of magnitude of light every
+// 75 m or so; shown to one decimal, then as "none measurable".
+function lightAt(d){
+  const pct = 100 * Math.pow(10, -d / 75);
+  if (pct >= 1) return pct.toFixed(0) + '<small>%</small>';
+  if (pct >= 0.0001) return pct.toPrecision(1) + '<small>%</small>';
+  return 'none&nbsp;<small>measurable</small>';
+}
+
+// Water colour: bright blue-green at the top, through blue, to nothing.
+const RAMP = [
+  [0,    [ 24, 118, 156]],
+  [60,   [ 16,  94, 132]],
+  [200,  [ 10,  64,  99]],
+  [600,  [  6,  40,  68]],
+  [1200, [  3,  20,  37]],
+  [2500, [  2,  10,  19]],
+  [6000, [  1,   5,  10]],
+  [11000,[  0,   2,   5]],
+];
+function colourAt(d){
+  for (let i = 1; i < RAMP.length; i++){
+    if (d <= RAMP[i][0]){
+      const [d0,c0] = RAMP[i-1], [d1,c1] = RAMP[i];
+      const t = (d - d0) / (d1 - d0);
+      return c0.map((v, k) => Math.round(v + (c1[k] - v) * t));
+    }
+  }
+  return RAMP[RAMP.length - 1][1];
+}
+
+let depth = 0;
+function update(){
+  const y = window.scrollY;
+  depth = Math.min(10935, depthOf(Math.max(0, y - TOP_PAD + window.innerHeight * .45)));
+  $('d').innerHTML = Math.round(depth).toLocaleString() + '<small>m</small>';
+  $('p').innerHTML = (1 + depth / 10).toFixed(depth < 100 ? 1 : 0) + '<small>atm</small>';
+  $('t').innerHTML = tempAt(depth).toFixed(1) + '<small>°C</small>';
+  $('l').innerHTML = lightAt(depth);
+  $('z').textContent = zoneAt(depth);
+  const c = colourAt(depth);
+  $('water').style.backgroundColor = 'rgb(' + c.join(',') + ')';
+  $('beam').style.opacity = String(Math.min(1, Math.max(0, (depth - 700) / 900)));
+  $('raildot').style.top = (Math.min(1, depth / 10935) * 100) + '%';
+
+  for (const st of STOPS){
+    const r = st.el.getBoundingClientRect();
+    if (r.top < window.innerHeight * .86 && r.bottom > 0) st.el.classList.add('in');
+    else st.el.classList.remove('in');
+  }
+}
+window.addEventListener('scroll', update, { passive: true });
+window.addEventListener('resize', update);
+
+/* ---- marine snow --------------------------------------------------- */
+
+const cv = $('snow'), ctx = cv.getContext('2d');
+let parts = [], lastY = window.scrollY, drift = 0;
+function sizeCanvas(){
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  cv.width = Math.round(innerWidth * dpr);
+  cv.height = Math.round(innerHeight * dpr);
+  cv.style.width = innerWidth + 'px';
+  cv.style.height = innerHeight + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  parts = Array.from({ length: 130 }, () => ({
+    x: Math.random() * innerWidth,
+    y: Math.random() * innerHeight,
+    r: .5 + Math.random() * 2.1,
+    v: .12 + Math.random() * .5,
+    a: .12 + Math.random() * .5,
+  }));
+}
+sizeCanvas();
+window.addEventListener('resize', sizeCanvas);
+
+const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function frame(){
+  const y = window.scrollY;
+  // clamped, or one flick of a scrollbar throws every particle off the top
+  // in a single frame and they all come back stacked in the same place
+  drift = Math.max(-26, Math.min(26, drift * .86 + (y - lastY) * .14));
+  lastY = y;
+  ctx.clearRect(0, 0, innerWidth, innerHeight);
+  // deeper down there is less of it, and it glints instead of drifting
+  const fade = Math.max(.10, 1 - depth / 2600);
+  for (const p of parts){
+    p.y += p.v + drift * .9;
+    if (p.y > innerHeight + 6 || p.y < -6){
+      p.y = p.y > 0 ? -6 : innerHeight + 6;
+      p.x = Math.random() * innerWidth;
+    }
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, 6.2832);
+    ctx.fillStyle = 'rgba(215,238,245,' + (p.a * fade).toFixed(3) + ')';
+    ctx.fill();
+  }
+  // below the light, the occasional bioluminescent flash
+  if (depth > 900 && Math.random() < .012){
+    const x = Math.random() * innerWidth, yy = Math.random() * innerHeight;
+    const g = ctx.createRadialGradient(x, yy, 0, x, yy, 26);
+    g.addColorStop(0, 'rgba(140,255,225,.5)');
+    g.addColorStop(1, 'rgba(140,255,225,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(x - 26, yy - 26, 52, 52);
+  }
+  requestAnimationFrame(frame);
+}
+if (!reduce) frame();
+
+/* ---- descent control ----------------------------------------------- */
+
+let descending = null, startedAt = null;
+const RATE = 520;                     // pixels per second, about 35 s to the bottom
+
+$('auto').addEventListener('click', () => {
+  if (descending){ stopDescent(); return; }
+  startedAt = startedAt || Date.now();
+  $('auto').textContent = 'hold';
+  let last = performance.now();
+  const step = (now) => {
+    if (!descending) return;
+    const dt = Math.min(50, now - last); last = now;
+    const maxY = document.documentElement.scrollHeight - innerHeight;
+    if (window.scrollY >= maxY - 2){ stopDescent(); return; }
+    window.scrollTo(0, window.scrollY + RATE * dt / 1000);
+    descending = requestAnimationFrame(step);
+  };
+  descending = requestAnimationFrame(step);
+});
+function stopDescent(){
+  if (descending) cancelAnimationFrame(descending);
+  descending = null;
+  $('auto').textContent = 'descend';
+}
+$('top').addEventListener('click', () => {
+  stopDescent();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+// a scroll of your own takes the wheel back
+window.addEventListener('wheel', () => { if (descending) stopDescent(); }, { passive: true });
+window.addEventListener('touchstart', () => { if (descending) stopDescent(); }, { passive: true });
+
+/* ---- the floor ------------------------------------------------------ */
+
+const floorSeen = new IntersectionObserver((entries) => {
+  for (const e of entries){
+    if (!e.isIntersecting) continue;
+    const secs = startedAt ? Math.round((Date.now() - startedAt) / 1000) : null;
+    $('floortext').textContent =
+      'Soft sediment, a few degrees above freezing, and about 1,100 atmospheres pressing in from every ' +
+      'direction. The trench keeps going sideways for two thousand kilometres. Nothing down here has ' +
+      'ever needed you to arrive.';
+    $('floorstat').textContent = (secs !== null ? 'your descent: ' + secs + ' seconds · ' : '') +
+      'Trieste, 23 January 1960: 4 h 47 min down, 20 minutes on the bottom, 3 h 15 min back up.';
+  }
+}, { threshold: .3 });
+floorSeen.observe($('floor'));
+
+update();
+</script>
+</body>
+</html>
