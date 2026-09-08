@@ -196,7 +196,12 @@ function addRow(ev){
 function tickCounters(){
   const now = Date.now();
   stamps = stamps.filter(t => now - t < 10000);
-  $('c-total').textContent = total.toLocaleString('en-GB');
+  // past a million the figure runs out of tile, and this counter is left
+  // running for hours; the exact total stays in the tooltip
+  $('c-total').textContent = total >= 1e6
+    ? (total / 1e6).toFixed(2).replace(/\.?0+$/, '') + 'M'
+    : total.toLocaleString('en-GB');
+  $('c-total').title = total.toLocaleString('en-GB') + ' edits';
   $('c-rate').textContent = (stamps.length / 10).toFixed(1);
   $('c-wikis').textContent = wikis.size;
   const s = Math.floor((now - started) / 1000);
