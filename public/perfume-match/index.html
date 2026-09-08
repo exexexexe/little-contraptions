@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Perfume Match</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230F2A22'/><rect x='11' y='5' width='10' height='4' fill='%23C9A961'/><path d='M9 12h14v13a3 3 0 0 1-3 3h-8a3 3 0 0 1-3-3z' fill='none' stroke='%23C9A961' stroke-width='1.8'/></svg>">
+<style>
+:root{
+  --bottle:#0F2A22;
+  --bottle-2:#153A2F;
+  --gold:#C9A961;
+  --gold-2:#E3C88A;
+  --cream:#F5EFE2;
+  --cream-2:#E8DFCB;
+  --ink:#1A2620;
+  --dim:#8FA398;
+  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Georgia,serif;
+  --sans:ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bottle);
+  background-image:radial-gradient(900px 520px at 50% -10%, var(--bottle-2) 0%, transparent 62%);
+  color:var(--cream);font-family:var(--serif);min-height:100vh;padding:32px 18px 60px;
+}
+.wrap{ max-width:740px;margin:0 auto }
+
+header{ text-align:center;margin-bottom:24px }
+.house{
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.34em;text-transform:uppercase;color:var(--gold);
+}
+h1{ margin:9px 0 0;font-size:clamp(30px,6.2vw,46px);font-weight:400;font-style:italic;letter-spacing:-.01em }
+.sub{ margin-top:9px;font-family:var(--sans);font-size:14px;color:var(--dim);line-height:1.6 }
+
+.rule{ height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:22px 0 }
+
+h2.step{
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--gold);margin:0 0 14px;font-weight:400;
+}
+
+/* ---------- notes ---------- */
+.notes{ display:grid;grid-template-columns:repeat(auto-fill,minmax(136px,1fr));gap:9px }
+.note{
+  background:rgba(245,239,226,.05);border:1px solid rgba(201,169,97,.3);
+  color:var(--cream);padding:13px 14px;cursor:pointer;text-align:left;font-family:var(--serif);
+  transition:background .14s,border-color .14s;
+}
+.note:hover{ background:rgba(201,169,97,.14);border-color:var(--gold) }
+.note[aria-pressed="true"]{ background:var(--gold);border-color:var(--gold);color:var(--bottle) }
+.note:focus-visible{ outline:2px solid var(--gold-2);outline-offset:2px }
+.note b{ display:block;font-size:16px;font-weight:600;margin-bottom:2px }
+.note span{ font-family:var(--sans);font-size:11px;opacity:.72;line-height:1.4;display:block }
+
+.deck{ display:flex;gap:9px;flex-wrap:wrap;margin-top:18px;align-items:center }
+.btn{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
+  background:var(--gold);color:var(--bottle);border:0;padding:13px 20px;cursor:pointer;font-weight:700;
+}
+.btn:hover{ background:var(--gold-2) }
+.btn.sec{ background:transparent;color:var(--cream);border:1px solid rgba(201,169,97,.4);font-weight:400 }
+.btn.sec:hover{ border-color:var(--gold);color:var(--gold) }
+.btn:disabled{ opacity:.35;cursor:default }
+.btn:focus-visible{ outline:2px solid var(--gold-2);outline-offset:2px }
+.hint{ font-family:var(--mono);font-size:10.5px;color:var(--dim);margin-left:auto }
+
+/* ---------- result ---------- */
+.result{ display:none;margin-top:8px }
+.result.on{ display:block }
+.flacon{
+  background:var(--cream);color:var(--ink);
+  padding:26px 26px 22px;position:relative;
+  box-shadow:0 18px 46px rgba(0,0,0,.42);
+}
+.flacon::before{
+  content:"";position:absolute;inset:9px;border:1px solid rgba(201,169,97,.55);pointer-events:none;
+}
+.badge{
+  display:inline-block;font-family:var(--mono);font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;
+  background:#1A2620;color:var(--gold);padding:4px 9px;margin-bottom:12px;
+}
+.badge.real{ background:#7A5A18;color:#FFF3D6 }
+.flacon h3{ margin:0 0 3px;font-size:clamp(24px,5vw,34px);font-weight:400;font-style:italic;letter-spacing:-.01em }
+.flacon .subject{ font-family:var(--sans);font-size:13.5px;color:#5A6A60;margin-bottom:16px }
+.pyramid{ border-top:1px solid var(--cream-2);border-bottom:1px solid var(--cream-2);padding:14px 0;margin-bottom:15px }
+.pyramid .lvl{ display:grid;grid-template-columns:64px 1fr;gap:14px;padding:5px 0;align-items:baseline }
+.pyramid .lvl span{ font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:#93A399 }
+.pyramid .lvl b{ font-family:var(--sans);font-size:14.5px;font-weight:500;color:var(--ink) }
+.flacon p.desc{ margin:0 0 14px;font-size:15.5px;line-height:1.68 }
+.flacon .disclaimer{
+  font-family:var(--sans);font-size:12px;line-height:1.6;color:#6B7B71;
+  border-left:2px solid var(--gold);padding-left:12px;
+}
+.runners{ margin-top:16px;font-family:var(--mono);font-size:11px;color:var(--dim) }
+.runners b{ color:var(--cream);font-weight:400 }
+
+footer{
+  margin-top:28px;padding-top:14px;border-top:1px solid rgba(201,169,97,.22);
+  font-family:var(--mono);font-size:10.5px;color:var(--dim);line-height:1.8;
+}
+footer a{ color:var(--cream) }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="house">Maison Contraption · counter no. 22</div>
+    <h1>Perfume Match</h1>
+    <p class="sub">Choose what you actually like the smell of. We will tell you whose shelf it belongs on.</p>
+  </header>
+
+  <div class="rule"></div>
+
+  <h2 class="step">Step one · pick two to four notes</h2>
+  <div class="notes" id="notes"></div>
+
+  <div class="deck">
+    <button class="btn" id="go" disabled>Find the match</button>
+    <button class="btn sec" id="clear">Clear</button>
+    <span class="hint" id="hint">nothing selected</span>
+  </div>
+
+  <div class="result" id="result"></div>
+</div>
+
+<footer>
+  A parlour game, not a fragrance guide. Where a real person appears they are matched to the
+  public persona they present, as an interpretation and nothing more — no endorsement, affiliation
+  or claim about what anyone actually wears is intended or implied.
+  <a href="/">← back to the cabinet</a>
+</footer>
+
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+const NOTES = [
+  { k:'citrus',   n:'Citrus',    d:'bergamot, cut grapefruit, lemon peel' },
+  { k:'green',    n:'Green',     d:'crushed stems, tomato leaf, fig' },
+  { k:'floral',   n:'Floral',    d:'iris, rose, orange blossom' },
+  { k:'powdery',  n:'Powdery',   d:'violet, old paper, face powder' },
+  { k:'spicy',    n:'Spicy',     d:'cardamom, pink pepper, clove' },
+  { k:'woody',    n:'Woody',     d:'cedar, sandalwood, dry pencil shavings' },
+  { k:'smoky',    n:'Smoky',     d:'birch tar, extinguished candle, bonfire' },
+  { k:'leather',  n:'Leather',   d:'suede, saddle soap, a good jacket' },
+  { k:'aquatic',  n:'Aquatic',   d:'salt air, wet stone, rain on pavement' },
+  { k:'earthy',   n:'Earthy',    d:'vetiver, damp soil, mushroom' },
+  { k:'gourmand', n:'Gourmand',  d:'vanilla, burnt sugar, almond' },
+  { k:'metallic', n:'Cold',      d:'ozone, steel, aldehydes' },
+];
+
+/* Each subject carries a note profile; matching is a real overlap score,
+   not a random draw. `real: true` subjects are public figures and are
+   framed strictly as an interpretation of their public persona. */
+const SUBJECTS = [
+  { name:'Sherlock Holmes', from:'Conan Doyle', notes:['smoky','leather','woody'],
+    top:'Cold pipe smoke', heart:'Worn leather, ink', base:'Cedar and dust',
+    desc:'Sharp at the opening and then unhelpfully quiet for an hour. Reads as unwashed to strangers and reassuring to the two people who know him.' },
+  { name:'Miss Havisham', from:'Dickens', notes:['powdery','floral','earthy'],
+    top:'Stale cake sugar', heart:'Dried roses under glass', base:'Damp plaster',
+    desc:'A bouquet that stopped at twenty to nine and was never taken out of the room. Beautiful for the first ten minutes, then increasingly a problem.' },
+  { name:'Gandalf', from:'Tolkien', notes:['smoky','earthy','woody'],
+    top:'Bonfire and rain', heart:'Old rope, pipeweed', base:'Wet oak, deep soil',
+    desc:'Smells like arriving late from somewhere with weather in it. Nobody can identify the smoke, and he will not say.' },
+  { name:'Ellen Ripley', from:'Alien', notes:['metallic','aquatic','leather'],
+    top:'Cold recycled air', heart:'Steel, coolant', base:'Flight suit, salt',
+    desc:'Clean in the way a corridor is clean. Nothing warm anywhere in it, and that is entirely the point.' },
+  { name:'Elizabeth Bennet', from:'Austen', notes:['green','floral','citrus'],
+    top:'Wet hedgerow, lemon', heart:'Garden rose', base:'Warm linen',
+    desc:'Six miles of muddy fields, then a change of clothes. Fresher than the room she walks into, which is half the effect.' },
+  { name:'Jay Gatsby', from:'Fitzgerald', notes:['gourmand','floral','woody'],
+    top:'Champagne, orange blossom', heart:'Hot house flowers', base:'New money, vanilla',
+    desc:'Overapplied on purpose. Expensive, slightly too sweet, and designed to be noticed from the far end of a lawn.' },
+  { name:'Wednesday Addams', from:'The Addams Family', notes:['earthy','powdery','metallic'],
+    top:'Cold stone', heart:'Iris, formaldehyde', base:'Grave soil, wax',
+    desc:'A funeral parlour in high summer. Unnervingly well composed, and it will outlast everyone else in the room.' },
+  { name:'Willy Wonka', from:'Dahl', notes:['gourmand','spicy','floral'],
+    top:'Burnt caramel', heart:'Violet cream, clove', base:'Cocoa, something unlisted',
+    desc:'Delicious for the first four seconds. Then it turns, and you are not sure whether that was on purpose.' },
+  { name:'Geralt of Rivia', from:'The Witcher', notes:['leather','earthy','smoky'],
+    top:'Rain on a road', heart:'Wet leather, horse', base:'Ash, iron',
+    desc:'Not a fragrance so much as evidence. Works far better outdoors than in a tavern.' },
+  { name:'Mary Poppins', from:'Travers', notes:['powdery','citrus','floral'],
+    top:'Lemon and starch', heart:'Lily of the valley', base:'Clean cotton, faint sugar',
+    desc:'Impeccable, unplaceable, and slightly sharper than expected. Gone from the room before you can ask.' },
+  { name:'Hercule Poirot', from:'Christie', notes:['citrus','powdery','woody'],
+    top:'Cologne, precisely measured', heart:'Orris, tonka', base:'Polished walnut',
+    desc:'Applied at the same hour every day. The whole composition is a statement that nothing here is accidental.' },
+  { name:'Furiosa', from:'Mad Max: Fury Road', notes:['metallic','earthy','smoky'],
+    top:'Engine heat, dust', heart:'Grease, hot metal', base:'Scorched earth',
+    desc:'There is no top note. There was, and it burned off somewhere around the second act.' },
+  { name:'Bilbo Baggins', from:'Tolkien', notes:['gourmand','green','woody'],
+    top:'Butter and toast', heart:'Garden herbs, pipe smoke', base:'Old book, oak beam',
+    desc:'Comfortable to the point of being a small argument against ever leaving. Lingers on furniture for decades.' },
+  { name:'Morticia Addams', from:'The Addams Family', notes:['floral','smoky','leather'],
+    top:'Black rose', heart:'Incense, tuberose', base:'Smoke, velvet',
+    desc:'The most confident thing on this list. Enters the room roughly nine seconds before she does.' },
+  { name:'Atticus Finch', from:'Lee', notes:['woody','powdery','citrus'],
+    top:'Shaving soap', heart:'Cotton, warm dust', base:'Cedar, courthouse wood',
+    desc:'Quiet, unfashionable, and identical every day for thirty years. That consistency is the entire fragrance.' },
+  { name:'Amélie Poulain', from:'Amélie', notes:['gourmand','green','floral'],
+    top:'Crème brûlée sugar', heart:'Fig leaf, apricot', base:'Warm paper, plum',
+    desc:'Sweet without being simple. Keeps something back, and is having a much better time than it lets on.' },
+  { name:'Jean Valjean', from:'Hugo', notes:['earthy','metallic','leather'],
+    top:'Cold river water', heart:'Iron, wet wool', base:'Candle wax, soil',
+    desc:'Heavy, and carried a long way. Warms considerably on the skin, which takes most people by surprise.' },
+  { name:'Daenerys Targaryen', from:'A Song of Ice and Fire', notes:['smoky','spicy','floral'],
+    top:'Dry heat, pepper', heart:'Blood orange, myrrh', base:'Ash and ambergris',
+    desc:'Opens beautifully. Develops in a direction the wearer did not entirely plan and cannot now reverse.' },
+  { name:'Samwise Gamgee', from:'Tolkien', notes:['green','earthy','gourmand'],
+    top:'Turned soil, tomato leaf', heart:'Potatoes, rosemary', base:'Rope, warm bread',
+    desc:'The least glamorous thing here and the only one you would actually want with you at the end.' },
+  { name:'Don Draper', from:'Mad Men', notes:['leather','smoky','citrus'],
+    top:'Bergamot, cigarette', heart:'Whisky, tanned hide', base:'Office wood, ice',
+    desc:'Immaculate at nine in the morning. By four it has become something considerably more honest.' },
+
+  // Public figures — matched to public persona only, clearly badged.
+  { name:'David Attenborough', real:true, from:'as he appears publicly', notes:['green','earthy','aquatic'],
+    top:'Rain on leaves', heart:'Moss, wet bark', base:'River stone, peat',
+    desc:'Calm, unhurried and entirely at home outdoors. Nothing in it is trying to impress you, which is why it does.' },
+  { name:'Dolly Parton', real:true, from:'as she appears publicly', notes:['floral','gourmand','powdery'],
+    top:'Peach and gardenia', heart:'Honeysuckle, vanilla sugar', base:'Warm powder, soft musk',
+    desc:'Big, generous and completely unembarrassed about it. Sweet on purpose, and far sharper underneath than it lets on.' },
+  { name:'Tilda Swinton', real:true, from:'as she appears publicly', notes:['metallic','powdery','woody'],
+    top:'Cold air, aldehydes', heart:'Iris, dry paper', base:'Pale wood, chalk',
+    desc:'Architectural. Reads as almost nothing from a distance and as something very deliberate up close.' },
+  { name:'Werner Herzog', real:true, from:'as he appears publicly', notes:['earthy','smoky','leather'],
+    top:'Volcanic dust', heart:'Damp jungle, diesel', base:'Old boots, ash',
+    desc:'Insists it is not a fragrance but a condition. Would wear it into a place nobody sensible goes.' },
+  { name:'Keanu Reeves', real:true, from:'as he appears publicly', notes:['woody','aquatic','citrus'],
+    top:'Sea air, grapefruit', heart:'Cedar, clean cotton', base:'Sandalwood, quiet',
+    desc:'Understated to the point of being hard to describe. Everyone likes it and nobody can tell you what is in it.' },
+];
+
+let chosen = new Set();
+
+function renderNotes(){
+  $('notes').innerHTML = '';
+  NOTES.forEach(n => {
+    const b = document.createElement('button');
+    b.className = 'note';
+    b.setAttribute('aria-pressed', String(chosen.has(n.k)));
+    b.innerHTML = '<b>' + esc(n.n) + '</b><span>' + esc(n.d) + '</span>';
+    b.onclick = () => {
+      if (chosen.has(n.k)) chosen.delete(n.k);
+      else if (chosen.size < 4) chosen.add(n.k);
+      renderNotes(); updateDeck();
+    };
+    $('notes').appendChild(b);
+  });
+}
+
+function updateDeck(){
+  const n = chosen.size;
+  $('go').disabled = n < 2;
+  $('hint').textContent = n === 0 ? 'nothing selected'
+    : n < 2 ? 'pick at least two'
+    : n + ' selected' + (n === 4 ? ' (maximum)' : '');
+}
+
+function score(subject){
+  let s = 0;
+  subject.notes.forEach(k => { if (chosen.has(k)) s++; });
+  // a light penalty so a subject with notes you did not pick ranks lower
+  return s - (subject.notes.length - s) * 0.25;
+}
+
+function match(){
+  const ranked = SUBJECTS
+    .map(s => ({ s, v: score(s) + Math.random() * 0.15 }))   // tiny jitter breaks exact ties
+    .sort((a, b) => b.v - a.v);
+  const best = ranked[0].s;
+  const runners = ranked.slice(1, 4).map(r => r.s.name);
+
+  $('result').innerHTML =
+    '<div class="flacon">' +
+      '<span class="badge' + (best.real ? ' real' : '') + '">' +
+        (best.real ? 'public figure · interpretation only' : 'fictional character') + '</span>' +
+      '<h3>' + esc(best.name) + '</h3>' +
+      '<div class="subject">' + esc(best.from) + '</div>' +
+      '<div class="pyramid">' +
+        '<div class="lvl"><span>top</span><b>' + esc(best.top) + '</b></div>' +
+        '<div class="lvl"><span>heart</span><b>' + esc(best.heart) + '</b></div>' +
+        '<div class="lvl"><span>base</span><b>' + esc(best.base) + '</b></div>' +
+      '</div>' +
+      '<p class="desc">' + esc(best.desc) + '</p>' +
+      (best.real
+        ? '<p class="disclaimer">Inspired by ' + esc(best.name) + '’s public persona. This is an ' +
+          'interpretation for a parlour game — not an endorsement, not an affiliation, and not a claim ' +
+          'about what they wear or would wear.</p>'
+        : '') +
+    '</div>' +
+    '<div class="runners">also close: <b>' + runners.map(esc).join('</b>, <b>') + '</b></div>';
+  $('result').classList.add('on');
+  $('result').scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+$('go').addEventListener('click', match);
+$('clear').addEventListener('click', () => {
+  chosen.clear(); renderNotes(); updateDeck();
+  $('result').classList.remove('on');
+});
+
+renderNotes();
+updateDeck();
+</script>
+</body>
+</html>

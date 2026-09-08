@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Everyday Hidden Thing</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%232C3440'/><circle cx='14' cy='14' r='7' fill='none' stroke='%23FFF' stroke-width='2'/><path d='M19 19l6 6' stroke='%23E8843C' stroke-width='2.6' stroke-linecap='round'/></svg>">
+<style>
+:root{
+  --slate:#2C3440;
+  --slate-2:#232A34;
+  --card:#FBFBFA;
+  --ink:#1A1F26;
+  --ink-2:#4C5561;
+  --dim:#8892A0;
+  --orange:#E8843C;
+  --line:#DDE1E6;
+  --sans:ui-sans-serif,system-ui,"Helvetica Neue",Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--slate);
+  background-image:radial-gradient(800px 480px at 50% -10%, #38424F 0%, transparent 62%);
+  color:#E7EBF0;font-family:var(--sans);min-height:100vh;padding:30px 18px 60px;
+}
+.wrap{ max-width:760px;margin:0 auto }
+
+header{ margin-bottom:20px }
+h1{ margin:0;font-size:clamp(24px,4.8vw,34px);font-weight:800;letter-spacing:-.03em;line-height:1.06 }
+.sub{ margin-top:8px;font-size:14px;color:#AEB8C4;line-height:1.6;max-width:52ch }
+
+.card{
+  background:var(--card);color:var(--ink);
+  box-shadow:0 16px 44px rgba(0,0,0,.34);
+  overflow:hidden;
+}
+.card .top{
+  display:grid;grid-template-columns:1fr 128px;gap:18px;align-items:start;
+  padding:24px 24px 0;
+}
+@media (max-width:560px){ .card .top{ grid-template-columns:1fr } }
+.num{
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--orange);
+  margin-bottom:9px;
+}
+.card h2{ margin:0 0 5px;font-size:clamp(21px,4.4vw,30px);font-weight:800;letter-spacing:-.025em;line-height:1.12 }
+.card .where{ font-family:var(--mono);font-size:11px;color:var(--dim) }
+svg.callout{ width:100%;height:auto }
+
+.body{ padding:20px 24px 24px }
+.blk{ margin-bottom:16px }
+.blk:last-child{ margin-bottom:0 }
+.blk h3{
+  margin:0 0 6px;font-family:var(--mono);font-size:9px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--dim);font-weight:400;
+}
+.blk p{ margin:0;font-size:15.5px;line-height:1.66 }
+.blk.why{ background:#F3F5F7;border-left:3px solid var(--orange);padding:13px 15px }
+.blk.why p{ font-size:14.5px;color:var(--ink-2) }
+
+.deck{ display:flex;gap:9px;flex-wrap:wrap;margin-top:18px;align-items:center }
+.btn{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;
+  background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.24);
+  padding:12px 17px;cursor:pointer;
+}
+.btn:hover{ background:rgba(255,255,255,.2);border-color:#fff }
+.btn.go{ background:var(--orange);border-color:var(--orange);color:#1A1206;font-weight:700 }
+.btn.go:hover{ background:#F2924D }
+.btn:focus-visible{ outline:2px solid #fff;outline-offset:2px }
+.count{ font-family:var(--mono);font-size:10.5px;color:#94A0AE;margin-left:auto }
+
+footer{
+  margin-top:26px;padding-top:14px;border-top:1px solid rgba(255,255,255,.14);
+  font-family:var(--mono);font-size:10.5px;color:#8A94A2;line-height:1.8;
+}
+footer a{ color:#C3CBD5 }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>The Everyday Hidden Thing</h1>
+    <p class="sub">Ordinary objects, and the part of them that is quietly doing something you were
+       never told about.</p>
+  </header>
+
+  <div class="card" id="card"></div>
+
+  <div class="deck">
+    <button class="btn go" id="next">Show me another</button>
+    <button class="btn" id="prev">Back</button>
+    <span class="count" id="count"></span>
+  </div>
+
+  <footer>
+    Only mechanisms that are documented and checkable are included here. A few popular "hidden meaning"
+    stories are left out on purpose because they are not true — one of them appears below, corrected.
+    <a href="/">← back to the cabinet</a>
+  </footer>
+</div>
+
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+/* Each entry sticks to a documented mechanism. Where a well-known claim is
+   actually a myth, it is included as a correction rather than repeated. */
+const THINGS = [
+  { n:'The bumps on F and J', where:'every keyboard you have ever used',
+    see:'Two small raised ridges, one on F and one on J, that most people notice and then forget.',
+    doing:'They mark the home row for touch typing. Your index fingers find them without looking, which anchors the other six fingers onto the correct starting keys.',
+    why:'It is the reason a touch typist can look at the screen instead of their hands — the whole system needs exactly two reference points, and those are them.' },
+  { n:'The hole in an aeroplane window', where:'the middle pane, near the bottom',
+    see:'A tiny hole in the middle of what looks like a solid window.',
+    doing:'Cabin windows are several panes with a gap between. The hole lets the gap stay at cabin pressure, so the outer pane carries the pressure difference and the inner one does not.',
+    why:'It also lets moisture out of the gap, which is why your window is not permanently fogged at altitude.' },
+  { n:'The arrow by the fuel gauge', where:'the dashboard of most modern cars',
+    see:'A small triangle or arrow printed beside the little petrol-pump symbol.',
+    doing:'It points to the side of the car the filler cap is on.',
+    why:'Added by manufacturers so drivers in unfamiliar or hire cars stop pulling up at the wrong side of the pump. Once you know, you cannot unsee it.' },
+  { n:'The ridges on coin edges', where:'in your pocket',
+    see:'Fine vertical grooves around the rim of some coins but not others.',
+    doing:'The practice is called milling or reeding. It began as an anti-fraud measure: when coins were made of precious metal, people shaved slivers off the edges, and a milled edge makes that obvious.',
+    why:'The metal value argument is long gone, but the grooves stayed — they help vending machines identify coins and help blind and partially sighted people tell denominations apart by touch.' },
+  { n:'The rivets on jeans pockets', where:'the corners of every pocket',
+    see:'Small copper studs at the points where a pocket meets the seam.',
+    doing:'They reinforce the exact spots that tear first under load — the corners, where the stitching takes all the strain.',
+    why:'Jacob Davis worked out the trick and patented it with Levi Strauss in 1873. Nearly every pair of jeans since has copied it.' },
+  { n:'Why manhole covers are round', where:'the middle of the road',
+    see:'A circular lid where a square one would be easier to make.',
+    doing:'A circle is the one shape that cannot fall through its own hole. A square cover turned on its diagonal will drop straight down the shaft; a round one will not, at any angle.',
+    why:'They are also heavy, and a round cover can be rolled rather than carried.' },
+  { n:'The mesh in a microwave door', where:'the window you watch your dinner through',
+    see:'A metal screen full of small holes, which you can see straight through.',
+    doing:'The holes are far smaller than the wavelength of the microwaves inside, so the waves are reflected back. Visible light has a far shorter wavelength and passes through easily.',
+    why:'That is the whole reason you can watch the food without being cooked alongside it.' },
+  { n:'The coloured squares on a toothpaste tube', where:'the crimped end',
+    see:'A small block of colour, usually near the seal — green, black, red or blue.',
+    doing:'Nothing to do with the ingredients. They are printer\'s eye marks: registration targets that packaging machinery reads to know where to cut, fold and seal.',
+    why:'This one is worth knowing precisely because the popular version — that green means natural and black means chemical — is entirely made up. The colour is chosen to contrast with the artwork, nothing more.' },
+  { n:'The aglet', where:'both ends of every shoelace',
+    see:'The stiff sheath on the tip of a lace.',
+    doing:'It stops the woven lace unravelling and stiffens the end enough to thread through an eyelet.',
+    why:'It has a name, which is the actual surprise. Once a lace loses its aglet it becomes almost impossible to thread, which is a decent demonstration of how much work it was doing.' },
+  { n:'Dimmed cabin lights on landing', where:'the last few minutes of a night flight',
+    see:'The crew turns the cabin lights down just before landing, and pulls the blinds up.',
+    doing:'It lets your eyes adjust to darkness in advance. Take-off and landing are when an evacuation is most likely, and dark-adapted eyes need no time to recover if the lighting fails.',
+    why:'Raising the blinds is the same idea from the other direction: it lets the crew see outside conditions, and lets outside light in if the interior goes dark.' },
+  { n:'The brushes beside an escalator', where:'along the skirting, at foot height',
+    see:'Two rows of stiff bristles running the length of the moving stairs.',
+    doing:'They keep feet, bags and loose clothing away from the gap where the step meets the side panel, which is where things get drawn in.',
+    why:'They are not for cleaning the steps, which is the reasonable assumption almost everybody makes.' },
+  { n:'The punt in a wine bottle', where:'push your thumb into the base',
+    see:'A deep dimple pushed up into the bottom of the bottle.',
+    doing:'It began as a consequence of glassblowing — pushing the base up guaranteed no rough pontil scar stuck out to make the bottle wobble.',
+    why:'It survives because it adds strength to the base, gives sediment somewhere to settle, and gives a server somewhere to put their thumb. It is not a measure of quality, whatever the price suggests.' },
+  { n:'The Y-shaped channel in a zip', where:'inside the slider',
+    see:'A slider that somehow joins two rows of teeth going one way and parts them going the other.',
+    doing:'There is a wedge inside. Pulled one way, the channels converge and force each tooth into the gap between two opposite teeth; pulled the other, the wedge drives between them and levers them apart.',
+    why:'There are no moving parts beyond the slider itself. When a zip fails it is usually because the slider has widened slightly and no longer forces the teeth together hard enough.' },
+  { n:'The pins inside a lock', where:'the cylinder of your front door',
+    see:'A keyhole, and a key with an irregular toothed edge.',
+    doing:'The cylinder holds several spring-loaded pin stacks, each cut into two pieces. The right key lifts every stack so that all the breaks line up exactly at the shear line — the boundary between the rotating plug and the fixed housing. Only then can the plug turn.',
+    why:'Every tooth on your key corresponds to one pin stack. A wrong key lifts them to the wrong heights, so at least one pin bridges the shear line and blocks rotation.' },
+  { n:'Cat\'s eyes in the road', where:'the centre line, at night',
+    see:'Studs that seem to light up only when your headlights reach them.',
+    doing:'They are retroreflectors: shaped so that light entering is bounced back towards where it came from, rather than scattered. That means the driver whose beam hits them is the person who sees them brightest.',
+    why:'The original British design also seats the reflector in a flexible rubber housing, so a passing wheel pushes it down and a wiper wipes the lens clean.' },
+  { n:'The tittle', where:'above every lower-case i and j',
+    see:'A dot.',
+    doing:'It has a name: a tittle. It appeared in medieval manuscripts to stop a lone minim — a single vertical stroke — being read as part of an adjacent letter.',
+    why:'In crowded handwriting, "i" next to "n" or "m" turned into an unreadable run of identical strokes. The dot was a disambiguation mark, and it simply never left.' },
+];
+
+let i = 0;
+const seen = new Set();
+
+function callout(n){
+  // a generic inspection motif rather than a fake diagram of each object
+  const a = (n * 47) % 360;
+  const cx = 64, cy = 58, r = 34;
+  const ex = cx + Math.cos(a * Math.PI/180) * (r + 22);
+  const ey = cy + Math.sin(a * Math.PI/180) * (r + 22);
+  return '<svg class="callout" viewBox="0 0 128 116" aria-hidden="true">' +
+    '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="#DDE1E6" stroke-width="1.5"/>' +
+    '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r - 7) + '" fill="none" stroke="#E8843C" stroke-width="1.5" stroke-dasharray="4 5"/>' +
+    '<line x1="' + cx + '" y1="' + cy + '" x2="' + ex.toFixed(1) + '" y2="' + ey.toFixed(1) + '" stroke="#DDE1E6" stroke-width="1.2"/>' +
+    '<circle cx="' + ex.toFixed(1) + '" cy="' + ey.toFixed(1) + '" r="3" fill="#E8843C"/>' +
+    '<text x="' + cx + '" y="' + (cy + 5) + '" text-anchor="middle" font-family="ui-monospace,monospace" ' +
+      'font-size="15" fill="#8892A0">' + String(n + 1).padStart(2,'0') + '</text>' +
+    '</svg>';
+}
+
+function render(){
+  const t = THINGS[i];
+  seen.add(i);
+  $('card').innerHTML =
+    '<div class="top">' +
+      '<div>' +
+        '<div class="num">no. ' + String(i + 1).padStart(2,'0') + ' of ' + THINGS.length + '</div>' +
+        '<h2>' + esc(t.n) + '</h2>' +
+        '<div class="where">' + esc(t.where) + '</div>' +
+      '</div>' +
+      callout(i) +
+    '</div>' +
+    '<div class="body">' +
+      '<div class="blk"><h3>what you see</h3><p>' + esc(t.see) + '</p></div>' +
+      '<div class="blk"><h3>what it is actually doing</h3><p>' + esc(t.doing) + '</p></div>' +
+      '<div class="blk why"><h3>the part nobody mentions</h3><p>' + esc(t.why) + '</p></div>' +
+    '</div>';
+  $('count').textContent = seen.size + ' of ' + THINGS.length + ' seen';
+}
+
+$('next').addEventListener('click', () => { i = (i + 1) % THINGS.length; render(); });
+$('prev').addEventListener('click', () => { i = (i - 1 + THINGS.length) % THINGS.length; render(); });
+
+i = Math.floor(Math.random() * THINGS.length);
+render();
+</script>
+</body>
+</html>
