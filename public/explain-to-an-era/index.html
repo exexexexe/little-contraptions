@@ -62,6 +62,10 @@ h1 b{ font-weight:800;color:var(--brass) }
 
 /* ---------- the panel takes on the era ---------- */
 .panel{ margin-top:16px;padding:26px 26px 24px;min-height:236px;transition:background .4s, color .4s }
+.panel .asks{
+  font-size:12px;font-style:italic;opacity:.8;margin:-8px 0 14px;padding-bottom:9px;
+  border-bottom:1px dashed currentColor;
+}
 .panel .who{
   font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;margin-bottom:14px;opacity:.72;
 }
@@ -78,14 +82,14 @@ h1 b{ font-weight:800;color:var(--brass) }
   background:#D8D5CE;color:#2C2A26;font-family:"Trajan Pro",Optima,"Palatino Linotype",Georgia,serif;
   font-size:16px;letter-spacing:.02em;border:3px double #8C877C;
 }
-.era-roman .who{ font-family:var(--mono);color:#7A756A }
+.era-roman .who{ font-family:var(--mono);color:#5F5B53 }
 .era-roman p:first-of-type{ text-transform:uppercase;letter-spacing:.05em;font-size:14.5px }
 .era-victorian{
   background:#F4EDE0;color:#2A2620;font-family:"Iowan Old Style",Georgia,serif;font-size:15.5px;
   border:1px solid #8A7A5E;outline:4px solid #F4EDE0;outline-offset:-7px;
   box-shadow:inset 0 0 0 1px #C7B694;
 }
-.era-victorian .who{ font-family:var(--mono);color:#8A7A5E }
+.era-victorian .who{ font-family:var(--mono);color:#756850 }
 .era-deco{
   background:#14110F;color:#F0E2BE;font-family:"Futura","Century Gothic",ui-sans-serif,sans-serif;
   font-size:15.5px;border:2px solid #C8A24A;
@@ -96,8 +100,45 @@ h1 b{ font-weight:800;color:var(--brass) }
   background:#DAD7C8;color:#22201C;font-family:var(--mono);font-size:13.5px;line-height:1.85;
   border:1px solid #9C998B;box-shadow:inset 0 0 0 1px #EFEDE2;
 }
-.era-office .who{ color:#6A6759 }
+.era-office .who{ color:#5E5C4F }
 .era-none{ background:#332F2A;color:var(--dim);border:1px dashed #4B453D }
+.era-neolithic{
+  background:#D9CBB2;color:#33291B;font-family:"Iowan Old Style",Georgia,serif;font-size:16.5px;
+  border:2px solid #7A6748;box-shadow:inset 0 0 46px rgba(90,72,44,.28);letter-spacing:.005em;
+}
+.era-neolithic .who{ font-family:var(--mono);color:#645335 }
+.era-egypt{
+  background:#E7D8A8;color:#3A2E14;font-family:"Iowan Old Style",Georgia,serif;font-size:16px;
+  border:3px solid #A98C42;box-shadow:inset 0 0 0 1px #E7D8A8, inset 0 0 40px rgba(150,120,50,.25);
+}
+.era-egypt .who{ font-family:var(--mono);color:#715A22;letter-spacing:.2em }
+.era-monk{
+  background:#EFE6D2;color:#2E2618;font-family:"Iowan Old Style",Georgia,serif;font-size:16px;
+  border:1px solid #9A8656;outline:3px double #B9A46E;outline-offset:-9px;
+}
+.era-monk .who{ font-family:var(--mono);color:#776437 }
+.era-monk p:first-of-type::first-letter{ font-size:2.5em;line-height:.85;float:left;padding:2px 7px 0 0;color:#9A2E22 }
+.era-elizabethan{
+  background:#E4DAC4;color:#2A2418;font-family:"Iowan Old Style",Georgia,serif;font-size:16px;
+  border:1px solid #6E6244;box-shadow:inset 0 0 34px rgba(90,80,50,.24);
+}
+.era-elizabethan .who{ font-family:var(--mono);color:#6A5E3F;font-style:italic }
+.era-wartime{
+  background:#CFC9B4;color:#26241C;font-family:var(--sans);font-size:15px;
+  border:1px solid #6E6A56;box-shadow:inset 0 0 0 1px #CFC9B4;
+  background-image:repeating-linear-gradient(0deg, rgba(0,0,0,.035) 0 1px, transparent 1px 4px);
+}
+.era-wartime .who{ font-family:var(--mono);color:#565444;letter-spacing:.16em }
+.era-apollo{
+  background:#0E1A16;color:#BFE8D2;font-family:var(--mono);font-size:13.5px;line-height:1.9;
+  border:1px solid #2C4A3C;box-shadow:inset 0 0 40px rgba(0,0,0,.6);
+}
+.era-apollo .who{ color:#5EA37E;letter-spacing:.2em }
+.era-dialup{
+  background:#C6C6C6;color:#12127A;font-family:"Comic Sans MS","Trebuchet MS",var(--sans);font-size:15px;
+  border:2px outset #EDEDED;box-shadow:inset -1px -1px 0 #808080, inset 1px 1px 0 #FFF;
+}
+.era-dialup .who{ font-family:var(--mono);color:#3A3A8A }
 
 .deck{ display:flex;gap:8px;flex-wrap:wrap;margin-top:14px }
 .mini{
@@ -152,10 +193,105 @@ const pick = (a) => a[Math.floor(Math.random() * a.length)];
 const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
+/* ------------------------------------------------------------------ *
+ *  Twelve listeners. The point is that each one *frames* the thing
+ *  differently rather than describing it with different adjectives:
+ *  the smith asks what it is made of and who repairs it, the engineer
+ *  asks what it holds up, the naturalist wants to classify it, the
+ *  clerk wants to know whose budget it comes out of. The `asks` line
+ *  states that frame outright so the three paragraphs hang off it.
+ *
+ *  NOTE / OPTION: fully open-ended explanation is the sort of thing an
+ *  LLM does better than a template bank. If GROQ_API_KEY is ever set,
+ *  this toy is the strongest candidate to route through the Phase C
+ *  proxy — generating in-character rather than assembling. Left as a
+ *  decision to make rather than one taken here.
+ * ------------------------------------------------------------------ */
 const ERAS = [
+  {
+    k:'neolithic', css:'era-neolithic', label:'Farmer, 4000 BC',
+    who:'a farmer, four thousand years before writing',
+    asks:'can you eat it, does it keep, and will it survive winter',
+    open:[
+      'You cannot eat {thing}. I have asked three times now and you keep answering a different question.',
+      'Show me where {thing} grows. If it does not grow, somebody made it, and I want to know from what.',
+      'We have eleven days of grain. Explain where {thing} fits into eleven days of grain.',
+    ],
+    mid:[
+      'Everything I own I can carry, mend, or plant. Which of the three is {thing}?',
+      'If the winter is hard, does {thing} help? Say yes or no. Do not explain again.',
+      'My grandmother would have had an opinion about {thing}, and it would have been shorter than yours.',
+    ],
+    close:[
+      'Keep it. I will keep the seed.',
+      'Fine. But it does not survive a frost, and I do.',
+      'You may be right. I have been wrong before, and I was hungry either way.',
+    ],
+  },
+  {
+    k:'egypt', css:'era-egypt', label:'Scribe, 1500 BC',
+    who:'a temple scribe with a quota to meet',
+    asks:'can it be recorded, and will the record outlast the thing',
+    open:[
+      'I record grain, cattle, and the deeds of the living. In which column does {thing} belong?',
+      'Say {thing} again slowly. I must find a sign for it, and there is no sign for it.',
+      'You describe {thing} as though everyone has one. Then somebody counted them. Who?',
+    ],
+    mid:[
+      'What survives is what is written on stone. {thing} is written on nothing I can point to.',
+      'The temple keeps records for a thousand years. Will there be anything left of {thing} to check them against?',
+      'If the man who tends {thing} dies, does the next man know how? That is the only question that matters.',
+    ],
+    close:[
+      'I will invent a sign for it. It will be wrong, and it will outlast us both.',
+      'Filed under offerings, for want of anywhere better.',
+      'Come back when it is finished. Nothing is real to me until it is finished.',
+    ],
+  },
+  {
+    k:'roman', css:'era-roman', label:'Engineer, 80 AD',
+    who:'a military engineer, Ninth Legion, on his own time',
+    asks:'what does it hold up, and will it still be standing in four hundred years',
+    open:[
+      'You have described {thing} three times and I have understood a different thing each time.',
+      'So {thing} moves nothing, carries nothing, and holds nothing up. And yet it is important.',
+      'Show me the {thing}. You cannot. This is already a poor start.',
+    ],
+    mid:[
+      'We build aqueducts. They are enormous, obvious, and still working when the builder is dead. Can {thing} say that?',
+      'Everything useful I have built rests on something else useful. What does {thing} rest on? More of the same? That is a rumour, not an answer.',
+      'You say it is fast. So is a rider. A rider also stops when tired, which is a feature.',
+    ],
+    close:[
+      'Very well. Bring it to a siege and we will see.',
+      'It will not last four hundred years. Almost nothing does. I merely note that ours did.',
+      'I remain unconvinced, and I have been unconvinced before and wrong twice.',
+    ],
+  },
+  {
+    k:'monk', css:'era-monk', label:'Copyist, 1180',
+    who:'a monastery copyist, eight hours into a page',
+    asks:'is it worth copying, and is it a sin',
+    open:[
+      'I have copied one page since dawn. Tell me why {thing} is worth the ink.',
+      'Brother Anselm believes {thing} is a vanity. Brother Anselm believes most things are a vanity.',
+      'If {thing} is true, it belongs in the library. If it is false, it belongs in the fire. Which am I holding?',
+    ],
+    mid:[
+      'We keep what is copied and lose what is not. Nobody is copying {thing}. That should worry you more than it does.',
+      'Everything you describe about {thing} is a convenience. I have taken a vow specifically against those.',
+      'The abbot will ask whether {thing} draws men toward God or toward the market. I would like an answer before he asks.',
+    ],
+    close:[
+      'I shall note it in the margin, where the honest doubts go.',
+      'Very well. God permits stranger things, and has said nothing about this one.',
+      'Return after Compline. Everything sounds more plausible after Compline.',
+    ],
+  },
   {
     k:'medieval', css:'era-medieval', label:'Blacksmith, 1340',
     who:'a village blacksmith, who has work to be getting on with',
+    asks:'what is it made of, and who mends it when it breaks',
     open:[
       'Right. So this {thing}. You are telling me it is a thing a person can have, but not hold.',
       'So then. {thing}. The whole village has it, and none of you made it yourselves.',
@@ -163,7 +299,7 @@ const ERAS = [
     ],
     mid:[
       'It is like the mill, then. Nobody understands the mill either, but the miller takes his cut and the bread gets made.',
-      'So it is a sort of guild. Somebody owns the {thing}, and you pay them, and in return you are permitted to use the {thing} they own.',
+      'So it is a sort of guild. Somebody owns {thing}, and you pay them, and in return you may use the thing they own.',
       'We had a fellow come through selling something similar. Turned out to be a box of sand and a promise.',
     ],
     close:[
@@ -173,36 +309,38 @@ const ERAS = [
     ],
   },
   {
-    k:'roman', css:'era-roman', label:'Engineer, 80 AD',
-    who:'a military engineer, Ninth Legion, on his own time',
+    k:'elizabethan', css:'era-elizabethan', label:'Playwright, 1599',
+    who:'a jobbing playwright with a deadline and a company to feed',
+    asks:'is there a play in it, and who is the villain',
     open:[
-      'You have described {thing} three times and I have understood a different thing each time.',
-      'So {thing} moves nothing, carries nothing, and holds nothing up. And yet it is important.',
-      'Show me the {thing}. You cannot. This is already a poor start.',
+      'There is a play in {thing}, but only if somebody is ruined by it. Is anybody ruined by it?',
+      'I can put {thing} on a stage in three acts, and the third will need a death. Whose?',
+      'The groundlings will not sit through {thing} unless it is funny or somebody is stabbed. Choose.',
     ],
     mid:[
-      'We build aqueducts. They are enormous, obvious, and they still work when the man who built them is dead. Can your {thing} say that?',
-      'Everything useful I have built rests on something else useful. What does {thing} rest on? More of the same? That is not an answer, it is a rumour.',
-      'You say it is fast. So is a rider. A rider also stops when he is tired, which is a feature.',
+      'You say everyone has {thing} and nobody is glad of it. That is a comedy. Possibly a bitter one.',
+      'Who profits from {thing}? Write that man down. He is the second act.',
+      'Marlowe would have made {thing} a bargain with the devil, and he would have been right to.',
     ],
     close:[
-      'Very well. Bring it to a siege and we will see.',
-      'It will not last four hundred years. Almost nothing does. I merely note that ours did.',
-      'I remain unconvinced, but I have been unconvinced before and wrong twice.',
+      'I shall use it. I shall change the name and deny everything.',
+      'Not enough blood in it. Come back with more blood.',
+      'Two hours traffic, and a song at the end. That is all any of it is.',
     ],
   },
   {
     k:'victorian', css:'era-victorian', label:'Naturalist, 1871',
     who:'a gentleman naturalist, three glasses of sherry in',
+    asks:'where does it sit in the classification, and what are its habits',
     open:[
       'Extraordinary. And you say {thing} is entirely commonplace? Among the labouring classes as well?',
       'I have catalogued eleven hundred beetles and not one of them prepared me for {thing}.',
       'You must forgive me. I had assumed {thing} was a species. It is not, is it.',
     ],
     mid:[
-      'One is reminded of the telegraph, which the Society dismissed as a novelty for precisely as long as it took to become indispensable.',
+      'One is reminded of the telegraph, which the Society dismissed as a novelty for exactly as long as it took to become indispensable.',
       'I shall want to know its habits. What does {thing} do when nobody is observing it? That is where the truth of a thing lives.',
-      'My colleague Pembridge would say this is a fad. Pembridge said that about the railway, and Pembridge now takes the railway.',
+      'My colleague Pembridge would call {thing} a fad. Pembridge said that about the railway, and Pembridge now takes the railway.',
     ],
     close:[
       'I shall write it up. The Society will be appalled, which is generally a sign of merit.',
@@ -213,6 +351,7 @@ const ERAS = [
   {
     k:'deco', css:'era-deco', label:'Flapper, 1926',
     who:'somebody at the back of a very loud room, 1926',
+    asks:'who is paying for it, and will anyone care by Thursday',
     open:[
       'Darling, say {thing} again but slower and with a drink in your hand.',
       'So {thing} is the new thing. There is always a new thing. Last year it was somebody\'s cousin.',
@@ -226,26 +365,87 @@ const ERAS = [
     close:[
       'Marvellous. Write down the name, I shall claim I discovered it.',
       'Fine, fine. Now stop talking, this is my song.',
-      'I am not against {thing}. I am simply against being explained things.',
+      'I am not against {thing}. I am against being explained things.',
+    ],
+  },
+  {
+    k:'wartime', css:'era-wartime', label:'Housewife, 1943',
+    who:'somebody making a week\'s rations last nine days',
+    asks:'is it necessary, and can it be made to last',
+    open:[
+      'Is {thing} necessary, or is it the other thing? Be honest with me.',
+      'We are on two ounces of butter a week. Explain {thing} against two ounces of butter a week.',
+      'You have got {thing} and you are still not happy. I find that remarkable and a little rude.',
+    ],
+    mid:[
+      'Everything in this house has been mended twice. How many times can {thing} be mended?',
+      'If it stops working, do you queue for a new one, or do you go without? That is the whole test.',
+      'My mother would have made {thing} out of something else and been proud of it.',
+    ],
+    close:[
+      'Well. It will not last, and neither will the shortage, and I know which I would bet on.',
+      'Make do. You will find you can, once nobody offers you the choice.',
+      'Put it away before the children see it and start wanting things.',
+    ],
+  },
+  {
+    k:'apollo', css:'era-apollo', label:'Engineer, 1969',
+    who:'a flight systems engineer who has not slept properly since March',
+    asks:'what are the failure modes, and what happens when it fails',
+    open:[
+      'Fine. What does {thing} do when it fails? Everything fails. Start there.',
+      'I need {thing} in terms of inputs and outputs. Adjectives do not help me.',
+      'Who signs off on {thing}? Somebody signs off on everything, or it does not fly.',
+    ],
+    mid:[
+      'Single point of failure. That is what {thing} sounds like, and I would not put a crew behind it.',
+      'We test to destruction. Has anybody tested {thing} to destruction, or only to satisfaction?',
+      'You have described the nominal case beautifully. Now describe the off-nominal one.',
+    ],
+    close:[
+      'Write me a procedure. If it cannot be a procedure, it cannot be relied on.',
+      'It is elegant. Elegant worries me. Elegant has killed people.',
+      'Get me the numbers and I will get you an answer. Not before.',
     ],
   },
   {
     k:'office', css:'era-office', label:'Office, 1986',
     who:'middle management, second floor, 1986',
+    asks:'whose budget is it, and who owns it when it breaks',
     open:[
       'Run that past me again. {thing} — is that a system, a service, or a supplier?',
-      'Right, {thing}. Where does that sit? Is it under IT or is it under facilities?',
-      'I have got a meeting at eleven. Give me {thing} in one line.',
+      'Right, {thing}. Where does that sit? Is it under IT or under facilities?',
+      'I have a meeting at eleven. Give me {thing} in one line.',
     ],
     mid:[
       'The trouble with {thing} is nobody owns it. If nobody owns it, nobody fixes it, and it lands on me in March.',
       'We piloted something similar in Bracknell. It went well, which is exactly why it was cancelled.',
-      'What is the cost per head? No, not the licence. The cost per head when it stops working.',
+      'What is the cost per head? Not the licence. The cost per head when it stops working.',
     ],
     close:[
-      'Put it in a memo. Two pages. If it needs three pages it is not a good idea.',
+      'Put it in a memo. Two pages. If it needs three it is not a good idea.',
       'I am not saying no. I am saying not this quarter.',
       'Fine. But when {thing} goes down at month end, it is not my department.',
+    ],
+  },
+  {
+    k:'dialup', css:'era-dialup', label:'Teenager, 1998',
+    who:'somebody on the family computer, timing it around the phone bill',
+    asks:'how big is it, and can you get it before someone needs the phone',
+    open:[
+      'How big is {thing}? In megabytes. That is the only unit that means anything here.',
+      'Right but does {thing} work if you get disconnected at 94 percent, because that is what will happen.',
+      'Mum needs the phone at six. Explain {thing} before six.',
+    ],
+    mid:[
+      'Everyone at school says {thing} is going to be massive. Everyone at school said that about a lot of things.',
+      'If {thing} is on a server somewhere, then it is not really yours, is it. Say what you like about a disc.',
+      'It sounds brilliant and it sounds like it will be full of adverts within a year.',
+    ],
+    close:[
+      'Burn it to a CD and I will believe in it.',
+      'Fine, but I am not paying a subscription for something I could have owned.',
+      'Get off, I have been waiting an hour for this.',
     ],
   },
 ];
@@ -280,10 +480,25 @@ function speak(thingRaw){
     return;
   }
   lastThing = thing;
-  const fill = (s) => s.replace(/\{thing\}/g, thing);
+  // The templates were written around short nouns ("wifi"), but people type
+  // whole phrases ("a subscription to a mindfulness app"). Two things go wrong
+  // on substitution: an article collision where the template supplies one too
+  // ("Show me the a subscription…"), and a lower-case {thing} landing at the
+  // start of a sentence. Both are fixed here rather than by rewriting 108 lines
+  // to dodge the problem.
+  const fill = (s) => {
+    const hasArticle = /^(a|an|the)\s+\S/i.test(thing);
+    return s
+      // template article + thing that brings its own: the thing's wins
+      .replace(/\b(?:the|a|an) \{thing\}/gi, (m) => hasArticle ? thing : m.replace('{thing}', thing))
+      .replace(/\{thing\}/g, thing)
+      // capitalise wherever the substitution landed at a sentence start
+      .replace(/(^|[.?!]\s+)([a-z])/g, (m, pre, c) => pre + c.toUpperCase());
+  };
   $('panel').className = 'panel ' + era.css;
   $('panel').innerHTML =
     '<div class="who">' + esc(era.who) + '</div>' +
+    '<div class="asks">wants to know: ' + esc(era.asks) + '</div>' +
     '<p>' + esc(fill(pick(era.open))) + '</p>' +
     '<p>' + esc(fill(pick(era.mid))) + '</p>' +
     '<p>' + esc(fill(pick(era.close))) + '</p>';
