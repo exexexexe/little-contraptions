@@ -130,18 +130,75 @@ footer a{ color:#8A9078 }
   .cursor::after{ animation:none }
 }
 @media (max-width:520px){ dl.rows{ grid-template-columns:1fr } dl.rows dd{ margin-bottom:6px } }
+/* ---------- Soviet-instrument type ---------- */
+:root{
+  --stencil:"Roboto Condensed","Arial Narrow","Helvetica Neue Condensed",
+            "Liberation Sans Narrow","DIN Condensed",Impact,var(--mono);
+}
+.plate h1, .sectors button, .key, .crt h2{
+  font-family:var(--stencil);text-transform:uppercase;letter-spacing:.13em;font-weight:700;
+}
+.plate h1{ letter-spacing:.2em }
+.crt h2{ letter-spacing:.16em }
+
+/* the unmarked catch on the bezel */
+.catch{
+  position:absolute;right:14px;top:9px;width:34px;height:11px;border-radius:2px;
+  background:linear-gradient(180deg,#4A4F44,#2C302A);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14), 0 1px 2px rgba(0,0,0,.5);
+  cursor:grab;touch-action:none;z-index:5;
+}
+.catch::after{
+  content:"";position:absolute;inset:3px 6px;
+  background:repeating-linear-gradient(90deg, rgba(0,0,0,.45) 0 1px, transparent 1px 3px);
+}
+.catch.held{ cursor:grabbing }
+.catch:focus-visible{ outline:1px solid var(--green, #7FE08A);outline-offset:2px }
+
+/* scan sweep */
+.crt{ position:relative }
+.crt.sweeping::after{
+  content:"";position:absolute;left:0;right:0;top:0;height:42%;pointer-events:none;
+  background:linear-gradient(180deg,transparent,rgba(140,255,170,.14),transparent);
+  animation:crtsweep .62s ease-out 1;
+}
+body.vault .crt.sweeping::after{ background:linear-gradient(180deg,transparent,rgba(255,190,80,.16),transparent) }
+@keyframes crtsweep{ from{ transform:translateY(-100%) } to{ transform:translateY(320%) } }
+.crt.switching{ opacity:.25;filter:blur(1px);transition:opacity .18s, filter .18s }
+.meter i{ transition:width .6s cubic-bezier(.2,.7,.3,1) }
+
+/* ---------- the other mode ---------- */
+body.vault{ --green:#FFB53C;--green-dim:#A9761F; }
+body.vault .crt, body.vault .crt *{ color:#FFB53C }
+body.vault .crt{
+  background:radial-gradient(120% 100% at 50% 40%, #241703 0%, #140C02 100%);
+  box-shadow:inset 0 0 60px rgba(255,150,40,.13);
+}
+body.vault .sectors button[aria-pressed="true"]{ background:#A9761F;border-color:#A9761F;color:#180E00 }
+body.vault .key.scan{ background:#FFB53C;color:#191000 }
+body.vault .plate h1{ color:#FFB53C }
+body.vault .meter i{ background:#FFB53C }
+@media (prefers-reduced-motion: reduce){
+  .crt.sweeping::after{ animation:none;opacity:0 }
+  .meter i{ transition:none }
+}
+/* uppercase turns the micro sign into a capital Mu, so µSv/h renders as
+   MSV/H — which reads as millisieverts, a thousand times the value. The
+   unit label opts out. */
+.readout-big span{ text-transform:none !important;letter-spacing:.1em }
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="plate">
-    <h1>Field PDA</h1>
-    <span class="id">unit 04-Г · survey issue</span>
+    <h1 id="plate-name">Field PDA</h1>
+    <span class="id" id="unit-id">unit 04-Г · survey issue</span>
     <span class="pwr" id="pwr">power ok</span>
   </div>
 
   <div class="unit">
     <div class="bezel">
+      <div class="catch" id="catch" tabindex="0" role="button" aria-label="unmarked catch"></div>
       <div class="crt flick" id="crt">
         <h2>Zone Survey Terminal</h2>
         <div class="sub">awaiting sector selection</div>
@@ -182,16 +239,68 @@ const esc = (s) => String(s == null ? '' : s)
 
 /* Sectors. The last two are deliberately not the Zone at all — the unit
    does not care, and reports them in the same flat register. */
+/* Real places in the Zone, referenced by name for flavour only — no text,
+   map data or imagery from any game. Ranges are this toy's invention. */
 const SECTORS = [
-  { k:'cordon',  n:'Cordon',        rad:[0.04,0.9],  flavour:'perimeter, lightly patrolled' },
-  { k:'forest',  n:'Wet Forest',    rad:[0.3,3.2],   flavour:'standing water, poor footing' },
-  { k:'plant',   n:'Chemical Plant',rad:[1.2,9.5],   flavour:'partial roof, unlit interior' },
-  { k:'array',   n:'Radar Array',   rad:[2.5,18.0],  flavour:'elevated, exposed, loud' },
-  { k:'ocean',   n:'The Ocean',     rad:[0.01,0.4],  flavour:'sector is entirely liquid',
-    special:'ocean' },
-  { k:'alice',   n:'Station Alice', rad:[0.02,0.3],  flavour:'research outpost, cheerful',
-    special:'alice' },
+  { k:'cordon',   n:'Cordon',            rad:[0.04,0.9],  flavour:'perimeter, lightly patrolled' },
+  { k:'swamps',   n:'The Swamps',        rad:[0.2,2.4],   flavour:'open water, no cover for a kilometre' },
+  { k:'garbage',  n:'The Garbage',       rad:[0.4,4.1],   flavour:'spoil heaps, buried vehicles' },
+  { k:'farm',     n:'Burnt Farmstead',   rad:[0.3,2.8],   flavour:'four walls, no roof, one well' },
+  { k:'agroprom', n:'Agroprom Institute',rad:[0.8,6.4],   flavour:'flooded underlevels, one way in' },
+  { k:'forest',   n:'Wet Forest',        rad:[0.3,3.2],   flavour:'standing water, poor footing' },
+  { k:'valley',   n:'Dark Valley',       rad:[0.9,7.2],   flavour:'narrow approach, overlooked from both sides' },
+  { k:'rostok',   n:'Rostok Factory',    rad:[0.7,5.6],   flavour:'workshops, gantries, a working bar somewhere in it' },
+  { k:'wild',     n:'Wild Territory',    rad:[1.1,8.3],   flavour:'crane yard, elevated walkways, blind corners' },
+  { k:'yantar',   n:'Lake Yantar',       rad:[2.2,14.0],  flavour:'shore burnt bare, the lab still has power' },
+  { k:'plant',    n:'Chemical Plant',    rad:[1.2,9.5],   flavour:'partial roof, unlit interior' },
+  { k:'warehouse',n:'Army Warehouses',   rad:[1.0,7.8],   flavour:'depot buildings, most of them opened already' },
+  { k:'redforest',n:'Red Forest',        rad:[4.0,26.0],  flavour:'the trees are the wrong colour and stayed that way' },
+  { k:'array',    n:'Radar Array',       rad:[2.5,18.0],  flavour:'elevated, exposed, loud' },
+  { k:'duga',     n:'Chernobyl-2',       rad:[2.8,19.5],  flavour:'the aerial is visible from everywhere and reachable from nowhere' },
+  { k:'limansk',  n:'Limansk',           rad:[2.0,15.5],  flavour:'a whole town, sealed and left standing' },
+  { k:'zaton',    n:'Zaton',             rad:[0.6,5.2],   flavour:'dry dock, beached hulls, wind off the flats' },
+  { k:'jupiter',  n:'Jupiter Plant',     rad:[1.4,10.4],  flavour:'production halls, the floor is not reliable' },
+  { k:'yanov',    n:'Yanov Station',     rad:[0.5,3.6],   flavour:'rolling stock, sidings, people who want paying first' },
+  { k:'towers',   n:'Cooling Towers',    rad:[3.2,21.0],  flavour:'unfinished, echoing, no line of sight to anything' },
+  { k:'pripyat',  n:'Pripyat',           rad:[3.6,24.0],  flavour:'streets on a grid, nothing keeping to it' },
+  { k:'generators',n:'The Generators',   rad:[5.5,34.0],  flavour:'open ground under permanent discharge' },
+  { k:'cnpp',     n:'Chernobyl NPP',     rad:[7.0,48.0],  flavour:'the reason for all of the above' },
+  { k:'sarco',    n:'The Sarcophagus',   rad:[9.0,62.0],  flavour:'do not linger, do not lean on anything' },
+  { k:'ocean',    n:'The Ocean',         rad:[0.01,0.4],  flavour:'sector is entirely liquid', special:'ocean' },
+  { k:'alice',    n:'Station Alice',     rad:[0.02,0.3],  flavour:'research outpost, cheerful', special:'alice' },
 ];
+
+/* The other mode. Fallout place names from the first four games and 76,
+   used the same way: names only, everything written for this cabinet. */
+const VAULT_SECTORS = [
+  { k:'v13',     n:'Vault 13',          rad:[0.02,0.5],  flavour:'door still seals, water chip situation unresolved' },
+  { k:'shady',   n:'Shady Sands',       rad:[0.1,1.4],   flavour:'walled, farmed, suspicious of visitors' },
+  { k:'junktown', n:'Junktown',         rad:[0.2,2.0],   flavour:'gate closes at dark and stays closed' },
+  { k:'hub',     n:'The Hub',           rad:[0.3,2.6],   flavour:'caravans in, caravans out, nobody asking why' },
+  { k:'necropolis',n:'Necropolis',      rad:[3.0,17.0],  flavour:'the pumps failed a long time ago' },
+  { k:'boneyard',n:'The Boneyard',      rad:[0.8,6.0],   flavour:'library district, heavily contested' },
+  { k:'mariposa',n:'Mariposa Base',     rad:[6.0,38.0],  flavour:'lift shaft open, lower levels not surveyed' },
+  { k:'arroyo',  n:'Arroyo',            rad:[0.05,0.7],  flavour:'village, bridge out, crops failing' },
+  { k:'klamath', n:'Klamath',           rad:[0.1,1.2],   flavour:'trapping town, gecko problem' },
+  { k:'vaultcity',n:'Vault City',       rad:[0.06,0.9],  flavour:'clean, orderly, will not let you in' },
+  { k:'gecko',   n:'Gecko',             rad:[4.0,22.0],  flavour:'reactor running hot and running anyway' },
+  { k:'newreno', n:'New Reno',          rad:[0.2,1.8],   flavour:'four families, no law, excellent lighting' },
+  { k:'sanfran', n:'San Francisco',     rad:[0.3,2.2],   flavour:'tanker in the bay, everyone has a plan for it' },
+  { k:'megaton', n:'Megaton',           rad:[1.2,9.0],   flavour:'settlement built around an unexploded device' },
+  { k:'rivet',   n:'Rivet City',        rad:[0.4,3.0],   flavour:'aircraft carrier, drawbridge, market on the deck' },
+  { k:'v101',    n:'Vault 101',         rad:[0.02,0.4],  flavour:'sealed by choice, which is worse' },
+  { k:'lamplight',n:'Little Lamplight', rad:[0.3,2.4],   flavour:'caverns, and a strict policy on adults' },
+  { k:'citadel', n:'The Citadel',       rad:[0.5,3.4],   flavour:'ring fort, heavily armoured, poorly explained' },
+  { k:'sanctuary',n:'Sanctuary Hills',  rad:[0.2,1.6],   flavour:'cul-de-sac, workbench, one intact bridge' },
+  { k:'diamond', n:'Diamond City',      rad:[0.3,2.2],   flavour:'ballpark, market, mayor with opinions' },
+  { k:'goodneighbor',n:'Goodneighbor',  rad:[0.6,4.2],   flavour:'of the people, for the people, briefly' },
+  { k:'glowingsea',n:'The Glowing Sea', rad:[12.0,80.0], flavour:'blast crater, permanent storm, nothing green' },
+  { k:'v76',     n:'Vault 76',          rad:[0.03,0.6],  flavour:'door open, occupants dispersed, party over' },
+  { k:'flatwoods',n:'Flatwoods',        rad:[0.4,3.2],   flavour:'church, chemistry station, no residents' },
+  { k:'whitespring',n:'The Whitespring',rad:[0.5,4.0],   flavour:'resort, golf course, robots still on shift' },
+  { k:'cranberry',n:'Cranberry Bog',    rad:[5.0,30.0],  flavour:'bog, scorched ground, everything here bites' },
+];
+
 
 const ANOMALIES = [
   'Whirl — a column of turning air, roughly two metres across, stationary since the last survey.',
@@ -252,6 +361,8 @@ const log = [];
 /* ------------------------- geiger audio ---------------------------- */
 // Short filtered noise bursts, scheduled at a Poisson-ish rate that
 // follows the current reading. Nothing plays until it is switched on.
+const REDUCED_ZONE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 function ensureCtx(){
   if (ctx) return ctx;
   try { ctx = new (window.AudioContext || window.webkitAudioContext)(); }
@@ -279,9 +390,149 @@ function scheduleClicks(){
 }
 
 /* ---------------------------- render ------------------------------- */
+
+/* ------------------------------------------------------------------ *
+ *  Two modes. The unit ships as a Zone survey terminal; sliding the
+ *  unmarked catch on the bezel flips it to something else entirely.
+ *  Nothing from either game is reproduced — place names only, and every
+ *  line of readout text is written for this cabinet.
+ * ------------------------------------------------------------------ */
+const VAULT_ANOM = [
+  'rad storm building to the west, forty minutes out',
+  'ferals denning in the stairwell, count unknown',
+  'turret still powered and still tracking',
+  'ground gives underfoot at the eastern approach',
+  'mine field, partially cleared, records incomplete',
+  'signal repeater running unattended on a loop',
+  'water table contaminated, treat before drinking',
+  'raider spoor, less than a day old',
+  'unstable floor above the second level',
+  'automated defence grid, intermittent',
+];
+const VAULT_SALVAGE = [
+  ['Sealed ration tin', 'unswollen, which is the whole test', 'trades for more than it feeds'],
+  ['Fusion cell, part charged', 'reads eleven per cent and holds it', 'do not stack them in a warm pack'],
+  ['Pre-war circuit board', 'four usable components, two corroded', 'worth stripping before carrying'],
+  ['Water purification tablet', 'foil intact, batch legible', 'the single most requested item at any settlement'],
+  ['Stimulant auto-injector', 'plunger free, seal unbroken', 'check the fluid is clear before you need it'],
+  ['Wound sealant', 'expired by decades, still viscous', 'better than the alternative'],
+  ['Terminal keycard', 'magnetic strip scored', 'may open one door somewhere'],
+  ['Duct tape, half roll', 'adhesive still tacky', 'the most valuable object in this list'],
+  ['Bottle caps, forty-one', 'mixed, none clipped', 'currency, apparently, and nobody explains why'],
+  ['Toolkit, incomplete', 'no spanner, everything else present', 'the missing spanner is always the point'],
+];
+const VAULT_CLOSERS = [
+  'Unit is operating within tolerances it set for itself.',
+  'Reminder: this device is not a substitute for looking.',
+  'Log retained locally. There is nowhere to send it.',
+  'Have a pleasant survey.',
+  'Diagnostics nominal. Diagnostics have been nominal throughout.',
+  'Battery projection assumes you stop walking soon.',
+];
+
+const MODES = {
+  zone: {
+    title: 'Zone Survey Terminal',
+    plate: 'Field PDA', id: 'unit 04-Г · survey issue',
+    unit: 'µSv/h', hazard: 'hazard class',
+    sectors: () => SECTORS,
+    anom: (s) => s.special === 'ocean' ? pick(OCEAN_ANOM)
+              : s.special === 'alice' ? pick(ALICE_ANOM) : pick(ANOMALIES),
+    find: () => pick(ARTIFACTS), findLabel: 'artefact',
+    closers: () => CLOSERS, scale: 18,
+  },
+  vault: {
+    title: 'Personal Information Processor',
+    plate: 'PIP UNIT', id: 'model 3000 mk IV · issued, unreturned',
+    unit: 'rad/h', hazard: 'exposure band',
+    sectors: () => VAULT_SECTORS,
+    anom: () => pick(VAULT_ANOM),
+    find: () => pick(VAULT_SALVAGE), findLabel: 'salvage',
+    closers: () => VAULT_CLOSERS, scale: 30,
+  },
+};
+let modeKey = 'zone';
+const M = () => MODES[modeKey];
+
+function applyMode(){
+  const m = M();
+  document.body.classList.toggle('vault', modeKey === 'vault');
+  $('plate-name').textContent = m.plate;
+  $('unit-id').textContent = m.id;
+  sector = m.sectors()[0];
+  renderSectors();
+  $('crt').innerHTML =
+    '<h2>' + esc(m.title) + '</h2>' +
+    '<div class="sub">awaiting sector selection</div>' +
+    '<div class="idle cursor">Select a sector below and press SCAN.<br>' +
+    'Readings are advisory. The unit does not accept responsibility for readings, ' +
+    'the absence of readings, or anything occurring between readings.</div>';
+  log.length = 0; $('log').innerHTML = '';
+}
+
+/* The catch: an unmarked tab on the bezel. Drag it across and the unit
+   changes its mind about what it is. Keyboard users get the same thing
+   from the arrow keys once it has focus. */
+function bindCatch(){
+  const c = $('catch');
+  let start = null;
+  const commit = (dx) => {
+    if (Math.abs(dx) < 26) { c.style.transform = ''; return; }
+    c.style.transform = '';
+    modeKey = modeKey === 'zone' ? 'vault' : 'zone';
+    $('crt').classList.add('switching');
+    setTimeout(() => { applyMode(); $('crt').classList.remove('switching'); }, 340);
+  };
+  c.addEventListener('pointerdown', (e) => {
+    start = e.clientX;
+    // capture is a convenience; a pointer that has already gone away throws
+    try { c.setPointerCapture(e.pointerId); } catch (err) {}
+    c.classList.add('held');
+  });
+  c.addEventListener('pointermove', (e) => {
+    if (start === null) return;
+    const dx = Math.max(-34, Math.min(34, e.clientX - start));
+    c.style.transform = 'translateX(' + dx + 'px)';
+  });
+  const end = (e) => {
+    if (start === null) return;
+    commit(e.clientX - start); start = null; c.classList.remove('held');
+  };
+  c.addEventListener('pointerup', end);
+  c.addEventListener('pointercancel', () => { start = null; c.style.transform = ''; c.classList.remove('held'); });
+  c.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft' || e.key === 'Enter'){ e.preventDefault(); commit(40); }
+  });
+}
+
+/* ---------- readout animation ---------- */
+function countUp(el, to, dp, ms){
+  if (REDUCED_ZONE){ el.textContent = to.toFixed(dp); return; }
+  const t0 = performance.now();
+  const step = (t) => {
+    const k = Math.min(1, (t - t0) / ms);
+    const eased = 1 - Math.pow(1 - k, 3);
+    el.textContent = (to * eased).toFixed(dp);
+    if (k < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+function typeOut(el, text, ms){
+  if (REDUCED_ZONE){ el.textContent = text; return; }
+  el.textContent = '';
+  let i = 0;
+  const per = Math.max(8, ms / text.length);
+  const step = () => {
+    el.textContent = text.slice(0, ++i);
+    if (i < text.length) setTimeout(step, per);
+  };
+  step();
+}
+
 function renderSectors(){
   $('sectors').innerHTML = '';
-  SECTORS.forEach(s => {
+  M().sectors().forEach(s => {
     const b = document.createElement('button');
     b.textContent = s.n;
     b.setAttribute('aria-pressed', String(s === sector));
@@ -293,40 +544,51 @@ function renderSectors(){
 function dangerFor(rad){ return DANGER.find(d => rad <= d.max); }
 
 function scan(){
+  const m = M();
   const rad = rr(sector.rad[0], sector.rad[1]);
   currentRad = rad;
   const dg = dangerFor(rad);
-  const anom = sector.special === 'ocean' ? pick(OCEAN_ANOM)
-             : sector.special === 'alice' ? pick(ALICE_ANOM)
-             : pick(ANOMALIES);
-  const art = Math.random() < (sector.special === 'alice' ? 0.35 : 0.62) ? pick(ARTIFACTS) : null;
+  const anom = m.anom(sector);
+  const art = Math.random() < (sector.special === 'alice' ? 0.35 : 0.62) ? m.find() : null;
   const bearing = ri(0, 359), dist = ri(40, 1400);
-  const pct = Math.min(100, rad / 18 * 100);
+  const pct = Math.min(100, rad / m.scale * 100);
+  // the sweep runs over the whole readout while the figures settle
+  if (!REDUCED_ZONE){
+    $('crt').classList.remove('sweeping');
+    void $('crt').offsetWidth;
+    $('crt').classList.add('sweeping');
+  }
 
   $('crt').innerHTML =
     '<h2>' + esc(sector.n) + '</h2>' +
     '<div class="sub">' + esc(sector.flavour) + ' · bearing ' + String(bearing).padStart(3,'0') +
       '° · ' + dist + ' m</div>' +
     '<div class="readout-big">' +
-      '<div><b class="' + dg.cls + '">' + rad.toFixed(2) + '</b><span>µSv/h</span></div>' +
-      '<div><b class="' + dg.cls + '">' + dg.label + '</b><span>hazard class</span></div>' +
+      '<div><b class="' + dg.cls + '" id="rad-val">0.00</b><span>' + esc(m.unit) + '</span></div>' +
+      '<div><b class="' + dg.cls + '">' + dg.label + '</b><span>' + esc(m.hazard) + '</span></div>' +
     '</div>' +
-    '<div class="meter"><i class="' + dg.cls + '" style="width:' + pct.toFixed(1) + '%"></i>' +
+    '<div class="meter"><i class="' + dg.cls + '" id="rad-bar" style="width:0%"></i>' +
       '<div class="meter-ticks"></div></div>' +
     '<div class="hr"></div>' +
     '<dl class="rows">' +
       '<dt>anomaly</dt><dd>' + esc(anom) + '</dd>' +
-      '<dt>artefact</dt><dd>' + (art
+      '<dt>' + esc(m.findLabel) + '</dt><dd>' + (art
         ? '<em>' + esc(art[0]) + '</em> — ' + esc(art[1]) + '. ' +
           esc(art[2].charAt(0).toUpperCase() + art[2].slice(1)) + '.'
         : 'none recovered this pass') + '</dd>' +
       '<dt>advisory</dt><dd class="' + dg.cls + '">' + esc(dg.advice) + '</dd>' +
     '</dl>' +
     '<div class="hr"></div>' +
-    '<div class="note cursor">' + esc(pick(CLOSERS)) + '</div>';
+    '<div class="note cursor" id="closer"></div>';
+
+  // figures count up and the bar fills, so a scan reads as a measurement
+  // being taken rather than a value appearing
+  countUp($('rad-val'), rad, 2, 620);
+  requestAnimationFrame(() => { $('rad-bar').style.width = pct.toFixed(1) + '%'; });
+  typeOut($('closer'), pick(m.closers()), 520);
 
   const stamp = new Date().toLocaleTimeString('en-GB', { hour12:false });
-  log.unshift(stamp + '  ' + sector.n.padEnd(15) + rad.toFixed(2) + ' µSv/h  ' + dg.label +
+  log.unshift(stamp + '  ' + sector.n.padEnd(15) + rad.toFixed(2) + ' ' + m.unit + '  ' + dg.label +
               (art ? '  · ' + art[0] : ''));
   if (log.length > 8) log.length = 8;
   $('log').innerHTML = '<b>survey log</b><br>' + log.map(esc).join('<br>');
@@ -334,6 +596,9 @@ function scan(){
 
   scheduleClicks();
 }
+
+bindCatch();
+applyMode();
 
 $('scan').addEventListener('click', scan);
 $('wipe').addEventListener('click', () => { log.length = 0; $('log').innerHTML = ''; });
