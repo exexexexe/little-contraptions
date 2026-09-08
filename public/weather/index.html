@@ -335,6 +335,59 @@ const PLACES = [
     pressureOptions: ["steady, the drone insists", "dropping, but the sponsor asked us not to alarm anyone"],
     omenLabel: "cyberpsychosis calls, this shift", omenRange: [3, 44],
   },
+  {
+    name: "Hyrule", tag: "kingdom under a blood moon, sword count: one",
+    meteorologist: "a shrine terminal, mostly guessing",
+    unit: "°", tempRange: [12, 22],
+    conditions: [
+      { adj: "clear and warm", phenomenon: "a strange red haze building right on the horizon, on schedule", mood: "quietly dreadful", advice: "recall your horse and get somewhere safe before moonrise", intensity: .6 },
+      { adj: "breezy", phenomenon: "cucco activity well above the recommended level near the stables", mood: "one wrong move from chaos", advice: "do not, under any circumstances, hit a cucco", intensity: .3 },
+      { adj: "stormy", phenomenon: "lightning forking oddly close to anything metal on the ridgeline", mood: "hazardous", advice: "put away the metal gear before you climb any higher", intensity: .8 },
+      { adj: "calm", phenomenon: "a faint melody drifting from the nearest shrine", mood: "contemplative", advice: "good day for korok hunting, bring patience", intensity: .15 },
+    ],
+    windOptions: ["gentle, off the plateau", "gusting ahead of the storm front", "still, right before the blood moon"],
+    pressureOptions: ["dropping ahead of the storm", "steady, for now"],
+    omenLabel: "blood moon likelihood tonight", omenRange: [3, 40],
+  },
+  {
+    name: "Silent Hill", tag: "a town that isn't always in the same place twice",
+    meteorologist: "whoever's radio still gets a signal",
+    unit: "°", tempRange: [4, 11],
+    conditions: [
+      { adj: "thick with fog", phenomenon: "visibility down to about ten feet on the main road", mood: "deeply unsettling", advice: "stay on the road, don't follow anything you hear", intensity: .8 },
+      { adj: "ash-fallen", phenomenon: "fine grey flakes drifting down with no fire anywhere nearby", mood: "wrong, in a way nobody can name", advice: "check for static before you turn any corner", intensity: .9 },
+      { adj: "unusually quiet", phenomenon: "the fog thinning just enough to see the water tower and nothing past it", mood: "held breath", advice: "enjoy the visibility, it won't last", intensity: .5 },
+    ],
+    windOptions: ["nonexistent — the fog just sits", "faint, carrying something like a siren from somewhere"],
+    pressureOptions: ["unreadable", "dropping, which the old-timers say means it's close"],
+    omenLabel: "otherworld shift, this block", omenRange: [5, 50],
+  },
+  {
+    name: "Whiterun", tag: "hold capital, dragons technically extinct",
+    meteorologist: "a guard who took an arrow to the knee and does weather now",
+    unit: "°", tempRange: [-4, 9],
+    conditions: [
+      { adj: "snow-flurried", phenomenon: "a distant roar echoing off the mountain, again", mood: "concerning, again", advice: "report it to the Jarl, they never believe the first guard who does", intensity: .6 },
+      { adj: "clear and cold", phenomenon: "aurora visible well before nightfall, unseasonably early", mood: "beautiful, mildly ominous", advice: "worth the walk up to see it properly", intensity: .2 },
+      { adj: "windy", phenomenon: "shout practice rattling shutters clear across the district", mood: "routine, if loud", advice: "keep the market stalls tied down today", intensity: .4 },
+    ],
+    windOptions: ["cold, sweeping down off the mountain", "calm in the city, brutal on the tundra"],
+    pressureOptions: ["steady", "dropping ahead of a storm off the sea"],
+    omenLabel: "dragon sighting, hold-wide", omenRange: [2, 25],
+  },
+  {
+    name: "Springfield", tag: "a town of exactly one nuclear plant and thirty churches",
+    meteorologist: "the channel 6 weatherman, unlicensed",
+    unit: "°", tempRange: [15, 26],
+    conditions: [
+      { adj: "hazy", phenomenon: "a faint green glow over the east side, management says it's fine", mood: "shrug-worthy", advice: "don't ask, it's never worth asking", intensity: .3 },
+      { adj: "sunny", phenomenon: "unusually high turnout expected at the town meeting, again, for some reason", mood: "chaotic but harmless", advice: "arrive early if you want an actual seat", intensity: .4 },
+      { adj: "overcast", phenomenon: "a minor incident at the plant, contained, allegedly, again", mood: "business as usual", advice: "nothing to see here, same as most weeks", intensity: .5 },
+    ],
+    windOptions: ["mild, smells faintly of donuts downtown", "gusty by the plant, nobody's ever explained why"],
+    pressureOptions: ["steady, same as every week", "unremarkable"],
+    omenLabel: "minor plant incident, this week", omenRange: [10, 60],
+  },
 ];
 
 const OPENERS = [
