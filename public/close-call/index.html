@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Close Call</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230C1013'/><circle cx='16' cy='16' r='9' fill='none' stroke='%23E8A33D' stroke-width='2'/><circle cx='16' cy='16' r='2.4' fill='%2358C08A'/></svg>">
+<style>
+:root{
+  --bg:#0C1013;
+  --bg-2:#111619;
+  --panel:#151B1F;
+  --line:#26313A;
+  --line-2:#334352;
+  --text:#C3D0D8;
+  --dim:#6E8291;
+  --amber:#E8A33D;
+  --green:#58C08A;
+  --red:#D45B4C;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);
+  background-image:repeating-linear-gradient(0deg, rgba(255,255,255,.014) 0 1px, transparent 1px 3px);
+  color:var(--text);
+  font-family:var(--mono);
+  font-size:13px;line-height:1.55;
+  min-height:100vh;padding:26px 16px 40px;
+}
+.wrap{ max-width:940px;margin:0 auto }
+
+/* ---------- masthead ---------- */
+.top{
+  display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;
+  border-bottom:1px solid var(--line-2);padding-bottom:11px;
+}
+h1{
+  margin:0;font-size:25px;letter-spacing:.20em;font-weight:700;
+  color:var(--text);text-transform:uppercase;
+}
+.sub{ font-size:11px;color:var(--dim);letter-spacing:.09em;padding-bottom:3px }
+.stamp{ margin-left:auto;font-size:10.5px;color:var(--dim);text-align:right;line-height:1.65;letter-spacing:.05em }
+.stamp b{ color:var(--green);font-weight:400 }
+
+/* ---------- verdict ---------- */
+.verdict{
+  border:1px solid var(--line-2);border-left:3px solid var(--amber);
+  background:var(--bg-2);
+  padding:16px 18px;margin:18px 0 20px;
+}
+.verdict .lbl{
+  font-size:10px;letter-spacing:.20em;color:var(--amber);text-transform:uppercase;
+  display:block;margin-bottom:7px;
+}
+.verdict p{ margin:0;font-size:15.5px;line-height:1.6;color:#DDE7EE }
+.verdict p + p{ margin-top:8px;color:var(--dim);font-size:13px }
+
+/* ---------- panels ---------- */
+.grid{ display:grid;grid-template-columns:1fr 1fr;gap:16px }
+@media (max-width:720px){ .grid{ grid-template-columns:1fr } }
+.panel{ border:1px solid var(--line);background:var(--panel);position:relative }
+.panel::before,.panel::after{
+  content:"";position:absolute;width:9px;height:9px;border:1px solid var(--line-2);
+}
+.panel::before{ top:-1px;left:-1px;border-right:0;border-bottom:0 }
+.panel::after{ bottom:-1px;right:-1px;border-left:0;border-top:0 }
+.panel h2{
+  margin:0;padding:11px 14px;font-size:11px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--dim);
+  border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:9px;
+}
+.panel h2 i{ width:7px;height:7px;background:var(--green);border-radius:50%;display:block;flex:none }
+.panel h2 .st{ margin-left:auto;color:var(--green);letter-spacing:.1em }
+.panel h2.warn i{ background:var(--amber) } .panel h2.warn .st{ color:var(--amber) }
+.body{ padding:14px }
+
+.hero{ margin-bottom:13px;padding-bottom:12px;border-bottom:1px dashed var(--line) }
+.hero .name{ font-size:16.5px;color:#E6EEF4;line-height:1.35;word-break:break-word }
+.hero .note{ font-size:11px;color:var(--dim);margin-top:3px }
+
+dl.rows{ margin:0;display:grid;grid-template-columns:auto 1fr;gap:5px 12px;font-size:12px }
+dl.rows dt{ color:var(--dim) }
+dl.rows dd{ margin:0;text-align:right;color:var(--text) }
+dl.rows dd b{ color:var(--amber);font-weight:400 }
+dl.rows dd.ok{ color:var(--green) } dl.rows dd.hot{ color:var(--red) }
+
+.list{ margin:13px 0 0;padding:11px 0 0;border-top:1px dashed var(--line);font-size:11.5px }
+.list .row{ display:flex;gap:10px;padding:3px 0;color:var(--dim) }
+.list .row span:first-child{ color:var(--text);flex:none;min-width:58px }
+.list .row span:last-child{ margin-left:auto;flex:none;color:var(--dim) }
+.list .cap{ font-size:10px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase;margin-bottom:6px }
+
+.state{ padding:16px;font-size:12px;color:var(--dim);line-height:1.7 }
+.state b{ color:var(--amber);display:block;margin-bottom:5px;letter-spacing:.1em }
+.state code{ color:var(--green);background:#0A0E10;padding:1px 5px;border:1px solid var(--line) }
+
+.deck{ display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin:20px 0 0 }
+button{
+  font-family:var(--mono);font-size:11px;letter-spacing:.11em;text-transform:uppercase;
+  background:#1A2228;color:var(--text);border:1px solid var(--line-2);
+  padding:9px 15px;cursor:pointer;
+}
+button:hover{ background:#222C34;border-color:#42566A }
+button:focus-visible{ outline:2px solid var(--amber);outline-offset:2px }
+
+footer{
+  margin-top:26px;padding-top:13px;border-top:1px solid var(--line);
+  font-size:10.5px;color:#4E6070;line-height:1.8;
+}
+footer a{ color:#6E8291 }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <h1>Close Call</h1>
+    <div class="sub">how near it came, in the last 24 hours</div>
+    <div class="stamp" id="stamp">station idle<br><b>—</b></div>
+  </div>
+
+  <div class="verdict">
+    <span class="lbl">Verdict</span>
+    <p id="v-main">Polling the instruments.</p>
+    <p id="v-sub"></p>
+  </div>
+
+  <div class="grid">
+    <div class="panel">
+      <h2 id="sky-h"><i></i> Sky — near-Earth objects <span class="st" id="sky-st">…</span></h2>
+      <div class="body" id="sky"><div class="state">Contacting NASA…</div></div>
+    </div>
+    <div class="panel">
+      <h2 id="gnd-h"><i></i> Ground — seismic <span class="st" id="gnd-st">…</span></h2>
+      <div class="body" id="gnd"><div class="state">Contacting USGS…</div></div>
+    </div>
+  </div>
+
+  <div class="deck">
+    <button id="refresh">Re-read the instruments</button>
+    <button id="reword">Reword the verdict</button>
+  </div>
+
+  <footer>
+    Every figure on this page is read live from
+    <a href="https://api.nasa.gov/" target="_blank" rel="noopener">NASA's NeoWs feed</a>
+    (proxied server-side) and the
+    <a href="https://earthquake.usgs.gov/earthquakes/feed/" target="_blank" rel="noopener">USGS earthquake feed</a>.
+    Nothing here is estimated or invented — only the tone is.
+    Distances are given in lunar distances (LD); 1 LD is the average Earth–Moon gap, about 384,400 km.
+    <a href="/">← back to the cabinet</a>
+  </footer>
+</div>
+
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+const pick = (a) => a[Math.floor(Math.random() * a.length)];
+const num = (n, d) => Number(n).toLocaleString('en-GB', { maximumFractionDigits: d == null ? 0 : d });
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+let sky = null, ground = null;
+
+/* ---------------------------- sky ---------------------------------- */
+async function loadSky(){
+  const d = new Date();
+  const iso = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' +
+              String(d.getDate()).padStart(2,'0');
+  const r = await fetch('/api/nasa/neo?date=' + iso);
+  const j = await r.json().catch(() => ({}));
+
+  if (r.status === 429){
+    $('sky').innerHTML = '<div class="state"><b>Rate limited</b>' +
+      esc(j.message || 'NASA turned us away for the hour.') +
+      (j.demoKey ? '<br><br>This is running on NASA\'s shared <code>DEMO_KEY</code>, which allows about 30 requests an hour. ' +
+                   'A free personal key set as <code>NASA_API_KEY</code> in Railway removes the limit.' : '') +
+      '</div>';
+    $('sky-st').textContent = 'limited'; $('sky-h').className = 'warn';
+    return null;
+  }
+  if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status));
+
+  const payload = typeof j === 'string' ? JSON.parse(j) : j;
+  const byDate = payload.near_earth_objects || {};
+  const objs = byDate[iso] || Object.values(byDate)[0] || [];
+  if (!objs.length){
+    $('sky').innerHTML = '<div class="state">NASA lists no catalogued close approaches for today. ' +
+      'That is the report, and it is a good one.</div>';
+    $('sky-st').textContent = 'clear';
+    return { count: 0 };
+  }
+
+  // closest approach of the day, by miss distance
+  const withCA = objs.map(o => ({ o, ca: (o.close_approach_data || [])[0] })).filter(x => x.ca);
+  withCA.sort((a,b) => parseFloat(a.ca.miss_distance.kilometers) - parseFloat(b.ca.miss_distance.kilometers));
+  const top = withCA[0];
+  const km = parseFloat(top.ca.miss_distance.kilometers);
+  const ld = parseFloat(top.ca.miss_distance.lunar);
+  const dia = top.o.estimated_diameter.meters;
+  const kph = parseFloat(top.ca.relative_velocity.kilometers_per_hour);
+  const haz = top.o.is_potentially_hazardous_asteroid;
+
+  $('sky-st').textContent = haz ? 'flagged' : 'nominal';
+  $('sky-h').className = haz ? 'warn' : '';
+
+  const others = withCA.slice(1, 5).map(x =>
+    '<div class="row"><span>' + esc(x.o.name.replace(/[()]/g,'')) + '</span>' +
+    '<span>' + num(parseFloat(x.ca.miss_distance.lunar), 1) + ' LD</span></div>').join('');
+
+  $('sky').innerHTML =
+    '<div class="hero">' +
+      '<div class="name">' + esc(top.o.name.replace(/[()]/g,'')) + '</div>' +
+      '<div class="note">closest catalogued approach today</div>' +
+    '</div>' +
+    '<dl class="rows">' +
+      '<dt>missed us by</dt><dd><b>' + num(km) + ' km</b></dd>' +
+      '<dt>in lunar distances</dt><dd>' + num(ld, 2) + ' LD</dd>' +
+      '<dt>estimated width</dt><dd>' + num(dia.estimated_diameter_min) + '–' + num(dia.estimated_diameter_max) + ' m</dd>' +
+      '<dt>relative speed</dt><dd>' + num(kph) + ' km/h</dd>' +
+      '<dt>hazard listing</dt><dd class="' + (haz ? 'hot' : 'ok') + '">' + (haz ? 'potentially hazardous' : 'not listed') + '</dd>' +
+      '<dt>tracked today</dt><dd>' + objs.length + ' object' + (objs.length === 1 ? '' : 's') + '</dd>' +
+    '</dl>' +
+    (others ? '<div class="list"><div class="cap">others, by distance</div>' + others + '</div>' : '');
+
+  return { count: objs.length, ld, km, haz, name: top.o.name.replace(/[()]/g,''),
+           width: dia.estimated_diameter_max };
+}
+
+/* --------------------------- ground -------------------------------- */
+async function loadGround(){
+  const r = await fetch('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson');
+  if (!r.ok) throw new Error('USGS HTTP ' + r.status);
+  const j = await r.json();
+  const f = (j.features || []).filter(x => x.properties && x.properties.mag != null);
+  if (!f.length){
+    $('gnd').innerHTML = '<div class="state">USGS is reporting no located events in the last 24 hours.</div>';
+    $('gnd-st').textContent = 'quiet';
+    return { count: 0 };
+  }
+  f.sort((a,b) => b.properties.mag - a.properties.mag);
+  const top = f[0], p = top.properties;
+  const depth = top.geometry.coordinates[2];
+  const when = new Date(p.time);
+  const tsunami = p.tsunami === 1;
+  const felt = p.felt;
+
+  $('gnd-st').textContent = p.mag >= 6 ? 'notable' : 'nominal';
+  $('gnd-h').className = p.mag >= 6 ? 'warn' : '';
+
+  const others = f.slice(1, 5).map(x =>
+    '<div class="row"><span>M ' + x.properties.mag.toFixed(1) + '</span>' +
+    '<span style="color:#8FA3B2">' + esc(x.properties.place || 'unknown') + '</span></div>').join('');
+
+  $('gnd').innerHTML =
+    '<div class="hero">' +
+      '<div class="name">M ' + p.mag.toFixed(1) + ' — ' + esc(p.place || 'location unresolved') + '</div>' +
+      '<div class="note">largest located event in the last 24 hours</div>' +
+    '</div>' +
+    '<dl class="rows">' +
+      '<dt>magnitude</dt><dd><b>' + p.mag.toFixed(1) + '</b></dd>' +
+      '<dt>depth</dt><dd>' + num(depth, 1) + ' km</dd>' +
+      '<dt>logged at</dt><dd>' + when.toISOString().slice(11,16) + ' UTC</dd>' +
+      '<dt>tsunami flag</dt><dd class="' + (tsunami ? 'hot' : 'ok') + '">' + (tsunami ? 'raised' : 'not raised') + '</dd>' +
+      (felt ? '<dt>felt reports</dt><dd>' + num(felt) + '</dd>' : '') +
+      '<dt>events located</dt><dd>' + f.length + ' in 24 h</dd>' +
+    '</dl>' +
+    (others ? '<div class="list"><div class="cap">next largest</div>' + others + '</div>' : '');
+
+  return { count: f.length, max: p.mag, place: p.place, tsunami };
+}
+
+/* --------------------------- verdict -------------------------------- */
+// Wording only. Every number it cites is one the feeds actually returned.
+function sayVerdict(){
+  const lines = [];
+  if (sky && sky.count === 0){
+    lines.push(pick([
+      'Nothing was scheduled to pass close today, and nothing did.',
+      'The sky filed no paperwork today.',
+    ]));
+  } else if (sky && sky.ld != null){
+    const ld = sky.ld;
+    if (ld < 1) lines.push(pick([
+      'Something crossed inside the Moon’s orbit today. It has already gone, and almost nobody looked up.',
+      sky.name + ' passed nearer than the Moon this morning. The catalogue notes this without comment.',
+    ]));
+    else if (ld < 10) lines.push(pick([
+      sky.name + ' cleared us by ' + num(ld,1) + ' lunar distances, which the catalogue files as routine.',
+      'The nearest object came within ' + num(ld,1) + ' lunar distances. Routine, in the way that word does a lot of work.',
+    ]));
+    else lines.push(pick([
+      'The nearest rock stayed ' + num(ld) + ' lunar distances out, which is a comfortable amount of nothing.',
+      'Closest approach today was ' + num(ld) + ' lunar distances. Not close. Catalogued anyway.',
+    ]));
+  }
+
+  if (ground && ground.count){
+    const m = ground.max;
+    if (m >= 7) lines.push('The ground gave up a magnitude ' + m.toFixed(1) + ' near ' + ground.place + '. That one will be in the news.');
+    else if (m >= 6) lines.push('Largest movement was a magnitude ' + m.toFixed(1) + ' near ' + ground.place + ' — big enough to be felt, small enough to be forgotten by Thursday.');
+    else lines.push(pick([
+      'Underneath, ' + num(ground.count) + ' earthquakes were located in 24 hours, the largest a magnitude ' + m.toFixed(1) + '. This is a normal day for a planet that is still cooling.',
+      'The ground logged ' + num(ground.count) + ' events, topping out at magnitude ' + m.toFixed(1) + '. Unremarkable, which is the point.',
+    ]));
+  }
+
+  $('v-main').textContent = lines[0] || 'The instruments returned nothing to report.';
+  $('v-sub').textContent = lines.slice(1).join(' ');
+}
+
+/* ---------------------------- boot ---------------------------------- */
+async function run(){
+  $('stamp').innerHTML = 'reading…<br><b>—</b>';
+  const [a, b] = await Promise.allSettled([loadSky(), loadGround()]);
+  sky = a.status === 'fulfilled' ? a.value : null;
+  ground = b.status === 'fulfilled' ? b.value : null;
+
+  if (a.status === 'rejected'){
+    $('sky').innerHTML = '<div class="state"><b>No answer</b>Could not reach the NASA proxy: ' +
+      esc(a.reason && a.reason.message) + '</div>';
+    $('sky-st').textContent = 'offline'; $('sky-h').className = 'warn';
+  }
+  if (b.status === 'rejected'){
+    $('gnd').innerHTML = '<div class="state"><b>No answer</b>Could not reach the USGS feed: ' +
+      esc(b.reason && b.reason.message) + '</div>';
+    $('gnd-st').textContent = 'offline'; $('gnd-h').className = 'warn';
+  }
+
+  sayVerdict();
+  const now = new Date();
+  $('stamp').innerHTML = 'report generated<br><b>' +
+    now.toISOString().slice(0,10) + ' ' + now.toISOString().slice(11,19) + ' UTC</b>';
+}
+
+$('refresh').addEventListener('click', run);
+$('reword').addEventListener('click', sayVerdict);
+run();
+</script>
+</body>
+</html>
