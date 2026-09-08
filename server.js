@@ -278,6 +278,48 @@ async function handleApi(req, res, url) {
     }
   }
 
+  // --- public-domain artwork images --------------------------------
+  // The Art Institute's IIIF server sits behind Cloudflare and sends
+  // cross-origin-resource-policy: same-origin, so a browser on another
+  // origin cannot display those images directly. Fetched here with the
+  // user-agent header their API asks for, and handed to the browser to
+  // cache. Only their IIIF host, only an id of the shape they issue.
+  if (path === '/api/art') {
+    const img = url.searchParams.get('img') || '';
+    const w = parseInt(url.searchParams.get('w'), 10) || 400;
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(img)) {
+      return sendJson(res, 400, { error: 'bad_image_id' });
+    }
+    // widths the IIIF server already keeps derivatives for; an unusual one
+    // makes it generate the image on the spot, which can take half a minute
+    if ([200, 400, 843].indexOf(w) < 0) return sendJson(res, 400, { error: 'bad_width' });
+    const target = 'https://www.artic.edu/iiif/2/' + img + '/full/' + w + ',/0/default.jpg';
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 25000);   // images can be cold
+    try {
+      const up = await fetch(target, {
+        signal: ctrl.signal,
+        headers: {
+          'User-Agent': 'little-contraptions/1.0 (hub)',
+          'AIC-User-Agent': 'little-contraptions (hobby project)',
+          Accept: 'image/jpeg,image/*',
+        },
+      });
+      if (!up.ok) return sendJson(res, 502, { error: 'artic_' + up.status });
+      const buf = Buffer.from(await up.arrayBuffer());
+      res.writeHead(200, {
+        'Content-Type': up.headers.get('content-type') || 'image/jpeg',
+        'Content-Length': buf.length,
+        'Cache-Control': 'public, max-age=86400',
+      });
+      return res.end(buf);
+    } catch (e) {
+      return sendJson(res, 502, { error: 'artic_unreachable', message: String(e && e.message || e) });
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
   // --- which optional keys are configured --------------------------
   // Lets a toy render an honest "needs a key" state instead of failing.
   if (path === '/api/keys') {

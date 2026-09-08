@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your Painted Double</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%232B2118'/><rect x='6' y='5' width='20' height='22' rx='1' fill='%23C8A24E'/><rect x='9' y='8' width='14' height='16' fill='%235E4A33'/><circle cx='16' cy='14' r='4' fill='%23C9A98A'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --bg:#191510;
+  --panel:#221C15;
+  --ink:#F0E9DC;
+  --ink-2:#B8AD9B;
+  --dim:#8A8071;
+  --rule:#332A20;
+  --gold:#C8A24E;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --sans:ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif;
+  --serif:"Iowan Old Style","Palatino Linotype",Georgia,serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{ background:var(--bg);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:24px 16px 70px }
+.wrap{ max-width:900px;margin:0 auto }
+h1{ font-family:var(--serif);font-size:clamp(24px,5vw,34px);margin:0;font-weight:600 }
+.sub{ font-family:var(--mono);font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--dim);margin-top:9px }
+
+.drop{
+  margin-top:20px;border:2px dashed var(--rule);border-radius:8px;padding:34px 20px;text-align:center;
+  background:var(--panel);cursor:pointer;
+}
+.drop.over{ border-color:var(--gold);background:#2A2218 }
+.drop p{ margin:0 0 6px;font-size:15px;color:var(--ink-2) }
+.drop .small{ font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim) }
+.drop:focus-visible{ outline:2px solid var(--gold);outline-offset:3px }
+input[type=file]{ display:none }
+
+.result{ margin-top:22px;display:none }
+.result.on{ display:block }
+.pair{ display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start }
+@media (max-width:620px){ .pair{ grid-template-columns:1fr } }
+.frame{ background:var(--panel);border:1px solid var(--rule);border-radius:6px;overflow:hidden }
+.frame .im{ width:100%;aspect-ratio:1;object-fit:cover;display:block;background:#0E0B08 }
+.frame .cap{ padding:13px 14px }
+.frame .cap .k{ font-family:var(--mono);font-size:9px;letter-spacing:.19em;text-transform:uppercase;color:var(--dim);margin-bottom:6px }
+.frame .cap h2{ font-family:var(--serif);font-size:18px;margin:0 0 4px;line-height:1.3 }
+.frame .cap .who{ font-size:13.5px;color:var(--ink-2);line-height:1.55 }
+.frame .cap a{ color:var(--gold);font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;display:inline-block;margin-top:9px }
+.frame.mine{ border-color:#3B3125 }
+
+.why{ margin-top:16px;background:var(--panel);border:1px solid var(--rule);border-left:3px solid var(--gold);border-radius:5px;padding:15px 17px }
+.why h3{ font-family:var(--mono);font-size:9.5px;letter-spacing:.19em;text-transform:uppercase;color:var(--dim);font-weight:400;margin:0 0 10px }
+.why ul{ margin:0;padding-left:18px }
+.why li{ font-size:14.5px;line-height:1.7;color:var(--ink-2);margin-bottom:6px }
+.why .score{ font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;color:var(--dim);margin-top:10px }
+
+.others{ margin-top:18px }
+.others h3{ font-family:var(--mono);font-size:9.5px;letter-spacing:.19em;text-transform:uppercase;color:var(--dim);font-weight:400;margin:0 0 10px }
+.strip{ display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px }
+.strip figure{ margin:0;cursor:pointer }
+.strip img{ width:100%;aspect-ratio:1;object-fit:cover;border-radius:4px;border:1px solid var(--rule);display:block }
+.strip figcaption{ font-size:11.5px;color:var(--dim);margin-top:6px;line-height:1.4 }
+.strip figure:hover img{ border-color:var(--gold) }
+
+.bar{ display:flex;gap:9px;margin-top:16px;flex-wrap:wrap }
+.btn{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
+  background:var(--panel);color:var(--ink);border:1px solid var(--rule);padding:12px 16px;border-radius:4px;cursor:pointer;
+}
+.btn:hover{ background:#2C2419 }
+.btn:focus-visible{ outline:2px solid var(--gold);outline-offset:2px }
+
+.status{ font-family:var(--mono);font-size:11px;letter-spacing:.09em;color:var(--dim);margin-top:12px;min-height:16px }
+
+.note{ margin-top:22px;border-top:1px solid var(--rule);padding-top:15px;font-size:12.5px;line-height:1.85;color:#8B8272 }
+.note b{ color:var(--ink-2) }
+.note a{ color:#B9A67F }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } }
+</style>
+</head>
+<body>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<div class="wrap">
+  <h1>Your Painted Double</h1>
+  <div class="sub">not your face · your light</div>
+
+  <div class="drop" id="drop" tabindex="0" role="button" aria-label="choose a photograph">
+    <p><b>Drop a photograph here</b>, or click to choose one.</p>
+    <div class="small">it stays in this browser · nothing is uploaded</div>
+  </div>
+  <input type="file" id="file" accept="image/*">
+  <div class="status" id="status"></div>
+
+  <div class="result" id="result">
+    <div class="pair">
+      <div class="frame mine">
+        <img class="im" id="mine" alt="the photograph you chose">
+        <div class="cap"><div class="k">you</div><h2 id="minelabel">Your photograph</h2>
+          <div class="who" id="minestats"></div></div>
+      </div>
+      <div class="frame">
+        <img class="im" id="theirs" alt="">
+        <div class="cap"><div class="k">closest painting</div>
+          <h2 id="title"></h2>
+          <div class="who" id="artist"></div>
+          <a id="link" target="_blank" rel="noopener">at the Art Institute ↗</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="why">
+      <h3>why this one</h3>
+      <ul id="reasons"></ul>
+      <div class="score" id="score"></div>
+    </div>
+
+    <div class="others">
+      <h3>four more that were nearly it</h3>
+      <div class="strip" id="strip"></div>
+    </div>
+
+    <div class="bar"><button class="btn" id="another">Try another photograph</button></div>
+  </div>
+
+  <div class="note">
+    <b>What this actually compares.</b> Nothing on this page recognises faces, and nothing is uploaded —
+    your photograph is read by this tab and never leaves it. What is compared is light: the picture is
+    squared off, reduced to a four-by-four grid of brightness values, and matched against the same
+    measurement taken from <span id="count">220</span> public-domain paintings in the
+    <a href="https://www.artic.edu/collection" target="_blank" rel="noopener">Art Institute of Chicago</a>
+    collection. So a match means the two pictures are lit and toned alike — which is a real thing to
+    have in common with a stranger from 1640, and is not the same as looking like them.
+  </div>
+</div>
+
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+const IIIF = (id, w) => '/api/art?img=' + encodeURIComponent(id) + '&w=' + w;
+
+let corpus = [];
+
+fetch('portraits.json')
+  .then(r => r.json())
+  .then(j => {
+    corpus = j;
+    $('status').textContent = corpus.length + ' paintings measured and waiting';
+    $('count').textContent = corpus.length;
+  })
+  .catch(() => { $('status').textContent = 'could not load the paintings'; });
+
+/* ---- the same measurement, taken from your photograph ------------- */
+// Square off the middle, shrink to 64×64, and reduce to a 4×4 grid of
+// brightness plus overall tone. This is all the page ever knows about
+// the picture, and it never leaves this tab.
+function measure(img){
+  const c = document.createElement('canvas');
+  c.width = c.height = 64;
+  const ctx = c.getContext('2d', { willReadFrequently: true });
+  const w = img.naturalWidth, h = img.naturalHeight, s = Math.min(w, h);
+  ctx.drawImage(img, (w - s) / 2, (h - s) / 2, s, s, 0, 0, 64, 64);
+  const d = ctx.getImageData(0, 0, 64, 64).data;
+
+  const lum = new Float64Array(64 * 64);
+  let R = 0, G = 0, B = 0;
+  for (let i = 0, p = 0; i < d.length; i += 4, p++){
+    lum[p] = (0.2126 * d[i] + 0.7152 * d[i+1] + 0.0722 * d[i+2]) / 255;
+    R += d[i]; G += d[i+1]; B += d[i+2];
+  }
+  const n = 64 * 64;
+  const g = [];
+  for (let gy = 0; gy < 4; gy++){
+    for (let gx = 0; gx < 4; gx++){
+      let acc = 0;
+      for (let y = gy * 16; y < (gy + 1) * 16; y++)
+        for (let x = gx * 16; x < (gx + 1) * 16; x++) acc += lum[y * 64 + x];
+      g.push(acc / 256);
+    }
+  }
+  let mean = 0;
+  for (let i = 0; i < n; i++) mean += lum[i];
+  mean /= n;
+  let v = 0;
+  for (let i = 0; i < n; i++) v += (lum[i] - mean) * (lum[i] - mean);
+  return { g, l: mean, c: Math.sqrt(v / n), r: R / n / 255, gr: G / n / 255, b: B / n / 255 };
+}
+
+// Distance: mostly the grid, with tone, contrast and warmth as tie-breakers.
+function distance(a, b){
+  let gd = 0;
+  for (let i = 0; i < 16; i++){ const t = a.g[i] - b.g[i]; gd += t * t; }
+  gd = Math.sqrt(gd / 16);
+  const ld = Math.abs(a.l - b.l);
+  const cd = Math.abs(a.c - b.c);
+  const warmA = a.r - a.b, warmB = b.r - b.b;
+  const wd = Math.abs(warmA - warmB);
+  return gd * 1.0 + ld * 0.55 + cd * 0.45 + wd * 0.35;
+}
+
+/* ---- saying why, in terms a person can check ---------------------- */
+
+const side = (f) => {
+  const left = f.g[0] + f.g[4] + f.g[8] + f.g[12] + f.g[1] + f.g[5] + f.g[9] + f.g[13];
+  const right = f.g[2] + f.g[6] + f.g[10] + f.g[14] + f.g[3] + f.g[7] + f.g[11] + f.g[15];
+  if (Math.abs(left - right) < .18) return 'evenly';
+  return left > right ? 'from the left' : 'from the right';
+};
+const vertical = (f) => {
+  const top = f.g.slice(0, 8).reduce((a, b) => a + b, 0);
+  const bot = f.g.slice(8).reduce((a, b) => a + b, 0);
+  if (Math.abs(top - bot) < .18) return 'evenly';
+  return top > bot ? 'brighter at the top' : 'brighter at the bottom';
+};
+const toneWord = (l) => l < .22 ? 'very dark' : l < .36 ? 'dark' : l < .52 ? 'middling' : l < .68 ? 'bright' : 'very bright';
+const contrastWord = (c) => c < .12 ? 'flat and even' : c < .2 ? 'gently modelled' : c < .28 ? 'strongly modelled' : 'harshly lit';
+
+function reasons(me, it){
+  const out = [];
+  const s1 = side(me), s2 = side(it);
+  if (s1 === s2){
+    out.push(s1 === 'evenly'
+      ? 'Both are lit evenly across, with no strong side to the light.'
+      : 'The light in both comes ' + s1 + '.');
+  } else {
+    out.push('The light does not agree — yours comes ' + s1 + ', the painting ' + s2 + ' — but everything else lined up.');
+  }
+  const v1 = vertical(me), v2 = vertical(it);
+  if (v1 === v2 && v1 !== 'evenly') out.push('Both are ' + v1 + ', which is most of what makes two pictures feel alike.');
+  out.push('Yours is ' + toneWord(me.l) + ' overall; the painting is ' + toneWord(it.l) + '.');
+  out.push('Yours is ' + contrastWord(me.c) + '; the painting is ' + contrastWord(it.c) + '.');
+  const warmMe = me.r - me.b, warmIt = it.r - it.b;
+  if (Math.abs(warmMe - warmIt) < .05){
+    out.push(warmMe > .04 ? 'Both lean warm — the same brown-and-amber cast.'
+      : warmMe < -.02 ? 'Both lean cool.' : 'Both are close to neutral in colour.');
+  }
+  return out;
+}
+
+/* ---- running it ---------------------------------------------------- */
+
+function handleFile(f){
+  if (!f || !/^image\//.test(f.type)){ $('status').textContent = 'that does not look like an image'; return; }
+  if (!corpus.length){ $('status').textContent = 'the paintings have not loaded yet — one moment'; return; }
+  $('status').textContent = 'measuring…';
+  const url = URL.createObjectURL(f);
+  const img = new Image();
+  img.onload = () => {
+    let me;
+    try { me = measure(img); }
+    catch (e){ $('status').textContent = 'could not read that image'; return; }
+    const ranked = corpus
+      .map(p => ({ p, d: distance(me, p) }))
+      .sort((a, b) => a.d - b.d);
+    show(url, me, ranked);
+    $('status').textContent = '';
+  };
+  img.onerror = () => { $('status').textContent = 'could not open that file'; };
+  img.src = url;
+}
+
+function show(url, me, ranked){
+  const best = ranked[0];
+  $('result').classList.add('on');
+  $('mine').src = url;
+  $('minestats').textContent = toneWord(me.l) + ', ' + contrastWord(me.c) + ', lit ' + side(me) + '.';
+  $('theirs').src = IIIF(best.p.i, 843);
+  $('theirs').alt = (best.p.t || 'a painting') + (best.p.a ? ', by ' + best.p.a : '');
+  $('title').textContent = best.p.t || 'Untitled';
+  $('artist').textContent = [best.p.a, best.p.d, best.p.m].filter(Boolean).join(' · ');
+  $('link').href = 'https://www.artic.edu/artworks/' + best.p.id;
+  $('reasons').innerHTML = reasons(me, best.p).map(r => '<li>' + esc(r) + '</li>').join('');
+  $('score').textContent = 'distance ' + best.d.toFixed(3) +
+    ' · next closest ' + ranked[1].d.toFixed(3) + ' · measured against ' + corpus.length + ' paintings';
+
+  $('strip').innerHTML = ranked.slice(1, 5).map(r =>
+    '<figure data-id="' + r.p.id + '">' +
+      '<img src="' + IIIF(r.p.i, 200) + '" alt="' + esc(r.p.t || 'a painting') + '" loading="lazy">' +
+      '<figcaption>' + esc(r.p.t || 'Untitled') + (r.p.a ? '<br>' + esc(r.p.a) : '') + '</figcaption>' +
+    '</figure>').join('');
+  $('strip').querySelectorAll('figure').forEach(fig => {
+    fig.addEventListener('click', () => {
+      window.open('https://www.artic.edu/artworks/' + fig.dataset.id, '_blank', 'noopener');
+    });
+  });
+  $('result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+$('drop').addEventListener('click', () => $('file').click());
+$('drop').addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); $('file').click(); } });
+$('file').addEventListener('change', (e) => handleFile(e.target.files[0]));
+$('another').addEventListener('click', () => $('file').click());
+
+['dragenter','dragover'].forEach(t => $('drop').addEventListener(t, (e) => {
+  e.preventDefault(); $('drop').classList.add('over');
+}));
+['dragleave','drop'].forEach(t => $('drop').addEventListener(t, (e) => {
+  e.preventDefault(); $('drop').classList.remove('over');
+}));
+$('drop').addEventListener('drop', (e) => {
+  const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+  handleFile(f);
+});
+document.addEventListener('paste', (e) => {
+  const items = (e.clipboardData && e.clipboardData.items) || [];
+  for (const it of items) if (it.type && it.type.indexOf('image/') === 0) handleFile(it.getAsFile());
+});
+</script>
+</body>
+</html>
