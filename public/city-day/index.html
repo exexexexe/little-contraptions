@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A Sunny Afternoon in the City</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23FFE9CC'/><circle cx='16' cy='13' r='6' fill='%23F2803C'/><rect x='4' y='21' width='24' height='3' rx='1.5' fill='%231D8A8A'/><rect x='4' y='26' width='16' height='3' rx='1.5' fill='%231D8A8A' opacity='.6'/></svg>">
+<style>
+:root{
+  --sun:#FFE9CC;
+  --sun-2:#FFD9A8;
+  --peach:#F2803C;
+  --teal:#1D8A8A;
+  --teal-2:#126B6B;
+  --ink:#2A2018;
+  --ink-2:#5C4B3C;
+  --dim:#8E7A66;
+  --card:#FFF8EE;
+  --line:#E8D5BB;
+  --sans:ui-sans-serif,system-ui,"Helvetica Neue",Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--sun);
+  background-image:
+    radial-gradient(1100px 600px at 70% -10%, #FFF4E2 0%, transparent 62%),
+    radial-gradient(700px 500px at 10% 100%, #FFDCC0 0%, transparent 60%);
+  color:var(--ink);font-family:var(--sans);min-height:100vh;padding:26px 18px 56px;
+}
+.wrap{ max-width:900px;margin:0 auto }
+
+header{ display:flex;align-items:baseline;gap:13px;flex-wrap:wrap;margin-bottom:16px }
+h1{ margin:0;font-size:clamp(23px,4.4vw,33px);font-weight:800;letter-spacing:-.03em;line-height:1.05 }
+h1 em{ font-style:normal;color:var(--peach) }
+.sub{ font-family:var(--mono);font-size:10.5px;color:var(--ink-2);letter-spacing:.1em;text-transform:uppercase }
+.clock{ margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--dim) }
+
+/* ---------- the photo ---------- */
+.frame{
+  position:relative;background:var(--sun-2);overflow:hidden;
+  border:1px solid var(--line);
+  box-shadow:0 20px 50px rgba(120,70,30,.16);
+  aspect-ratio:16/10;
+}
+.frame img{
+  width:100%;height:100%;object-fit:cover;display:block;
+  /* a warm, sun-bleached grade — declared in the credit, as the licence asks */
+  filter:saturate(1.06) contrast(1.03) brightness(1.04) sepia(.16);
+}
+.wash{
+  position:absolute;inset:0;pointer-events:none;
+  background:
+    linear-gradient(200deg, rgba(255,205,140,.30) 0%, rgba(255,180,110,.05) 42%, rgba(20,90,95,.22) 100%),
+    radial-gradient(120% 100% at 80% 0%, rgba(255,225,170,.35) 0%, transparent 55%);
+  mix-blend-mode:multiply;
+}
+.glow{
+  position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(50% 45% at 78% 12%, rgba(255,220,150,.55) 0%, transparent 70%);
+  mix-blend-mode:screen;
+}
+.loading{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:12px;color:var(--ink-2);background:var(--sun-2);
+}
+
+/* ---------- the HUD ---------- */
+.hud{
+  position:absolute;left:16px;top:16px;max-width:min(330px,72%);
+  background:rgba(255,248,238,.92);
+  border:2px solid var(--teal);
+  backdrop-filter:blur(2px);
+  padding:12px 14px 11px;
+}
+.hud::before{
+  content:"";position:absolute;left:-2px;top:-2px;width:12px;height:12px;
+  border-left:4px solid var(--peach);border-top:4px solid var(--peach);
+}
+.hud .tagline{
+  font-family:var(--mono);font-size:8px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--teal-2);margin-bottom:6px;
+}
+.hud h2{ margin:0 0 3px;font-size:17px;font-weight:800;letter-spacing:-.02em;line-height:1.2 }
+.hud .place{ font-family:var(--mono);font-size:10px;color:var(--dim);margin-bottom:9px }
+.hud dl{ margin:0;display:grid;grid-template-columns:1fr auto;gap:3px 10px;font-family:var(--mono);font-size:10.5px }
+.hud dt{ color:var(--ink-2) }
+.hud dd{ margin:0;text-align:right;color:var(--teal-2);font-weight:700 }
+.hud .quip{
+  margin-top:9px;padding-top:8px;border-top:1px dashed var(--line);
+  font-size:12px;line-height:1.5;color:var(--ink-2);font-style:italic;
+}
+.hud .fict{
+  margin-top:8px;font-family:var(--mono);font-size:8px;letter-spacing:.11em;
+  text-transform:uppercase;color:var(--peach);
+}
+@media (max-width:620px){ .hud{ position:static;max-width:none;margin:0;border-top:0 } }
+
+/* ---------- credit ---------- */
+.credit{
+  border:1px solid var(--line);border-top:0;background:var(--card);
+  padding:13px 16px;display:grid;grid-template-columns:1fr auto;gap:14px;align-items:start;
+}
+@media (max-width:620px){ .credit{ grid-template-columns:1fr } }
+.credit .t{ font-size:14.5px;line-height:1.45;font-weight:600 }
+.credit .m{ font-family:var(--mono);font-size:10.5px;color:var(--ink-2);line-height:1.75;margin-top:5px }
+.credit .m a{ color:var(--teal-2) }
+.credit .lic{
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;
+  border:1px solid var(--teal);color:var(--teal-2);padding:5px 9px;white-space:nowrap;
+}
+
+.deck{ display:flex;gap:9px;flex-wrap:wrap;margin-top:16px;align-items:center }
+.btn{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;
+  background:var(--peach);color:#fff;border:0;padding:12px 19px;cursor:pointer;font-weight:700;
+}
+.btn:hover{ background:#F58F4F }
+.btn.sec{ background:transparent;color:var(--ink);border:1px solid var(--line);font-weight:400 }
+.btn.sec:hover{ border-color:var(--teal);color:var(--teal-2) }
+.btn:focus-visible{ outline:2px solid var(--teal);outline-offset:2px }
+.count{ margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--dim) }
+
+.state{ padding:20px;font-family:var(--mono);font-size:12px;color:var(--ink-2);line-height:1.75 }
+.state b{ display:block;color:var(--peach);margin-bottom:5px }
+
+footer{
+  margin-top:26px;padding-top:14px;border-top:1px solid var(--line);
+  font-family:var(--mono);font-size:10.5px;color:var(--dim);line-height:1.85;
+}
+footer a{ color:var(--ink-2) }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>A sunny afternoon <em>in the city</em></h1>
+    <span class="sub">San Francisco · real photographs</span>
+    <span class="clock" id="clock"></span>
+  </header>
+
+  <div class="frame" id="frame">
+    <div class="loading">finding an afternoon…</div>
+  </div>
+  <div class="credit" id="credit"></div>
+
+  <div class="deck">
+    <button class="btn" id="next">Another afternoon</button>
+    <button class="btn sec" id="reroll">Re-read the overlay</button>
+    <span class="count" id="count"></span>
+  </div>
+</div>
+
+<footer>
+  Photographs come live from <a href="https://commons.wikimedia.org/" target="_blank" rel="noopener">Wikimedia
+  Commons</a> and belong to the people who took them — each is credited above with its licence, and every
+  image here is shown with a warm colour grade applied in the browser, which the licences count as a change.
+  The teal-and-orange overlay is a joke and says so; nothing in it is a real measurement, and it describes
+  the place, never anybody in the picture. <a href="/">← back to the cabinet</a>
+</footer>
+
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+const pick = (a) => a[Math.floor(Math.random()*a.length)];
+const ri = (a,b) => a + Math.floor(Math.random()*(b-a+1));
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const strip = (h) => { const d = document.createElement('div'); d.innerHTML = h || '';
+  return (d.textContent || '').replace(/\s+/g,' ').trim(); };
+
+const CATS = [
+  'Quality images of San Francisco',
+  'Featured pictures of San Francisco',
+  'Streets in San Francisco',
+];
+
+/* The overlay is invented and labelled as such. It profiles the location,
+   never a person in the frame — no claims are made about anybody. */
+const METRICS = [
+  ['fog commitment',    () => ri(4,99) + '%'],
+  ['hill gradient',     () => ri(2,31) + '°'],
+  ['parking outlook',   () => pick(['bleak','theoretical','one space, contested','circle again','miraculous'])],
+  ['sourdough radius',  () => ri(40,900) + ' m'],
+  ['smugness index',    () => ri(11,97) + '/100'],
+  ['seagull pressure',  () => pick(['low','building','critical','two, watching'])],
+  ['queue for brunch',  () => ri(12,95) + ' min'],
+  ['bus, next',         () => pick(['4 min','9 min','"approaching" for 20 min','cancelled, cheerfully'])],
+];
+const QUIPS = [
+  'Somebody is playing a saxophone about a block from here and nobody minds.',
+  'The light does this for roughly forty minutes and then gives up entirely.',
+  'Three separate people are describing their startup within earshot.',
+  'A dog with a bandana has right of way and knows it.',
+  'The fog is currently four streets over, biding its time.',
+  'Everyone here left somewhere colder and mentions it often.',
+  'A man is selling something from a folding table. It is going well.',
+  'The hill looked shorter from the bottom. It always does.',
+  'Somewhere below, a cable car bell. Somewhere above, scaffolding.',
+];
+const DESIGNATIONS = ['scene','location','afternoon','block','corner','vantage'];
+
+let pool = [], idx = 0, seen = 0, placeholderTimer = 0, showToken = 0;
+
+function normaliseHost(u){
+  // thumb.wikimedia.org is blocked cross-origin in browsers; upload is not
+  return (u || '').replace('//thumb.wikimedia.org/', '//upload.wikimedia.org/');
+}
+
+async function fetchCategory(cat){
+  const u = 'https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*' +
+    '&generator=categorymembers&gcmtype=file&gcmlimit=100' +
+    '&gcmtitle=' + encodeURIComponent('Category:' + cat) +
+    '&prop=imageinfo&iiprop=url|extmetadata|size&iiurlwidth=1600';
+  const r = await fetch(u);
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  const j = await r.json();
+  const pages = (j.query && j.query.pages) || {};
+  return Object.values(pages).map(p => {
+    const ii = (p.imageinfo || [])[0]; if (!ii) return null;
+    const em = ii.extmetadata || {};
+    const val = (k) => em[k] ? strip(em[k].value) : null;
+    const artist = val('Artist');
+    const licence = val('LicenseShortName');
+    // no attribution, no display — the licence is the point
+    if (!artist || !licence) return null;
+    // a 16:10 frame crops portrait shots to pieces, so keep landscape only
+    if (!ii.thumburl || ii.width < 900 || ii.height > ii.width) return null;
+    return {
+      title: p.title.replace(/^File:/,'').replace(/\.(jpe?g|png|webp|tiff?)$/i,'').replace(/_/g,' '),
+      src: normaliseHost(ii.thumburl),
+      page: 'https://commons.wikimedia.org/wiki/' + encodeURIComponent(p.title),
+      artist, licence,
+      licenceUrl: val('LicenseUrl'),
+      desc: val('ImageDescription'),
+      w: ii.width, h: ii.height,
+    };
+  }).filter(Boolean);
+}
+
+function shuffle(a){
+  a = a.slice();
+  for (let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+
+function hudFor(ph){
+  const m = shuffle(METRICS).slice(0,4);
+  return '<div class="hud">' +
+    '<div class="tagline">' + esc(pick(DESIGNATIONS)) + ' profile · fabricated</div>' +
+    '<h2>' + esc(ph.title.length > 46 ? ph.title.slice(0,44) + '…' : ph.title) + '</h2>' +
+    '<div class="place">San Francisco, California</div>' +
+    '<dl>' + m.map(x => '<dt>' + esc(x[0]) + '</dt><dd>' + esc(x[1]()) + '</dd>').join('') + '</dl>' +
+    '<div class="quip">' + esc(pick(QUIPS)) + '</div>' +
+    '<div class="fict">↑ invented · not measurements</div>' +
+  '</div>';
+}
+
+function show(){
+  if (!pool.length) return;
+  const ph = pool[idx % pool.length];
+  seen++;
+  // The credit is written synchronously but the image arrives later. Without
+  // a token, a slow earlier image can land on top of a newer credit — showing
+  // one photograph under another photographer's name, which the licence does
+  // not allow. Only the newest request is permitted to paint.
+  const token = ++showToken;
+
+  // Only show the placeholder if the image is slow. The timer must be
+  // module-level and cleared on entry: a previous call's timer firing after
+  // the next image was appended would wipe it straight back out.
+  clearTimeout(placeholderTimer);
+  placeholderTimer = setTimeout(() => {
+    if (token !== showToken) return;
+    $('frame').innerHTML = '<div class="loading">loading…</div>';
+  }, 220);
+  const img = new Image();
+  img.onload = () => {
+    if (token !== showToken) return;          // superseded; drop it
+    clearTimeout(placeholderTimer);
+    $('frame').innerHTML = '';
+    $('frame').appendChild(img);
+    const wash = document.createElement('div'); wash.className = 'wash';
+    const glow = document.createElement('div'); glow.className = 'glow';
+    $('frame').appendChild(wash); $('frame').appendChild(glow);
+    $('frame').insertAdjacentHTML('beforeend', hudFor(ph));
+  };
+  img.onerror = () => {
+    if (token !== showToken) return;
+    clearTimeout(placeholderTimer);
+    $('frame').innerHTML = '<div class="state"><b>That photograph would not load</b>' +
+      'Skipping to the next one.</div>';
+    setTimeout(() => { idx++; show(); }, 700);
+  };
+  img.alt = ph.title;
+  img.src = ph.src;
+
+  $('credit').innerHTML =
+    '<div>' +
+      '<div class="t">' + esc(ph.title) + '</div>' +
+      '<div class="m">' +
+        'Credit: ' + esc(ph.artist) + '. ' +
+        '<a href="' + esc(ph.page) + '" target="_blank" rel="noopener">File on Wikimedia Commons</a>' +
+        (ph.licenceUrl ? ' · <a href="' + esc(ph.licenceUrl) + '" target="_blank" rel="noopener">licence</a>' : '') +
+        '<br>Shown here with a colour grade applied in the browser; the original is unmodified at the link above.' +
+      '</div>' +
+    '</div>' +
+    '<div class="lic">' + esc(ph.licence) + '</div>';
+
+  $('count').textContent = seen + ' seen · ' + pool.length + ' in the pool';
+}
+
+$('next').addEventListener('click', () => { idx++; show(); });
+$('reroll').addEventListener('click', () => {
+  const hud = document.querySelector('.hud');
+  if (hud && pool.length) hud.outerHTML = hudFor(pool[idx % pool.length]);
+});
+
+function tickClock(){
+  // San Francisco local time, wherever you happen to be
+  try {
+    $('clock').textContent = new Intl.DateTimeFormat('en-GB',
+      { hour:'2-digit', minute:'2-digit', hour12:false, timeZone:'America/Los_Angeles' })
+      .format(new Date()) + ' there';
+  } catch(e){ $('clock').textContent = ''; }
+}
+
+(async function boot(){
+  tickClock(); setInterval(tickClock, 20000);
+  try {
+    const lists = await Promise.all(CATS.map(c => fetchCategory(c).catch(() => [])));
+    const merged = [];
+    const seenTitles = new Set();
+    lists.flat().forEach(p => { if (!seenTitles.has(p.title)){ seenTitles.add(p.title); merged.push(p); } });
+    if (!merged.length) throw new Error('no usable photographs came back');
+    pool = shuffle(merged);
+    show();
+  } catch (err) {
+    $('frame').innerHTML = '<div class="state"><b>Could not reach Commons</b>' +
+      esc(err.message) + '. The API is public and keyless, so this is usually a passing problem.</div>';
+    $('credit').innerHTML = '';
+  }
+})();
+</script>
+</body>
+</html>
