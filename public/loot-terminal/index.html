@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Loot Terminal</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%231B120A'/><path d='M16 4l2.6 7.4 7.4.4-5.8 4.8 2 7.4-6.2-4.2-6.2 4.2 2-7.4L6 11.8l7.4-.4z' fill='%23E8A33C'/></svg>">
+<style>
+:root{
+  --dark:#1B120A; --dark-2:#241809; --panel:#2E1F0E;
+  --parch:#EFE0C0; --parch-2:#E0CDA4; --edge:#8A6A38;
+  --ink:#2A1E10; --ink-2:#5A452A;
+  --ember:#E8A33C; --ember-hot:#FFC96B; --blood:#A33B28;
+  --c-common:#9A8F7A; --c-uncommon:#6E9A5A; --c-rare:#4A82C4;
+  --c-epic:#9B5FC7; --c-legend:#E8A33C;
+  --display:"Cinzel","Iowan Old Style","Palatino Linotype",Georgia,serif;
+  --body:"Iowan Old Style",Palatino,Georgia,serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--dark);
+  background-image:
+    radial-gradient(900px 520px at 50% -8%, #3A2711 0%, transparent 62%),
+    repeating-linear-gradient(94deg, rgba(0,0,0,.10) 0 2px, transparent 2px 6px);
+  color:var(--parch); font-family:var(--body); min-height:100vh; padding:24px 16px 50px;
+}
+.wrap{ max-width:880px;margin:0 auto }
+
+/* ---------- terminal chrome ---------- */
+.chrome{
+  background:linear-gradient(168deg,#3C2A13,var(--panel) 46%,#1A1207);
+  border:1px solid #4E3818; border-radius:9px; padding:14px;
+  box-shadow:0 22px 56px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,210,140,.14);
+  position:relative;
+}
+.chrome::before,.chrome::after{
+  content:"";position:absolute;width:9px;height:9px;border-radius:50%;
+  background:radial-gradient(circle at 34% 30%,#FFD79A,var(--ember) 55%,#6E4A16);
+}
+.chrome::before{ left:10px;top:10px } .chrome::after{ right:10px;top:10px }
+
+.plate{ display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;padding:2px 4px 12px }
+.plate h1{
+  margin:0;font-family:var(--display);font-size:clamp(18px,3.4vw,25px);font-weight:700;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--ember-hot);
+}
+.plate .sub{ font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;color:#9A7C4A;text-transform:uppercase }
+.plate .cnt{ margin-left:auto;font-family:var(--mono);font-size:10px;color:#9A7C4A }
+
+/* ---------- tabs ---------- */
+.tabs{ display:flex;gap:0;border:1px solid #4E3818;border-radius:5px;overflow:hidden;margin-bottom:12px }
+.tabs button{
+  flex:1;font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  background:transparent;border:0;border-right:1px solid #4E3818;color:#B79A6A;padding:10px 8px;cursor:pointer;
+}
+.tabs button:last-child{ border-right:0 }
+.tabs button[aria-pressed="true"]{ background:var(--ember);color:#2A1B08;font-weight:700 }
+.tabs button:focus-visible{ outline:2px solid var(--ember-hot);outline-offset:-2px }
+
+/* ---------- the slab ---------- */
+.slab{
+  background:linear-gradient(178deg,var(--parch),var(--parch-2));
+  color:var(--ink); border:1px solid var(--edge); border-radius:3px;
+  padding:26px 26px 22px; min-height:288px; position:relative;
+  box-shadow:inset 0 0 40px rgba(138,106,56,.24);
+}
+.slab::after{
+  content:"";position:absolute;inset:7px;border:1px solid rgba(138,106,56,.34);pointer-events:none;border-radius:2px;
+}
+.rar{
+  display:inline-block;font-family:var(--mono);font-size:9px;letter-spacing:.2em;text-transform:uppercase;
+  padding:3px 9px;border:1px solid currentColor;margin-bottom:12px;
+}
+.slab h2{
+  font-family:var(--display);font-weight:700;
+  font-size:clamp(24px,5.2vw,40px);line-height:1.1;letter-spacing:-.005em;margin:0 0 4px;
+}
+.slab .kind{ font-family:var(--mono);font-size:11px;color:var(--ink-2);letter-spacing:.09em;margin-bottom:16px }
+.slab .flavour{ font-size:16.5px;line-height:1.68;font-style:italic;color:#40301C;max-width:56ch }
+.slab dl{ margin:17px 0 0;display:grid;grid-template-columns:auto 1fr;gap:6px 16px;font-family:var(--mono);font-size:12px }
+.slab dt{ color:var(--ink-2) } .slab dd{ margin:0;text-align:right;color:var(--ink) }
+/* watermark, kept clear of the right-aligned stat column */
+.slab .sigil{ position:absolute;right:26px;top:26px;opacity:.13;width:118px;height:118px;pointer-events:none }
+@media (max-width:620px){ .slab .sigil{ width:76px;height:76px;opacity:.09 } }
+
+/* ---------- compendium ---------- */
+.comp{ display:none }
+.comp.on{ display:block }
+.comp .tools{ display:flex;gap:8px;flex-wrap:wrap;margin-bottom:11px;align-items:center }
+.comp input{
+  flex:1;min-width:150px;font-family:var(--body);font-size:14px;
+  background:#241809;border:1px solid #4E3818;color:var(--parch);padding:9px 12px;border-radius:3px;
+}
+.comp input:focus-visible{ outline:2px solid var(--ember);outline-offset:-1px }
+.comp .stat{ font-family:var(--mono);font-size:10px;color:#9A7C4A }
+.rows{ border:1px solid #4E3818;border-radius:4px;overflow:hidden;max-height:430px;overflow-y:auto }
+.row{
+  display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:baseline;
+  padding:10px 13px;border-bottom:1px solid #3A2A13;cursor:pointer;
+}
+.row:last-child{ border-bottom:0 }
+.row:hover{ background:#33230F }
+.row .nm{ font-size:15px;line-height:1.35 }
+.row .nm i{ display:block;font-style:normal;font-family:var(--mono);font-size:10px;color:#9A7C4A;margin-top:2px }
+.row .rr{ font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase }
+.row .dt{ font-family:var(--mono);font-size:9.5px;color:#7A6440;white-space:nowrap }
+.empty{ padding:34px 16px;text-align:center;font-style:italic;color:#9A7C4A }
+
+.deck{ display:flex;gap:8px;flex-wrap:wrap;margin-top:13px;align-items:center }
+.key{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
+  background:linear-gradient(180deg,#7A5722,#5A3F16);color:#FFE9C2;border:0;border-radius:5px;
+  padding:12px 18px;cursor:pointer;box-shadow:0 3px 0 #33240C, inset 0 1px 0 rgba(255,220,160,.2);
+}
+.key:active{ transform:translateY(2px);box-shadow:0 1px 0 #33240C }
+.key.pull{ background:linear-gradient(180deg,#C98A2C,#9A6718);color:#2A1B08;font-weight:700 }
+.key.warn{ background:linear-gradient(180deg,#8A3728,#6A281C) }
+.key:focus-visible{ outline:2px solid var(--ember-hot);outline-offset:2px }
+.msg{ font-family:var(--mono);font-size:10.5px;color:#9A7C4A;margin-left:auto }
+
+footer{
+  margin-top:22px;font-family:var(--mono);font-size:10px;color:#7A6440;line-height:1.9;
+}
+footer a{ color:#B79A6A }
+@media (prefers-reduced-motion:reduce){ .slab{ transition:none } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="chrome">
+    <div class="plate">
+      <h1>The Loot Terminal</h1>
+      <span class="sub">appraisal &amp; registry</span>
+      <span class="cnt" id="cnt"></span>
+    </div>
+
+    <div class="tabs" id="tabs">
+      <button data-t="pull" aria-pressed="true">Appraisal</button>
+      <button data-t="comp" aria-pressed="false">Compendium</button>
+    </div>
+
+    <div id="pullview">
+      <div class="slab" id="slab"></div>
+      <div class="deck">
+        <button class="key pull" id="pull">Pull an item</button>
+        <button class="key" id="reroll">Re-describe</button>
+        <span class="msg" id="msg"></span>
+      </div>
+    </div>
+
+    <div class="comp" id="compview">
+      <div class="tools">
+        <input id="q" placeholder="search the compendium…" autocomplete="off">
+        <span class="stat" id="cstat"></span>
+      </div>
+      <div class="rows" id="rows"></div>
+      <div class="deck">
+        <button class="key" id="export">Copy list</button>
+        <button class="key warn" id="wipe">Burn the registry</button>
+        <span class="msg" id="cmsg"></span>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Every item is assembled in your browser from word lists — no two registries are alike.
+    The compendium is kept in this browser's localStorage and nowhere else.
+    <a href="/">← back to the cabinet</a>
+  </footer>
+</div>
+
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+const pick = (a) => a[Math.floor(Math.random()*a.length)];
+const ri = (a,b) => a + Math.floor(Math.random()*(b-a+1));
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const KEY = 'little-contraptions:loot-terminal:v1';
+
+/* --------------------------- the stock ----------------------------- */
+const KINDS = [
+  { k:'sword',  n:'Longsword',   slot:'one-handed blade',  forms:['Blade','Edge','Fang','Sabre','Brand','Point'] },
+  { k:'greats', n:'Greatsword',  slot:'two-handed blade',  forms:['Greatsword','Cleaver','Reaver','Ruin'] },
+  { k:'axe',    n:'War Axe',     slot:'one-handed axe',    forms:['Axe','Hewer','Splitter','Bite'] },
+  { k:'staff',  n:'Staff',       slot:'focus, two-handed', forms:['Staff','Rod','Cane','Branch','Sceptre'] },
+  { k:'bow',    n:'Longbow',     slot:'ranged',            forms:['Bow','Draw','Loosing','Arc'] },
+  { k:'dagger', n:'Dagger',      slot:'off-hand blade',    forms:['Dagger','Kiss','Needle','Whisper','Tooth'] },
+  { k:'helm',   n:'Helm',        slot:'head',              forms:['Helm','Crown','Circlet','Visor','Cowl'] },
+  { k:'plate',  n:'Cuirass',     slot:'chest',             forms:['Cuirass','Mail','Plate','Harness','Shell'] },
+  { k:'boots',  n:'Boots',       slot:'feet',              forms:['Boots','Treads','Striders','Step','Soles'] },
+  { k:'cloak',  n:'Cloak',       slot:'back',              forms:['Cloak','Mantle','Shroud','Wrap'] },
+  { k:'ring',   n:'Ring',        slot:'finger',            forms:['Ring','Band','Signet','Loop','Circle'] },
+  { k:'amulet', n:'Amulet',      slot:'neck',              forms:['Amulet','Pendant','Charm','Locket','Token'] },
+  { k:'bag',    n:'Satchel',     slot:'carried',           forms:['Satchel','Pack','Bag','Pouch','Coffer'] },
+  { k:'shield', n:'Shield',      slot:'off-hand',          forms:['Shield','Bulwark','Ward','Aegis','Wall'] },
+  { k:'lamp',   n:'Lantern',     slot:'carried',           forms:['Lantern','Lamp','Beacon','Ember','Wick'] },
+  { k:'tome',   n:'Tome',        slot:'carried',           forms:['Tome','Codex','Ledger','Grimoire','Folio'] },
+];
+
+const RARITY = [
+  { r:'Common',    w:40, cls:'--c-common',   mult:1 },
+  { r:'Uncommon',  w:26, cls:'--c-uncommon', mult:1.4 },
+  { r:'Rare',      w:18, cls:'--c-rare',     mult:2 },
+  { r:'Epic',      w:11, cls:'--c-epic',     mult:2.9 },
+  { r:'Legendary', w:5,  cls:'--c-legend',   mult:4.4 },
+];
+
+/* Proper-noun naming, Excalibur-style, rather than "Sword #3". */
+const PROPER = ['Aelthar','Brannoc','Caladwen','Dunmara','Eirlys','Fenwrack','Gaverone','Hurstwald',
+  'Ilvane','Jorrund','Kaelith','Lyrran','Morvath','Nyxara','Orrimund','Pelenor','Quenmar','Rhovann',
+  'Sevrant','Tharion','Ulmyr','Vaeloth','Wrenhald','Ysoldir','Zeraph'];
+const OF_WHOM = ['the Drowned King','the Last Cartographer','a Patient Widow','the Ninth Sister',
+  'the Sleepless Smith','a Forgotten Oath','the Hollow Count','the Salt Prophet','the Iron Gardener',
+  'the Second Moon','a Merciful Executioner','the Winter Envoy','the Cartographer of Ashes'];
+const EPITHET = ['the Unyielding','the Quiet','the Twice-Broken','the Patient','the Unwelcome',
+  'the Long-Waiting','the Unlit','the Kindly','the Undignified','the Reluctant','the Overdue',
+  'the Well-Meaning','the Improbable','the Last'];
+const ADJ = ['Gilded','Hollow','Riven','Sunless','Salted','Weeping','Fell','Bright','Ashen','Verdant',
+  'Frostbound','Emberlit','Whispering','Leaden','Glass','Thorned','Umbral','Tidebound','Rustward'];
+const NOUN = ['Dawn','Sorrow','Vigil','Tempest','Covenant','Reckoning','Lament','Harvest','Threshold',
+  'Requiem','Solstice','Verdict','Pilgrim','Wake','Refrain','Errand','Tally'];
+
+const NAME_PATTERNS = [
+  (k) => pick(PROPER),
+  (k) => pick(PROPER) + ', ' + pick(EPITHET),
+  (k) => 'The ' + pick(ADJ) + ' ' + pick(k.forms),
+  (k) => pick(k.forms) + ' of ' + pick(OF_WHOM),
+  (k) => pick(ADJ) + pick(['fall','wake','bane','song','light','hold','mark','reach']),
+  (k) => 'The ' + pick(NOUN) + ' ' + pick(k.forms),
+  (k) => pick(PROPER) + "'s " + pick(k.forms),
+  (k) => pick(NOUN) + 'bringer',
+  (k) => 'The Last ' + pick(k.forms) + ' of ' + pick(PROPER),
+  (k) => pick(ADJ) + ' ' + pick(NOUN),
+];
+
+const FLAV_OPEN = [
+  'Recovered from {place}, where it had been doing nothing in particular for a very long time.',
+  'The smith who made this signed it, then spent the rest of their life saying they had not.',
+  'Older than the language of the inscription on it, which nobody can read anyway.',
+  'Traded four times in one week, each owner insisting they got the better of it.',
+  'Found {place}. The finder is not available for comment, or for anything else.',
+  'It was buried carefully, which is usually a sign that somebody wanted it to stay buried.',
+  'Commissioned for a war that was called off, and never quite forgave anyone for that.',
+  'Every previous owner has described it as "fine". None have elaborated.',
+];
+const FLAV_QUIRK = [
+  'It is warm on one side and never on the other.',
+  'It weighs slightly less when nobody is watching, which is difficult to verify.',
+  'Birds will not go near it. Cats are entirely unbothered.',
+  'It hums, but only in rooms where a decision is about to be made.',
+  'The engraving changes by one letter a year. Nobody has yet read a full word.',
+  'It has never been dropped. Several people have tried.',
+  'Rain avoids it. This is less useful than it sounds.',
+  'It is always exactly where you left it, even when that is impossible.',
+  'It smells faintly of a room you have not been in for years.',
+  'Left alone overnight, it will have turned to face the door.',
+];
+const PLACES = ['a flooded barrow','the wrong tomb','a market stall in Ninebridge','the cellar of a burnt inn',
+  'the riverbed at low tide','a lost caravan','beneath a floor that should not have had one','a monastery midden'];
+
+const AFFIX = ['of Endurance','of the Verge','of Quiet Passage','of the Ninth Hour','of Slow Mending',
+  'of Unwelcome Truth','of the Salt Road','of the Long Watch','of Small Mercies','of Cold Iron'];
+
+function rollRarity(){
+  const total = RARITY.reduce((n,r)=>n+r.w,0);
+  let x = Math.random()*total;
+  for (const r of RARITY){ if ((x -= r.w) <= 0) return r; }
+  return RARITY[0];
+}
+
+function makeItem(){
+  const kind = pick(KINDS);
+  const rar = rollRarity();
+  let name = pick(NAME_PATTERNS)(kind);
+  if (Math.random() < 0.24) name += ' ' + pick(AFFIX);
+  const flav = pick(FLAV_OPEN).replace('{place}', pick(PLACES)) + ' ' + pick(FLAV_QUIRK);
+  const base = ri(4, 26);
+  return {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2,7),
+    name, kind: kind.n, slot: kind.slot, kindKey: kind.k,
+    rarity: rar.r, cls: rar.cls,
+    flav,
+    stats: {
+      'item level': Math.round(base * rar.mult),
+      'weight':     (0.3 + Math.random()*7.4).toFixed(1) + ' kg',
+      'condition':  pick(['pristine','serviceable','worn','notched','held together by habit']),
+      'value':      Math.round(base * rar.mult * ri(7, 31)) + ' gp',
+    },
+    when: Date.now(),
+  };
+}
+
+/* a small drawn sigil per item kind, so the slab is not all type */
+function sigil(kindKey, colour){
+  const g = {
+    sword:'<path d="M48 8 L56 30 L56 68 L48 78 L40 68 L40 30 Z"/><rect x="30" y="66" width="36" height="6"/>',
+    greats:'<path d="M48 4 L60 32 L60 72 L48 84 L36 72 L36 32 Z"/><rect x="24" y="70" width="48" height="7"/>',
+    axe:'<rect x="44" y="12" width="8" height="72"/><path d="M52 18 C78 22 78 46 52 50 Z"/>',
+    staff:'<rect x="45" y="16" width="6" height="70"/><circle cx="48" cy="18" r="13" fill="none" stroke-width="5"/>',
+    bow:'<path d="M32 12 C64 34 64 62 32 84" fill="none" stroke-width="6"/><line x1="32" y1="12" x2="32" y2="84" stroke-width="3"/>',
+    dagger:'<path d="M48 16 L54 34 L54 62 L48 70 L42 62 L42 34 Z"/><rect x="34" y="60" width="28" height="5"/>',
+    helm:'<path d="M24 52 C24 26 72 26 72 52 L72 74 L24 74 Z"/><rect x="42" y="40" width="12" height="26" fill="#000"/>',
+    plate:'<path d="M28 24 L68 24 L72 54 L48 80 L24 54 Z"/>',
+    boots:'<path d="M32 20 L48 20 L48 60 L72 60 L72 78 L32 78 Z"/>',
+    cloak:'<path d="M48 16 L74 34 L66 82 L30 82 L22 34 Z"/>',
+    ring:'<circle cx="48" cy="54" r="24" fill="none" stroke-width="8"/><path d="M48 14 l7 12 h-14 z"/>',
+    amulet:'<path d="M26 20 C40 44 56 44 70 20" fill="none" stroke-width="5"/><circle cx="48" cy="60" r="17"/>',
+    bag:'<path d="M30 38 L66 38 L72 82 L24 82 Z"/><path d="M38 38 C38 20 58 20 58 38" fill="none" stroke-width="5"/>',
+    shield:'<path d="M48 14 L76 26 C76 58 62 76 48 84 C34 76 20 58 20 26 Z"/>',
+    lamp:'<rect x="34" y="34" width="28" height="34"/><path d="M40 34 C40 20 56 20 56 34" fill="none" stroke-width="4"/><rect x="30" y="68" width="36" height="6"/>',
+    tome:'<rect x="26" y="22" width="44" height="58" rx="3"/><line x1="48" y1="22" x2="48" y2="80" stroke="#000" stroke-width="3"/>',
+  }[kindKey] || '<circle cx="48" cy="50" r="26"/>';
+  return '<svg class="sigil" viewBox="0 0 96 96" fill="' + colour + '" stroke="' + colour + '" aria-hidden="true">' + g + '</svg>';
+}
+
+/* ------------------------------ state ------------------------------ */
+let current = null;
+let registry = load();
+let tab = 'pull';
+
+function load(){
+  try { const v = JSON.parse(localStorage.getItem(KEY)); return Array.isArray(v) ? v : []; }
+  catch (e) { return []; }
+}
+function save(){
+  try { localStorage.setItem(KEY, JSON.stringify(registry.slice(0, 500))); return true; }
+  catch (e) { return false; }
+}
+function colourOf(cls){ return getComputedStyle(document.documentElement).getPropertyValue(cls).trim() || '#E8A33C'; }
+
+function renderSlab(){
+  if (!current){ $('slab').innerHTML = '<div class="empty">The terminal is idle. Pull an item.</div>'; return; }
+  const c = colourOf(current.cls);
+  $('slab').innerHTML =
+    '<span class="rar" style="color:' + c + '">' + esc(current.rarity) + '</span>' +
+    '<h2>' + esc(current.name) + '</h2>' +
+    '<div class="kind">' + esc(current.kind) + ' · ' + esc(current.slot) + '</div>' +
+    '<p class="flavour">' + esc(current.flav) + '</p>' +
+    '<dl>' + Object.keys(current.stats).map(k =>
+      '<dt>' + esc(k) + '</dt><dd>' + esc(current.stats[k]) + '</dd>').join('') + '</dl>' +
+    sigil(current.kindKey, c);
+}
+
+function renderComp(){
+  const q = ($('q').value || '').trim().toLowerCase();
+  const list = registry.filter(i => !q ||
+    (i.name + ' ' + i.kind + ' ' + i.rarity).toLowerCase().includes(q));
+  $('cstat').textContent = list.length + (q ? ' matching' : '') + ' of ' + registry.length;
+  if (!list.length){
+    $('rows').innerHTML = '<div class="empty">' +
+      (registry.length ? 'Nothing matches that.' : 'Nothing logged yet. Pull something.') + '</div>';
+    return;
+  }
+  $('rows').innerHTML = list.slice(0, 300).map(i =>
+    '<div class="row" data-id="' + esc(i.id) + '">' +
+      '<div class="nm">' + esc(i.name) + '<i>' + esc(i.kind) + ' · ' + esc(i.slot) + '</i></div>' +
+      '<div class="rr" style="color:' + colourOf(i.cls) + '">' + esc(i.rarity) + '</div>' +
+      '<div class="dt">' + new Date(i.when).toLocaleDateString('en-GB',{day:'numeric',month:'short'}) + '</div>' +
+    '</div>').join('');
+  [...$('rows').querySelectorAll('.row')].forEach(r => {
+    r.onclick = () => {
+      const it = registry.find(x => x.id === r.dataset.id);
+      if (it){ current = it; renderSlab(); setTab('pull'); }
+    };
+  });
+}
+
+function renderCount(){
+  const legend = registry.filter(i => i.rarity === 'Legendary').length;
+  $('cnt').textContent = registry.length + ' logged' + (legend ? ' · ' + legend + ' legendary' : '');
+}
+
+function setTab(t){
+  tab = t;
+  [...$('tabs').children].forEach(b => b.setAttribute('aria-pressed', String(b.dataset.t === t)));
+  $('pullview').style.display = t === 'pull' ? '' : 'none';
+  $('compview').classList.toggle('on', t === 'comp');
+  if (t === 'comp') renderComp();
+}
+
+function pullItem(){
+  current = makeItem();
+  registry.unshift(current);
+  if (!save()) $('msg').textContent = 'this browser will not let the registry save';
+  else $('msg').textContent = current.rarity === 'Legendary' ? 'a legendary. log it somewhere safer.' : '';
+  renderSlab(); renderCount();
+  if (tab === 'comp') renderComp();
+}
+
+$('tabs').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (b) setTab(b.dataset.t);
+});
+$('pull').addEventListener('click', pullItem);
+$('reroll').addEventListener('click', () => {
+  if (!current) return pullItem();
+  current.flav = pick(FLAV_OPEN).replace('{place}', pick(PLACES)) + ' ' + pick(FLAV_QUIRK);
+  const at = registry.findIndex(i => i.id === current.id);
+  if (at > -1) registry[at] = current;
+  save(); renderSlab();
+});
+$('q').addEventListener('input', renderComp);
+$('export').addEventListener('click', async () => {
+  if (!registry.length){ $('cmsg').textContent = 'nothing to copy'; return; }
+  const text = registry.map(i => i.name + ' — ' + i.kind + ' (' + i.rarity + ')').join('\n');
+  try { await navigator.clipboard.writeText(text); $('cmsg').textContent = 'copied ' + registry.length + ' entries'; }
+  catch (e) { $('cmsg').textContent = 'clipboard blocked'; window.prompt('Your compendium:', text); }
+});
+$('wipe').addEventListener('click', () => {
+  if (!registry.length) return;
+  if (!window.confirm('Burn all ' + registry.length + ' entries? This cannot be undone.')) return;
+  registry = [];
+  try { localStorage.removeItem(KEY); } catch (e) {}
+  renderComp(); renderCount();
+  $('cmsg').textContent = 'registry burnt';
+});
+
+renderCount();
+if (registry.length){ current = registry[0]; }
+renderSlab();
+</script>
+</body>
+</html>

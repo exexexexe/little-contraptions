@@ -11,7 +11,7 @@ Opens on http://localhost:3000.
 
 ## The toys
 
-28 drawers, each a single self-contained HTML file under `public/<slug>/index.html`.
+29 drawers, each a single self-contained HTML file under `public/<slug>/index.html`.
 The hub filters them by the tag on each card.
 
 | # | Toy | Tag | What it is |
@@ -44,6 +44,7 @@ The hub filters them by the tag on each card.
 | 26 | [A Sunny Afternoon in the City](/city-day/) | real data | Attributed Commons photographs of San Francisco under a fictional HUD. |
 | 27 | [The Radio Hub](/radio/) | generator | Seven invented stations; optional real CC audio from the Internet Archive. |
 | 28 | [Civilizations, Ranked](/civilizations/) | scroll story | Scrollytelling up the Kardashev scale, with the arithmetic shown. |
+| 29 | [The Loot Terminal](/loot-terminal/) | generator | Fantasy item appraisal with a compendium that persists in the browser. |
 
 Still to build: Movie night (needs `TMDB_API_KEY`), the rest of Phase B
 (Civilizations ranked) and
