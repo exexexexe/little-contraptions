@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Right Now, Somewhere</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23FBFBFC'/><circle cx='16' cy='16' r='6' fill='%230B5FFF'/><circle cx='16' cy='16' r='11' fill='none' stroke='%230B5FFF' stroke-width='1.6' opacity='.4'/></svg>">
+<style>
+:root{
+  --paper:#FBFBFC;
+  --paper-2:#F1F2F5;
+  --ink:#0B0C0F;
+  --ink-2:#4A4E58;
+  --dim:#8A8F9A;
+  --blue:#0B5FFF;
+  --line:#DFE1E6;
+  --green:#0A9257;
+  --sans:ui-sans-serif,system-ui,"Helvetica Neue",Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);color:var(--ink);font-family:var(--sans);
+  min-height:100vh;padding:32px 18px 60px;
+}
+.wrap{ max-width:860px;margin:0 auto }
+
+header{ margin-bottom:22px }
+h1{ margin:0;font-size:clamp(26px,5vw,38px);font-weight:800;letter-spacing:-.035em;line-height:1.05 }
+.sub{ margin:8px 0 0;font-size:14.5px;color:var(--ink-2);max-width:56ch;line-height:1.6 }
+
+.status{
+  display:inline-flex;align-items:center;gap:8px;margin-top:12px;
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--green);
+}
+.status i{ width:8px;height:8px;border-radius:50%;background:var(--green);display:block;animation:beat 1.6s infinite }
+.status.off{ color:#B4441F } .status.off i{ background:#B4441F;animation:none }
+@keyframes beat{ 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.35;transform:scale(.8)} }
+
+/* ---------- counters ---------- */
+.counters{ display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin:22px 0 8px }
+.c{ background:var(--paper);padding:16px 18px }
+.c b{
+  display:block;font-size:clamp(28px,5.6vw,42px);font-weight:800;letter-spacing:-.04em;
+  font-variant-numeric:tabular-nums;line-height:1;
+}
+.c.hero b{ color:var(--blue) }
+.c span{ font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;color:var(--dim);text-transform:uppercase;display:block;margin-top:7px }
+
+/* ---------- controls ---------- */
+.bar{ display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin:18px 0 12px }
+.bar label{ display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;color:var(--ink-2);cursor:pointer }
+.bar input[type=checkbox]{ accent-color:var(--blue);width:14px;height:14px }
+.bar .spacer{ flex:1 }
+.btn{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+  background:transparent;border:1px solid var(--line);color:var(--ink);padding:9px 14px;cursor:pointer;
+}
+.btn:hover{ border-color:var(--blue);color:var(--blue) }
+.btn:focus-visible{ outline:2px solid var(--blue);outline-offset:2px }
+
+/* ---------- feed ---------- */
+.feed{ border:1px solid var(--line);background:var(--paper);max-height:460px;overflow-y:auto }
+.row{
+  display:grid;grid-template-columns:66px 1fr auto;gap:12px;align-items:baseline;
+  padding:9px 14px;border-bottom:1px solid var(--line);
+  animation:in .5s ease both;
+}
+.row:last-child{ border-bottom:0 }
+@keyframes in{ from{ opacity:0;background:#E8F0FF } to{ opacity:1;background:transparent } }
+.row .wiki{
+  font-family:var(--mono);font-size:10px;color:var(--blue);letter-spacing:.04em;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.row .title{ font-size:14px;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap }
+.row .title a{ color:var(--ink);text-decoration:none }
+.row .title a:hover{ color:var(--blue);text-decoration:underline }
+.row .who{ font-family:var(--mono);font-size:10.5px;color:var(--dim);white-space:nowrap }
+.row .who.anon{ color:#9AA0AC;font-style:italic }
+.row .delta{ font-family:var(--mono);font-size:10.5px;font-variant-numeric:tabular-nums }
+.row .delta.up{ color:var(--green) } .row .delta.down{ color:#B4441F }
+
+.state{ padding:24px;font-family:var(--mono);font-size:12px;color:var(--ink-2);line-height:1.75 }
+.state b{ display:block;color:#B4441F;margin-bottom:6px }
+
+footer{
+  margin-top:26px;padding-top:15px;border-top:1px solid var(--line);
+  font-family:var(--mono);font-size:10.5px;color:var(--dim);line-height:1.8;
+}
+footer a{ color:var(--ink-2) }
+
+@media (prefers-reduced-motion:reduce){
+  .row{ animation:none }
+  .status i{ animation:none }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Right now, somewhere</h1>
+    <p class="sub">Every line below is a real edit to Wikipedia or one of its sister projects,
+       arriving as it happens. Nobody involved knows you are watching.</p>
+    <div class="status" id="status"><i></i> connecting</div>
+  </header>
+
+  <div class="counters">
+    <div class="c hero"><b id="c-total">0</b><span>edits since you arrived</span></div>
+    <div class="c"><b id="c-rate">0.0</b><span>edits per second</span></div>
+    <div class="c"><b id="c-wikis">0</b><span>projects touched</span></div>
+    <div class="c"><b id="c-watch">0:00</b><span>you have watched for</span></div>
+  </div>
+
+  <div class="bar">
+    <label><input type="checkbox" id="nobots" checked> hide bot edits</label>
+    <label><input type="checkbox" id="en"> English Wikipedia only</label>
+    <span class="spacer"></span>
+    <button class="btn" id="pause">Pause</button>
+    <button class="btn" id="clear">Clear list</button>
+  </div>
+
+  <div class="feed" id="feed">
+    <div class="state">Opening the stream…</div>
+  </div>
+
+  <footer>
+    Live from <a href="https://stream.wikimedia.org/" target="_blank" rel="noopener">Wikimedia EventStreams</a>,
+    a public firehose of every change across all Wikimedia projects. No key, no account, nothing stored —
+    the counters reset the moment you reload. Usernames shown are the public attribution on each edit.
+    <a href="/">← back to the cabinet</a>
+  </footer>
+</div>
+
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+const STREAM = 'https://stream.wikimedia.org/v2/stream/recentchange';
+const MAX_ROWS = 60;
+
+let es = null;
+let total = 0;              // edits counted since arrival (after filters)
+let stamps = [];            // recent arrival times, for the rate
+let wikis = new Set();
+let started = Date.now();
+let paused = false;
+
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+function setStatus(text, ok){
+  $('status').className = 'status' + (ok ? '' : ' off');
+  $('status').innerHTML = '<i></i> ' + esc(text);
+}
+
+function keep(ev){
+  if (ev.type !== 'edit' && ev.type !== 'new') return false;
+  if ($('nobots').checked && ev.bot) return false;
+  if ($('en').checked && ev.wiki !== 'enwiki') return false;
+  return true;
+}
+
+function addRow(ev){
+  const feed = $('feed');
+  if (feed.querySelector('.state')) feed.innerHTML = '';
+
+  const delta = ev.length && typeof ev.length.new === 'number' && typeof ev.length.old === 'number'
+    ? ev.length.new - ev.length.old : null;
+
+  // IPs show up as usernames on anonymous edits; label rather than print them
+  const anon = !!(ev.user && /^\d{1,3}(\.\d{1,3}){3}$/.test(ev.user)) ||
+               !!(ev.user && ev.user.indexOf(':') > -1 && ev.user.indexOf('.') === -1 && /[0-9a-f]{1,4}:/i.test(ev.user));
+
+  const row = document.createElement('div');
+  row.className = 'row';
+  row.innerHTML =
+    '<div class="wiki">' + esc((ev.server_name || ev.wiki || '').replace(/\.org$/,'')) + '</div>' +
+    '<div class="title"><a href="' + esc(ev.title_url || '#') + '" target="_blank" rel="noopener">' +
+      esc(ev.title || '(untitled)') + '</a></div>' +
+    '<div class="who' + (anon ? ' anon' : '') + '">' + (anon ? 'anonymous' : esc(ev.user || '—')) + '</div>';
+
+  if (delta !== null){
+    const d = document.createElement('div');
+    d.className = 'delta ' + (delta >= 0 ? 'up' : 'down');
+    d.textContent = (delta >= 0 ? '+' : '') + delta;
+    row.appendChild(d);
+    row.style.gridTemplateColumns = '66px 1fr auto auto';
+  }
+
+  feed.insertBefore(row, feed.firstChild);
+  while (feed.children.length > MAX_ROWS) feed.removeChild(feed.lastChild);
+}
+
+function tickCounters(){
+  const now = Date.now();
+  stamps = stamps.filter(t => now - t < 10000);
+  $('c-total').textContent = total.toLocaleString('en-GB');
+  $('c-rate').textContent = (stamps.length / 10).toFixed(1);
+  $('c-wikis').textContent = wikis.size;
+  const s = Math.floor((now - started) / 1000);
+  $('c-watch').textContent = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+}
+setInterval(tickCounters, 500);
+
+function connect(){
+  if (es) { es.close(); es = null; }
+  if (typeof EventSource === 'undefined'){
+    setStatus('unsupported', false);
+    $('feed').innerHTML = '<div class="state"><b>This browser has no EventSource</b>' +
+      'The stream needs server-sent events, which this browser does not provide.</div>';
+    return;
+  }
+  setStatus('connecting', true);
+  es = new EventSource(STREAM);
+
+  es.onopen = () => setStatus('live', true);
+
+  es.onmessage = (msg) => {
+    if (paused) return;
+    let ev;
+    try { ev = JSON.parse(msg.data); } catch (e) { return; }
+    if (!keep(ev)) return;
+    total++;
+    stamps.push(Date.now());
+    if (ev.wiki) wikis.add(ev.wiki);
+    addRow(ev);
+  };
+
+  es.onerror = () => {
+    // EventSource retries on its own; surface the gap rather than hide it
+    setStatus('reconnecting', false);
+  };
+}
+
+/* Be a good citizen: drop the connection while the tab is hidden. */
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden){
+    if (es){ es.close(); es = null; setStatus('paused (tab hidden)', false); }
+  } else if (!paused && !es){
+    connect();
+  }
+});
+
+$('pause').addEventListener('click', () => {
+  paused = !paused;
+  $('pause').textContent = paused ? 'Resume' : 'Pause';
+  if (paused){
+    if (es){ es.close(); es = null; }
+    setStatus('paused', false);
+  } else connect();
+});
+$('clear').addEventListener('click', () => {
+  $('feed').innerHTML = '<div class="state">Cleared. Waiting for the next edit…</div>';
+});
+
+connect();
+tickCounters();
+</script>
+</body>
+</html>

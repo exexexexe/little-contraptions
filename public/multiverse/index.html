@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Multiverse Coin Flip</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230B0B0C'/><ellipse cx='16' cy='16' rx='6' ry='9' fill='none' stroke='%23FF3D8B' stroke-width='2.4'/></svg>">
+<style>
+:root{
+  --bg:#0B0B0C;
+  --bg-2:#131315;
+  --line:#2A2A2E;
+  --text:#F2F2F0;
+  --dim:#8A8A90;
+  --hot:#FF3D8B;
+  --sans:ui-sans-serif,system-ui,"Helvetica Neue",Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);color:var(--text);font-family:var(--sans);
+  min-height:100vh;padding:34px 18px 60px;
+}
+.wrap{ max-width:780px;margin:0 auto }
+
+h1{
+  margin:0;font-size:clamp(30px,6.6vw,54px);font-weight:800;
+  letter-spacing:-.04em;line-height:.98;text-transform:uppercase;
+}
+h1 span{ color:var(--hot) }
+.sub{ font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:.1em;margin-top:9px }
+.hr{ height:1px;background:var(--line);margin:22px 0 24px }
+
+/* ---------- ask ---------- */
+.ask{ display:flex;gap:9px;flex-wrap:wrap;align-items:stretch }
+.ask input{
+  flex:1;min-width:210px;background:var(--bg-2);border:1px solid var(--line);
+  color:var(--text);font-family:var(--sans);font-size:15.5px;padding:14px 15px;
+}
+.ask input::placeholder{ color:#5C5C63 }
+.ask input:focus-visible{ outline:2px solid var(--hot);outline-offset:-1px }
+.btn{
+  font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+  background:var(--hot);color:#0B0B0C;border:0;padding:14px 22px;cursor:pointer;font-weight:700;
+}
+.btn:hover{ background:#FF5C9E }
+.btn.sec{ background:transparent;color:var(--text);border:1px solid var(--line);font-weight:400 }
+.btn.sec:hover{ border-color:var(--hot);color:var(--hot) }
+.btn:focus-visible{ outline:2px solid var(--text);outline-offset:2px }
+.btn:disabled{ opacity:.4;cursor:default }
+
+/* ---------- coin ---------- */
+.coin-stage{ display:flex;justify-content:center;padding:36px 0 26px;perspective:900px }
+.coin{
+  width:132px;height:132px;position:relative;transform-style:preserve-3d;
+  transition:transform 1.5s cubic-bezier(.3,.8,.3,1);
+}
+.coin .face{
+  position:absolute;inset:0;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:13px;letter-spacing:.18em;text-transform:uppercase;
+  backface-visibility:hidden;border:2px solid var(--text);
+}
+.coin .h{ background:var(--text);color:var(--bg);font-weight:700 }
+.coin .t{ background:var(--bg);color:var(--text);transform:rotateY(180deg) }
+.coin.spin{ animation:none }
+
+/* ---------- result ---------- */
+.result{ text-align:center;margin-bottom:30px;min-height:74px }
+.result .call{
+  font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--hot);
+}
+.result h2{ margin:8px 0 0;font-size:clamp(21px,4.4vw,32px);font-weight:800;letter-spacing:-.02em;line-height:1.2 }
+.result p{ margin:8px auto 0;max-width:52ch;font-size:14.5px;color:var(--dim);line-height:1.6 }
+
+/* ---------- branches ---------- */
+.branch-label{
+  font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);
+  display:flex;align-items:center;gap:12px;margin-bottom:14px;
+}
+.branch-label::after{ content:"";flex:1;height:1px;background:var(--line) }
+.branches{ display:grid;gap:1px;background:var(--line);border:1px solid var(--line) }
+.u{ background:var(--bg);padding:17px 19px;display:grid;grid-template-columns:74px 1fr;gap:16px;align-items:start }
+@media (max-width:560px){ .u{ grid-template-columns:1fr;gap:6px } }
+.u .id{
+  font-family:var(--mono);font-size:10.5px;color:var(--hot);letter-spacing:.06em;padding-top:3px;
+}
+.u .txt b{ display:block;font-size:15px;font-weight:700;margin-bottom:5px;line-height:1.35 }
+.u .txt span{ font-size:13.5px;color:var(--dim);line-height:1.62 }
+.u.you{ background:var(--bg-2) }
+.u.you .id{ color:var(--text) }
+
+footer{
+  margin-top:34px;padding-top:15px;border-top:1px solid var(--line);
+  font-family:var(--mono);font-size:10.5px;color:#5F5F66;line-height:1.8;
+}
+footer a{ color:var(--dim) }
+
+@media (prefers-reduced-motion:reduce){
+  .coin{ transition:none }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>The Multiverse<br><span>Coin Flip</span></h1>
+  <div class="sub">one answer here · several elsewhere</div>
+  <div class="hr"></div>
+
+  <div class="ask">
+    <input id="q" placeholder="what are you deciding? e.g. move to the coast" autocomplete="off" maxlength="90">
+    <button class="btn" id="flip">Flip</button>
+    <button class="btn sec" id="again" disabled>Re-run</button>
+  </div>
+
+  <div class="coin-stage">
+    <div class="coin" id="coin">
+      <div class="face h">Do it</div>
+      <div class="face t">Don't</div>
+    </div>
+  </div>
+
+  <div class="result" id="result">
+    <div class="call">awaiting a decision</div>
+    <h2>Type something you cannot decide.</h2>
+    <p>The coin settles it here. The other universes are shown for context, not comfort.</p>
+  </div>
+
+  <div id="branch-wrap" hidden>
+    <div class="branch-label">adjacent universes</div>
+    <div class="branches" id="branches"></div>
+  </div>
+
+  <footer>
+    Everything on this page is assembled in your browser from word lists — nothing is stored,
+    sent anywhere, or taken remotely seriously. <a href="/">← back to the cabinet</a>
+  </footer>
+</div>
+
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+const pick = (a) => a[Math.floor(Math.random() * a.length)];
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* Tidy the typed decision into something that reads inside a sentence. */
+function tidy(raw){
+  let t = (raw || '').trim().replace(/\s+/g, ' ').replace(/[.?!]+$/, '');
+  if (!t) return '';
+  t = t.replace(/^(should i|shall i|do i|can i|will i|is it worth|would it be mad to)\s+/i, '');
+  return t.charAt(0).toLowerCase() + t.slice(1);
+}
+
+const DID = [
+  'went ahead with it', 'did it, quietly, on a Tuesday', 'did it and told nobody for a month',
+  'did it twice, to be sure', 'did it the expensive way', 'did it before anyone could talk you out of it',
+];
+const DIDNT = [
+  'left it alone', 'talked yourself out of it on the walk home', 'decided next year would do',
+  'wrote a list of reasons not to and believed the list', 'let the deadline pass and felt fine about it',
+  'told everyone you would, and then did not',
+];
+const DIVERGE = [
+  'where the coin landed on its edge',
+  'where you asked one more person first',
+  'where you slept on it and woke up certain',
+  'where the weather was worse that week',
+  'where you read the email an hour later',
+  'where somebody else got there first',
+  'where you had slightly more money',
+  'where the train was cancelled',
+  'where you never learned to drive',
+  'where you said it out loud instead of thinking it',
+  'where the flat had better light',
+  'where you were three years older',
+];
+const OUTCOMES_GOOD = [
+  'It worked. Not immediately, and not in the way advertised, but it worked.',
+  'It turned out to be the least interesting good decision of the decade, which is the best kind.',
+  'Nothing dramatic happened. That version of you is simply slightly harder to worry.',
+  'It went well enough that they stopped mentioning it, which is how you know.',
+  'It cost more than expected and was still, on balance, correct.',
+  'They are fine. Annoyingly, provably fine.',
+];
+const OUTCOMES_BAD = [
+  'It did not work, and they talk about it at parties, which is a kind of return.',
+  'It went badly for about eight months and then stopped mattering entirely.',
+  'They regret it in a small, manageable way, roughly twice a year.',
+  'It was a mistake, but a load-bearing one — everything after it depended on it.',
+  'Briefly disastrous. Now a good story with a reliable laugh in the middle.',
+  'They would do it again, which tells you less than you would hope.',
+];
+const OUTCOMES_FLAT = [
+  'Nothing measurable changed. The universe declined to comment.',
+  'Same flat, same job, marginally different opinions about it.',
+  'It made no difference at all, which is itself worth knowing.',
+  'The outcome was identical. Some doors open onto the same room.',
+  'Indistinguishable from here, apart from the haircut.',
+];
+
+function uid(){
+  const L = 'ABCDEFGHJKMNPQRSTUVWXYZ';
+  return L[Math.floor(Math.random()*L.length)] + '-' +
+         String(Math.floor(Math.random()*9000) + 1000);
+}
+
+function branches(thing, heads){
+  const n = 3 + Math.floor(Math.random() * 2);   // 3 or 4
+  const used = new Set();
+  const rows = [];
+
+  // the universe you are standing in
+  rows.push({
+    id: 'YOU',
+    here: true,
+    head: 'You are here. The coin said ' + (heads ? 'do it' : 'don\'t') + '.',
+    // the decision itself is already named in the result line above, and
+    // "went ahead with it about moving house" does not parse
+    body: 'In this one you ' + pick(heads ? DID : DIDNT) + '.',
+  });
+
+  while (rows.length < n + 1){
+    let d = pick(DIVERGE);
+    if (used.has(d)) continue;
+    used.add(d);
+    const theyDid = Math.random() < 0.5;
+    const roll = Math.random();
+    const out = roll < 0.4 ? pick(OUTCOMES_GOOD) : (roll < 0.78 ? pick(OUTCOMES_BAD) : pick(OUTCOMES_FLAT));
+    rows.push({
+      id: uid(),
+      here: false,
+      head: 'The one ' + d + '.',
+      body: 'There, you ' + pick(theyDid ? DID : DIDNT) + '. ' + out,
+    });
+  }
+  return rows;
+}
+
+let busy = false;
+
+function settle(heads, thing){
+  $('result').innerHTML =
+    '<div class="call">the coin has an opinion</div>' +
+    '<h2>' + (heads ? 'Do it.' : 'Don\'t.') + '</h2>' +
+    '<p>' + (thing
+      ? 'On the question of ' + esc(thing) + '. Binding in this universe only.'
+      : 'On whatever it was. Binding in this universe only.') + '</p>';
+
+  const rows = branches(thing, heads);
+  $('branches').innerHTML = rows.map(r =>
+    '<div class="u' + (r.here ? ' you' : '') + '">' +
+      '<div class="id">' + esc(r.id) + '</div>' +
+      '<div class="txt"><b>' + esc(r.head) + '</b><span>' + esc(r.body) + '</span></div>' +
+    '</div>').join('');
+  $('branch-wrap').hidden = false;
+  $('again').disabled = false;
+}
+
+function flip(){
+  if (busy) return;
+  busy = true;
+  const thing = tidy($('q').value);
+  const heads = Math.random() < 0.5;
+
+  if (reduceMotion){
+    $('coin').style.transform = 'rotateY(' + (heads ? 0 : 180) + 'deg)';
+    settle(heads, thing);
+    busy = false;
+    return;
+  }
+
+  const turns = 4 + Math.floor(Math.random() * 3);
+  const end = turns * 360 + (heads ? 0 : 180);
+  $('coin').style.transform = 'rotateY(' + end + 'deg)';
+  $('result').innerHTML = '<div class="call">in the air</div><h2>…</h2>';
+  $('branch-wrap').hidden = true;
+
+  setTimeout(() => {
+    // reset the accumulated rotation so the next flip starts clean
+    $('coin').style.transition = 'none';
+    $('coin').style.transform = 'rotateY(' + (heads ? 0 : 180) + 'deg)';
+    void $('coin').offsetWidth;
+    $('coin').style.transition = '';
+    settle(heads, thing);
+    busy = false;
+  }, 1550);
+}
+
+$('flip').addEventListener('click', flip);
+$('again').addEventListener('click', flip);
+$('q').addEventListener('keydown', (e) => { if (e.key === 'Enter') flip(); });
+</script>
+</body>
+</html>
