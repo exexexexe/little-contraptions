@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Machine 7</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23122019'/><rect x='7' y='5' width='18' height='22' rx='2' fill='%231E3A2C' stroke='%2364C8A0'/><rect x='10' y='19' width='12' height='5' fill='%2364C8A0' opacity='.5'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --dark:#0E1814;
+  --case:#16281F;
+  --case-2:#1E3A2C;
+  --glass:#0A1410;
+  --neon:#64C8A0;
+  --neon-2:#A8F0D0;
+  --paper:#E4EFE8;
+  --dim:#7E9A8A;
+  --amber:#E8B45C;
+  --rule:#2A4436;
+  --sans:ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --serif:"Iowan Old Style","Palatino Linotype",Georgia,serif;
+  --display:"Avenir Next Condensed","Roboto Condensed","Arial Narrow",var(--sans);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:radial-gradient(700px 500px at 50% 0%, #16281F, var(--dark) 65%);
+  color:var(--paper);font-family:var(--sans);min-height:100vh;padding:26px 18px 64px;
+}
+.wrap{ max-width:660px;margin:0 auto }
+header{ text-align:center;margin-bottom:20px }
+h1{ font-family:var(--display);font-size:clamp(24px,5.2vw,36px);margin:0;letter-spacing:.14em;text-transform:uppercase;color:var(--neon);font-weight:700 }
+.sub{ font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin-top:8px }
+
+.machine{
+  background:linear-gradient(180deg, var(--case-2), var(--case));
+  border:1px solid var(--rule);border-radius:8px;padding:18px;
+  box-shadow:0 20px 50px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.06);
+}
+.window{
+  background:var(--glass);border:1px solid var(--rule);border-radius:4px;
+  min-height:250px;padding:22px;position:relative;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;text-align:center;
+}
+.window::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(115deg, rgba(255,255,255,.06) 0%, transparent 32%);
+}
+.idle{ font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim) }
+
+.item{ animation:drop .5s cubic-bezier(.25,.9,.3,1) }
+@keyframes drop{ 0%{ opacity:0;transform:translateY(-38px) } 60%{ transform:translateY(4px) } 100%{ opacity:1;transform:none } }
+.item .art{ width:104px;height:104px;margin:0 auto 14px;display:block }
+.item .rar{
+  display:inline-block;font-family:var(--mono);font-size:8.5px;letter-spacing:.2em;text-transform:uppercase;
+  padding:4px 9px;border:1px solid currentColor;margin-bottom:11px;
+}
+.item h2{ font-family:var(--serif);font-size:clamp(19px,4vw,26px);margin:0 0 10px;line-height:1.25 }
+.item .desc{ font-size:14.5px;line-height:1.65;color:#B8CCC0;max-width:42ch;margin:0 auto 12px }
+.item .warn{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;color:var(--amber);
+  border-top:1px dashed var(--rule);padding-top:11px;margin-top:4px;line-height:1.6;
+}
+
+.panel{ display:flex;gap:12px;align-items:center;margin-top:16px;flex-wrap:wrap }
+.slot{
+  flex:1;min-width:150px;background:var(--glass);border:1px solid var(--rule);border-radius:3px;
+  padding:11px 14px;font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);
+}
+.slot b{ color:var(--neon);font-weight:600 }
+.btn{
+  font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  background:var(--neon);color:#08160F;border:0;padding:14px 22px;cursor:pointer;font-weight:700;border-radius:3px;
+}
+.btn:hover{ background:var(--neon-2) }
+.btn[disabled]{ opacity:.4;cursor:default }
+.btn:focus-visible{ outline:2px solid var(--neon-2);outline-offset:3px }
+.btn.sec{ background:transparent;color:var(--paper);border:1px solid var(--rule);font-weight:400;padding:13px 18px }
+.btn.sec:hover{ border-color:var(--neon);color:var(--neon) }
+
+.tray{ margin-top:20px;border-top:1px solid var(--rule);padding-top:15px }
+.tray h3{ font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);font-weight:400;margin:0 0 11px }
+.tray ul{ margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:7px }
+.tray li{
+  font-family:var(--mono);font-size:10.5px;background:rgba(100,200,160,.08);
+  border:1px solid var(--rule);padding:6px 10px;border-radius:2px;color:#A8C4B4;
+}
+.tray .none{ font-family:var(--mono);font-size:11px;color:var(--dim);opacity:.6 }
+
+footer{
+  max-width:660px;margin:26px auto 0;padding-top:14px;border-top:1px solid var(--rule);
+  font-family:var(--mono);font-size:10.5px;line-height:1.8;color:var(--dim);
+}
+footer a{ color:#A8D8C0 }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+body{ padding-bottom:64px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media print{ #lc-back{ display:none } }
+@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } .item{ animation:none } }
+</style>
+</head>
+<body>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<div class="wrap">
+  <header>
+    <h1>Machine 7</h1>
+    <div class="sub">basement corridor · out of order since 1998 · still working</div>
+  </header>
+
+  <div class="machine">
+    <div class="window" id="window">
+      <div class="idle">insert a coin</div>
+    </div>
+    <div class="panel">
+      <div class="slot">credit <b id="credit">0</b> · dispensed <b id="dispensed">0</b></div>
+      <button class="btn sec" id="coin">Insert coin</button>
+      <button class="btn" id="vend" disabled>Vend</button>
+    </div>
+    <div class="tray">
+      <h3>collection tray</h3>
+      <ul id="tray"><li class="none">empty</li></ul>
+    </div>
+  </div>
+</div>
+
+<footer>
+  Nothing here exists and nothing is for sale. The machine takes an imaginary coin and gives
+  an imaginary object; the only thing it keeps is a list, and only until you close the tab.
+  <a href="/">← back to the cabinet</a>
+</footer>
+
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+const pick = (a) => a[Math.floor(Math.random() * a.length)];
+const ri = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+const RARITY = [
+  { k:'common',    w:46, c:'#8FB8A4' },
+  { k:'unusual',   w:28, c:'#64C8A0' },
+  { k:'irregular', w:16, c:'#6AB4E8' },
+  { k:'restricted',w:8,  c:'#C89AE8' },
+  { k:'sealed',    w:2,  c:'#E8B45C' },
+];
+function rollRarity(){
+  const total = RARITY.reduce((n, r) => n + r.w, 0);
+  let roll = Math.random() * total;
+  for (const r of RARITY){ roll -= r.w; if (roll <= 0) return r; }
+  return RARITY[0];
+}
+
+/* Each item is a small impossible object with a use and a catch. The catch is
+   the payload — an impossible thing without a downside is just a wish. */
+const ITEMS = [
+  ['A jar of the sound a room makes when it is empty', 'Open it in a crowded place and everyone will briefly stop talking without knowing why.', 'Cannot be resealed. The sound goes back into general circulation.'],
+  ['Twelve minutes of Tuesday', 'Redeemable on any Tuesday, at a moment of your choosing, without anyone noticing the gap.', 'The twelve minutes are taken from a later Tuesday. You will feel the shortfall in about a year.'],
+  ['A key to a door you have already walked past', 'It fits exactly one door, which you have definitely seen and cannot currently picture.', 'The door is only a door from one side.'],
+  ['The smell of a house you grew up in', 'Half a teaspoon. Enough for one afternoon of unhelpful nostalgia.', 'Includes the parts you had edited out.'],
+  ['A pocket that is deeper than the coat', 'Standard opening, non-standard interior. Fits an umbrella comfortably.', 'Items retrieved come out slightly older than they went in.'],
+  ['One perfect parking space', 'Appears exactly where you need it, once, at a moment of genuine need.', 'Somebody else was going to have it. You will not be told who.'],
+  ['A bookmark that holds your place in a conversation', 'Return to any dropped thread at the precise word you lost it.', 'Everyone else has moved on and will find it strange.'],
+  ['A shade of blue nobody has seen', 'Sealed in glass. Certified previously unobserved.', 'Observing it uses it up. You will not be able to describe it afterwards.'],
+  ['Somebody else\'s good mood, decanted', 'Roughly forty minutes of unearned contentment. Works immediately.', 'They notice. They will not know why, and they will blame the weather.'],
+  ['A small, portable Tuesday afternoon', 'Deploy anywhere for the specific quality of light at about four o\'clock.', 'Only works indoors, and only if you have nothing urgent.'],
+  ['The last word of an argument', 'Single use. Guarantees you say the correct thing at the correct moment.', 'You will still lose. The correct thing was never going to help.'],
+  ['A map of where things go', 'Shows the current location of any object you have lost, updated live.', 'It shows where the thing is, not how to get there, and the map is enormous.'],
+  ['One night of proper sleep, bottled', 'Eight hours, uninterrupted, of the kind you remember having as a child.', 'Must be used tonight. Cannot be saved for a night you will need it more.'],
+  ['A jar of held breath', 'Contains roughly nine hundred people\'s worth, collected in a waiting room.', 'Do not open near anything you want to keep still.'],
+  ['The good silence', 'Not the absence of noise. The other one.', 'Only available in rooms that already have a lamp on.'],
+  ['A spare hour that fits between two others', 'Slots neatly between four and five without displacing either.', 'Nothing that happens in it can be remembered by anyone else.'],
+  ['A coat that has been somewhere', 'Wearing it gives you the exact confidence of a person who has done this before.', 'The confidence is genuine. The experience is not, and it shows in the details.'],
+  ['A working model of a decision you did not make', 'Fully operational. Shows the whole thing playing out at one-fifth scale.', 'Cannot be switched off. Sits on the shelf, running.'],
+  ['One unremarkable Thursday, preserved', 'Nothing happened. That is the product.', 'You will find you want more of these than you expected.'],
+  ['The thing you were about to say', 'Recovered intact from the moment you lost it, roughly eleven seconds ago.', 'Restoring it also restores the reason you decided not to say it.'],
+  ['A radio that plays the room next door', 'Any room, any distance. Very clear reception.', 'It is mostly people not talking. This is the honest part of the product.'],
+  ['A grudge, professionally dismantled', 'Comes apart into its actual components, labelled.', 'Most of them turn out to be yours. The box is smaller than expected.'],
+  ['Directions to the shortcut', 'The one you always suspected existed between those two streets.', 'It exists. It is longer. It is nicer.'],
+  ['A tin of the feeling of finishing something', 'Enough for one project of any size.', 'Works whether or not you have finished anything.'],
+  ['An apology in its original packaging', 'Never opened. Still good.', 'The recipient moved in 2011 and left no address.'],
+  ['A fold in a Sunday', 'Doubles the afternoon without extending the evening.', 'The second afternoon is identical, including the bit where you check your phone.'],
+];
+
+const ART = [
+  (c) => '<circle cx="52" cy="52" r="34" fill="none" stroke="' + c + '" stroke-width="3"/><circle cx="52" cy="52" r="14" fill="' + c + '" opacity=".5"/>',
+  (c) => '<rect x="24" y="18" width="56" height="68" rx="5" fill="none" stroke="' + c + '" stroke-width="3"/><path d="M36 40h32M36 54h32M36 68h20" stroke="' + c + '" stroke-width="2.4"/>',
+  (c) => '<path d="M34 22h36l8 22-26 42-26-42z" fill="none" stroke="' + c + '" stroke-width="3"/><path d="M34 44h36" stroke="' + c + '" stroke-width="2.2"/>',
+  (c) => '<rect x="30" y="30" width="44" height="44" fill="none" stroke="' + c + '" stroke-width="3" transform="rotate(14 52 52)"/><circle cx="52" cy="52" r="6" fill="' + c + '"/>',
+  (c) => '<path d="M28 70c0-24 10-44 24-44s24 20 24 44z" fill="none" stroke="' + c + '" stroke-width="3"/><path d="M28 70h48" stroke="' + c + '" stroke-width="3"/>',
+  (c) => '<circle cx="52" cy="40" r="18" fill="none" stroke="' + c + '" stroke-width="3"/><path d="M52 58v26M40 84h24" stroke="' + c + '" stroke-width="3"/>',
+  (c) => '<path d="M22 52h60M52 22v60" stroke="' + c + '" stroke-width="3"/><circle cx="52" cy="52" r="26" fill="none" stroke="' + c + '" stroke-width="2" stroke-dasharray="5 6"/>',
+  (c) => '<path d="M30 78 L52 24 L74 78 Z" fill="none" stroke="' + c + '" stroke-width="3"/><path d="M40 62h24" stroke="' + c + '" stroke-width="2.4"/>',
+];
+
+let credit = 0, dispensed = 0, tray = [], pool = [];
+
+function updatePanel(){
+  $('credit').textContent = credit;
+  $('dispensed').textContent = dispensed;
+  $('vend').disabled = credit < 1;
+}
+
+function vend(){
+  if (credit < 1) return;
+  credit--;
+  dispensed++;
+  if (!pool.length) pool = ITEMS.slice().sort(() => Math.random() - 0.5);
+  const [name, desc, warn] = pool.pop();
+  const r = rollRarity();
+  const art = pick(ART)(r.c);
+  $('window').innerHTML =
+    '<div class="item">' +
+      '<svg class="art" viewBox="0 0 104 104" aria-hidden="true">' + art + '</svg>' +
+      '<div class="rar" style="color:' + r.c + '">' + esc(r.k) + '</div>' +
+      '<h2>' + esc(name) + '</h2>' +
+      '<p class="desc">' + esc(desc) + '</p>' +
+      '<div class="warn">' + esc(warn) + '</div>' +
+    '</div>';
+  tray.unshift({ name, rarity: r.k, c: r.c });
+  if (tray.length > 14) tray.pop();
+  $('tray').innerHTML = tray.map(t =>
+    '<li style="border-color:' + t.c + '55"><span style="color:' + t.c + '">●</span> ' +
+    esc(t.name.length > 34 ? t.name.slice(0, 32) + '…' : t.name) + '</li>').join('');
+  updatePanel();
+}
+
+$('coin').addEventListener('click', () => { credit++; updatePanel(); });
+$('vend').addEventListener('click', vend);
+updatePanel();
+</script>
+</body>
+</html>

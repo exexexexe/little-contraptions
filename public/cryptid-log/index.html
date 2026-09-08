@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Sighting Log</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23151B18'/><path d='M9 24c0-7 3-12 7-12s7 5 7 12' fill='%232E4A38'/><circle cx='13' cy='15' r='1.6' fill='%23D8E86A'/><circle cx='19' cy='15' r='1.6' fill='%23D8E86A'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --night:#151B18;
+  --night-2:#1D2621;
+  --paper:#E6E9E2;
+  --dim:#8A9690;
+  --green:#9CC46A;
+  --amber:#E0B04A;
+  --rule:#2C3831;
+  --sans:ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --serif:"Iowan Old Style","Palatino Linotype",Georgia,serif;
+  --display:"Avenir Next Condensed","Roboto Condensed","Arial Narrow",var(--sans);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{ background:var(--night);color:var(--paper);font-family:var(--sans);min-height:100vh;padding:28px 18px 64px }
+.wrap{ max-width:760px;margin:0 auto }
+h1{ font-family:var(--display);font-size:clamp(26px,5.6vw,40px);margin:0;letter-spacing:.05em;text-transform:uppercase;font-weight:700 }
+.sub{ font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-top:8px }
+
+.bar{
+  display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:18px 0 20px;
+  padding:11px 14px;background:var(--night-2);border:1px solid var(--rule);border-radius:3px;
+  font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);
+}
+.bar .live{ color:var(--green) }
+.bar .live::before{
+  content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);
+  margin-right:7px;vertical-align:middle;animation:blink 2.2s ease-in-out infinite;
+}
+@keyframes blink{ 0%,100%{opacity:.3} 50%{opacity:1} }
+.bar .sp{ flex:1 }
+.btn{
+  font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;
+  background:transparent;color:var(--paper);border:1px solid var(--rule);padding:8px 13px;
+  cursor:pointer;border-radius:2px;
+}
+.btn:hover{ border-color:var(--green);color:var(--green) }
+.btn:focus-visible{ outline:2px solid var(--green);outline-offset:2px }
+
+.entry{
+  border:1px solid var(--rule);border-radius:3px;background:var(--night-2);
+  padding:20px 22px;margin-bottom:13px;animation:in .45s ease-out;
+}
+@keyframes in{ from{ opacity:0;transform:translateY(-8px) } to{ opacity:1;transform:none } }
+.entry .top{
+  display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--dim);
+  margin-bottom:11px;
+}
+.entry .top .cls{ color:var(--amber) }
+.entry h2{ font-family:var(--serif);font-size:clamp(18px,3.5vw,23px);margin:0 0 10px;line-height:1.3;font-weight:600 }
+.entry p{ margin:0 0 11px;font-size:15px;line-height:1.68;color:#C6CFC8 }
+.entry .quote{
+  border-left:3px solid var(--rule);padding:2px 0 2px 14px;font-family:var(--serif);
+  font-style:italic;color:#D6DDD6;
+}
+.entry .quote span{ display:block;font-style:normal;font-family:var(--mono);font-size:10px;
+  letter-spacing:.1em;color:var(--dim);margin-top:7px }
+.entry .official{
+  margin-top:13px;padding-top:11px;border-top:1px solid var(--rule);
+  font-size:13.5px;line-height:1.6;color:var(--dim);
+}
+.entry .official b{ font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--dim);display:block;margin-bottom:5px }
+
+footer{
+  max-width:760px;margin:26px auto 0;padding-top:14px;border-top:1px solid var(--rule);
+  font-family:var(--mono);font-size:10.5px;line-height:1.8;color:var(--dim);
+}
+footer a{ color:#BFD0C4 }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+body{ padding-bottom:64px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media print{ #lc-back{ display:none } }
+@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } .entry{ animation:none } .bar .live::before{ animation:none;opacity:.9 } }
+</style>
+</head>
+<body>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<div class="wrap">
+  <h1>The Sighting Log</h1>
+  <div class="sub">county desk · unverified · filed as received</div>
+
+  <div class="bar">
+    <span class="live" id="live">receiving</span>
+    <span>· <b id="count">0</b> filed this session</span>
+    <span class="sp"></span>
+    <button class="btn" id="now">File one now</button>
+    <button class="btn" id="pause">Pause</button>
+  </div>
+
+  <div id="feed"></div>
+</div>
+
+<footer>
+  Every creature, county, witness and quote below is invented for this cabinet. Nothing here
+  refers to a real place, a real folklore tradition, or anybody's actual account — it is a joke
+  about the deadpan register of a local news desk that has run out of other stories.
+  <a href="/">← back to the cabinet</a>
+</footer>
+
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+const pick = (a) => a[Math.floor(Math.random() * a.length)];
+const ri = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* Invented creatures — the naming follows the real convention (a place plus a
+   feature, or a descriptive nickname a local paper would print) without using
+   any actual cryptid, folklore figure or real location. */
+const PREFIX = ['Marrowdale','Fen Hollow','Cold Ashby','Wexley','Draycott','Nether Pike','Stanmoor',
+  'Bramblewick','Little Ossett','Hagley Fen','Thrushmere','Pike End','Weeting','Craywell','Dunmarsh',
+  'Yarrow Bank','Stipple Cross','Nine Elms Cut','Hobb\'s Bottom','Ratchet Green'];
+const FORM = ['Howler','Stalker','Grinner','Wader','Lamplighter','Stilt-Man','Hound','Crawler','Watcher',
+  'Whistler','Beast','Shape','Nodder','Tall Thing','Bagman','Shepherd','Loper','Rattler','Knocker','Long Ned'];
+
+const PLACES = ['the old reservoir road','the industrial estate behind the retail park','Wither Lane',
+  'the cut between the allotments','the lay-by on the B4041','the flooded quarry','the football pitch at dusk',
+  'the footbridge over the bypass','the caravan site out of season','the golf course, ninth hole',
+  'the back of the garden centre','the level crossing','the woods behind the primary school',
+  'the reservoir overflow','the disused platform','the estate roundabout','the towpath','the car park at Aldi'];
+
+const WITNESS = ['a dog walker who asked not to be named','two teenagers on their way home',
+  'a delivery driver, mid-shift','a retired postmaster','a woman putting out the bins',
+  'a groundskeeper with forty years on the site','a taxi driver and his fare','a birdwatcher, on record',
+  'a man fixing a fence','three members of a running club','a night-shift cleaner','a family in a parked car',
+  'a farmer checking a gate','a pair of anglers','a district nurse driving home'];
+
+const TIMES = ['just after eleven','shortly before dawn','at around four in the afternoon','at dusk',
+  'during the storm on Tuesday','at some point between two and three','in broad daylight, which is the unusual part',
+  'as the streetlights came on','during the school run','well after midnight'];
+
+const SEEN = [
+  'described as roughly seven feet, moving in a way the witness could not demonstrate when asked',
+  'standing entirely still for the duration, which the witness estimates at four minutes',
+  'crossing the road in two steps and not appearing on the other side',
+  'reflective at the eyes and nowhere else',
+  'making a sound described variously as a cough, a laugh, and "the fridge"',
+  'apparently wearing a coat, which the witness stressed repeatedly',
+  'moving parallel to the car at a steady thirty miles per hour',
+  'shaped correctly from the front and incorrectly from the side',
+  'seated, which nobody has been able to explain since',
+  'leaving prints in one direction only',
+  'taller when the witness looked away and back',
+  'holding something the witness declined to describe on the record',
+];
+
+const DETAIL = [
+  'The witness returned the following morning with a phone and found nothing except a flattened area of grass roughly the right size.',
+  'A second person present has since said they saw a deer. The first witness maintains the deer was also there and was also frightened.',
+  'Photographs were taken. The photographs show the lay-by.',
+  'A dog present at the time has reportedly refused to walk that route since, which the owner offers without comment.',
+  'The witness has given the same account four times without material change, which the desk notes for what it is worth.',
+  'A local group has offered a mundane explanation involving a scarecrow. The landowner says there is no scarecrow.',
+  'Two further reports came in the same week from within a mile, both of which have been withdrawn.',
+  'Council records confirm nothing was scheduled in that location on that date, which the witness considers significant and we do not.',
+];
+
+const OFFICIAL = [
+  'The council has advised that the area is well lit and that no unusual maintenance was carried out.',
+  'Police attended and recorded no offence. A spokesperson described the report as "taken seriously and now closed".',
+  'The landowner would like it noted that the field is private and that people have started arriving with torches.',
+  'A wildlife officer has suggested a large muntjac. The witness has been shown a photograph of a muntjac and disagrees.',
+  'The parish council has asked us to stop printing these. We have agreed to consider it.',
+  'The environment agency confirms the water level was normal, which nobody had asked about.',
+  'No further action is planned. This is the fourth such report from the same postcode this year.',
+];
+
+const CLASSES = ['unverified','second-hand','single witness','multiple witnesses','withdrawn, then unwithdrawn','on the record'];
+
+let count = 0, timer = 0, paused = false;
+
+function stamp(){
+  const d = new Date(Date.now() - ri(0, 9) * 86400000);
+  return d.toLocaleDateString('en-GB', { day:'numeric', month:'short' }) + ' · ' +
+         String(ri(0, 23)).padStart(2, '0') + ':' + String(ri(0, 59)).padStart(2, '0');
+}
+
+function entry(){
+  const name = pick(PREFIX) + ' ' + pick(FORM);
+  const el = document.createElement('div');
+  el.className = 'entry';
+  el.innerHTML =
+    '<div class="top"><span>ref ' + ri(1000, 9999) + ' · ' + esc(stamp()) + '</span>' +
+      '<span class="cls">' + esc(pick(CLASSES)) + '</span></div>' +
+    '<h2>' + esc(name) + ' reported again at ' + esc(pick(PLACES)) + '</h2>' +
+    '<p>Reported by ' + esc(pick(WITNESS)) + ', ' + esc(pick(TIMES)) + '. The figure was ' +
+      esc(pick(SEEN)) + '.</p>' +
+    '<p class="quote">' + esc(pick([
+      'I am not saying what it was. I am saying what it was not, and it was not a person.',
+      'I have lived here since 1981. I know what is meant to be in that field.',
+      'It did not run. That is the thing people keep asking and it did not run.',
+      'I would rather not have seen it, if I am honest with you.',
+      'My husband thinks I am being ridiculous. My husband did not get out of the car.',
+      'It looked at me the way you look at a bus timetable.',
+      'I have told the police, I have told the council, and now I have told you.',
+      'It was there and then the road was empty and there is no gap in between.',
+    ])) + '<span>— ' + esc(pick(WITNESS)) + '</span></p>' +
+    '<p>' + esc(pick(DETAIL)) + '</p>' +
+    '<div class="official"><b>official comment</b>' + esc(pick(OFFICIAL)) + '</div>';
+  return el;
+}
+
+function file(){
+  const feed = $('feed');
+  feed.insertBefore(entry(), feed.firstChild);
+  while (feed.children.length > 24) feed.removeChild(feed.lastChild);
+  count++;
+  $('count').textContent = count;
+}
+
+function schedule(){
+  clearTimeout(timer);
+  if (paused) return;
+  timer = setTimeout(() => { if (!document.hidden) file(); schedule(); }, ri(6000, 13000));
+}
+
+$('now').addEventListener('click', file);
+$('pause').addEventListener('click', () => {
+  paused = !paused;
+  $('pause').textContent = paused ? 'Resume' : 'Pause';
+  $('live').textContent = paused ? 'paused' : 'receiving';
+  $('live').style.color = paused ? 'var(--dim)' : '';
+  schedule();
+});
+document.addEventListener('visibilitychange', () => { if (!document.hidden) schedule(); });
+
+for (let i = 0; i < 4; i++) file();
+schedule();
+</script>
+</body>
+</html>

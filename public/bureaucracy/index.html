@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Form 12-B</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23E8E6DE'/><rect x='8' y='5' width='16' height='22' fill='%23fff' stroke='%23555'/><path d='M11 11h10M11 15h10M11 19h10M11 23h6' stroke='%23888' stroke-width='1.3'/></svg>">
+<style>
+:root{ color-scheme: light; }
+:root{
+  --desk:#D9D6CB;
+  --paper:#F7F6F1;
+  --ink:#22231F;
+  --ink-2:#54564E;
+  --dim:#8B8D84;
+  --stamp:#9E2B25;
+  --rule:#C9C7BC;
+  --sans:ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --display:"Avenir Next Condensed","Roboto Condensed","Arial Narrow",var(--sans);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:repeating-linear-gradient(0deg, rgba(0,0,0,.012) 0 1px, transparent 1px 3px), var(--desk);
+  color:var(--ink);font-family:var(--sans);min-height:100vh;padding:28px 18px 64px;
+}
+.wrap{ max-width:720px;margin:0 auto }
+.form-head{
+  background:var(--paper);border:1px solid var(--rule);border-bottom:0;padding:22px 24px 18px;
+}
+.dept{ font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim) }
+h1{ font-family:var(--display);font-size:clamp(24px,5vw,34px);margin:8px 0 4px;letter-spacing:.03em;text-transform:uppercase;font-weight:700 }
+.reg{ font-family:var(--mono);font-size:10.5px;color:var(--dim);letter-spacing:.06em }
+
+.progress{
+  background:var(--paper);border:1px solid var(--rule);border-bottom:0;padding:14px 24px;
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+}
+.progress .t{ font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);white-space:nowrap }
+.progress .track{ flex:1;min-width:120px;height:7px;background:#E4E2D9;border:1px solid var(--rule);border-radius:2px;overflow:hidden }
+.progress .track i{ display:block;height:100%;background:#7A9B62;transition:width .5s ease }
+.progress .pct{ font-family:var(--mono);font-size:12px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums }
+
+.sheet{ background:var(--paper);border:1px solid var(--rule);padding:6px 24px 22px }
+.field{ padding:15px 0;border-bottom:1px dashed var(--rule) }
+.field:last-child{ border-bottom:0 }
+.field label{ display:block;font-size:14.5px;line-height:1.5;margin-bottom:8px;color:var(--ink) }
+.field label .n{ font-family:var(--mono);font-size:10px;color:var(--dim);margin-right:8px;letter-spacing:.08em }
+.field .hint{ display:block;font-family:var(--mono);font-size:10.5px;color:var(--dim);margin-top:6px;line-height:1.6 }
+.field input, .field select, .field textarea{
+  width:100%;background:#fff;border:1px solid var(--rule);color:var(--ink);
+  font-family:var(--sans);font-size:15px;padding:10px 12px;border-radius:2px;
+}
+.field input:focus, .field select:focus, .field textarea:focus{ outline:2px solid #7A9B62;outline-offset:-1px }
+.field.done input, .field.done select, .field.done textarea{ background:#F0F3EC;color:var(--ink-2) }
+.field.new{ animation:drop .4s ease-out }
+@keyframes drop{ from{ opacity:0;transform:translateY(-10px) } to{ opacity:1;transform:none } }
+
+.actions{ display:flex;gap:9px;flex-wrap:wrap;margin-top:20px }
+.btn{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
+  background:var(--ink);color:var(--paper);border:0;padding:12px 20px;cursor:pointer;font-weight:700;border-radius:2px;
+}
+.btn:hover{ background:#000 }
+.btn.sec{ background:transparent;color:var(--ink);border:1px solid var(--rule);font-weight:400 }
+.btn.sec:hover{ border-color:var(--stamp);color:var(--stamp) }
+.btn:focus-visible{ outline:2px solid #7A9B62;outline-offset:3px }
+
+.notice{
+  margin-top:16px;border-left:4px solid var(--stamp);background:#F6EDEC;padding:13px 16px;
+  font-size:14px;line-height:1.62;color:#6E2420;
+}
+.notice b{ font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;display:block;margin-bottom:5px;color:var(--stamp) }
+
+.tally{
+  margin-top:18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:1px;
+  background:var(--rule);border:1px solid var(--rule);
+}
+.tally div{ background:var(--paper);padding:12px 14px }
+.tally span{ font-family:var(--mono);font-size:8.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--dim);display:block }
+.tally b{ display:block;font-size:18px;margin-top:5px;font-variant-numeric:tabular-nums }
+
+footer{
+  max-width:720px;margin:26px auto 0;padding-top:14px;border-top:1px solid var(--rule);
+  font-family:var(--mono);font-size:10.5px;line-height:1.8;color:var(--dim);
+}
+footer a{ color:var(--ink-2) }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+body{ padding-bottom:64px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media print{ #lc-back{ display:none } }
+@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } .field.new{ animation:none } .progress .track i{ transition:none } }
+</style>
+</head>
+<body>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<div class="wrap">
+  <div class="form-head">
+    <div class="dept">Office of Procedural Continuance · Sub-department 14</div>
+    <h1>Form 12-B</h1>
+    <div class="reg">Application to be permitted to apply · reference <span id="ref"></span></div>
+  </div>
+
+  <div class="progress">
+    <span class="t">completion</span>
+    <span class="track"><i id="bar" style="width:0%"></i></span>
+    <span class="pct" id="pct">0%</span>
+    <span class="t" id="trend"></span>
+  </div>
+
+  <div class="sheet">
+    <div id="fields"></div>
+    <div class="actions">
+      <button class="btn" id="submit">Submit for review</button>
+      <button class="btn sec" id="restart">Start a new application</button>
+    </div>
+    <div id="notice"></div>
+    <div class="tally">
+      <div><span>fields completed</span><b id="t-done">0</b></div>
+      <div><span>fields outstanding</span><b id="t-left">0</b></div>
+      <div><span>submissions</span><b id="t-sub">0</b></div>
+      <div><span>estimated completion</span><b id="t-eta">—</b></div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  There is no end state. Every field you complete generates more, which is the joke and also the
+  design. Nothing is submitted anywhere and nothing is stored.
+  <a href="/">← back to the cabinet</a>
+</footer>
+
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+const pick = (a) => a[Math.floor(Math.random() * a.length)];
+const ri = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+/* Each requirement is written so that it is *almost* answerable. The comedy is
+   in the hint underneath, which is always a small procedural trap. */
+const REQS = [
+  ['Full name as it appears on the original application', 'If the original application has not yet been made, leave blank and complete Form 12-B.'],
+  ['Full name as it appears on any subsequent application', 'Must differ from the above in at least one respect.'],
+  ['Date of first attempt', 'Approximate is acceptable. Exact is required.'],
+  ['Reason for applying', 'Do not restate the reason given in the covering letter, which has not been requested.'],
+  ['Previous reference number', 'Issued on completion of this form. Enter it now.'],
+  ['Name of the officer who advised you to apply', 'If nobody advised you, state who should have.'],
+  ['Confirm you have read Annexe 4', 'Annexe 4 is available on written request to this department.'],
+  ['Number of dependants, excluding yourself', 'Include yourself if you are dependent on the outcome of this form.'],
+  ['Preferred method of correspondence', 'All correspondence is by second-class post regardless of selection.'],
+  ['Address for the last six years', 'Where the address has not changed, list it six times.'],
+  ['Signature of a witness who has known you two years', 'The witness may not be related to you, employed by you, or aware of this form.'],
+  ['Estimated value of the item in question', 'Do not estimate. Provide the value.'],
+  ['Have you applied before?', 'Answering yes requires Form 12-B(i). Answering no requires Form 12-B(ii).'],
+  ['Your position on the waiting list', 'Positions are issued after processing. Processing begins on receipt of this figure.'],
+  ['Reason for the delay', 'The delay is ours. Explain it.'],
+  ['Attach a photograph', 'The photograph must show the applicant and must not show the applicant\'s face.'],
+  ['Local authority for the property', 'If the property spans two authorities, apply to a third.'],
+  ['National insurance number of the previous occupant', 'Consent is not required and must be attached.'],
+  ['Preferred appointment window', 'Appointments are allocated automatically outside the window selected.'],
+  ['Confirm none of the above has changed', 'Since when is not specified and may not be queried.'],
+  ['Describe the item without naming it', 'Naming the item invalidates the description.'],
+  ['Amount enclosed', 'Do not enclose payment. Payment cannot be accepted at this stage.'],
+  ['Emergency contact', 'This contact will not be contacted in an emergency.'],
+  ['Do you require the form in an accessible format?', 'This question is only available in this format.'],
+  ['Your reference for our reference', 'Must not match ours.'],
+  ['Second signature, in the presence of the first', 'The first signature must not be present.'],
+  ['Confirm the information is true to the best of your knowledge', 'The standard is not "best of your knowledge". Please confirm anyway.'],
+  ['Time taken to complete this form so far', 'To the nearest minute, at the point of submission, in advance.'],
+];
+
+const KINDS = ['text','text','text','select','date','textarea'];
+const SELECTS = [['Yes','No','Not applicable','Prefer not to say'],
+  ['Post','Email','Telephone','In person'], ['Under six months','Six to twelve months','Over a year','Unclear']];
+
+const NOTICES = [
+  'Thank you. Your submission has been received and has generated {n} further requirement{s}. This is normal.',
+  'Your application is now under review. Review has identified {n} omission{s}, listed above.',
+  'Processing complete. Processing has produced {n} additional field{s}, which must be completed before processing can begin.',
+  'Received. A colleague has looked at this and added {n} thing{s}. They have since left the department.',
+  'We have cross-referenced your answers against Annexe 4 and found {n} discrepanc{y}. The Annexe is not available.',
+  'Submission accepted in principle. {N} further item{s} required before it can be accepted in practice.',
+  'This has been escalated. Escalation adds {n} field{s} automatically and cannot be reversed.',
+];
+
+let fields = [], submissions = 0, pool = [], peakPct = 0;
+
+function newRef(){
+  return String.fromCharCode(65 + ri(0, 25)) + ri(10, 99) + '/' +
+         String.fromCharCode(65 + ri(0, 25)) + ri(1000, 9999);
+}
+
+function addField(){
+  if (!pool.length) pool = REQS.slice().sort(() => Math.random() - 0.5);
+  const [label, hint] = pool.pop();
+  fields.push({ label, hint, kind: pick(KINDS), done: false, id: 'f' + fields.length });
+}
+
+function renderFields(markNew){
+  $('fields').innerHTML = fields.map((f, i) => {
+    let control;
+    if (f.kind === 'select'){
+      control = '<select id="' + f.id + '"><option value="">— select —</option>' +
+        pick(SELECTS).map(o => '<option>' + esc(o) + '</option>').join('') + '</select>';
+    } else if (f.kind === 'textarea'){
+      control = '<textarea id="' + f.id + '" rows="2"></textarea>';
+    } else if (f.kind === 'date'){
+      control = '<input type="date" id="' + f.id + '">';
+    } else {
+      control = '<input type="text" id="' + f.id + '">';
+    }
+    const isNew = markNew && i >= fields.length - markNew;
+    return '<div class="field' + (isNew ? ' new' : '') + '" data-i="' + i + '">' +
+      '<label for="' + f.id + '"><span class="n">' + String(i + 1).padStart(2, '0') + '</span>' +
+      esc(f.label) + '<span class="hint">' + esc(f.hint) + '</span></label>' + control + '</div>';
+  }).join('');
+  // restore anything already filled
+  fields.forEach(f => {
+    const el = document.getElementById(f.id);
+    if (el && f.value){ el.value = f.value; el.closest('.field').classList.add('done'); }
+  });
+}
+
+function stats(){
+  const done = fields.filter(f => f.value && String(f.value).trim()).length;
+  const pct = fields.length ? Math.round(done / fields.length * 100) : 0;
+  $('bar').style.width = pct + '%';
+  $('pct').textContent = pct + '%';
+  $('t-done').textContent = done;
+  $('t-left').textContent = fields.length - done;
+  $('t-sub').textContent = submissions;
+  $('t-eta').textContent = submissions === 0 ? '—' : (submissions < 3 ? 'shortly' : submissions < 6 ? 'in due course' : 'not scheduled');
+  if (pct < peakPct) $('trend').textContent = '↓ down from ' + peakPct + '%';
+  else { peakPct = Math.max(peakPct, pct); $('trend').textContent = ''; }
+}
+
+function capture(){
+  fields.forEach(f => {
+    const el = document.getElementById(f.id);
+    if (el) f.value = el.value;
+  });
+}
+
+function submit(){
+  capture();
+  const filled = fields.filter(f => f.value && String(f.value).trim()).length;
+  if (filled === 0){
+    $('notice').innerHTML = '<div class="notice"><b>returned</b>' +
+      'The form has been returned unprocessed. At least one field must be completed before it can be rejected properly.</div>';
+    stats();
+    return;
+  }
+  submissions++;
+  // every submission adds more than it resolves; that is the whole machine
+  const add = ri(1, 3);
+  for (let i = 0; i < add; i++) addField();
+  const t = pick(NOTICES)
+    .replace(/\{n\}/g, String(add)).replace(/\{N\}/g, String(add))
+    .replace(/\{s\}/g, add === 1 ? '' : 's')
+    .replace(/\{y\}/g, add === 1 ? 'y' : 'ies');
+  renderFields(add);
+  $('notice').innerHTML = '<div class="notice"><b>notice of receipt</b>' + esc(t) + '</div>';
+  stats();
+  const first = document.querySelector('.field.new');
+  if (first) first.scrollIntoView({ block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+}
+
+function restart(){
+  fields = []; submissions = 0; pool = []; peakPct = 0;
+  for (let i = 0; i < 3; i++) addField();
+  $('ref').textContent = newRef();
+  renderFields(0);
+  $('notice').innerHTML = '';
+  stats();
+}
+
+$('submit').addEventListener('click', submit);
+$('restart').addEventListener('click', restart);
+$('fields').addEventListener('input', () => { capture(); stats(); });
+
+restart();
+</script>
+</body>
+</html>

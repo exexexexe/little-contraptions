@@ -84,3 +84,39 @@ The metrics are deliberately absurd and the footer says so — no figure here is
 
 **Verified:** 80 pitches, 73 distinct names, 75 distinct taglines, 0 structural defects.
 
+### /cryptid-log/ — The Sighting Log
+
+**Built.** An ambient feed — four entries seeded, then a new one every 6-13 seconds. Each has a reference number and timestamp, a classification (single witness / withdrawn, then unwithdrawn), a witness account, a pull quote, a follow-up detail and an official comment. Pause/resume, and it does not file while the tab is hidden.
+
+**Judgment call:** every creature name is generated from an invented place plus a form (`Little Ossett Tall Thing`, `Hagley Fen Bagman`), which follows the real naming convention without touching any actual cryptid, folklore figure or real location — the rules say names-and-settings-only for real material, and here it was cleaner to invent the lot. The humour is entirely in the register: the paper believes nothing and prints it anyway.
+
+**Tagged `reference` rather than `generator`** so it sits with the browsing toys rather than the make-a-thing ones; easy to change if that reads wrong.
+
+**Verified:** 60 clicks gave 60 distinct headlines, feed caps at 24 entries, pause genuinely stops the timer, every entry has all five parts.
+
+### /bureaucracy/ — Form 12-B
+
+**Built.** Starts at three fields. Every submission adds 1-3 more, each with a hint that is a small procedural trap ("Previous reference number — issued on completion of this form. Enter it now."). 28 requirements in a shuffled pool.
+
+**Judgment call:** the completion percentage is the load-bearing joke, so it is real arithmetic — completed ÷ total — which means filling everything gets you to 100%, and submitting drops you to 75%, then 57%. A "↓ down from 100%" trend line appears once you have gone backwards, and the estimated completion degrades from *shortly* to *in due course* to *not scheduled*. Submitting an empty form is refused with "at least one field must be completed before it can be rejected properly", which felt truer than letting it through.
+
+**Verified:** 8 rounds of fill-everything-and-submit — the form grew every time (3 → 22 fields), the percentage fell after every growth, restart clears fully.
+
+### /impossible-vending/ — Machine 7
+
+**Built.** Insert coin → vend. Each item drops into the window with a drawn sigil, a rarity band, a description and — always — a catch. Weighted rarity (common 46 / unusual 28 / irregular 16 / restricted 8 / sealed 2) and a collection tray holding the last 14.
+
+**Judgment call:** every item has a downside, and that is the rule the writing follows. An impossible object with no catch is just a wish, and wishes are not funny; "one perfect parking space — somebody else was going to have it, and you will not be told who" is. 26 items, drawn from a shuffled pool so you do not see repeats until the pool empties.
+
+**Verified:** vend is disabled without credit, 300 pulls surfaced all 26 items, rarity distribution came out close to the declared weights (124/79/57/35/5 against 46/28/16/8/2), tray caps at 14, credit arithmetic is correct.
+
+### /espionage/ — Briefing Room
+
+**Built.** Typewritten document on a desk: classification banner, operation codename, redacted officer fields, and five sections. Objectives, assets, complications, extraction and registry notes all draw on the word you typed.
+
+**Judgment call:** the comedy is in treating a paperclip with total operational seriousness, so the register never winks — the funniest lines are the flat ones ("The item is in use. It is being used correctly and by somebody who is enjoying it."). Everything is invented: codenames from two word lists, and cities chosen as real but incidental locations, with no real agency, operation or person named. The redaction blocks cover text that was never generated, which is noted in the footer.
+
+**Bug found and fixed:** `.sec` was doing double duty as *document section* and *secondary button*, so `.sec{margin-bottom:19px}` was silently applying to the Random Word button. Sections renamed `.docsec`; button margin now 0.
+
+**Verified:** 80 briefings over 4 words, 75 distinct codenames, 0 defects, the typed word appears in every document.
+
