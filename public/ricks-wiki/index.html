@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rick's Wiki</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23F4F5F0'/><circle cx='16' cy='16' r='8' fill='none' stroke='%232A5B9E' stroke-width='1.6'/><circle cx='16' cy='16' r='3' fill='none' stroke='%232A5B9E' stroke-width='1.6'/><path d='M16 4v5M16 23v5M4 16h5M23 16h5' stroke='%232A5B9E' stroke-width='1.6'/></svg>">
+<style>
+:root{
+  --paper:#F4F5F0;
+  --paper-2:#E9EBE3;
+  --blue:#2A5B9E;
+  --blue-2:#7FA3CE;
+  --ink:#1B1F26;
+  --ink-2:#4C5461;
+  --dim:#8B929C;
+  --stamp:#B02B2B;
+  --line:#C9CEC4;
+  --sans:ui-sans-serif,system-ui,"Helvetica Neue",Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:#D9DCD3;
+  background-image:repeating-linear-gradient(0deg, rgba(0,0,0,.02) 0 1px, transparent 1px 4px);
+  color:var(--ink);font-family:var(--sans);min-height:100vh;padding:28px 16px 60px;
+}
+.wrap{ max-width:780px;margin:0 auto }
+
+.filing{
+  background:var(--paper);border:1px solid var(--line);
+  box-shadow:0 14px 40px rgba(30,36,28,.22);
+  padding:0 0 24px;position:relative;overflow:hidden;
+}
+.filing::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg, transparent 0 27px, rgba(42,91,158,.05) 27px 28px);
+}
+
+.head{
+  border-bottom:2px solid var(--ink);padding:18px 24px 13px;
+  display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;align-items:flex-end;
+}
+.head .office{
+  font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-2);
+}
+.head h1{ margin:5px 0 0;font-size:19px;font-weight:800;letter-spacing:-.01em }
+.head .no{ font-family:var(--mono);font-size:10.5px;color:var(--dim);text-align:right;line-height:1.7 }
+
+.body{ padding:20px 24px 0;position:relative;z-index:1 }
+.title-row{ display:grid;grid-template-columns:1fr 168px;gap:20px;align-items:start }
+@media (max-width:620px){ .title-row{ grid-template-columns:1fr } }
+h2.device{
+  margin:0 0 4px;font-size:clamp(21px,4.4vw,31px);font-weight:800;
+  letter-spacing:-.025em;line-height:1.12;text-transform:uppercase;
+}
+.classif{ font-family:var(--mono);font-size:10.5px;color:var(--blue);letter-spacing:.09em;margin-bottom:14px }
+svg.schema{ width:100%;height:auto;border:1px solid var(--blue-2);background:#FBFCFA }
+
+.sec{ margin-top:18px }
+.sec h3{
+  margin:0 0 7px;font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--ink-2);font-weight:400;
+  border-bottom:1px solid var(--line);padding-bottom:5px;
+}
+.sec p{ margin:0;font-size:15px;line-height:1.68 }
+.sec p em{ font-style:italic;color:var(--ink-2) }
+ol.claims{ margin:0;padding-left:22px;font-size:14.5px;line-height:1.62 }
+ol.claims li{ margin-bottom:7px }
+
+.warn{
+  margin-top:18px;border:2px solid var(--stamp);background:#FBF0EF;
+  padding:14px 16px;
+}
+.warn h3{
+  margin:0 0 6px;font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--stamp);
+}
+.warn p{ margin:0;font-size:14.5px;line-height:1.6;color:#5A2320 }
+
+.stamp{
+  position:absolute;right:22px;top:120px;
+  border:3px solid var(--stamp);color:var(--stamp);
+  font-family:var(--mono);font-size:12px;letter-spacing:.16em;font-weight:700;
+  padding:7px 12px;transform:rotate(-11deg);opacity:.78;text-transform:uppercase;
+  z-index:2;pointer-events:none;background:rgba(244,245,240,.6);
+}
+
+.deck{ display:flex;gap:9px;flex-wrap:wrap;margin-top:20px;padding:0 24px }
+.btn{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;
+  background:var(--ink);color:var(--paper);border:0;padding:12px 18px;cursor:pointer;font-weight:700;
+}
+.btn:hover{ background:#000 }
+.btn.sec2{ background:transparent;color:var(--ink);border:1px solid var(--line);font-weight:400 }
+.btn.sec2:hover{ border-color:var(--blue);color:var(--blue) }
+.btn:focus-visible{ outline:2px solid var(--blue);outline-offset:2px }
+
+footer{
+  margin-top:24px;font-family:var(--mono);font-size:10.5px;color:#5F6660;line-height:1.8;text-align:center;
+}
+footer a{ color:var(--ink-2) }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="filing" id="filing"></div>
+  <div class="deck">
+    <button class="btn" id="next">File another</button>
+    <button class="btn sec2" id="copy">Copy the abstract</button>
+  </div>
+  <footer>
+    Entirely invented filings, assembled in your browser. Written in the general spirit of a
+    certain garage inventor and quoting none of it. <a href="/">← back to the cabinet</a>
+  </footer>
+</div>
+
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+const pick = (a) => a[Math.floor(Math.random() * a.length)];
+const ri = (a,b) => a + Math.floor(Math.random() * (b - a + 1));
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+const PREFIX = ['Portable','Handheld','Pocket','Field','Modular','Recursive','Disposable','Industrial',
+  'Personal','Collapsible','Autonomous','Retrofitted','Non-Consensual','Provisional','Load-Bearing'];
+const SUBJ = ['Consequence','Timeline','Regret','Adjacency','Momentum','Probability','Grievance','Continuity',
+  'Attention','Household','Cousin','Weekend','Inventory','Apology','Dimension','Argument','Sunday'];
+const DEVICE = ['Deferrer','Splitter','Compressor','Rerouter','Nullifier','Decanter','Manifold','Winder',
+  'Extractor','Collator','Dampener','Recombinator','Substituter','Flattener','Hoist'];
+
+const ABSTRACT = [
+  'The present invention relates to a device for {verb} {object}, which nobody asked for and which several people have now asked to be uninvented.',
+  'Disclosed herein is an apparatus for {verb} {object}. It works. That is not the same as it being a good idea, and the office would like that noted.',
+  'A method and apparatus for {verb} {object} is described. Prior art exists but was abandoned, reportedly for reasons the applicant declines to look up.',
+  'The invention provides means for {verb} {object} using components sourced entirely from a kitchen drawer.',
+  'This filing covers an assembly capable of {verb} {object} at a rate the applicant describes as "fine" and the examiner describes as "a matter for others".',
+];
+const VERB = ['deferring','decanting','flattening','rerouting','compressing','duplicating','nullifying',
+  'inverting','postponing','laminating','outsourcing'];
+const OBJECT = ['a household argument','a Sunday afternoon','one specific regret','an inconvenient cousin',
+  'the concept of Tuesday','a small amount of momentum','somebody else\'s attention span',
+  'an unread inbox','the middle of a conversation','four minutes of an evening','a mild grudge'];
+
+const ASIDES = [
+  'and before anyone asks, yes, it has been tested, on a volunteer, loosely defined',
+  'the applicant would like it recorded that the smell is unrelated',
+  'this is the version that works, which is not the version that was demonstrated',
+  'the examiner is asked to disregard the noise it makes between 3 and 4 a.m.',
+  'the second prototype is not discussed in this filing and will not be',
+  'no, it cannot be turned off, that was raised at the time',
+];
+
+const CLAIMS = [
+  'An apparatus as described, comprising a housing, an aperture, and one component the applicant refuses to name.',
+  'The apparatus of claim 1, wherein the aperture is only approximately where the diagram indicates.',
+  'The apparatus of claim 1, further comprising a handle, added late, for reasons that became obvious.',
+  'A method of operating the apparatus, comprising switching it on and then leaving the room.',
+  'The apparatus of claim 1, wherein the warranty is void on first use.',
+  'The apparatus of claim 1, adapted so that it can be carried by one person at a brisk walk.',
+  'A method as described, wherein the operator is not informed of the outcome until afterwards.',
+  'The apparatus of claim 1, in which the indicator light means nothing and is included for confidence.',
+];
+
+const SIDE_EFFECTS = [
+  'Prolonged use causes every clock in the building to run four minutes fast, permanently, including ones that are not plugged in.',
+  'Anyone within two metres will later be unable to remember the middle third of any anecdote they tell.',
+  'The device produces a second, smaller copy of itself roughly once a fortnight. The copies are not covered by this filing.',
+  'Operators report an ongoing conviction that they have left the oven on. They have not. They will keep checking.',
+  'Nearby houseplants grow towards the device rather than the window, and become noticeably resentful if it is moved.',
+  'The nearest other person will develop a mild and permanent preference for a decade they did not live through.',
+  'All photographs taken in the room afterwards will contain one additional chair.',
+  'The operator will find their handwriting has changed. Slightly. Legibly. Not back.',
+];
+
+const OFFICE_NOTES = [
+  'Filed under protest by the examining officer.',
+  'Accepted on the third attempt, chiefly to end the correspondence.',
+  'Granted. The office wishes to record that it was outvoted.',
+  'Provisionally accepted pending a site visit nobody intends to make.',
+  'Filed. The applicant was already gone.',
+];
+
+let current = null;
+
+function schematic(seed){
+  // A plausible-looking blueprint, drawn from the filing number so each
+  // invention gets its own consistent diagram.
+  let s = seed;
+  const r = () => { s = (s * 1103515245 + 12345) & 0x7fffffff; return s / 0x7fffffff; };
+  const W = 168, H = 132;
+  let g = '';
+  g += '<rect x="0.5" y="0.5" width="' + (W-1) + '" height="' + (H-1) + '" fill="none" stroke="#7FA3CE" stroke-width="1"/>';
+  // grid
+  for (let x = 12; x < W; x += 12) g += '<line x1="' + x + '" y1="0" x2="' + x + '" y2="' + H + '" stroke="#E3EAF3" stroke-width="1"/>';
+  for (let y = 12; y < H; y += 12) g += '<line x1="0" y1="' + y + '" x2="' + W + '" y2="' + y + '" stroke="#E3EAF3" stroke-width="1"/>';
+  // body
+  const bw = 46 + r()*40, bh = 34 + r()*34;
+  const bx = (W - bw)/2, by = (H - bh)/2;
+  g += '<rect x="' + bx.toFixed(1) + '" y="' + by.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + bh.toFixed(1) +
+       '" fill="none" stroke="#2A5B9E" stroke-width="1.6"/>';
+  // internals
+  const n = 2 + Math.floor(r()*3);
+  for (let i = 0; i < n; i++){
+    const cx = bx + 8 + r()*(bw-16), cy = by + 8 + r()*(bh-16), rad = 3 + r()*7;
+    g += '<circle cx="' + cx.toFixed(1) + '" cy="' + cy.toFixed(1) + '" r="' + rad.toFixed(1) +
+         '" fill="none" stroke="#2A5B9E" stroke-width="1.2"/>';
+  }
+  // protrusions
+  for (let i = 0; i < 3; i++){
+    const side = Math.floor(r()*4);
+    const len = 10 + r()*18;
+    let x1,y1,x2,y2;
+    if (side === 0){ x1 = bx + r()*bw; y1 = by; x2 = x1; y2 = by - len; }
+    else if (side === 1){ x1 = bx + bw; y1 = by + r()*bh; x2 = bx + bw + len; y2 = y1; }
+    else if (side === 2){ x1 = bx + r()*bw; y1 = by + bh; x2 = x1; y2 = by + bh + len; }
+    else { x1 = bx; y1 = by + r()*bh; x2 = bx - len; y2 = y1; }
+    g += '<line x1="' + x1.toFixed(1) + '" y1="' + y1.toFixed(1) + '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) +
+         '" stroke="#2A5B9E" stroke-width="1.3"/>';
+    g += '<circle cx="' + x2.toFixed(1) + '" cy="' + y2.toFixed(1) + '" r="2.4" fill="#2A5B9E"/>';
+  }
+  // callouts
+  g += '<text x="6" y="' + (H-6) + '" font-family="ui-monospace,monospace" font-size="7" fill="#7FA3CE">FIG. 1 — not to scale</text>';
+  return '<svg class="schema" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="schematic diagram">' + g + '</svg>';
+}
+
+function makeFiling(){
+  const name = pick(PREFIX) + ' ' + pick(SUBJ) + ' ' + pick(DEVICE);
+  const no = ri(2,9) + ',' + ri(100,999) + ',' + ri(100,999);
+  const seed = parseInt(no.replace(/,/g,''), 10);
+  const abstractTpl = pick(ABSTRACT);
+  const abstract = abstractTpl
+    .replace('{verb}', pick(VERB))
+    .replace('{object}', pick(OBJECT));
+  // the mid-sentence aside, spliced into the abstract rather than appended
+  const aside = pick(ASIDES);
+  const parts = abstract.split(/(?<=,)\s/);
+  let withAside;
+  if (parts.length > 1){
+    withAside = parts[0] + ' <em>(' + aside + ')</em> ' + parts.slice(1).join(' ');
+  } else {
+    const dot = abstract.indexOf('. ');
+    withAside = dot > -1
+      ? abstract.slice(0, dot + 1) + ' <em>(' + aside + ')</em>' + abstract.slice(dot + 1)
+      : abstract + ' <em>(' + aside + ')</em>';
+  }
+
+  const claims = [];
+  const pool = CLAIMS.slice();
+  const want = ri(3,4);
+  while (claims.length < want && pool.length){
+    claims.push(pool.splice(Math.floor(Math.random()*pool.length), 1)[0]);
+  }
+
+  return {
+    name, no, seed,
+    classif: 'Class ' + String.fromCharCode(65 + ri(0,25)) + ri(10,99) + '/' + ri(100,999) +
+             ' · unclassifiable subgroup ' + ri(2,88),
+    abstractHtml: withAside,
+    abstractText: abstract + ' (' + aside + ')',
+    claims,
+    side: pick(SIDE_EFFECTS),
+    note: pick(OFFICE_NOTES),
+    filed: ri(1,28) + ' ' + pick(['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']) +
+           ' ' + ri(1994, 2026),
+  };
+}
+
+function render(){
+  const f = current;
+  $('filing').innerHTML =
+    '<div class="stamp">Filed</div>' +
+    '<div class="head">' +
+      '<div><div class="office">Interdimensional Patent Office · Division of Unwise Devices</div>' +
+      '<h1>Application for Letters Patent</h1></div>' +
+      '<div class="no">No. ' + esc(f.no) + '<br>filed ' + esc(f.filed) + '</div>' +
+    '</div>' +
+    '<div class="body">' +
+      '<div class="title-row">' +
+        '<div><h2 class="device">' + esc(f.name) + '</h2>' +
+        '<div class="classif">' + esc(f.classif) + '</div></div>' +
+        schematic(f.seed) +
+      '</div>' +
+      '<div class="sec"><h3>Abstract</h3><p>' + f.abstractHtml + '</p></div>' +
+      '<div class="sec"><h3>Claims</h3><ol class="claims">' +
+        f.claims.map(c => '<li>' + esc(c) + '</li>').join('') + '</ol></div>' +
+      '<div class="warn"><h3>Side effect · not listed by the applicant</h3><p>' + esc(f.side) + '</p></div>' +
+      '<div class="sec"><h3>Examiner\'s note</h3><p>' + esc(f.note) + '</p></div>' +
+    '</div>';
+}
+
+$('next').addEventListener('click', () => { current = makeFiling(); render(); });
+$('copy').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText(current.name + ' — ' + current.abstractText); }
+  catch (e) { window.prompt('Copy:', current.name + ' — ' + current.abstractText); }
+});
+
+current = makeFiling();
+render();
+</script>
+</body>
+</html>
