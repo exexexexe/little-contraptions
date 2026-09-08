@@ -46,8 +46,8 @@ body{
   position:fixed;inset:0;z-index:-1;pointer-events:none;
   /* the illustrated scenes are far brighter than the flat gradients they
      replaced, so the card needs more separation than before */
-  background:radial-gradient(720px 620px at 50% 50%,
-    rgba(4,8,6,.58) 0%, rgba(4,8,6,.34) 44%, rgba(4,8,6,0) 78%);
+  background:radial-gradient(760px 660px at 50% 50%,
+    rgba(4,8,6,.30) 0%, rgba(4,8,6,.16) 46%, rgba(4,8,6,0) 80%);
 }
 .frame{
   width:100%;max-width:560px;
@@ -749,11 +749,11 @@ const SCENES = {
     sky: ['#E8BE72','#C08637','#5C3A12'], bands: [] },   // replaced below
 
   rain: { seed: 31,
-    sky: ['#5E7284', '#3B4A5A', '#161E27'],
+    sky: ['#33424F', '#B6C6D2', '#D2DDE5'],
     bands: [
-      { s:'hills',  base:308, amp:122,  fill:'#4A5C6E', op:.5, blur:3 },
-      { s:'skyline',base:378, amp:192, fill:'#2B3744', op:.9, blur:.6 },
-      { s:'skyline',base:438, amp:122,  fill:'#171F28', op:1 },
+      { s:'hills',  base:308, amp:122, fill:'#8395A6', op:.5, blur:3 },
+      { s:'skyline',base:378, amp:192, fill:'#465868', op:.9, blur:.6 },
+      { s:'skyline',base:438, amp:122, fill:'#212B36', op:1 },
     ], grain:.06 },
 
   'acid-rain': { seed: 41,
@@ -765,21 +765,21 @@ const SCENES = {
     ], grain:.08 },
 
   ash: { seed: 53,
-    sky: ['#8B8985', '#5A5854', '#22211F'],
-    sun: { x:.5, y:.3, r:.34, c:'rgba(255,232,200,.20)' },
+    sky: ['#413F3C', '#CFCCC6', '#E2DFD9'],
+    sun: { x:.5, y:.34, r:.38, c:'rgba(255,232,200,.34)' },
     bands: [
-      { s:'ridge', base:290, amp:168, fill:'#6A6864', op:.45, blur:3.4 },
-      { s:'ruins', base:364, amp:168, fill:'#454340', op:.8,  blur:1.2 },
-      { s:'ruins', base:432, amp:110,  fill:'#232220', op:1 },
+      { s:'ridge', base:290, amp:168, fill:'#A8A59F', op:.45, blur:3.4 },
+      { s:'ruins', base:364, amp:168, fill:'#6D6A66', op:.8,  blur:1.2 },
+      { s:'ruins', base:432, amp:110, fill:'#332F2C', op:1 },
     ], grain:.11 },
 
   embers: { seed: 67,
-    sky: ['#9E3512', '#5A1608', '#1A0703'],
-    sun: { x:.46, y:.62, r:.42, c:'rgba(255,140,40,.42)' },
+    sky: ['#22070A', '#D9752E', '#F2A85E'],
+    sun: { x:.46, y:.70, r:.46, c:'rgba(255,150,50,.5)' },
     bands: [
-      { s:'ridge', base:302, amp:202, fill:'#7A2A10', op:.6, blur:2.8 },
-      { s:'ridge', base:372, amp:161, fill:'#48170A', op:.9, blur:.9 },
-      { s:'ruins', base:446, amp:117,  fill:'#1E0803', op:1 },
+      { s:'ridge', base:302, amp:202, fill:'#6E2410', op:.7, blur:2.8 },
+      { s:'ridge', base:372, amp:161, fill:'#3E1408', op:.92, blur:.9 },
+      { s:'ruins', base:446, amp:117, fill:'#150603', op:1 },
     ], grain:.10 },
 
   fog: { seed: 71,
@@ -801,11 +801,11 @@ const SCENES = {
     ], grain:.09 },
 
   starfield: { seed: 97,
-    sky: ['#141E33', '#0A1120', '#03060D'],
+    sky: ['#060B16', '#31456F', '#425C8E'],
     bands: [
-      { s:'ridge', base:336, amp:161, fill:'#16203A', op:.75, blur:1.6 },
-      { s:'ridge', base:402, amp:133, fill:'#0C1322', op:.95 },
-      { s:'flat',  base:470, amp:17,  fill:'#05080F', op:1 },
+      { s:'ridge', base:336, amp:161, fill:'#131B2E', op:.85, blur:1.6 },
+      { s:'ridge', base:402, amp:133, fill:'#0A101E', op:.95 },
+      { s:'flat',  base:470, amp:17,  fill:'#04070D', op:1 },
     ], grain:.03 },
 
   fluorescent: { seed:103,
@@ -818,21 +818,21 @@ const SCENES = {
     ], grain:.13, strip:true },
 
   aurora: { seed:109,
-    sky: ['#0E3B44', '#0A2733', '#04101A'],
+    sky: ['#030C14', '#1E758D', '#2C93AD'],
     bands: [
-      { s:'ridge', base:318, amp:181, fill:'#12414A', op:.6, blur:2.2 },
-      { s:'ridge', base:390, amp:143, fill:'#0A2A33', op:.9, blur:.7 },
-      { s:'forest',base:452, amp:89,  fill:'#04141B', op:1 },
+      { s:'ridge', base:318, amp:181, fill:'#0E3542', op:.72, blur:2.2 },
+      { s:'ridge', base:390, amp:143, fill:'#082430', op:.92, blur:.7 },
+      { s:'forest',base:452, amp:89,  fill:'#031016', op:1 },
     ], grain:.04, curtains:true },
 
   calm: { seed:127,
-    sky: ['#4E7A63', '#2C4A3D', '#0E1C17'],
-    sun: { x:.3, y:.3, r:.3, c:'rgba(220,255,225,.22)' },
+    sky: ['#4A7F68', '#DCE8C8', '#EFF3DE'],
+    sun: { x:.3, y:.34, r:.34, c:'rgba(255,246,214,.5)' },
     bands: [
-      { s:'hills', base:304, amp:112,  fill:'#3E6450', op:.5, blur:2.6 },
-      { s:'hills', base:366, amp:99,  fill:'#284537', op:.8, blur:1 },
-      { s:'forest',base:428, amp:94,  fill:'#152922', op:.95 },
-      { s:'flat',  base:476, amp:20,  fill:'#0B1713', op:1 },
+      { s:'hills', base:304, amp:112, fill:'#93B29A', op:.55, blur:2.6 },
+      { s:'hills', base:366, amp:99,  fill:'#4E7360', op:.85, blur:1 },
+      { s:'forest',base:428, amp:94,  fill:'#2A4436', op:.95 },
+      { s:'flat',  base:476, amp:20,  fill:'#16261E', op:1 },
     ], grain:.05 },
 };
 
