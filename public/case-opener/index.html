@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Case</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%2312141C'/><rect x='6' y='10' width='20' height='14' rx='2' fill='%23D8A93C'/><rect x='6' y='14' width='20' height='3' fill='%2312141C'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --void:#12141C;
+  --panel:#1A1D27;
+  --panel-2:#232734;
+  --gold:#D8A93C;
+  --paper:#E4E7EE;
+  --dim:#7E849A;
+  --rule:#2E3242;
+  --sans:ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --display:"Avenir Next Condensed","Roboto Condensed","Arial Narrow",var(--sans);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{ background:radial-gradient(800px 520px at 50% -8%, #1C2030, var(--void) 62%);
+  color:var(--paper);font-family:var(--sans);min-height:100vh;padding:26px 18px 64px }
+.wrap{ max-width:880px;margin:0 auto }
+header{ text-align:center }
+h1{ font-family:var(--display);font-size:clamp(25px,5.4vw,38px);margin:0;letter-spacing:.1em;text-transform:uppercase;font-weight:700 }
+.sub{ font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin-top:8px }
+
+/* ---------- the reel ---------- */
+.reelbox{
+  position:relative;margin:24px 0 0;background:var(--panel);border:1px solid var(--rule);
+  border-radius:5px;overflow:hidden;box-shadow:0 18px 44px rgba(0,0,0,.5);
+}
+.reelbox::before, .reelbox::after{
+  content:"";position:absolute;top:0;bottom:0;width:90px;z-index:3;pointer-events:none;
+}
+.reelbox::before{ left:0;background:linear-gradient(90deg, var(--panel), transparent) }
+.reelbox::after{ right:0;background:linear-gradient(270deg, var(--panel), transparent) }
+.needle{
+  position:absolute;left:50%;top:0;bottom:0;width:2px;margin-left:-1px;z-index:4;
+  background:var(--gold);box-shadow:0 0 12px rgba(216,169,60,.8);pointer-events:none;
+}
+.needle::before, .needle::after{
+  content:"";position:absolute;left:-5px;border-left:6px solid transparent;border-right:6px solid transparent;
+}
+.needle::before{ top:0;border-top:8px solid var(--gold) }
+.needle::after{ bottom:0;border-bottom:8px solid var(--gold) }
+.reel{ display:flex;padding:16px 0;will-change:transform }
+.slot{
+  flex:0 0 138px;margin:0 4px;height:150px;border-radius:3px;background:var(--panel-2);
+  border:1px solid var(--rule);border-bottom-width:3px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:9px;padding:10px;text-align:center;
+}
+.slot svg{ width:56px;height:56px }
+.slot .n{ font-family:var(--mono);font-size:9px;line-height:1.35;color:#B4BACB;letter-spacing:.02em }
+
+/* ---------- result ---------- */
+.result{ margin-top:20px;background:var(--panel);border:1px solid var(--rule);border-radius:5px;padding:24px }
+.result.hidden{ display:none }
+.res-top{ display:flex;gap:20px;align-items:center;flex-wrap:wrap }
+.res-art{
+  width:120px;height:120px;flex:0 0 auto;border-radius:4px;display:grid;place-items:center;
+  background:#0E1018;border:1px solid var(--rule);
+}
+.res-art svg{ width:88px;height:88px }
+.res-info{ flex:1;min-width:200px }
+.res-rar{
+  display:inline-block;font-family:var(--mono);font-size:8.5px;letter-spacing:.2em;text-transform:uppercase;
+  padding:4px 9px;border:1px solid currentColor;margin-bottom:10px;
+}
+.res-info h2{ font-family:var(--display);font-size:clamp(22px,4.6vw,32px);margin:0 0 6px;letter-spacing:.03em;text-transform:uppercase }
+.res-info .wear{ font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:.08em }
+.res-info .flavour{ margin:12px 0 0;font-size:14.5px;line-height:1.6;color:#B8BECD;max-width:52ch }
+.floatbar{ margin-top:14px }
+.floatbar .track{ height:8px;background:#0E1018;border:1px solid var(--rule);border-radius:2px;position:relative;overflow:hidden }
+.floatbar .track i{ position:absolute;top:0;bottom:0;width:2px;background:var(--gold) }
+.floatbar .track .seg{ position:absolute;top:0;bottom:0;opacity:.28 }
+.floatbar .lbl{ display:flex;justify-content:space-between;font-family:var(--mono);font-size:8.5px;color:var(--dim);letter-spacing:.1em;margin-top:6px }
+
+.deck{ display:flex;gap:9px;flex-wrap:wrap;justify-content:center;margin-top:20px }
+.btn{
+  font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  background:var(--gold);color:#171200;border:0;padding:14px 26px;cursor:pointer;font-weight:700;border-radius:3px;
+}
+.btn:hover{ background:#E8BC58 }
+.btn[disabled]{ opacity:.4;cursor:default }
+.btn.sec{ background:transparent;color:var(--paper);border:1px solid var(--rule);font-weight:400;padding:13px 20px }
+.btn.sec:hover{ border-color:var(--gold);color:var(--gold) }
+.btn:focus-visible{ outline:2px solid var(--gold);outline-offset:3px }
+
+.inv{ margin-top:26px;border-top:1px solid var(--rule);padding-top:18px }
+.inv h3{ font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);font-weight:400;margin:0 0 12px }
+.inv .grid{ display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px }
+.inv .card{
+  background:var(--panel);border:1px solid var(--rule);border-left-width:3px;border-radius:3px;padding:10px 12px;
+}
+.inv .card b{ display:block;font-size:12.5px;line-height:1.35;margin-bottom:4px }
+.inv .card span{ font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:.08em }
+.inv .none{ font-family:var(--mono);font-size:11px;color:var(--dim);opacity:.6 }
+.odds{ margin-top:16px;font-family:var(--mono);font-size:10px;color:var(--dim);line-height:1.9;letter-spacing:.05em }
+
+footer{
+  max-width:880px;margin:26px auto 0;padding-top:14px;border-top:1px solid var(--rule);
+  font-family:var(--mono);font-size:10.5px;line-height:1.8;color:var(--dim);
+}
+footer a{ color:#A8B8D8 }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+body{ padding-bottom:64px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media print{ #lc-back{ display:none } }
+@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } }
+</style>
+</head>
+<body>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<div class="wrap">
+  <header>
+    <h1>The Case</h1>
+    <div class="sub">nothing in here is real · nothing in here costs anything</div>
+  </header>
+
+  <div class="reelbox">
+    <div class="needle"></div>
+    <div class="reel" id="reel"></div>
+  </div>
+
+  <div class="deck">
+    <button class="btn" id="open">Open the case</button>
+    <button class="btn sec" id="clear">Clear inventory</button>
+  </div>
+
+  <div class="result hidden" id="result"></div>
+
+  <div class="inv">
+    <h3>your inventory · <span id="count">0</span> items</h3>
+    <div class="grid" id="grid"><div class="none">nothing yet</div></div>
+    <div class="odds" id="odds"></div>
+  </div>
+</div>
+
+<footer>
+  Every finish, pattern and rarity here is invented for this cabinet — no real game's items,
+  artwork or names are reproduced. There is no money in this and nothing is saved: the odds are
+  printed below the inventory because a case that hides them is doing something else.
+  <a href="/">← back to the cabinet</a>
+</footer>
+
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+const pick = (a) => a[Math.floor(Math.random() * a.length)];
+const ri = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const rr = (a, b) => a + Math.random() * (b - a);
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* Invented rarities and weights. The weights are printed on the page, which
+   is the honest version of this mechanic. */
+const RARITY = [
+  { k:'standard',  w:7992, c:'#8A93A8' },
+  { k:'marked',    w:1598, c:'#5B8FD8' },
+  { k:'restricted',w:320,  c:'#8B6AD8' },
+  { k:'archive',   w:64,   c:'#C858B8' },
+  { k:'sealed',    w:20,   c:'#D84848' },
+  { k:'one-off',   w:6,    c:'#D8A93C' },
+];
+const TOTAL_W = RARITY.reduce((n, r) => n + r.w, 0);
+function rollRarity(){
+  let roll = Math.random() * TOTAL_W;
+  for (const r of RARITY){ roll -= r.w; if (roll <= 0) return r; }
+  return RARITY[0];
+}
+
+/* Invented item classes and finishes — the naming convention of the genre
+   without any actual item, collection or artist's work. */
+const CLASS = ['Sidearm','Carbine','Marksman','Shortblade','Toolkit','Sidearm','Carbine','Wrench','Lantern','Visor'];
+const FINISH = ['Ashfall','Kingfisher','Long Winter','Paper Lantern','Rust Bloom','Meridian','Cold Store',
+  'Harrow','Nine of Cups','Salt Flat','Understudy','Bramble','Tin Whistle','Overcast','Marrowbone',
+  'Second Shift','Quiet Hours','Foxglove','Dry Dock','Chalk Line','Bellwether','Low Tide','Kiln',
+  'Pale Horse','Thistle','Nightwatch','Ferrous','Sundial','Blue Hour','Hollowpoint'];
+const WEAR = [
+  { k:'pristine', lo:0.00, hi:0.07 },
+  { k:'light',    lo:0.07, hi:0.15 },
+  { k:'field',    lo:0.15, hi:0.38 },
+  { k:'worn',     lo:0.38, hi:0.45 },
+  { k:'ruined',   lo:0.45, hi:1.00 },
+];
+const FLAVOUR = [
+  'Finished by hand in a workshop that no longer takes commissions.',
+  'One of a run of forty. The other thirty-nine were recalled.',
+  'The pattern is meant to be a landscape. Held at arm\'s length it nearly is.',
+  'Applied over an older finish, which shows through where it has been handled.',
+  'Somebody has scratched a date into the underside. It has not been identified.',
+  'Made to be looked at rather than used, and it shows in the balance.',
+  'The colour was mixed wrong and the mistake became the point.',
+  'Catalogued twice under different names, which has never been resolved.',
+  'The pattern continues onto surfaces nobody sees.',
+  'Produced during a shortage. The materials are worse and the work is better.',
+];
+
+const ART = [
+  (c) => '<path d="M14 44h60M22 44v-12h34v12" fill="none" stroke="' + c + '" stroke-width="4"/><circle cx="30" cy="56" r="7" fill="' + c + '"/>',
+  (c) => '<path d="M18 62 L44 16 L70 62 Z" fill="none" stroke="' + c + '" stroke-width="4"/><path d="M30 48h28" stroke="' + c + '" stroke-width="3"/>',
+  (c) => '<rect x="20" y="24" width="48" height="40" rx="4" fill="none" stroke="' + c + '" stroke-width="4"/><path d="M32 40h24M32 52h16" stroke="' + c + '" stroke-width="3"/>',
+  (c) => '<circle cx="44" cy="44" r="26" fill="none" stroke="' + c + '" stroke-width="4"/><path d="M44 18v52M18 44h52" stroke="' + c + '" stroke-width="2.4"/>',
+  (c) => '<path d="M24 20 L64 20 L54 68 L34 68 Z" fill="none" stroke="' + c + '" stroke-width="4"/><path d="M30 44h28" stroke="' + c + '" stroke-width="3"/>',
+  (c) => '<path d="M44 14 L70 30 V58 L44 74 L18 58 V30 Z" fill="none" stroke="' + c + '" stroke-width="4"/><circle cx="44" cy="44" r="9" fill="' + c + '"/>',
+];
+
+function makeItem(){
+  const r = rollRarity();
+  const cls = pick(CLASS), fin = pick(FINISH);
+  const wear = pick(WEAR);
+  const float = rr(wear.lo, wear.hi);
+  return {
+    name: cls + ' | ' + fin,
+    rarity: r, wear: wear.k, float,
+    art: pick(ART), flavour: pick(FLAVOUR),
+    stat: Math.random() < 0.08,
+  };
+}
+
+let inventory = [], spinning = false;
+
+function slotHTML(it){
+  return '<div class="slot" style="border-bottom-color:' + it.rarity.c + '">' +
+    '<svg viewBox="0 0 88 88" aria-hidden="true">' + it.art(it.rarity.c) + '</svg>' +
+    '<div class="n">' + esc(it.name) + '</div></div>';
+}
+
+function buildReel(winner){
+  // a long strip of decoys with the winner at a known index
+  const items = [];
+  for (let i = 0; i < 60; i++) items.push(makeItem());
+  const winIndex = 52;
+  items[winIndex] = winner;
+  $('reel').innerHTML = items.map(slotHTML).join('');
+  return winIndex;
+}
+
+function spin(){
+  if (spinning) return;
+  spinning = true;
+  $('open').disabled = true;
+  $('result').classList.add('hidden');
+
+  const winner = makeItem();
+  const winIndex = buildReel(winner);
+
+  const reel = $('reel');
+  const slotW = 138 + 8;                       // slot plus its margins
+  const box = reel.parentElement.clientWidth;
+  // land the winner under the needle, with a little jitter so it does not
+  // stop dead centre every time
+  const jitter = rr(-46, 46);
+  const target = winIndex * slotW + slotW / 2 - box / 2 + jitter;
+
+  reel.style.transition = 'none';
+  reel.style.transform = 'translateX(0px)';
+  void reel.offsetWidth;
+
+  if (reduce){
+    reel.style.transform = 'translateX(' + (-target) + 'px)';
+    finish(winner);
+    return;
+  }
+  reel.style.transition = 'transform 5.4s cubic-bezier(.12,.62,.16,1)';
+  reel.style.transform = 'translateX(' + (-target) + 'px)';
+  setTimeout(() => finish(winner), 5500);
+}
+
+function finish(it){
+  spinning = false;
+  $('open').disabled = false;
+
+  const segs = WEAR.map(w =>
+    '<span class="seg" style="left:' + (w.lo * 100) + '%;width:' + ((w.hi - w.lo) * 100) + '%;background:' +
+    (w.k === 'pristine' ? '#5BD8A0' : w.k === 'light' ? '#8FD85B' : w.k === 'field' ? '#D8C85B' :
+     w.k === 'worn' ? '#D8935B' : '#D85B5B') + '"></span>').join('');
+
+  $('result').classList.remove('hidden');
+  $('result').innerHTML =
+    '<div class="res-top">' +
+      '<div class="res-art"><svg viewBox="0 0 88 88" aria-hidden="true">' + it.art(it.rarity.c) + '</svg></div>' +
+      '<div class="res-info">' +
+        '<div class="res-rar" style="color:' + it.rarity.c + '">' + esc(it.rarity.k) +
+          (it.stat ? ' · logged' : '') + '</div>' +
+        '<h2>' + esc(it.name) + '</h2>' +
+        '<div class="wear">' + esc(it.wear) + ' · wear ' + it.float.toFixed(4) + '</div>' +
+        '<div class="floatbar"><div class="track">' + segs +
+          '<i style="left:' + (it.float * 100).toFixed(2) + '%"></i></div>' +
+          '<div class="lbl"><span>0.00 pristine</span><span>ruined 1.00</span></div></div>' +
+        '<p class="flavour">' + esc(it.flavour) + '</p>' +
+      '</div>' +
+    '</div>';
+
+  inventory.unshift(it);
+  if (inventory.length > 40) inventory.pop();
+  renderInv();
+}
+
+function renderInv(){
+  $('count').textContent = inventory.length;
+  if (!inventory.length){
+    $('grid').innerHTML = '<div class="none">nothing yet</div>';
+  } else {
+    $('grid').innerHTML = inventory.map(it =>
+      '<div class="card" style="border-left-color:' + it.rarity.c + '">' +
+        '<b>' + esc(it.name) + '</b>' +
+        '<span style="color:' + it.rarity.c + '">' + esc(it.rarity.k) + '</span> ' +
+        '<span>· ' + esc(it.wear) + '</span></div>').join('');
+  }
+}
+
+$('odds').innerHTML = 'declared odds · ' + RARITY.map(r =>
+  esc(r.k) + ' ' + (r.w / TOTAL_W * 100).toFixed(r.w / TOTAL_W < 0.01 ? 3 : 2) + '%').join(' · ');
+
+$('open').addEventListener('click', spin);
+$('clear').addEventListener('click', () => { inventory = []; renderInv(); });
+
+// idle reel so the strip is not empty before the first spin
+$('reel').innerHTML = Array.from({ length: 20 }, () => slotHTML(makeItem())).join('');
+renderInv();
+</script>
+</body>
+</html>
