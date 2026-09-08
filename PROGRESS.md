@@ -238,3 +238,9 @@ Eight room types (drained pool, hotel corridor, open-plan office, car park level
 
 Judgment calls: the brief said not to scrape Reddit or anyone's photographs, so there are no images on the page at all — every room is drawn by code, and the footer says so. First pass put the caption over the picture as a gradient overlay, which hid the floor, where nearly all the detail of a liminal room lives; the caption moved below the art instead. The pool basin, the play tube, the mall shutters and the office glazing all needed a second pass — the first versions read as a flat floor, a banana, blank walls and a wireframe respectively.
 
+### /static-channel/ — The Static Channel
+
+A CRT set that tunes into random public-domain ephemeral film streamed straight from the Internet Archive's Prelinger collection. Canvas static plus a WebAudio hiss between channels, an on-screen channel number, a caption with title, year and a link back to the item page, and a log of what you have tuned through. Every film is seeked to a random point between 10 and 75 percent, so no channel ever starts at the beginning.
+
+Judgment calls: the brief said Prelinger specifically, not a general Internet Archive search, so the query is pinned to collection:"prelinger" AND mediatype:"movies" — 10,461 items. Nothing is downloaded or re-hosted: the video element points at archive.org and every card links back. The player prefers the 512Kb derivative (about 40 MB) over the masters (up to 500 MB) so a channel starts quickly. Roughly a third of the collection is unlabelled scanned reels with numeric identifiers; those stay in, since an unmarked reel is very much the point, but titled films are drawn first and unlabelled ones are captioned 'Unlabelled reel — Prelinger no. NNNN' rather than showing a bare number. The footnote says plainly that these are historical documents carrying the assumptions of their year.
+
