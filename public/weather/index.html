@@ -23,8 +23,7 @@
 html,body{margin:0;padding:0}
 body{
   min-height:100vh;
-  background:
-    radial-gradient(1100px 700px at 50% -10%, #1E3229 0%, var(--ink) 55%, #0B140F 100%);
+  background:#0B140F;
   color:var(--text);
   font-family:var(--serif);
   display:flex;align-items:center;justify-content:center;
@@ -35,16 +34,20 @@ body{
        brightest and busiest effects. All behind .frame. --- */
 .bg-layer{
   position:fixed;inset:0;z-index:-3;opacity:0;
-  transition:opacity 1s ease;
+  transition:opacity 1.15s ease;
+  overflow:hidden;
 }
 .bg-layer.on{ opacity:1 }
+.bg-layer svg.scene{ position:absolute;inset:0;width:100%;height:100% }
 #fx{
   position:fixed;inset:0;z-index:-2;display:block;pointer-events:none;
 }
 .scrim{
   position:fixed;inset:0;z-index:-1;pointer-events:none;
-  background:radial-gradient(620px 520px at 50% 50%,
-    rgba(6,10,8,.46) 0%, rgba(6,10,8,.24) 44%, rgba(6,10,8,0) 74%);
+  /* the illustrated scenes are far brighter than the flat gradients they
+     replaced, so the card needs more separation than before */
+  background:radial-gradient(720px 620px at 50% 50%,
+    rgba(4,8,6,.58) 0%, rgba(4,8,6,.34) 44%, rgba(4,8,6,0) 78%);
 }
 .frame{
   width:100%;max-width:560px;
@@ -565,21 +568,327 @@ function setNeedle(intensity){
  *  tint that crossfades between the two .bg-layer divs.
  * -------------------------------------------------------------------- */
 
-// effect name -> [inner, mid, outer] stops of the body gradient
-const THEMES = {
-  snow:        ['#3D5670', '#1B2A38', '#080D13'],
-  sand:        ['#7A5A2A', '#3B2C14', '#140E06'],
-  rain:        ['#2A3D4A', '#141F27', '#070C10'],
-  'acid-rain': ['#2E4A32', '#16281A', '#060F08'],
-  ash:         ['#3A3A38', '#1E1E1D', '#0B0B0B'],
-  embers:      ['#6B2412', '#33100A', '#120503'],
-  fog:         ['#4A5450', '#252B29', '#0D100F'],
-  spore:       ['#6B4A16', '#33220C', '#110B04'],
-  starfield:   ['#121A26', '#080C12', '#03050A'],
-  fluorescent: ['#5E6A2C', '#2C3315', '#0E1107'],
-  aurora:      ['#1C4A46', '#122A32', '#050D12'],
-  calm:        ['#1E3229', '#101C18', '#0B140F'],  // the almanac's original backdrop
+/* ================= illustrated backdrops =========================== *
+ *  Each effect gets a built scene, not a flat wash: a graded sky, two
+ *  to four silhouette bands that lighten toward the horizon for depth,
+ *  an optional light source, and grain over the moodier ones. The
+ *  particle field then sits on top of this as foreground detail.
+ *  Everything is drawn here — no photography, stock or otherwise.
+ * ------------------------------------------------------------------- */
+
+const SW = 1000, SH = 620;                 // scene coordinate space
+
+function prng(seed){
+  let s = seed >>> 0;
+  return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
+}
+
+/* --- silhouette generators. Each returns a closed path across the frame. */
+function ridge(rand, opts){
+  // midpoint displacement gives a believable jagged skyline
+  const { base, amp, rough = 0.55, steps = 6 } = opts;
+  let pts = [[0, base + (rand() - 0.5) * amp * 0.4], [SW, base + (rand() - 0.5) * amp * 0.4]];
+  let a = amp;
+  for (let s = 0; s < steps; s++){
+    const next = [];
+    for (let i = 0; i < pts.length - 1; i++){
+      const [x1, y1] = pts[i], [x2, y2] = pts[i + 1];
+      next.push(pts[i]);
+      next.push([(x1 + x2) / 2, (y1 + y2) / 2 + (rand() - 0.5) * a]);
+    }
+    next.push(pts[pts.length - 1]);
+    pts = next; a *= rough;
+  }
+  return 'M0,' + SH + ' L' + pts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' L') +
+         ' L' + SW + ',' + SH + ' Z';
+}
+
+function hills(rand, opts){
+  const { base, amp, n = 4 } = opts;
+  let d = 'M0,' + SH + ' L0,' + base.toFixed(1);
+  const seg = SW / n;
+  let x = 0, y = base;
+  for (let i = 0; i < n; i++){
+    const nx = x + seg, ny = base + (rand() - 0.5) * amp;
+    d += ' Q' + (x + seg * 0.5).toFixed(1) + ',' + (y - amp * (0.4 + rand() * 0.7)).toFixed(1) +
+         ' ' + nx.toFixed(1) + ',' + ny.toFixed(1);
+    x = nx; y = ny;
+  }
+  return d + ' L' + SW + ',' + SH + ' Z';
+}
+
+function dunes(rand, opts){
+  const { base, amp, n = 3 } = opts;
+  let d = 'M0,' + SH + ' L0,' + (base + amp * 0.3).toFixed(1);
+  let x = 0;
+  for (let i = 0; i < n; i++){
+    const w = SW / n;
+    const crest = base - amp * (0.5 + rand() * 0.6);
+    d += ' C' + (x + w * 0.34).toFixed(1) + ',' + crest.toFixed(1) +
+         ' ' + (x + w * 0.52).toFixed(1) + ',' + crest.toFixed(1) +
+         ' ' + (x + w).toFixed(1) + ',' + (base + (rand() - 0.5) * amp * 0.4).toFixed(1);
+    x += w;
+  }
+  return d + ' L' + SW + ',' + SH + ' Z';
+}
+
+function skyline(rand, opts){
+  const { base, amp, minW = 26, maxW = 74 } = opts;
+  let d = 'M0,' + SH + ' L0,' + base.toFixed(1);
+  let x = 0;
+  while (x < SW){
+    const w = minW + rand() * (maxW - minW);
+    const h = amp * (0.25 + rand() * rand() * 1.5);
+    const top = base - h;
+    d += ' L' + x.toFixed(1) + ',' + top.toFixed(1) + ' L' + Math.min(SW, x + w).toFixed(1) + ',' + top.toFixed(1);
+    // the occasional mast
+    if (rand() < 0.16){
+      const mx = x + w * 0.5, mt = top - h * (0.18 + rand() * 0.3);
+      d += ' L' + mx.toFixed(1) + ',' + top.toFixed(1) + ' L' + mx.toFixed(1) + ',' + mt.toFixed(1) +
+           ' L' + mx.toFixed(1) + ',' + top.toFixed(1);
+    }
+    x += w;
+    d += ' L' + Math.min(SW, x).toFixed(1) + ',' + base.toFixed(1);
+  }
+  return d + ' L' + SW + ',' + SH + ' Z';
+}
+
+function forest(rand, opts){
+  const { base, amp } = opts;
+  let d = 'M0,' + SH + ' L0,' + base.toFixed(1);
+  let x = -10;
+  while (x < SW + 10){
+    const w = 12 + rand() * 26;
+    const h = amp * (0.45 + rand() * 0.95);
+    d += ' L' + x.toFixed(1) + ',' + base.toFixed(1) +
+         ' L' + (x + w * 0.5).toFixed(1) + ',' + (base - h).toFixed(1) +
+         ' L' + (x + w).toFixed(1) + ',' + base.toFixed(1);
+    x += w * 0.72;
+  }
+  return d + ' L' + SW + ',' + SH + ' Z';
+}
+
+function ruins(rand, opts){
+  const { base, amp } = opts;
+  let d = 'M0,' + SH + ' L0,' + base.toFixed(1);
+  let x = 0;
+  while (x < SW){
+    const w = 30 + rand() * 90;
+    if (rand() < 0.32){ x += w; d += ' L' + Math.min(SW,x).toFixed(1) + ',' + base.toFixed(1); continue; }
+    const h = amp * (0.3 + rand() * 1.2);
+    const top = base - h;
+    // broken, uneven crown
+    d += ' L' + x.toFixed(1) + ',' + top.toFixed(1);
+    const bits = 2 + Math.floor(rand() * 3);
+    for (let b = 1; b <= bits; b++){
+      const bx = x + (w * b) / bits;
+      d += ' L' + bx.toFixed(1) + ',' + (top + rand() * h * 0.45).toFixed(1);
+    }
+    x += w;
+    d += ' L' + Math.min(SW, x).toFixed(1) + ',' + base.toFixed(1);
+  }
+  return d + ' L' + SW + ',' + SH + ' Z';
+}
+
+function flat(rand, opts){
+  const { base, amp } = opts;
+  let d = 'M0,' + SH + ' L0,' + base.toFixed(1);
+  for (let x = 0; x <= SW; x += 40){
+    d += ' L' + x + ',' + (base + Math.sin(x / 90 + rand()) * amp * 0.16).toFixed(1);
+  }
+  return d + ' L' + SW + ',' + SH + ' Z';
+}
+
+const SHAPES = { ridge, hills, dunes, skyline, forest, ruins, flat };
+
+/* --- the twelve scenes ------------------------------------------------ */
+const SCENES = {
+  snow: { seed: 11,
+    sky: ['#9FC4DE', '#6E93B4', '#33465E'],
+    sun: { x: 0.72, y: 0.24, r: 0.30, c: 'rgba(255,247,235,.55)' },
+    bands: [
+      { s:'ridge', base:296, amp:192, fill:'#7E9CBA', op:.55, blur:2.4 },
+      { s:'ridge', base:340, amp:151, fill:'#57718E', op:.8,  blur:1.1 },
+      { s:'forest',base:406, amp:94,  fill:'#2C3D53', op:.95 },
+      { s:'flat',  base:460, amp:28,  fill:'#1A2634', op:1 },
+    ], grain:.05 },
+
+  sand: { seed: 23,
+    sky: ['#E8BE72','#C08637','#5C3A12'], bands: [] },   // replaced below
+
+  rain: { seed: 31,
+    sky: ['#5E7284', '#3B4A5A', '#161E27'],
+    bands: [
+      { s:'hills',  base:308, amp:122,  fill:'#4A5C6E', op:.5, blur:3 },
+      { s:'skyline',base:378, amp:192, fill:'#2B3744', op:.9, blur:.6 },
+      { s:'skyline',base:438, amp:122,  fill:'#171F28', op:1 },
+    ], grain:.06 },
+
+  'acid-rain': { seed: 41,
+    sky: ['#7FA36A', '#4B6B3E', '#16240F'],
+    bands: [
+      { s:'skyline',base:302, amp:215, fill:'#3E5A33', op:.55, blur:2.6 },
+      { s:'skyline',base:376, amp:238, fill:'#243A1D', op:.9, blur:.5 },
+      { s:'ruins',  base:448, amp:112,  fill:'#0E1A0A', op:1 },
+    ], grain:.08 },
+
+  ash: { seed: 53,
+    sky: ['#8B8985', '#5A5854', '#22211F'],
+    sun: { x:.5, y:.3, r:.34, c:'rgba(255,232,200,.20)' },
+    bands: [
+      { s:'ridge', base:290, amp:168, fill:'#6A6864', op:.45, blur:3.4 },
+      { s:'ruins', base:364, amp:168, fill:'#454340', op:.8,  blur:1.2 },
+      { s:'ruins', base:432, amp:110,  fill:'#232220', op:1 },
+    ], grain:.11 },
+
+  embers: { seed: 67,
+    sky: ['#9E3512', '#5A1608', '#1A0703'],
+    sun: { x:.46, y:.62, r:.42, c:'rgba(255,140,40,.42)' },
+    bands: [
+      { s:'ridge', base:302, amp:202, fill:'#7A2A10', op:.6, blur:2.8 },
+      { s:'ridge', base:372, amp:161, fill:'#48170A', op:.9, blur:.9 },
+      { s:'ruins', base:446, amp:117,  fill:'#1E0803', op:1 },
+    ], grain:.10 },
+
+  fog: { seed: 71,
+    sky: ['#A9B2AE', '#7C8683', '#3C4442'],
+    bands: [
+      { s:'forest', base:286, amp:150, fill:'#9AA4A0', op:.5,  blur:6 },
+      { s:'forest', base:352, amp:160, fill:'#6E7975', op:.72, blur:3.2 },
+      { s:'forest', base:420, amp:150, fill:'#3A4341', op:.9,  blur:1.2 },
+      { s:'forest', base:486, amp:120, fill:'#1C2322', op:1 },
+    ], grain:.07 },
+
+  spore: { seed: 83,
+    sky: ['#C08B2E', '#7A4E12', '#241305'],
+    sun: { x:.62, y:.34, r:.3, c:'rgba(255,200,90,.34)' },
+    bands: [
+      { s:'ruins',  base:300, amp:189, fill:'#8A5B18', op:.5, blur:2.6 },
+      { s:'ruins',  base:374, amp:174, fill:'#4E320C', op:.85, blur:.8 },
+      { s:'forest', base:444, amp:94,  fill:'#221503', op:1 },
+    ], grain:.09 },
+
+  starfield: { seed: 97,
+    sky: ['#141E33', '#0A1120', '#03060D'],
+    bands: [
+      { s:'ridge', base:336, amp:161, fill:'#16203A', op:.75, blur:1.6 },
+      { s:'ridge', base:402, amp:133, fill:'#0C1322', op:.95 },
+      { s:'flat',  base:470, amp:17,  fill:'#05080F', op:1 },
+    ], grain:.03 },
+
+  fluorescent: { seed:103,
+    sky: ['#D2DE72', '#8C9A2E', '#39420E'],
+    bands: [
+      { s:'flat', base:300, amp:6,  fill:'#A9B648', op:.55 },
+      { s:'flat', base:398, amp:6,  fill:'#7C8A2C', op:.8 },
+      { s:'flat', base:470, amp:6,  fill:'#4E5A18', op:.95 },
+      { s:'flat', base:534, amp:6,  fill:'#2E360C', op:1 },
+    ], grain:.13, strip:true },
+
+  aurora: { seed:109,
+    sky: ['#0E3B44', '#0A2733', '#04101A'],
+    bands: [
+      { s:'ridge', base:318, amp:181, fill:'#12414A', op:.6, blur:2.2 },
+      { s:'ridge', base:390, amp:143, fill:'#0A2A33', op:.9, blur:.7 },
+      { s:'forest',base:452, amp:89,  fill:'#04141B', op:1 },
+    ], grain:.04, curtains:true },
+
+  calm: { seed:127,
+    sky: ['#4E7A63', '#2C4A3D', '#0E1C17'],
+    sun: { x:.3, y:.3, r:.3, c:'rgba(220,255,225,.22)' },
+    bands: [
+      { s:'hills', base:304, amp:112,  fill:'#3E6450', op:.5, blur:2.6 },
+      { s:'hills', base:366, amp:99,  fill:'#284537', op:.8, blur:1 },
+      { s:'forest',base:428, amp:94,  fill:'#152922', op:.95 },
+      { s:'flat',  base:476, amp:20,  fill:'#0B1713', op:1 },
+    ], grain:.05 },
 };
+
+/* sand needs its own dune stack */
+SCENES.sand = { seed: 23,
+  sky: ['#E8BE72', '#C08637', '#5C3A12'],
+  sun: { x:.66, y:.3, r:.34, c:'rgba(255,226,150,.5)' },
+  bands: [
+    { s:'dunes', base:308, amp:122,  fill:'#C39150', op:.55, blur:2.6 },
+    { s:'dunes', base:366, amp:133, fill:'#96682F', op:.8,  blur:1.1 },
+    { s:'dunes', base:430, amp:117,  fill:'#5E3D16', op:.95 },
+    { s:'dunes', base:486, amp:81,  fill:'#33200A', op:1 },
+  ], grain:.08 };
+
+function buildScene(name){
+  const sc = SCENES[name] || SCENES.calm;
+  const rand = prng(sc.seed);
+  const id = 'sc' + name.replace(/[^a-z]/g,'');
+  let defs =
+    '<linearGradient id="' + id + 'sky" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="' + sc.sky[0] + '"/>' +
+      '<stop offset="52%" stop-color="' + sc.sky[1] + '"/>' +
+      '<stop offset="100%" stop-color="' + sc.sky[2] + '"/>' +
+    '</linearGradient>';
+
+  let body = '<rect width="' + SW + '" height="' + SH + '" fill="url(#' + id + 'sky)"/>';
+
+  if (sc.sun){
+    defs += '<radialGradient id="' + id + 'sun">' +
+      '<stop offset="0%" stop-color="' + sc.sun.c + '"/>' +
+      '<stop offset="100%" stop-color="transparent"/></radialGradient>';
+    body += '<ellipse cx="' + (sc.sun.x*SW).toFixed(0) + '" cy="' + (sc.sun.y*SH).toFixed(0) +
+            '" rx="' + (sc.sun.r*SW).toFixed(0) + '" ry="' + (sc.sun.r*SH*1.1).toFixed(0) +
+            '" fill="url(#' + id + 'sun)"/>';
+  }
+
+  if (sc.curtains){
+    // aurora ribbons, drawn rather than particled
+    for (let i = 0; i < 7; i++){
+      const x = 90 + i * 130 + rand()*60, w = 26 + rand()*54;
+      const gid = id + 'c' + i;
+      defs += '<linearGradient id="' + gid + '" x1="0" y1="0" x2="0" y2="1">' +
+        '<stop offset="0%" stop-color="rgba(120,255,205,0)"/>' +
+        '<stop offset="42%" stop-color="rgba(120,255,205,' + (0.10 + rand()*0.13).toFixed(2) + ')"/>' +
+        '<stop offset="100%" stop-color="rgba(90,170,255,0)"/></linearGradient>';
+      body += '<rect x="' + x.toFixed(0) + '" y="30" width="' + w.toFixed(0) +
+              '" height="' + (250 + rand()*140).toFixed(0) + '" fill="url(#' + gid + ')"/>';
+    }
+  }
+
+  if (sc.strip){
+    // a corridor rather than a horizon: walls converging on a vanishing point,
+    // with the ceiling panels receding into it
+    const vx = SW/2, vy = 300;
+    for (let i = 0; i < 7; i++){
+      const t = i / 7, x = t * (SW/2);
+      const o = (0.16 - t*0.12).toFixed(3);
+      body += '<path d="M' + x.toFixed(0) + ',0 L' + vx + ',' + vy + ' L' + x.toFixed(0) + ',' + SH + ' Z" fill="rgba(0,0,0,' + o + ')"/>';
+      body += '<path d="M' + (SW-x).toFixed(0) + ',0 L' + vx + ',' + vy + ' L' + (SW-x).toFixed(0) + ',' + SH + ' Z" fill="rgba(0,0,0,' + o + ')"/>';
+    }
+    for (let i = 0; i < 6; i++){
+      const t = i / 6, w = 300 * (1 - t) + 26, y = 26 + t * (vy - 60);
+      body += '<rect x="' + (vx - w/2).toFixed(0) + '" y="' + y.toFixed(0) + '" width="' + w.toFixed(0) +
+              '" height="' + (13 * (1 - t) + 3).toFixed(0) + '" rx="3" fill="rgba(255,255,220,' +
+              (0.62 - t*0.34).toFixed(2) + ')"/>';
+    }
+    body += '<rect x="0" y="0" width="' + SW + '" height="70" fill="rgba(245,250,180,.22)"/>';
+  }
+
+  sc.bands.forEach((b, i) => {
+    const gen = SHAPES[b.s] || SHAPES.hills;
+    const d = gen(rand, b);
+    const f = b.blur ? ' filter="url(#' + id + 'b' + i + ')"' : '';
+    if (b.blur) defs += '<filter id="' + id + 'b' + i + '" x="-6%" y="-20%" width="112%" height="150%">' +
+      '<feGaussianBlur stdDeviation="' + b.blur + '"/></filter>';
+    body += '<path d="' + d + '" fill="' + b.fill + '" opacity="' + b.op + '"' + f + '/>';
+  });
+
+  if (sc.grain){
+    defs += '<filter id="' + id + 'g"><feTurbulence type="fractalNoise" baseFrequency="0.9" ' +
+      'numOctaves="3" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter>';
+    body += '<rect width="' + SW + '" height="' + SH + '" filter="url(#' + id + 'g)" opacity="' +
+      sc.grain + '" style="mix-blend-mode:overlay"/>';
+  }
+
+  return '<svg class="scene" viewBox="0 0 ' + SW + ' ' + SH + '" preserveAspectRatio="xMidYMax slice" ' +
+         'aria-hidden="true"><defs>' + defs + '</defs>' + body + '</svg>';
+}
 
 const fxCanvas = $('fx');
 const fxCtx = fxCanvas.getContext('2d');
@@ -737,13 +1046,13 @@ function stopLoop(){
 
 /* two layers, crossfaded — the incoming one is painted then faded up */
 let tintTop = $('bgA'), tintBack = $('bgB');
+const sceneCache = {};
 function gradientFor(name){
-  const t = THEMES[name] || THEMES.calm;
-  return 'radial-gradient(1100px 700px at 50% -10%, ' +
-    t[0] + ' 0%, ' + t[1] + ' 55%, ' + t[2] + ' 100%)';
+  if (!sceneCache[name]) sceneCache[name] = buildScene(SCENES[name] ? name : 'calm');
+  return sceneCache[name];
 }
 function setTint(name){
-  tintBack.style.backgroundImage = gradientFor(name);
+  tintBack.innerHTML = gradientFor(name);
   tintBack.classList.add('on');
   tintTop.classList.remove('on');
   const swap = tintTop; tintTop = tintBack; tintBack = swap;
@@ -833,7 +1142,7 @@ function roll(){
 
 /* ------------------------------ boot -------------------------------- */
 sizeCanvas();
-tintTop.style.backgroundImage = gradientFor('calm');
+tintTop.innerHTML = gradientFor('calm');
 tintTop.classList.add('on');
 
 renderPlaces();
