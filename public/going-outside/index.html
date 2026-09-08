@@ -4,14 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Going Outside</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,600&family=Inter+Tight:wght@400;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23FFD9A0'/><circle cx='16' cy='18' r='7' fill='%23F08A24'/></svg>">
 <style>
 :root{
   --sky-1:#8FC4E8; --sky-2:#DCEAF3; --ground:#F6EFE2;
   --ink:#2A2620; --ink-2:#5C5449; --dim:#8B8277;
   --sun:#F08A24; --line:rgba(42,38,32,.16);
-  --sans:ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif;
-  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --display:"Fraunces","Iowan Old Style",Georgia,serif;
+  --sans:"Inter Tight",ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
@@ -25,15 +29,20 @@ body{
 .wrap{ max-width:720px;margin:0 auto }
 
 header{ text-align:center;margin-bottom:6px }
-h1{ margin:0;font-size:clamp(27px,5.4vw,40px);font-weight:800;letter-spacing:-.025em }
+h1{ margin:0;font-family:var(--display);font-size:clamp(30px,5.8vw,46px);font-weight:600;letter-spacing:-.02em;line-height:1 }
 .where{
   font-family:var(--mono);font-size:11.5px;color:var(--ink-2);
   margin-top:5px;letter-spacing:.04em;
 }
 
 /* ---------- sun arc ---------- */
-.arc-box{ margin:14px 0 6px }
+.arc-box{ margin:10px 0 2px }
 svg.arc{ width:100%;height:auto;display:block;overflow:visible }
+.arc .body{ transition:transform 1.2s cubic-bezier(.4,.9,.4,1) }
+.arc .ray{ transform-origin:center; animation:spin 44s linear infinite }
+@keyframes spin{ to{ transform:rotate(360deg) } }
+.arc .below{ opacity:.55 }
+@media (prefers-reduced-motion:reduce){ .arc .ray{ animation:none } .arc .body{ transition:none } }
 .arc .band{ fill:none;stroke:var(--line);stroke-width:1.5;stroke-dasharray:3 5 }
 .arc .day{ fill:none;stroke:var(--sun);stroke-width:2.5;stroke-linecap:round;opacity:.55 }
 .arc .horizon{ stroke:var(--line);stroke-width:1.5 }
@@ -49,10 +58,10 @@ svg.arc{ width:100%;height:auto;display:block;overflow:visible }
   padding:22px 24px;margin-top:10px;
   box-shadow:0 6px 30px rgba(60,50,35,.10);
 }
-.verdict h2{ margin:0 0 8px;font-size:clamp(19px,3.6vw,26px);line-height:1.28;font-weight:800;letter-spacing:-.015em }
+.verdict h2{ margin:0 0 8px;font-family:var(--display);font-size:clamp(21px,3.8vw,29px);line-height:1.22;font-weight:600;letter-spacing:-.015em }
 .verdict p{ margin:0;font-size:14.5px;line-height:1.65;color:var(--ink-2) }
 .big{
-  font-variant-numeric:tabular-nums;font-weight:800;
+  font-family:var(--display);font-variant-numeric:tabular-nums;font-weight:600;
   font-size:clamp(34px,8vw,54px);line-height:1;letter-spacing:-.03em;margin:2px 0 4px;
 }
 .big small{ font-size:.42em;font-weight:700;letter-spacing:0;color:var(--ink-2);margin-left:4px }
@@ -233,19 +242,64 @@ function drawArc(){
     const now = Date.now(), a = sun.sunrise.getTime(), b = sun.sunset.getTime();
     frac = (now - a) / (b - a);
   }
-  const clamped = frac == null ? null : Math.min(1, Math.max(0, frac));
-  const ang = clamped == null ? null : Math.PI * (1 - clamped);
-  const sx = ang == null ? null : cx + r * Math.cos(ang);
-  const sy = ang == null ? null : base - r * Math.sin(ang);
   const up = frac != null && frac >= 0 && frac <= 1;
 
-  $('arc').innerHTML =
-    '<path class="band" d="M ' + (cx-r) + ' ' + base + ' A ' + r + ' ' + r + ' 0 0 1 ' + (cx+r) + ' ' + base + '"/>' +
-    (up ? '<path class="day" d="M ' + (cx-r) + ' ' + base + ' A ' + r + ' ' + r + ' 0 0 1 ' + sx + ' ' + sy + '"/>' : '') +
-    '<line class="horizon" x1="12" y1="' + base + '" x2="' + (W-12) + '" y2="' + base + '"/>' +
-    (sx != null ? '<circle class="sun' + (up ? '' : ' down') + '" cx="' + sx + '" cy="' + (up ? sy : base + 8) + '" r="7"/>' : '') +
-    '<text x="' + (cx-r) + '" y="' + (base+15) + '" text-anchor="middle">' + (sun ? fmt(sun.sunrise, place.tz) : '') + '</text>' +
-    '<text x="' + (cx+r) + '" y="' + (base+15) + '" text-anchor="middle">' + (sun ? fmt(sun.sunset, place.tz) : '') + '</text>';
+  // at night, run the moon along the same track using the dark hours
+  let t = frac;
+  if (!up && sun){
+    const now = Date.now(), a = sun.sunrise.getTime(), b = sun.sunset.getTime();
+    const nightLen = 86400000 - (b - a);
+    let since = now > b ? now - b : now - (b - 86400000);
+    t = Math.max(0, Math.min(1, since / nightLen));
+  }
+  const ang = t == null ? null : Math.PI * (1 - Math.max(0, Math.min(1, t)));
+  const bx = ang == null ? null : cx + r * Math.cos(ang);
+  const by = ang == null ? null : base - r * Math.sin(ang);
+
+  const arcPath = (to) => 'M ' + (cx-r) + ' ' + base + ' A ' + r + ' ' + r + ' 0 0 1 ' + to;
+  const bodyFill = up ? 'var(--sun)' : '#C9D3E2';
+
+  let g = '';
+  // full track, then the travelled portion
+  g += '<path class="band" d="' + arcPath((cx+r) + ' ' + base) + '"/>';
+  if (bx != null) g += '<path class="day" d="' + arcPath(bx.toFixed(1) + ' ' + by.toFixed(1)) +
+                       '" stroke="' + (up ? 'var(--sun)' : '#9FB0C6') + '"/>';
+  // hour ticks along the track
+  for (let i = 1; i < 8; i++){
+    const A = Math.PI * (1 - i/8);
+    const x1 = cx + (r-4) * Math.cos(A), y1 = base - (r-4) * Math.sin(A);
+    const x2 = cx + (r+4) * Math.cos(A), y2 = base - (r+4) * Math.sin(A);
+    g += '<line x1="' + x1.toFixed(1) + '" y1="' + y1.toFixed(1) + '" x2="' + x2.toFixed(1) +
+         '" y2="' + y2.toFixed(1) + '" stroke="var(--line)" stroke-width="1"/>';
+  }
+  g += '<line class="horizon" x1="6" y1="' + base + '" x2="' + (W-6) + '" y2="' + base + '"/>';
+
+  if (bx != null){
+    const y = up ? by : Math.min(by, base - 6);
+    g += '<g class="body" style="transform:translate(0px,0px)">';
+    if (up){
+      g += '<g class="ray" style="transform-origin:' + bx.toFixed(1) + 'px ' + y.toFixed(1) + 'px">';
+      for (let i = 0; i < 8; i++){
+        const A = i / 8 * Math.PI * 2;
+        g += '<line x1="' + (bx + Math.cos(A)*10).toFixed(1) + '" y1="' + (y + Math.sin(A)*10).toFixed(1) +
+             '" x2="' + (bx + Math.cos(A)*14.5).toFixed(1) + '" y2="' + (y + Math.sin(A)*14.5).toFixed(1) +
+             '" stroke="var(--sun)" stroke-width="1.6" stroke-linecap="round" opacity=".75"/>';
+      }
+      g += '</g>';
+      g += '<circle cx="' + bx.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="7.5" fill="' + bodyFill + '"/>';
+    } else {
+      // a crescent, cut with a second disc
+      g += '<defs><mask id="mn"><rect width="' + W + '" height="' + H + '" fill="#fff"/>' +
+           '<circle cx="' + (bx+4.4).toFixed(1) + '" cy="' + (y-3.4).toFixed(1) + '" r="7.2" fill="#000"/></mask></defs>';
+      g += '<circle cx="' + bx.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="7.5" fill="' + bodyFill +
+           '" mask="url(#mn)"/>';
+    }
+    g += '</g>';
+  }
+
+  g += '<text x="' + (cx-r) + '" y="' + (base+15) + '" text-anchor="middle">' + (sun ? fmt(sun.sunrise, place.tz) : '') + '</text>';
+  g += '<text x="' + (cx+r) + '" y="' + (base+15) + '" text-anchor="middle">' + (sun ? fmt(sun.sunset, place.tz) : '') + '</text>';
+  $('arc').innerHTML = g;
 }
 
 /* -------------------------- the verdict ----------------------------- */
