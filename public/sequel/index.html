@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Uninvited Sequel</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230C0C14'/><path d='M16 5l3 8h8l-6.5 5 2.5 9-7-5.5-7 5.5 2.5-9L5 13h8z' fill='%23E8C05A'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --void:#0C0C14;
+  --void-2:#15151F;
+  --gold:#E8C05A;
+  --paper:#EFE9DC;
+  --dim:#8A8798;
+  --red:#C43A32;
+  --rule:#2A2A38;
+  --sans:ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --display:"Avenir Next Condensed","Roboto Condensed","Arial Narrow",Impact,var(--sans);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{ background:radial-gradient(900px 600px at 50% -8%, var(--void-2), var(--void) 62%);
+  color:var(--paper);font-family:var(--sans);min-height:100vh;padding:28px 18px 64px }
+.wrap{ max-width:740px;margin:0 auto }
+h1{ font-family:var(--display);font-size:clamp(26px,5.6vw,40px);margin:0;letter-spacing:.06em;text-transform:uppercase;font-weight:700 }
+.sub{ font-family:var(--mono);font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin-top:8px }
+
+.bar{ display:flex;gap:9px;flex-wrap:wrap;margin:20px 0 0 }
+input{
+  flex:1;min-width:200px;background:#0A0A11;border:1px solid var(--rule);color:var(--paper);
+  font-family:var(--sans);font-size:16px;padding:12px 14px;border-radius:2px;
+}
+input:focus{ outline:2px solid var(--gold);outline-offset:-1px }
+.btn{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
+  background:var(--gold);color:#161200;border:0;padding:12px 18px;cursor:pointer;font-weight:700;border-radius:2px;
+}
+.btn:hover{ background:#F4D07A }
+.btn.sec{ background:transparent;color:var(--paper);border:1px solid var(--rule);font-weight:400 }
+.btn.sec:hover{ border-color:var(--gold);color:var(--gold) }
+.btn:focus-visible{ outline:2px solid var(--gold);outline-offset:3px }
+.chips{ display:flex;gap:7px;flex-wrap:wrap;margin-top:13px }
+.chip{ font-family:var(--mono);font-size:11px;background:transparent;border:1px dashed var(--rule);
+  color:var(--dim);padding:7px 11px;cursor:pointer;border-radius:2px }
+.chip:hover{ border-style:solid;border-color:var(--gold);color:var(--gold) }
+
+/* ---------- the one-sheet ---------- */
+.sheet{
+  margin-top:24px;background:linear-gradient(175deg,#14141E 0%,#0A0A11 100%);
+  border:1px solid var(--rule);border-radius:3px;padding:30px 26px 24px;
+  box-shadow:0 20px 50px rgba(0,0,0,.55);position:relative;overflow:hidden;
+}
+.sheet::before{
+  content:"";position:absolute;left:-20%;top:-40%;width:140%;height:90%;
+  background:radial-gradient(closest-side, rgba(232,192,90,.10), transparent 70%);pointer-events:none;
+}
+.tagline{
+  font-family:var(--mono);font-size:10px;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--gold);text-align:center;margin-bottom:14px;
+}
+.title{
+  font-family:var(--display);text-align:center;text-transform:uppercase;font-weight:700;
+  font-size:clamp(30px,8vw,62px);line-height:.94;letter-spacing:.01em;margin:0;
+  text-shadow:0 2px 0 rgba(0,0,0,.6);
+}
+.title .two{ display:block;color:var(--gold);font-size:.62em;margin-top:6px;letter-spacing:.06em }
+.strap{
+  text-align:center;font-style:italic;font-size:clamp(14px,2.8vw,18px);color:#C8C2D6;
+  margin:16px auto 0;max-width:44ch;line-height:1.5;
+}
+.rule{ height:1px;background:var(--rule);margin:22px 0 }
+.log{ font-size:15.5px;line-height:1.68;color:#D6D0E0;margin:0 0 14px }
+.log b{ color:var(--paper) }
+.beats{ margin:0 0 4px;padding-left:18px }
+.beats li{ font-size:14.5px;line-height:1.62;color:#B8B2C6;margin-bottom:7px }
+.grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1px;
+  background:var(--rule);border:1px solid var(--rule);margin-top:20px;
+}
+.grid div{ background:#0C0C14;padding:12px 14px }
+.grid span{ font-family:var(--mono);font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);display:block }
+.grid b{ display:block;font-size:14px;margin-top:5px;color:var(--paper);font-weight:600;line-height:1.35 }
+.note{
+  margin-top:18px;border-left:3px solid var(--red);padding:11px 14px;background:rgba(196,58,50,.08);
+  font-size:13.5px;line-height:1.6;color:#E4C8C4;
+}
+.note b{ font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--red);display:block;margin-bottom:5px }
+
+footer{
+  max-width:740px;margin:26px auto 0;padding-top:14px;border-top:1px solid var(--rule);
+  font-family:var(--mono);font-size:10.5px;line-height:1.8;color:var(--dim);
+}
+footer a{ color:#C9C3D8 }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+body{ padding-bottom:64px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media print{ #lc-back{ display:none } }
+@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } }
+</style>
+</head>
+<body>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<div class="wrap">
+  <h1>The Uninvited Sequel</h1>
+  <div class="sub">nobody asked for this · it is being made anyway</div>
+
+  <div class="bar">
+    <input type="text" id="in" maxlength="48" placeholder="anything — a quiet bookshop, my commute, doing laundry" value="a quiet bookshop">
+    <button class="btn" id="go">Green-light it</button>
+    <button class="btn sec" id="rand">Pick for me</button>
+  </div>
+  <div class="chips" id="chips"></div>
+
+  <div id="out"></div>
+</div>
+
+<footer>
+  Every title, tagline, beat and studio note is generated here from word lists. No real film,
+  franchise or pitch is being quoted — the joke is the machinery of a sequel nobody wanted, applied
+  to whatever you typed. <a href="/">← back to the cabinet</a>
+</footer>
+
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+const pick = (a) => a[Math.floor(Math.random() * a.length)];
+const ri = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+const SUBTITLES = ['The Reckoning','Deeper','Unfinished Business','The Final Chapter','Resurrection',
+  'Origins','After Dark','The Awakening','Retribution','Endgame','No Way Back','Legacy','Uprising',
+  'The Last Stand','Redemption','Bloodline','Aftermath','Homecoming','Revelations','The Second Shift',
+  'Reloaded','Judgment','Rising','Nowhere Left','The Long Night','Full Circle'];
+
+const STRAPS = [
+  'This time, it is personal.',
+  'You thought it was over. It was resting.',
+  'Some things should stay closed.',
+  'The rules have changed. Nobody was told.',
+  'It was never really about {x}.',
+  'Everything you knew about {x} was the prologue.',
+  'One last job. Then another one, immediately.',
+  'They should have left it alone.',
+  'The past is not finished with you.',
+  'From the people who did not stop when asked.',
+  'It ends where it started. Except louder.',
+  'Some sequels earn it. This one arrives regardless.',
+];
+
+const HOOKS = [
+  'Six years on, {x} has been quietly rebuilt — and the person who rebuilt it has been waiting.',
+  'A routine morning at {x} goes wrong in a way that turns out to have been scheduled.',
+  'The original crew are scattered, retired, and about to be contacted by someone with a folder.',
+  'What started as {x} has become an institution, and institutions have basements.',
+  '{X} was decommissioned. Somebody has been paying the electricity bill anyway.',
+  'The sole survivor of {x} has spent a decade insisting it meant nothing. They were lying.',
+  'A prequel would have explained everything. This is not a prequel.',
+  'Everything is fine at {x} until a name resurfaces that nobody wanted to hear again.',
+];
+
+const BEATS = [
+  'A returning character is killed in the first eight minutes to establish stakes.',
+  'The mentor figure explains the rules, then immediately breaks one.',
+  'A montage set to a slowed-down cover of a song from the first one.',
+  'Someone says the title out loud. The room goes quiet.',
+  'A twist involving a sibling nobody mentioned in the original.',
+  'The location from the first film, now abandoned and dripping.',
+  'A committee scene. It is longer than it needs to be and it is the best scene.',
+  'The antagonist has a coherent point and is never allowed to finish making it.',
+  'Third act relocates, without explanation, to a rooftop.',
+  'A character who died returns via a technicality established off-screen.',
+  'The last line is a setup for a third one that will not be made.',
+  'Ten minutes of walking, filmed beautifully, that the studio will cut.',
+  'A dog appears in act one and survives, which is the only promise this film keeps.',
+  'A legacy prop is recovered from a drawer in slow motion.',
+];
+
+const CAST = ['the original lead, contractually','a much younger version of the original lead',
+  'a famous actor in one scene, for the poster','the director\'s friend, again','somebody from television',
+  'the original lead\'s voice only','a newcomer who is better than the film','three returning faces and one recast',
+  'an unexplained narrator'];
+const DIRECTORS = ['the second-unit director from the first one','a music video director on their first feature',
+  'a committee, effectively','the original director, reluctantly, for the money',
+  'someone excellent, hired for prestige and then overruled','two directors who were not introduced'];
+const BUDGETS = ['larger than the first, visibly not on screen','modest, and it shows in the good way',
+  'enormous, and thirty per cent of it is a single corridor','undisclosed, which is itself a genre',
+  'reduced twice during production'];
+const OPENINGS = ['a strong opening weekend and a very quiet second',
+  'number two behind something with a talking animal','a respectable showing in exactly one territory',
+  'straight to a platform, in November','delayed twice, then released with no warning'];
+
+const NOTES = [
+  'Studio note: can the ending be happier, and also darker.',
+  'Studio note: audiences responded poorly to the part that makes it make sense.',
+  'Studio note: add a scene where they explain the first film to each other.',
+  'Studio note: the dog tested extremely well. More dog.',
+  'Studio note: legal have asked us to change one letter of the title.',
+  'Studio note: the trailer is finished. The script is not.',
+  'Studio note: please remove the ambiguity from the final shot, and then put it back.',
+  'Studio note: nobody remembers the first one. Consider explaining it in the title.',
+];
+
+const SUGGESTIONS = ['a quiet bookshop','my commute','doing the laundry','a village fete',
+  'the office kitchen','learning to drive','a boring Sunday','assembling furniture','a dentist appointment'];
+
+function titleOf(x){
+  const clean = x.replace(/^(a|an|the)\s+/i, '').trim();
+  const T = clean.toUpperCase();
+  const style = ri(0, 3);
+  if (style === 0) return { main: T, two: '2: ' + pick(SUBTITLES) };
+  if (style === 1) return { main: T, two: pick(SUBTITLES) };
+  if (style === 2) return { main: T + ' II', two: pick(SUBTITLES) };
+  return { main: T, two: 'Part Two — ' + pick(SUBTITLES) };
+}
+
+function render(){
+  const raw = $('in').value.trim();
+  if (!raw){ $('out').innerHTML = ''; return; }
+  const x = raw.toLowerCase();
+  const X = x.charAt(0).toUpperCase() + x.slice(1);
+  const f = (s) => s.replace(/\{x\}/g, x).replace(/\{X\}/g, X);
+  const t = titleOf(raw);
+
+  const beats = [];
+  const pool = BEATS.slice();
+  const want = ri(4, 5);
+  while (beats.length < want && pool.length) beats.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+
+  $('out').innerHTML =
+    '<div class="sheet">' +
+      '<div class="tagline">' + esc(pick(['coming ' + pick(['summer','winter','eventually','at some point']),
+        'nobody asked', 'in theatres and also not', 'from the makers of the first one'])) + '</div>' +
+      '<h2 class="title">' + esc(t.main) + '<span class="two">' + esc(t.two) + '</span></h2>' +
+      '<p class="strap">' + esc(f(pick(STRAPS))) + '</p>' +
+      '<div class="rule"></div>' +
+      '<p class="log">' + esc(f(pick(HOOKS))) + '</p>' +
+      '<ul class="beats">' + beats.map(b => '<li>' + esc(b) + '</li>').join('') + '</ul>' +
+      '<div class="grid">' +
+        '<div><span>returning</span><b>' + esc(pick(CAST)) + '</b></div>' +
+        '<div><span>directed by</span><b>' + esc(pick(DIRECTORS)) + '</b></div>' +
+        '<div><span>budget</span><b>' + esc(pick(BUDGETS)) + '</b></div>' +
+        '<div><span>projected</span><b>' + esc(pick(OPENINGS)) + '</b></div>' +
+      '</div>' +
+      '<div class="note"><b>note from the eleventh floor</b>' + esc(pick(NOTES)) + '</div>' +
+    '</div>';
+}
+
+$('go').addEventListener('click', render);
+$('in').addEventListener('keydown', (e) => { if (e.key === 'Enter') render(); });
+$('rand').addEventListener('click', () => { $('in').value = pick(SUGGESTIONS); render(); });
+$('chips').innerHTML = SUGGESTIONS.slice(0, 5).map(s => '<button class="chip">' + esc(s) + '</button>').join('');
+$('chips').addEventListener('click', (e) => {
+  const c = e.target.closest('.chip'); if (!c) return;
+  $('in').value = c.textContent; render();
+});
+
+render();
+</script>
+</body>
+</html>
