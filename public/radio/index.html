@@ -6,6 +6,11 @@
 <title>The Radio Hub</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%235C3A22'/><rect x='4' y='9' width='24' height='9' rx='2' fill='%23F2E2BE'/><rect x='15' y='9' width='2' height='9' fill='%23D4732A'/><circle cx='9' cy='24' r='3' fill='%23C9A46A'/><circle cx='23' cy='24' r='3' fill='%23C9A46A'/></svg>">
 <style>
+/* Declare the scheme this toy is actually drawn in. Without it a browser
+   running forced dark mode will invert the whole page — the cream card
+   comes back dark brown, the ink comes back pale, and the illustrated
+   background is flattened to black. */
+:root{ color-scheme: dark; }
 :root{
   --wood:#5C3A22;
   --wood-hi:#7A5030;

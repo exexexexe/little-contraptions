@@ -6,6 +6,11 @@
 <title>Nature's Greatest Hits</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23F7F4EC'/><path d='M16 27C16 18 20 9 26 6c1 9-3 18-10 21z' fill='%236B8F3E'/><path d='M16 27C13 20 9 14 5 12c0 8 4 13 11 15z' fill='%232F4A6B'/></svg>">
 <style>
+/* Declare the scheme this toy is actually drawn in. Without it a browser
+   running forced dark mode will invert the whole page — the cream card
+   comes back dark brown, the ink comes back pale, and the illustrated
+   background is flattened to black. */
+:root{ color-scheme: light; }
 :root{
   --bone:#F7F4EC;
   --bone-2:#EDE8DA;

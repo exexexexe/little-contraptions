@@ -6,6 +6,11 @@
 <title>The Loot Terminal</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%231B120A'/><path d='M16 4l2.6 7.4 7.4.4-5.8 4.8 2 7.4-6.2-4.2-6.2 4.2 2-7.4L6 11.8l7.4-.4z' fill='%23E8A33C'/></svg>">
 <style>
+/* Declare the scheme this toy is actually drawn in. Without it a browser
+   running forced dark mode will invert the whole page — the cream card
+   comes back dark brown, the ink comes back pale, and the illustrated
+   background is flattened to black. */
+:root{ color-scheme: dark; }
 :root{
   --dark:#1B120A; --dark-2:#241809; --panel:#2E1F0E;
   --parch:#EFE0C0; --parch-2:#E0CDA4; --edge:#8A6A38;

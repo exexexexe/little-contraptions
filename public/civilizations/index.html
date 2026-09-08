@@ -9,6 +9,11 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,700;0,9..144,900;1,9..144,400&family=JetBrains+Mono:wght@300;400;600&family=Inter+Tight:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
+/* Declare the scheme this toy is actually drawn in. Without it a browser
+   running forced dark mode will invert the whole page — the cream card
+   comes back dark brown, the ink comes back pale, and the illustrated
+   background is flattened to black. */
+:root{ color-scheme: dark; }
 *{ box-sizing:border-box;margin:0;padding:0 }
 :root{
   --bg:#0C1220; --fg:#E8EEF6; --accent:#4FD1C5; --muted:#8FA3B8;

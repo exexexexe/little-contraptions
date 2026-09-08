@@ -6,6 +6,11 @@
 <title>The Multiverse Coin Flip</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230B0B0C'/><ellipse cx='16' cy='16' rx='6' ry='9' fill='none' stroke='%23FF3D8B' stroke-width='2.4'/></svg>">
 <style>
+/* Declare the scheme this toy is actually drawn in. Without it a browser
+   running forced dark mode will invert the whole page — the cream card
+   comes back dark brown, the ink comes back pale, and the illustrated
+   background is flattened to black. */
+:root{ color-scheme: dark; }
 :root{
   --bg:#0B0B0C;
   --bg-2:#131315;

@@ -6,6 +6,11 @@
 <title>Perfume Match</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230F2A22'/><rect x='11' y='5' width='10' height='4' fill='%23C9A961'/><path d='M9 12h14v13a3 3 0 0 1-3 3h-8a3 3 0 0 1-3-3z' fill='none' stroke='%23C9A961' stroke-width='1.8'/></svg>">
 <style>
+/* Declare the scheme this toy is actually drawn in. Without it a browser
+   running forced dark mode will invert the whole page — the cream card
+   comes back dark brown, the ink comes back pale, and the illustrated
+   background is flattened to black. */
+:root{ color-scheme: dark; }
 :root{
   --bottle:#0F2A22;
   --bottle-2:#153A2F;
