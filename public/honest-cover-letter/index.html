@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cover Letter, But Honest</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23F6F4EE'/><rect x='8' y='6' width='16' height='20' fill='%23fff' stroke='%23384038'/><path d='M11 12h10M11 16h10M11 20h6' stroke='%23384038' stroke-width='1.4'/></svg>">
+<style>
+:root{ color-scheme: light; }
+:root{
+  --paper:#F6F4EE;
+  --sheet:#FFFFFF;
+  --ink:#1F231F;
+  --ink-2:#4C534C;
+  --dim:#8A908A;
+  --accent:#3E6B4A;
+  --rule:#DDDCD2;
+  --sans:ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --serif:"Iowan Old Style","Palatino Linotype",Georgia,serif;
+  --display:"Avenir Next Condensed","Roboto Condensed","Arial Narrow",var(--sans);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{ background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:30px 18px 64px }
+.wrap{ max-width:720px;margin:0 auto }
+h1{ font-family:var(--display);font-size:clamp(26px,5.6vw,40px);margin:0;letter-spacing:.03em;text-transform:uppercase;font-weight:700 }
+.sub{ font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-top:8px }
+
+.form{ display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:20px 0 12px }
+.form label{ display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--dim);margin-bottom:6px }
+.form input, .form select{
+  width:100%;background:#fff;border:1px solid var(--rule);color:var(--ink);
+  font-family:var(--sans);font-size:15px;padding:11px 12px;border-radius:2px;
+}
+.form input:focus, .form select:focus{ outline:2px solid var(--accent);outline-offset:-1px }
+
+.deck{ display:flex;gap:9px;flex-wrap:wrap;margin-bottom:20px }
+.btn{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
+  background:var(--ink);color:var(--paper);border:0;padding:12px 18px;cursor:pointer;font-weight:700;border-radius:2px;
+}
+.btn:hover{ background:#000 }
+.btn.sec{ background:transparent;color:var(--ink);border:1px solid var(--rule);font-weight:400 }
+.btn.sec:hover{ border-color:var(--accent);color:var(--accent) }
+.btn:focus-visible{ outline:2px solid var(--accent);outline-offset:3px }
+
+.letter{
+  background:var(--sheet);border:1px solid var(--rule);border-radius:2px;
+  padding:38px 40px 34px;box-shadow:0 12px 34px rgba(0,0,0,.07);
+  font-family:var(--serif);font-size:16px;line-height:1.72;color:var(--ink-2);
+}
+.letter .head{
+  display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  font-family:var(--mono);font-size:10.5px;color:var(--dim);letter-spacing:.06em;
+  padding-bottom:18px;margin-bottom:22px;border-bottom:1px solid var(--rule);
+}
+.letter p{ margin:0 0 15px }
+.letter p:last-of-type{ margin-bottom:0 }
+.letter .to{ color:var(--ink);font-weight:600;font-family:var(--sans);font-size:15px;margin-bottom:20px }
+.letter .sig{ margin-top:26px;padding-top:16px;border-top:1px solid var(--rule);font-family:var(--sans);font-size:14px;color:var(--ink) }
+.letter .sig i{ color:var(--dim);display:block;margin-top:5px;font-size:13px }
+.letter mark{ background:#EEF3EA;color:var(--accent);padding:0 2px;border-radius:2px }
+
+.stamp{
+  display:inline-block;margin-top:16px;font-family:var(--mono);font-size:9px;letter-spacing:.2em;
+  text-transform:uppercase;color:#B4453A;border:1px solid #B4453A;padding:5px 10px;transform:rotate(-1.5deg);
+}
+
+footer{
+  max-width:720px;margin:26px auto 0;padding-top:14px;border-top:1px solid var(--rule);
+  font-family:var(--mono);font-size:10.5px;line-height:1.8;color:var(--dim);
+}
+footer a{ color:var(--ink-2) }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+body{ padding-bottom:64px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } .letter{ padding:26px 22px } }
+@media print{ #lc-back{ display:none } }
+@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } }
+</style>
+</head>
+<body>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<div class="wrap">
+  <h1>Cover Letter, But Honest</h1>
+  <div class="sub">the draft you delete before writing the real one</div>
+
+  <div class="form">
+    <div>
+      <label for="role">the role</label>
+      <input type="text" id="role" maxlength="46" value="Senior Product Designer">
+    </div>
+    <div>
+      <label for="co">the company</label>
+      <input type="text" id="co" maxlength="46" value="Halverson &amp; Pike">
+    </div>
+    <div>
+      <label for="tone">how you are feeling about it</label>
+      <select id="tone">
+        <option value="tired">tired but employable</option>
+        <option value="desperate">quietly desperate</option>
+        <option value="fine">genuinely fine, oddly</option>
+        <option value="overqualified">overqualified and aware of it</option>
+        <option value="career">changing career entirely</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="deck">
+    <button class="btn" id="go">Write it</button>
+    <button class="btn sec" id="again">Another draft</button>
+    <button class="btn sec" id="copy">Copy the letter</button>
+  </div>
+
+  <div id="out"></div>
+</div>
+
+<footer>
+  Generated in your browser from word lists — nothing is sent anywhere and no real company,
+  posting or person is referenced. Do not send this. That is the entire premise.
+  <a href="/">← back to the cabinet</a>
+</footer>
+
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+const pick = (a) => a[Math.floor(Math.random() * a.length)];
+const ri = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+const OPENERS = {
+  tired: [
+    'I am applying for the {role} position because I would like to keep having somewhere to be on weekdays.',
+    'I saw the posting for {role} at {co} at eleven at night and applied before I could reconsider.',
+    'I am writing about the {role} role. I have written eleven of these this week and this is the one where I stopped pretending.',
+  ],
+  desperate: [
+    'I would like the {role} job at {co}. I would like most jobs, but I would like this one at least as much as the others.',
+    'I am applying for {role}. I will not oversell my enthusiasm, because you will be able to hear it wobble.',
+    'Please consider me for {role}. I have a number in my head for how long I can keep doing this and it is smaller than it was.',
+  ],
+  fine: [
+    'I am applying for the {role} role at {co}, which I am aware is a strange thing to do when nothing is wrong.',
+    'I have a perfectly good job and I am applying for {role} anyway, which should probably tell us both something.',
+    'This is an application for {role}. I am not unhappy. I am simply curious, which is a worse reason and a truer one.',
+  ],
+  overqualified: [
+    'I am applying for {role}. I have done this job, and the one above it, and I am applying for this one on purpose.',
+    'I am overqualified for {role} at {co} and we are both going to have to be adult about that.',
+    'I would like the {role} position. I have deliberately left three things off my CV so this letter would be less awkward.',
+  ],
+  career: [
+    'I am applying for {role} at {co} with none of the background you are looking for and all of the interest.',
+    'I have spent eleven years doing something else and would like to stop. Hence: {role}.',
+    'This is a career change application for {role}. I am aware of what that costs you and I am asking anyway.',
+  ],
+};
+
+const MIDDLE = [
+  'My relevant experience is real but thinner than the CV implies. The CV is not lying; it is arranged.',
+  'I have done most of what the posting asks for. The two things I have not done are the two things you will ask about.',
+  'I am good at the part of this job that nobody writes a job description for, and average at the part you have listed first.',
+  'I work well in a team in the sense that I am pleasant and turn up. I do not think that is what teams mean.',
+  'I am a fast learner, by which I mean I am willing to be bad at something in public for about three weeks.',
+  'My last role ended for reasons that are entirely explicable and will take four minutes, which is three minutes longer than an interview allows.',
+  'I have read your website. I understand roughly sixty per cent of what you do and I am confident about forty of it.',
+  'I am detail-oriented in the areas I find interesting, which is a smaller set than either of us would like.',
+];
+
+const WHY = [
+  'I want this job because it pays, because it is near a train I can actually get, and because the posting was written like a person wrote it.',
+  'I am drawn to {co} because your careers page did not use the word "family", which is the highest compliment available.',
+  'I am interested in {co} specifically. I could produce a more flattering version of that sentence but you would not believe it either.',
+  'The honest answer to "why us" is that you were hiring and I was looking, and everything after that is decoration.',
+  'I would like to work somewhere the meetings end when the thing is decided. I have no evidence that is you. I am hoping.',
+  'What I want is a manager who says what they mean and a laptop that is not four years old. That is genuinely the list.',
+];
+
+const ASK = [
+  'I will be a solid, unspectacular hire for eight months and then quite a good one, if you let me get there.',
+  'I am not going to change your company. I will do the work, on time, and tell you early when it is going wrong.',
+  'I would rather be told what the actual problem is than what the role is. They are rarely the same.',
+  'If you hire me I will be reliable in a way that is invisible until the week I am off.',
+  'I will not be the most impressive person you interview. I will be there in March.',
+];
+
+const CLOSERS = [
+  'Available at short notice, which you can read either way.',
+  'I can start whenever. That is not eagerness; it is availability.',
+  'Happy to talk. Happier to talk about the role than about myself, though I understand the format.',
+  'Thank you for reading this far. Statistically, you did not.',
+  'I look forward to a templated rejection in nine to eleven working days.',
+  'If this is not right, I would genuinely rather know quickly than be kept warm.',
+];
+
+const NAMES = ['Someone Who Needs A Job','The Applicant','A. Candidate','Yours, Provisionally','An Honest Person, Briefly'];
+const PS = [
+  'P.S. I did not tailor this letter. I tailored the first paragraph, which is what everyone means by tailoring.',
+  'P.S. I have a portfolio. It is three good things and some noise.',
+  'P.S. I have read the salary band. I noticed it is a band.',
+  'P.S. I know somebody who works here and I have not asked them to mention me, out of pride.',
+  'P.S. If the posting says "wear many hats", I would like to know how many, in writing.',
+];
+
+function today(){
+  return new Date().toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
+}
+
+function render(){
+  const role = $('role').value.trim() || 'the advertised role';
+  const co = $('co').value.trim() || 'your company';
+  const tone = $('tone').value;
+  const f = (s) => s.replace(/\{role\}/g, role).replace(/\{co\}/g, co);
+
+  $('out').innerHTML =
+    '<div class="letter">' +
+      '<div class="head"><span>draft — not sent</span><span>' + esc(today()) + '</span></div>' +
+      '<div class="to">To whoever opens these at ' + esc(co) + ',</div>' +
+      '<p>' + esc(f(pick(OPENERS[tone]))) + '</p>' +
+      '<p>' + esc(f(pick(MIDDLE))) + ' ' + esc(f(pick(MIDDLE))) + '</p>' +
+      '<p>' + esc(f(pick(WHY))) + '</p>' +
+      '<p>' + esc(f(pick(ASK))) + '</p>' +
+      '<p>' + esc(f(pick(CLOSERS))) + '</p>' +
+      '<div class="sig">' + esc(pick(NAMES)) +
+        '<i>' + esc(pick(PS)) + '</i></div>' +
+      '<div class="stamp">do not send</div>' +
+    '</div>';
+}
+
+$('go').addEventListener('click', render);
+$('again').addEventListener('click', render);
+['role','co'].forEach(id => $(id).addEventListener('keydown', (e) => { if (e.key === 'Enter') render(); }));
+$('tone').addEventListener('change', render);
+$('copy').addEventListener('click', async () => {
+  const el = document.querySelector('.letter');
+  if (!el) return;
+  const text = el.innerText.replace(/\n{3,}/g, '\n\n');
+  try { await navigator.clipboard.writeText(text); $('copy').textContent = 'Copied'; }
+  catch (e) { window.prompt('Copy the letter:', text); }
+  setTimeout(() => { $('copy').textContent = 'Copy the letter'; }, 1500);
+});
+
+render();
+</script>
+</body>
+</html>
