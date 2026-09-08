@@ -11,7 +11,7 @@ Opens on http://localhost:3000.
 
 ## The toys
 
-24 drawers, each a single self-contained HTML file under `public/<slug>/index.html`.
+25 drawers, each a single self-contained HTML file under `public/<slug>/index.html`.
 The hub filters them by the tag on each card.
 
 | # | Toy | Tag | What it is |
@@ -40,10 +40,11 @@ The hub filters them by the tag on each card.
 | 22 | [Perfume Match](/perfume-match/) | game | Notes in, character out. Real people clearly framed. |
 | 23 | [Nature's Greatest Hits](/nature-hits/) | real data | Today's tally from iNaturalist, GBIF and USGS. |
 | 24 | [ISS Tracker](/iss/) | real data | Live position, ground track and visible-pass prediction by in-browser SGP4. |
+| 25 | [Field PDA — Zone Survey](/the-zone/) | generator | CRT survey terminal: radiation, anomaly, artefact, advisory, Geiger audio. |
 
 Still to build: Movie night (needs `TMDB_API_KEY`), the rest of Phase B
-(Stalker's field PDA, A sunny afternoon in the city, Radio hub,
-Civilizations ranked) and Phase C (needs `GROQ_API_KEY`).
+(A sunny afternoon in the city, Radio hub, Civilizations ranked) and
+Phase C (needs `GROQ_API_KEY`).
 
 ## Server routes
 
