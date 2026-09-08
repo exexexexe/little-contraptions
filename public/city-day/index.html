@@ -130,6 +130,63 @@ footer{
   font-family:var(--mono);font-size:10.5px;color:var(--dim);line-height:1.85;
 }
 footer a{ color:var(--ink-2) }
+/* ---------- ctOS chrome ---------- */
+.frame{ position:relative }
+.hud-rail{
+  display:flex;gap:14px;align-items:center;flex-wrap:wrap;
+  font-family:var(--mono);font-size:8.5px;letter-spacing:.2em;text-transform:uppercase;
+  padding:0 0 9px;margin:0 0 10px;border-bottom:1px solid rgba(14,74,82,.28);color:#14555E;
+}
+.hud-rail .lk{ color:#0A6E62;font-weight:700 }
+.hud-rail .lk::before{ content:"";display:inline-block;width:5px;height:5px;border-radius:50%;
+  background:#0A9E86;margin-right:6px;vertical-align:middle;animation:ctpulse 1.9s ease-in-out infinite }
+@keyframes ctpulse{ 0%,100%{opacity:.3} 50%{opacity:1} }
+.hud-rail .fab{ margin-left:auto;color:#9A5A05;border:1px solid rgba(154,90,5,.55);padding:2px 7px;font-weight:700 }
+.recticle{ position:absolute;inset:14px;pointer-events:none;z-index:3 }
+.recticle .c{ position:absolute;width:22px;height:22px;border:2px solid rgba(95,227,214,.85) }
+.recticle .tl{ left:0;top:0;border-right:0;border-bottom:0 }
+.recticle .tr{ right:0;top:0;border-left:0;border-bottom:0 }
+.recticle .bl{ left:0;bottom:0;border-right:0;border-top:0 }
+.recticle .br{ right:0;bottom:0;border-left:0;border-top:0 }
+.recticle .lock{
+  position:absolute;left:50%;top:50%;width:54px;height:54px;margin:-27px 0 0 -27px;
+  border:1px solid rgba(95,227,214,.4);border-radius:50%;
+  animation:ctlock 2.6s cubic-bezier(.2,.8,.3,1) 1;
+}
+.recticle .lock::after{
+  content:"";position:absolute;inset:22px;border:1px solid rgba(95,227,214,.7);
+}
+@keyframes ctlock{ 0%{ transform:scale(4.6);opacity:0 } 40%{ opacity:.9 } 100%{ transform:scale(1);opacity:.35 } }
+.scanbar{
+  position:absolute;left:0;right:0;top:0;height:26%;z-index:2;pointer-events:none;
+  background:linear-gradient(180deg,transparent,rgba(95,227,214,.16),transparent);
+  animation:ctscan 1.5s ease-out 1;
+}
+@keyframes ctscan{ from{ transform:translateY(-60%) } to{ transform:translateY(420%);opacity:0 } }
+
+/* ---------- folded credit ---------- */
+.cr-toggle{
+  display:flex;align-items:center;gap:10px;width:100%;text-align:left;cursor:pointer;
+  background:transparent;border:0;border-top:1px solid rgba(255,255,255,.13);
+  padding:11px 2px;color:inherit;font:inherit;
+}
+.cr-toggle:hover{ background:rgba(255,255,255,.03) }
+.cr-toggle:focus-visible{ outline:2px solid #5FE3D6;outline-offset:-2px }
+.cr-line{
+  font-family:var(--mono);font-size:11px;opacity:.8;flex:1;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.cr-what{
+  font-family:var(--mono);font-size:8.5px;letter-spacing:.2em;text-transform:uppercase;opacity:.45;
+}
+.cr-caret{ font-size:11px;opacity:.6;transition:transform .18s }
+.cr-toggle[aria-expanded="true"] .cr-caret{ transform:rotate(180deg) }
+.cr-body{ padding:2px 2px 14px }
+@media (prefers-reduced-motion: reduce){
+  .recticle .lock, .scanbar{ animation:none }
+  .scanbar{ opacity:0 }
+  .hud-rail .lk::before{ animation:none;opacity:.9 }
+}
 </style>
 </head>
 <body>
@@ -171,11 +228,46 @@ const esc = (s) => String(s == null ? '' : s)
 const strip = (h) => { const d = document.createElement('div'); d.innerHTML = h || '';
   return (d.textContent || '').replace(/\s+/g,' ').trim(); };
 
-const CATS = [
-  'Quality images of San Francisco',
-  'Featured pictures of San Francisco',
-  'Streets in San Francisco',
+/* Landmarks the game's version of this city is built around, each mapped to
+   a Wikimedia Commons category that was checked for usable landscape files
+   before it went in here. These are real, properly licensed photographs of
+   real places, chosen with the game's geography in mind — nothing is taken
+   from the game itself. */
+const LANDMARKS = [
+  { cat:'Golden Gate Bridge from road or walkway',            name:'Golden Gate Bridge' },
+  { cat:'Golden Gate Bridge from Marin County, California',   name:'Golden Gate Bridge — north approach' },
+  { cat:'Golden Gate Bridge Vista Point',                     name:'Golden Gate Vista Point' },
+  { cat:'Coit Tower',                                         name:'Coit Tower' },
+  { cat:'Painted Ladies from Alamo Square Park',              name:'Alamo Square' },
+  { cat:'Alamo Square, San Francisco',                        name:'Alamo Square' },
+  { cat:'Lombard Street (San Francisco)',                     name:'Lombard Street' },
+  { cat:'Transamerica Pyramid',                               name:'Transamerica Pyramid' },
+  { cat:"Fisherman's Wharf, San Francisco",                   name:"Fisherman's Wharf" },
+  { cat:'Pier 39 (San Francisco)',                            name:'Pier 39' },
+  { cat:'Alcatraz Island',                                    name:'Alcatraz Island' },
+  { cat:'Ferry Building',                                     name:'Ferry Building' },
+  { cat:'Palace of Fine Arts, San Francisco',                 name:'Palace of Fine Arts' },
+  { cat:'Twin Peaks (San Francisco, California)',             name:'Twin Peaks' },
+  { cat:'Views from Twin Peaks (San Francisco, California)',  name:'Twin Peaks lookout' },
+  { cat:'Sutro Tower',                                        name:'Sutro Tower' },
+  { cat:'Chinatown, San Francisco',                           name:'Chinatown' },
+  { cat:'Castro Theatre',                                     name:'Castro Theatre' },
+  { cat:'Haight-Ashbury, San Francisco',                      name:'Haight-Ashbury' },
+  { cat:'Golden Gate Park',                                   name:'Golden Gate Park' },
+  { cat:'Ocean Beach, San Francisco',                         name:'Ocean Beach' },
+  { cat:'The Embarcadero (San Francisco)',                    name:'The Embarcadero' },
+  { cat:'Union Square, San Francisco',                        name:'Union Square' },
+  { cat:'Cable cars in San Francisco',                        name:'Cable car line' },
+  { cat:'Mission District, San Francisco',                    name:'Mission District' },
+  { cat:'Dolores Park',                                       name:'Dolores Park' },
+  { cat:'Marin Headlands',                                    name:'Marin Headlands' },
+  { cat:'Salesforce Tower',                                   name:'Salesforce Tower' },
+  { cat:'San Francisco City Hall',                            name:'City Hall' },
+  { cat:'Presidio of San Francisco',                          name:'The Presidio' },
+  { cat:'Financial District, San Francisco',                  name:'Financial District' },
+  { cat:'Bay Bridge',                                         name:'Bay Bridge' },
 ];
+
 
 /* The overlay is invented and labelled as such. It profiles the location,
    never a person in the frame — no claims are made about anybody. */
@@ -209,7 +301,8 @@ function normaliseHost(u){
   return (u || '').replace('//thumb.wikimedia.org/', '//upload.wikimedia.org/');
 }
 
-async function fetchCategory(cat){
+async function fetchCategory(lm){
+  const cat = lm.cat;
   const u = 'https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*' +
     '&generator=categorymembers&gcmtype=file&gcmlimit=100' +
     '&gcmtitle=' + encodeURIComponent('Category:' + cat) +
@@ -236,6 +329,7 @@ async function fetchCategory(cat){
       licenceUrl: val('LicenseUrl'),
       desc: val('ImageDescription'),
       w: ii.width, h: ii.height,
+      landmark: lm.name,
     };
   }).filter(Boolean);
 }
@@ -248,14 +342,28 @@ function shuffle(a){
 
 function hudFor(ph){
   const m = shuffle(METRICS).slice(0,4);
+  const node = 'SF-' + String(ri(10,99)) + '-' + String(ri(100,999));
   return '<div class="hud">' +
-    '<div class="tagline">' + esc(pick(DESIGNATIONS)) + ' profile · fabricated</div>' +
-    '<h2>' + esc(ph.title.length > 46 ? ph.title.slice(0,44) + '…' : ph.title) + '</h2>' +
-    '<div class="place">San Francisco, California</div>' +
-    '<dl>' + m.map(x => '<dt>' + esc(x[0]) + '</dt><dd>' + esc(x[1]()) + '</dd>').join('') + '</dl>' +
-    '<div class="quip">' + esc(pick(QUIPS)) + '</div>' +
-    '<div class="fict">↑ invented · not measurements</div>' +
-  '</div>';
+    '<div class="hud-rail">' +
+      '<span class="lk">◉ linked</span>' +
+      '<span>node ' + node + '</span>' +
+      '<span>lat 37.77 · lon −122.41</span>' +
+      '<span class="fab">fabricated</span>' +
+    '</div>' +
+    '<div class="hud-body">' +
+      '<div class="tagline">' + esc(pick(DESIGNATIONS)) + ' profile</div>' +
+      '<h2>' + esc(ph.landmark || 'Unlisted block') + '</h2>' +
+      '<div class="place">' + esc(ph.title.length > 44 ? ph.title.slice(0,42) + '…' : ph.title) + '</div>' +
+      '<dl>' + m.map(x => '<dt>' + esc(x[0]) + '</dt><dd>' + esc(x[1]()) + '</dd>').join('') + '</dl>' +
+      '<div class="quip">' + esc(pick(QUIPS)) + '</div>' +
+      '<div class="fict">↑ invented · not measurements</div>' +
+    '</div>' +
+  '</div>' +
+  '<div class="recticle" aria-hidden="true">' +
+    '<i class="c tl"></i><i class="c tr"></i><i class="c bl"></i><i class="c br"></i>' +
+    '<i class="lock"></i>' +
+  '</div>' +
+  '<div class="scanbar" aria-hidden="true"></div>';
 }
 
 function show(){
@@ -297,8 +405,16 @@ function show(){
   img.alt = ph.title;
   img.src = ph.src;
 
+  // The panel folds away, but the photographer and the licence stay on
+  // screen in the collapsed state — that is the condition the picture is
+  // being used under, not a detail to tuck behind a toggle.
   $('credit').innerHTML =
-    '<div>' +
+    '<button class="cr-toggle" id="cr-toggle" aria-expanded="false" aria-controls="cr-body">' +
+      '<span class="cr-line">' + esc(ph.artist) + ' · ' + esc(ph.licence) + '</span>' +
+      '<span class="cr-caret" aria-hidden="true">▾</span>' +
+      '<span class="cr-what">credit</span>' +
+    '</button>' +
+    '<div class="cr-body" id="cr-body" hidden>' +
       '<div class="t">' + esc(ph.title) + '</div>' +
       '<div class="m">' +
         'Credit: ' + esc(ph.artist) + '. ' +
@@ -306,8 +422,13 @@ function show(){
         (ph.licenceUrl ? ' · <a href="' + esc(ph.licenceUrl) + '" target="_blank" rel="noopener">licence</a>' : '') +
         '<br>Shown here with a colour grade applied in the browser; the original is unmodified at the link above.' +
       '</div>' +
-    '</div>' +
-    '<div class="lic">' + esc(ph.licence) + '</div>';
+    '</div>';
+  const tg = $('cr-toggle');
+  tg.addEventListener('click', () => {
+    const open = tg.getAttribute('aria-expanded') === 'true';
+    tg.setAttribute('aria-expanded', String(!open));
+    $('cr-body').hidden = open;
+  });
 
   $('count').textContent = seen + ' seen · ' + pool.length + ' in the pool';
 }
@@ -330,12 +451,29 @@ function tickClock(){
 (async function boot(){
   tickClock(); setInterval(tickClock, 20000);
   try {
-    const lists = await Promise.all(CATS.map(c => fetchCategory(c).catch(() => [])));
+    // A different spread of landmarks each visit, fetched in waves until the
+    // pool is deep enough — a category can come back thin once the licence
+    // and landscape filters have run, so one wave is not a guarantee.
+    const order = shuffle(LANDMARKS.slice());
     const merged = [];
     const seenTitles = new Set();
-    lists.flat().forEach(p => { if (!seenTitles.has(p.title)){ seenTitles.add(p.title); merged.push(p); } });
+    let cursor = 0;
+    while (merged.length < 90 && cursor < order.length){
+      const wave = order.slice(cursor, cursor + 6);
+      cursor += 6;
+      const lists = await Promise.all(wave.map(lm => fetchCategory(lm).catch(() => [])));
+      // Cap what any one landmark contributes. Without this the first wave
+      // alone returns 180 photographs of six places, which is depth where
+      // the point was breadth.
+      lists.forEach(list => {
+        shuffle(list).slice(0, 8).forEach(ph => {
+          if (!seenTitles.has(ph.title)){ seenTitles.add(ph.title); merged.push(ph); }
+        });
+      });
+      $('count').textContent = 'reading the city · ' + merged.length + ' frames';
+    }
     if (!merged.length) throw new Error('no usable photographs came back');
-    pool = shuffle(merged);
+    pool = shuffle(merged).slice(0, 100);
     show();
   } catch (err) {
     $('frame').innerHTML = '<div class="state"><b>Could not reach Commons</b>' +
