@@ -1,6 +1,74 @@
 # Overnight batch — progress log
 
-*(Summary section is written at the end of the run and lives at the top.)*
+## Summary
+
+**34 toys built, verified in a browser, and added to the hub.** The cabinet went from 29 drawers to 63.
+Everything on the list got built; nothing was left half-finished, and nothing hit a blocker that stopped it.
+Each one has its own section below with what it does, what I had to decide, and how it was checked.
+
+**Not started, as instructed:** the pixel outpost builder (waiting on your scoped-down version — not begun,
+not even the small one), Room Tone, and the nostalgia-sound idea. Nothing outside the list was built.
+
+### Look at these first
+
+1. **`/boring-day/` was renamed and reframed.** It could not honestly be called "the most boring day in
+   history" — it measures how much Wikipedia's editors wrote about a date, not how much happened on it. It
+   is now **The Quietest Day**, and the note under the grid says so in as many words, using 1 January (the
+   darkest square of the year) as evidence of the encyclopedia's own bias. It also took three attempts to
+   build: Wikimedia rate-limits at roughly 25 requests in a short window, then returns 429 with
+   `retry-after: 7`, so any live scan broke a third of the way through. The counts for all 366 days are now
+   snapshotted (paced against the limiter over about an hour) and stored as a 4 kB file beside the page; only
+   the date you click goes to the network. **The snapshot date is stated on the page** — it will want
+   refreshing eventually, and re-running is just a matter of re-pacing the same script.
+
+2. **`/doppelganger/` deliberately does not recognise faces.** A real doppelganger finder needs a model this
+   project cannot add, and would mean sending someone's photograph somewhere. So it matches on *light* — a
+   4×4 brightness grid plus tone, contrast and warmth — against 220 public-domain paintings, and it says
+   that plainly under the result rather than implying it saw your face. The photo genuinely never leaves the
+   tab. If you would rather it did real face matching, that is a different toy and needs a dependency
+   decision from you.
+
+3. **Three routes were added to `server.js`.** `/api/onthisday` (one date, reduced and cached a day, with a
+   backoff retry on 429), `/api/art` (the Art Institute's IIIF server sends
+   `cross-origin-resource-policy: same-origin`, so their images **cannot** be displayed from another origin
+   at all without a relay — it accepts only their host, only a UUID of the shape they issue, and only the
+   three widths they keep derivatives for), and `/api/cables` from earlier in the run. All three follow the
+   existing fixed-allowlist pattern; none takes a URL from the query string.
+
+4. **I retagged 11 cards.** Everything built tonight had gone in as `toy`, which made the filter useless —
+   a third of the cabinet under one chip. They are now spread across the existing taxonomy (`real data` 15,
+   `generator` 25, `game` 10, `scroll story` 3, `reference` 5, `reflection` 3, `toy` 2). Filtering was
+   re-checked with all 63 cards: every chip's count matches the cards it shows, and the ghost drawer still
+   hides when a filter is on. If you disagree with any individual tag, it is one word per card.
+
+5. **Three facts in `/ocean-depths/` were wrong on the first pass and were corrected against sources.** The
+   Challenger Deep depth is now attributed to the 2021 survey (10,935 ± 6 m) with the disagreeing surveys
+   listed rather than one figure asserted as *the* answer; "more people have walked on the Moon" was cut
+   because it stopped being true in 2019, replaced with the real counts; and Ahmed Gabr's ascent is "close
+   to fourteen hours", not fifteen. The pressure gauge is labelled as calculated from depth rather than
+   measured, and the temperature line as a typical profile rather than a reading.
+
+6. **`/static-channel/` streams other people's video.** Films come straight from archive.org's Prelinger
+   collection — nothing is re-hosted here — and every channel links back to its item page. Worth knowing:
+   these are historical documents and some carry the attitudes of the year they were made, which the page
+   says outright.
+
+### Data files added to the repo
+
+| file | size | what it is |
+|---|---|---|
+| `public/boring-day/counts.json` | 4 kB | events per date, snapshotted from Wikimedia on 9 Sep 2026 |
+| `public/doppelganger/portraits.json` | 73 kB | 220 public-domain paintings, measured here, with AIC ids |
+| `public/constellation/stars.json` | 146 kB | 1,637 stars to mag 5 from the HYG database |
+
+No npm dependencies were added. The only CDN scripts remain Three.js (ISS) and Matter.js (the jar), both
+already approved. No API keys were needed by anything built tonight.
+
+### Standing note
+
+Deploys still need the Railway source reconnected by hand — the GitHub App has no access to this repo, so
+pushes to `main` do not trigger anything. That is unchanged from before tonight and needs your click in
+GitHub → Settings → Applications → Railway → Repository access.
 
 ---
 
