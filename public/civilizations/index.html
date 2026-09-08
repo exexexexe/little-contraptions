@@ -126,6 +126,51 @@ body{
 }
 .finale .back:hover{ background:currentColor }
 .finale .back:hover span{ color:var(--bg) }
+/* ---------- interactive ---------- */
+.lab{
+  margin:46px 0 10px;padding:24px;border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.03);border-radius:3px;
+}
+.lab-head{ display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;margin-bottom:16px }
+.lab-head b{ font-size:19px;letter-spacing:-.01em }
+.lab-head span{
+  font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;opacity:.55;
+}
+.lab-stage{ position:relative;background:rgba(0,0,0,.3);border-radius:2px;overflow:hidden }
+.lab-stage canvas{ display:block;width:100%;height:auto;touch-action:none;cursor:crosshair }
+.lab-stage.hole canvas{ cursor:default }
+.dock{
+  position:absolute;left:14px;bottom:14px;font-family:var(--mono);font-size:10.5px;
+  letter-spacing:.12em;text-transform:uppercase;background:var(--accent);color:#10140F;
+  border:0;padding:9px 13px;cursor:grab;border-radius:2px;font-weight:700;
+}
+.dock.lifting{ cursor:grabbing;transform:scale(1.06) }
+.dock:focus-visible{ outline:2px solid #fff;outline-offset:2px }
+.lab-read{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1px;
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.12);margin-top:16px;
+}
+.lab-read.wide{ grid-template-columns:1fr }
+.lab-read div{ background:var(--bg);padding:13px 15px }
+.lab-read b{
+  display:block;font-family:var(--mono);font-size:20px;font-weight:600;
+  letter-spacing:-.01em;color:var(--accent);font-variant-numeric:tabular-nums;
+}
+.lab-read span{
+  display:block;font-family:var(--mono);font-size:8.5px;letter-spacing:.16em;
+  text-transform:uppercase;opacity:.5;margin-top:6px;
+}
+.lab-form{ display:flex;gap:9px;margin-top:14px;flex-wrap:wrap }
+.lab-form input{
+  flex:1;min-width:180px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.18);
+  color:var(--fg);font-family:var(--mono);font-size:14px;padding:11px 13px;border-radius:2px;
+}
+.lab-form input:focus{ outline:2px solid var(--accent);outline-offset:-1px }
+.lab-btn{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
+  background:var(--accent);color:#10140F;border:0;padding:11px 20px;cursor:pointer;font-weight:700;border-radius:2px;
+}
+.lab-note{ margin-top:13px;font-size:13px;line-height:1.6;opacity:.6;max-width:70ch }
 </style>
 </head>
 <body>
@@ -350,8 +395,296 @@ $('finale-p').textContent =
   'is a measurement of things we already burn. The distance between those two sentences is the whole subject.';
 
 let totalPanels = 0;
+const EXTRA_PANELS = {
+  0: [
+    { lbl:'divided up', h:'Per person it is about a hairdryer, running forever',
+      p:'Spread the whole world draw across everybody alive and each of us is a continuous couple of kilowatts — appliance-sized. Every power station, refinery, furnace and engine on the planet, averaged out, comes to roughly one hairdryer each, left on.',
+      fig: fmt(WORLD_W / 8.2e9) + ' W each',
+      work: fmt(WORLD_W/1e12,1) + ' × 10¹² W ÷ 8.2 × 10⁹ people = ' + fmt(WORLD_W/8.2e9) + ' W' },
+    { lbl:'the share', h:'Earth catches one part in two billion of the Sun',
+      p:'The planet is a small disc a long way from a large fire. Almost all of the output goes past us and always has — which is the whole reason the next rung is about catching it somewhere other than here.',
+      fig: '1 in ' + fmt(SUN_L / earthIntercept / 1e9, 1) + ' billion',
+      work: fmt(earthIntercept/1e17,2) + ' × 10¹⁷ W ÷ ' + fmt(SUN_L/1e26,3) + ' × 10²⁶ W = ' + (earthIntercept/SUN_L).toExponential(2) },
+  ],
+  1: [
+    { lbl:'by fission', h:'A year of everything, on seven and a half thousand tonnes',
+      p:'Fission a gram of uranium-235 completely and you get about eighty-two gigajoules. Run the arithmetic for the whole world for a year and the fuel fits in a few hundred lorries — which is the part that makes the engineering feel almost reasonable, right up until you ask about the rest of it.',
+      fig: fmt(WORLD_W * 3.15576e7 / U235_G / 1e6) + ' t',
+      work: fmt(WORLD_W/1e12,1) + ' × 10¹² W × 3.16 × 10⁷ s ÷ 8.2 × 10¹⁰ J/g = ' + fmt(WORLD_W*3.15576e7/U235_G/1e6) + ' tonnes' },
+    { lbl:'by fusion', h:'Or seven hundred tonnes of deuterium',
+      p:'Deuterium–tritium fusion releases 17.6 MeV per reaction. A year of global demand works out at a couple of hundred thousand tonnes of seawater processed, for a deuterium mass you could park in a warehouse. Nobody has done it. The arithmetic is not the hard part.',
+      fig: fmt(WORLD_W * 3.15576e7 / (DT_MEV * 1.602176634e-13) * 3.344e-27 / 1000) + ' t',
+      work: DT_MEV + ' MeV = 2.82 × 10⁻¹² J per reaction; ' + (WORLD_W*3.15576e7/(DT_MEV*1.602176634e-13)).toExponential(2) + ' reactions per year' },
+  ],
+  2: [
+    { lbl:'one panel', h:'A single square kilometre out there beats a power station',
+      p:'At Earth\'s distance the sunlight is 1,361 watts per square metre with no night, no weather and no atmosphere in the way. One square kilometre of collector at a modest twenty per cent yields more than a quarter of a gigawatt, continuously.',
+      fig: fmt(SOLAR_CONST * 1e6 * 0.20 / 1e6) + ' MW',
+      work: '1,361 W/m² × 10⁶ m² × 0.20 = ' + fmt(SOLAR_CONST*1e6*0.2/1e6) + ' × 10⁶ W' },
+    { lbl:'how many', h:'Seventy-two thousand of them replaces us entirely',
+      p:'That is the number that matches everything humanity currently draws. Reaching Type I properly needs a few tens of millions of them — which is where a swarm stops being a construction project and becomes a manufacturing one that has to run for centuries.',
+      fig: fmt(WORLD_W / (SOLAR_CONST*1e6*0.20)) + ' panels',
+      work: fmt(WORLD_W/1e12,1) + ' × 10¹² W ÷ ' + fmt(SOLAR_CONST*1e6*0.2/1e6) + ' × 10⁶ W = ' + fmt(WORLD_W/(SOLAR_CONST*1e6*0.2)) },
+  ],
+  3: [
+    { lbl:'the multiplier', h:'Type III is a hundred billion Type IIs',
+      p:'Each rung on this scale is not a step but a factor. Going from one star to a galaxy of them multiplies the available power by the number of stars, which for the Milky Way is somewhere between one and four hundred billion. The index only moves by one, which tells you how much a single point on it hides.',
+      fig: '×' + fmt(MILKY_LO / 1e9) + ' billion',
+      work: fmt(SUN_L*MILKY_LO/1e37,2) + ' × 10³⁷ W ÷ ' + fmt(SUN_L/1e26,3) + ' × 10²⁶ W = 10¹¹', spec:true },
+    { lbl:'the catch', h:'A message to the far side takes a hundred thousand years',
+      p:'Nothing about a galactic civilization can be coordinated, because a decision cannot cross it inside a hundred thousand years even at the speed of light. Whatever a Type III is, it is not an organisation. It is a very large number of things that once shared an origin.',
+      fig: '100,000 yr',
+      work: 'a galaxy roughly 100,000 light years across, at c by definition', spec:true },
+  ],
+};
+
+/* ------------------------------------------------------------------ *
+ *  Two things you can actually do. Both are driven by the same
+ *  published figures as the panels above them — the swarm's readout is
+ *  real arithmetic on real solar output, not a number that goes up
+ *  because you clicked.
+ * ------------------------------------------------------------------ */
+
+/* --- Rung II: build a swarm ---------------------------------------- */
+const SWARM = { list: [], tilt: 0.42, spin: 0, raf: 0, dragging: null };
+const PANEL_W = SOLAR_CONST * 1e6 * 0.20;      // W from 1 km² at 20%, at 1 AU
+
+function swarmMarkup(){
+  return '<div class="lab" id="lab-swarm">' +
+    '<div class="lab-head"><b>Build one</b>' +
+      '<span>drag a collector onto the orbit · drag the star to tilt it</span></div>' +
+    '<div class="lab-stage" id="swarm-stage">' +
+      '<canvas id="swarm-cv" width="720" height="380" aria-label="A star with collectors you have placed around it"></canvas>' +
+      '<button class="dock" id="swarm-dock" aria-label="Drag a collector into orbit">▬ collector</button>' +
+    '</div>' +
+    '<div class="lab-read">' +
+      '<div><b id="sw-n">0</b><span>collectors placed</span></div>' +
+      '<div><b id="sw-w">0 W</b><span>captured, continuous</span></div>' +
+      '<div><b id="sw-k">—</b><span>Kardashev index</span></div>' +
+      '<div><b id="sw-cmp">—</b><span>against all of humanity</span></div>' +
+    '</div>' +
+    '<div class="lab-note" id="sw-note">Each collector is one square kilometre at twenty per cent, at Earth’s distance: ' +
+      fmt(PANEL_W/1e6) + ' MW apiece. The readout is that figure times the number you have placed.</div>' +
+  '</div>';
+}
+
+function swarmReadout(){
+  const n = SWARM.list.length;
+  const w = n * PANEL_W;
+  $('sw-n').textContent = fmt(n);
+  $('sw-w').textContent = w === 0 ? '0 W'
+    : w >= 1e12 ? fmt(w/1e12, 2) + ' TW'
+    : w >= 1e9 ? fmt(w/1e9, 2) + ' GW' : fmt(w/1e6, 1) + ' MW';
+  $('sw-k').textContent = w === 0 ? '—' : 'K = ' + K(w).toFixed(2);
+  $('sw-cmp').textContent = w === 0 ? '—'
+    : w < WORLD_W ? (w / WORLD_W * 100).toFixed(w / WORLD_W < 0.01 ? 3 : 1) + '%'
+    : '×' + fmt(w / WORLD_W, 1);
+  const note = $('sw-note');
+  if (n >= 72006) note.dataset.hit = 'world';
+}
+
+function drawSwarm(){
+  const cv = $('swarm-cv'); if (!cv) return;
+  const g = cv.getContext('2d');
+  const W = cv.width, H = cv.height, cx = W/2, cy = H/2;
+  g.clearRect(0, 0, W, H);
+  const acc = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#E8C56A';
+
+  // the star
+  const grad = g.createRadialGradient(cx, cy, 4, cx, cy, 64);
+  grad.addColorStop(0, '#FFF6DC'); grad.addColorStop(0.4, acc); grad.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = grad; g.beginPath(); g.arc(cx, cy, 64, 0, 6.2832); g.fill();
+  g.fillStyle = '#FFF9E8'; g.beginPath(); g.arc(cx, cy, 21, 0, 6.2832); g.fill();
+
+  // guide orbit
+  g.strokeStyle = 'rgba(255,255,255,.16)'; g.lineWidth = 1;
+  g.beginPath(); g.ellipse(cx, cy, 250, 250 * SWARM.tilt, 0, 0, 6.2832); g.stroke();
+
+  // collectors, drawn behind then in front of the star for depth
+  const pts = SWARM.list.map(c => {
+    const a = c.a + SWARM.spin * c.speed;
+    return { x: cx + Math.cos(a) * c.r, y: cy + Math.sin(a) * c.r * SWARM.tilt, back: Math.sin(a) < 0, a };
+  });
+  const plate = (p) => {
+    g.save(); g.translate(p.x, p.y); g.rotate(p.a * 0.6);
+    g.fillStyle = acc; g.globalAlpha = p.back ? 0.45 : 0.95;
+    g.fillRect(-5, -1.6, 10, 3.2);
+    g.restore();
+  };
+  pts.filter(p => p.back).forEach(plate);
+  g.globalAlpha = 1;
+  pts.filter(p => !p.back).forEach(plate);
+  g.globalAlpha = 1;
+}
+
+function tickSwarm(){
+  SWARM.raf = requestAnimationFrame(tickSwarm);
+  if (document.hidden) return;
+  if (!reduce) SWARM.spin += 0.004;
+  drawSwarm();
+}
+
+function addCollector(x, y){
+  const cv = $('swarm-cv');
+  const cx = cv.width/2, cy = cv.height/2;
+  const dx = x - cx, dy = (y - cy) / SWARM.tilt;
+  const r = Math.max(90, Math.min(300, Math.hypot(dx, dy)));
+  SWARM.list.push({ a: Math.atan2(dy, dx), r, speed: 90 / r });
+  if (SWARM.list.length > 900) SWARM.list.shift();      // the canvas, not the physics
+  swarmReadout();
+}
+
+function bindSwarm(){
+  const stage = $('swarm-stage'), cv = $('swarm-cv'), dock = $('swarm-dock');
+  if (!stage) return;
+  const local = (e) => {
+    const r = cv.getBoundingClientRect();
+    return { x: (e.clientX - r.left) * cv.width / r.width, y: (e.clientY - r.top) * cv.height / r.height };
+  };
+  // drag off the dock to place; drag on the field to tilt
+  dock.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    SWARM.dragging = 'place';
+    try { dock.setPointerCapture(e.pointerId); } catch (err) {}
+    dock.classList.add('lifting');
+  });
+  dock.addEventListener('pointerup', (e) => {
+    if (SWARM.dragging === 'place'){
+      const p = local(e);
+      if (p.x > 0 && p.x < cv.width && p.y > 0 && p.y < cv.height) addCollector(p.x, p.y);
+      else addCollector(cv.width/2 + 190, cv.height/2);   // dropped outside: park it in orbit anyway
+    }
+    SWARM.dragging = null; dock.classList.remove('lifting');
+  });
+  cv.addEventListener('pointerdown', (e) => {
+    const p = local(e);
+    const near = Math.hypot(p.x - cv.width/2, p.y - cv.height/2) < 70;
+    SWARM.dragging = near ? 'tilt' : 'place-direct';
+    SWARM.lastY = e.clientY;
+    try { cv.setPointerCapture(e.pointerId); } catch (err) {}
+  });
+  cv.addEventListener('pointermove', (e) => {
+    if (SWARM.dragging !== 'tilt') return;
+    SWARM.tilt = Math.max(0.08, Math.min(1, SWARM.tilt + (e.clientY - SWARM.lastY) * 0.004));
+    SWARM.lastY = e.clientY;
+    drawSwarm();
+  });
+  cv.addEventListener('pointerup', (e) => {
+    if (SWARM.dragging === 'place-direct') addCollector(local(e).x, local(e).y);
+    SWARM.dragging = null;
+  });
+  dock.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' '){
+      e.preventDefault();
+      const a = Math.random() * 6.2832;
+      addCollector(cv.width/2 + Math.cos(a) * 200, cv.height/2 + Math.sin(a) * 200 * SWARM.tilt);
+    }
+  });
+  swarmReadout(); tickSwarm();
+}
+
+/* --- Rung III: send something through ------------------------------ */
+const HOLE = { raf: 0, chars: [], running: false };
+
+function wormholeMarkup(){
+  return '<div class="lab" id="lab-hole">' +
+    '<div class="lab-head"><b>Send something through</b>' +
+      '<span>type a message and watch what arrives</span></div>' +
+    '<div class="lab-stage hole">' +
+      '<canvas id="hole-cv" width="720" height="240" aria-label="A message crossing a wormhole"></canvas>' +
+    '</div>' +
+    '<form class="lab-form" id="hole-form">' +
+      '<input id="hole-in" maxlength="42" placeholder="we are still here" aria-label="Message to send">' +
+      '<button class="lab-btn" type="submit">Send</button>' +
+    '</form>' +
+    '<div class="lab-read wide"><div><b id="hole-out">—</b><span>received at the far mouth</span></div></div>' +
+    '<div class="lab-note">The mouth is drawn, not simulated: no physics here says a traversable wormhole exists, ' +
+      'and the arithmetic in the panels above stops well short of claiming one does.</div>' +
+  '</div>';
+}
+
+function bindHole(){
+  const cv = $('hole-cv'); if (!cv) return;
+  const g = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+
+  const draw = () => {
+    const acc = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#B9A2E8';
+    g.clearRect(0, 0, W, H);
+    // two mouths and the throat between them
+    g.strokeStyle = 'rgba(255,255,255,.14)'; g.lineWidth = 1;
+    for (let i = 1; i <= 7; i++){
+      g.beginPath();
+      g.ellipse(150, H/2, 16 + i * 9, 34 + i * 15, 0, 0, 6.2832);
+      g.stroke();
+      g.beginPath();
+      g.ellipse(W - 150, H/2, 16 + i * 9, 34 + i * 15, 0, 0, 6.2832);
+      g.stroke();
+    }
+    g.strokeStyle = acc; g.lineWidth = 2;
+    g.beginPath(); g.ellipse(150, H/2, 20, 46, 0, 0, 6.2832); g.stroke();
+    g.beginPath(); g.ellipse(W - 150, H/2, 20, 46, 0, 0, 6.2832); g.stroke();
+
+    g.font = '600 17px ui-monospace, monospace';
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    HOLE.chars.forEach(c => {
+      if (c.t < 0) return;
+      const k = Math.min(1, c.t);
+      // out along the approach, squeezed through the throat, out the far side
+      let x, y, sc, alpha;
+      if (k < 0.42){
+        const u = k / 0.42;
+        x = 30 + u * 120; y = H/2; sc = 1; alpha = 1;
+      } else if (k < 0.58){
+        const u = (k - 0.42) / 0.16;
+        x = 150 + u * (W - 300); y = H/2;
+        sc = 0.2 + Math.abs(u - 0.5) * 1.6; alpha = 0.25 + Math.abs(u - 0.5) * 1.5;
+      } else {
+        const u = (k - 0.58) / 0.42;
+        x = W - 150 + u * 120; y = H/2; sc = 1; alpha = 1 - u * 0.15;
+      }
+      g.save(); g.globalAlpha = Math.max(0, Math.min(1, alpha));
+      g.translate(x, y); g.scale(1, sc); g.fillStyle = acc;
+      g.fillText(c.ch, 0, 0);
+      g.restore();
+    });
+  };
+
+  const step = () => {
+    HOLE.raf = requestAnimationFrame(step);
+    if (document.hidden) return;
+    let live = false;
+    HOLE.chars.forEach(c => { c.t += 0.012; if (c.t < 1.05) live = true; });
+    draw();
+    if (!live && HOLE.running){
+      HOLE.running = false;
+      const msg = HOLE.chars.map(c => c.ch).join('');
+      // what arrives is late, and the far end has had a long time to garble it
+      $('hole-out').textContent = msg.split('').map((ch, i) =>
+        (i % 7 === 3 && ch !== ' ') ? '·' : ch).join('') + '  (delayed 100,000 yr)';
+    }
+  };
+
+  $('hole-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const v = ($('hole-in').value || $('hole-in').placeholder).slice(0, 42);
+    HOLE.chars = v.split('').map((ch, i) => ({ ch, t: -i * 0.055 }));
+    HOLE.running = true;
+    $('hole-out').textContent = 'in transit…';
+    if (reduce){
+      HOLE.chars.forEach(c => { c.t = 1.06; });
+      HOLE.running = false;
+      $('hole-out').textContent = v.split('').map((ch, i) => (i % 7 === 3 && ch !== ' ') ? '·' : ch).join('') + '  (delayed 100,000 yr)';
+      draw();
+    }
+  });
+  draw();
+  if (!reduce) step();
+}
+
 $('main').innerHTML = TIERS.map((t, ti) => {
-  const panels = t.panels.map((p, pi) => {
+  const all = t.panels.concat(EXTRA_PANELS[ti] || []);
+  const panels = all.map((p, pi) => {
     totalPanels++;
     const n = totalPanels;
     return '<div class="panel" data-tier="' + ti + '" data-n="' + n + '">' +
@@ -367,6 +700,7 @@ $('main').innerHTML = TIERS.map((t, ti) => {
       '</div>' +
     '</div>';
   }).join('');
+  const lab = ti === 2 ? swarmMarkup() : ti === 3 ? wormholeMarkup() : '';
   return '<section class="divider" data-tier="' + ti + '">' +
       '<div class="art">' + art(t.art, t.accent) + '</div>' +
       '<div class="inner">' +
@@ -376,11 +710,14 @@ $('main').innerHTML = TIERS.map((t, ti) => {
         '<p class="desc">' + esc(t.desc) + '</p>' +
       '</div>' +
     '</section>' +
-    '<section class="band" data-tier="' + ti + '"><div class="inner">' + panels + '</div></section>';
+    '<section class="band" data-tier="' + ti + '"><div class="inner">' + panels + lab + '</div></section>';
 }).join('');
 
 /* ---------------------------- scroll behaviour ---------------------------- */
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+bindSwarm();
+bindHole();
 let current = -1;
 
 function applyTier(i){
