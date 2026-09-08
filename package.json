@@ -1,0 +1,13 @@
+{
+  "name": "little-contraptions",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A small hub of self-contained web toys.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
