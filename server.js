@@ -84,6 +84,13 @@ async function fetchUpstream(url, headers) {
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
+// Fixed set of relayable feeds. Add here, never from the query string.
+const FEEDS = {
+  goodnews: { url: 'https://www.goodnewsnetwork.org/feed/',   title: 'Good News Network',      site: 'goodnewsnetwork.org' },
+  positive: { url: 'https://www.positive.news/feed/',         title: 'Positive News',          site: 'positive.news' },
+  cheerful: { url: 'https://reasonstobecheerful.world/feed/', title: 'Reasons to be Cheerful', site: 'reasonstobecheerful.world' },
+};
+
 async function handleApi(req, res, url) {
   const path = url.pathname;
 
@@ -120,6 +127,36 @@ async function handleApi(req, res, url) {
     } catch (e) {
       return sendJson(res, 502, { error: 'upstream_unreachable', message: String(e && e.message || e) });
     }
+  }
+
+  // --- RSS relay ---------------------------------------------------
+  // RSS hosts essentially never send CORS headers, so feeds are fetched
+  // here. The feed list is a fixed allowlist keyed by short name: accepting
+  // an arbitrary ?url= would make this an open proxy (SSRF).
+  if (path === '/api/rss') {
+    const name = url.searchParams.get('feed') || '';
+    const target = FEEDS[name];
+    if (!target) return sendJson(res, 400, { error: 'unknown_feed', allowed: Object.keys(FEEDS) });
+
+    const cacheKey = 'rss:' + name;
+    const hit = cacheGet(cacheKey);
+    if (hit) {
+      res.writeHead(200, { 'Content-Type': 'application/xml; charset=utf-8', 'X-Cache': 'hit' });
+      return res.end(hit.body);
+    }
+    try {
+      const up = await fetchUpstream(target.url, { Accept: 'application/rss+xml, application/xml, text/xml' });
+      if (up.status >= 400) return sendJson(res, 502, { error: 'feed_http_' + up.status });
+      cacheSet(cacheKey, 200, up.body, 10 * 60 * 1000);
+      res.writeHead(200, { 'Content-Type': 'application/xml; charset=utf-8', 'X-Cache': 'miss' });
+      return res.end(up.body);
+    } catch (e) {
+      return sendJson(res, 502, { error: 'feed_unreachable', message: String(e && e.message || e) });
+    }
+  }
+
+  if (path === '/api/rss/list') {
+    return sendJson(res, 200, Object.keys(FEEDS).map((k) => ({ key: k, title: FEEDS[k].title, site: FEEDS[k].site })));
   }
 
   // --- which optional keys are configured --------------------------

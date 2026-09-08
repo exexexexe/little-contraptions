@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wikipedia Rabbit Hole</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230A1428'/><circle cx='9' cy='10' r='3' fill='%235BC8D8'/><circle cx='23' cy='22' r='3' fill='%23F0A868'/><path d='M9 10 L23 22' stroke='%235BC8D8' stroke-width='1.6'/></svg>">
+<style>
+:root{
+  --bg:#0A1428;
+  --bg-2:#0E1B33;
+  --card:#132546;
+  --card-2:#172C52;
+  --line:#22406E;
+  --text:#DCE7F5;
+  --dim:#7D95B8;
+  --cyan:#5BC8D8;
+  --amber:#F0A868;
+  --sans:ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);
+  background-image:radial-gradient(900px 600px at 80% -10%, #14294D 0%, transparent 60%);
+  color:var(--text);font-family:var(--sans);
+  min-height:100vh;padding:26px 18px 60px;
+}
+.wrap{ max-width:880px;margin:0 auto }
+
+header{ display:flex;align-items:baseline;gap:12px;flex-wrap:wrap }
+h1{ margin:0;font-size:clamp(23px,4.2vw,32px);font-weight:700;letter-spacing:-.015em }
+h1 span{ color:var(--cyan) }
+.sub{ font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:.07em }
+
+/* ---------- trail ---------- */
+.trail{
+  margin:18px 0 20px;padding:12px 14px;
+  border:1px solid var(--line);background:var(--bg-2);
+  overflow-x:auto;white-space:nowrap;
+  scrollbar-width:thin;
+}
+.trail .step{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:var(--mono);font-size:11.5px;color:var(--dim);
+}
+.trail .step + .step::before{ content:"→";color:var(--line);margin:0 4px }
+.trail .step b{ font-weight:400;color:var(--text);cursor:pointer }
+.trail .step b:hover{ color:var(--cyan);text-decoration:underline }
+.trail .step.first b{ color:var(--amber) }
+.trail .step.here b{ color:var(--cyan);text-decoration:underline }
+
+/* ---------- current article ---------- */
+.here-card{
+  border:1px solid var(--line);background:var(--card);
+  display:flex;gap:0;overflow:hidden;margin-bottom:8px;
+}
+.here-card .pic{ width:190px;flex:none;background:var(--bg-2);overflow:hidden;display:flex }
+.here-card .pic img{ width:100%;height:100%;object-fit:cover }
+.here-card .txt{ padding:18px 20px;flex:1;min-width:0 }
+.here-card .depth{
+  font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--amber);margin-bottom:6px;
+}
+.here-card h2{ margin:0 0 8px;font-size:clamp(19px,3.4vw,26px);line-height:1.2;font-weight:700 }
+.here-card p{ margin:0;font-size:14px;line-height:1.6;color:#B9CBE2 }
+.here-card a.src{
+  display:inline-block;margin-top:11px;font-family:var(--mono);font-size:10.5px;
+  color:var(--cyan);text-decoration:none;border-bottom:1px solid rgba(91,200,216,.35);
+}
+@media (max-width:620px){ .here-card{ flex-direction:column } .here-card .pic{ width:100%;height:150px } }
+
+/* ---------- doors ---------- */
+.doors-label{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--dim);margin:20px 0 10px;display:flex;align-items:center;gap:10px;
+}
+.doors-label::after{ content:"";flex:1;height:1px;background:var(--line) }
+.doors{ display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:10px }
+.door{
+  text-align:left;border:1px solid var(--line);background:var(--card-2);
+  color:var(--text);padding:13px 14px;cursor:pointer;font-family:var(--sans);
+  transition:border-color .14s, background .14s, transform .14s;
+  display:flex;flex-direction:column;gap:5px;min-height:92px;
+}
+.door:hover{ border-color:var(--cyan);background:#1B3460;transform:translateY(-2px) }
+.door:focus-visible{ outline:2px solid var(--cyan);outline-offset:2px }
+.door b{ font-size:14.5px;font-weight:600;line-height:1.3 }
+.door span{ font-size:11.5px;color:var(--dim);line-height:1.5 }
+.door.visited b::after{ content:" ↺";color:var(--amber);font-size:11px }
+
+/* ---------- stats + deck ---------- */
+.stats{ display:flex;gap:22px;flex-wrap:wrap;margin:22px 0 0;padding-top:16px;border-top:1px solid var(--line) }
+.stat b{ display:block;font-size:21px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.2 }
+.stat span{ font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;color:var(--dim);text-transform:uppercase }
+.deck{ display:flex;gap:8px;flex-wrap:wrap;margin-top:16px }
+button.act{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;
+  background:transparent;color:var(--text);border:1px solid var(--line);
+  padding:10px 15px;cursor:pointer;
+}
+button.act:hover{ border-color:var(--cyan);color:var(--cyan) }
+button.act.go{ background:var(--cyan);border-color:var(--cyan);color:#06121F;font-weight:700 }
+button.act.go:hover{ background:#7BD8E6;color:#06121F }
+button.act:disabled{ opacity:.35;cursor:default }
+button.act:focus-visible{ outline:2px solid var(--amber);outline-offset:2px }
+
+.state{ padding:20px;border:1px dashed var(--line);color:var(--dim);font-family:var(--mono);font-size:12px;line-height:1.7 }
+.state b{ color:var(--amber);display:block;margin-bottom:5px }
+.skel{ opacity:.5 }
+
+footer{
+  margin-top:30px;padding-top:14px;border-top:1px solid var(--line);
+  font-family:var(--mono);font-size:10.5px;color:#5E759B;line-height:1.8;
+}
+footer a{ color:var(--dim) }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Wikipedia <span>Rabbit Hole</span></h1>
+    <span class="sub">start anywhere, end up somewhere else</span>
+  </header>
+
+  <div class="trail" id="trail"></div>
+
+  <div id="stage">
+    <div class="state">Finding somewhere to start…</div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><b id="s-depth">0</b><span>links deep</span></div>
+    <div class="stat"><b id="s-seen">0</b><span>articles seen</span></div>
+    <div class="stat"><b id="s-time">0:00</b><span>in the hole</span></div>
+    <div class="stat"><b id="s-from">—</b><span>started at</span></div>
+  </div>
+
+  <div class="deck">
+    <button class="act" id="back">← Back up</button>
+    <button class="act go" id="tele">Teleport somewhere random</button>
+    <button class="act" id="reset">Start over</button>
+  </div>
+
+  <footer>
+    Articles, summaries and links come live from
+    <a href="https://en.wikipedia.org/" target="_blank" rel="noopener">Wikipedia</a>
+    (CC BY-SA) — the doors below each article are its real outgoing links, picked at random.
+    <a href="/">← back to the cabinet</a>
+  </footer>
+</div>
+
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+const API = 'https://en.wikipedia.org/w/api.php';
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+let trail = [];          // [{title, extract, thumb}]
+let visited = new Set();
+let started = Date.now();
+let busy = false;
+
+function qs(params){
+  return API + '?' + new URLSearchParams(
+    Object.assign({ format:'json', origin:'*', formatversion:'2' }, params)).toString();
+}
+
+async function jget(url){
+  const r = await fetch(url);
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return r.json();
+}
+
+/* Random article, via the REST summary endpoint. */
+async function randomArticle(){
+  const r = await fetch('https://en.wikipedia.org/api/rest_v1/page/random/summary');
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  const j = await r.json();
+  return { title: j.title, extract: j.extract || '', thumb: j.thumbnail ? j.thumbnail.source : null };
+}
+
+/* Real outgoing links from an article, article-namespace only. */
+async function linksFrom(title){
+  const j = await jget(qs({ action:'query', prop:'links', titles:title, pllimit:'150', plnamespace:'0' }));
+  const page = (j.query && j.query.pages && j.query.pages[0]) || {};
+  return (page.links || []).map(l => l.title)
+    .filter(t => !/^List of|^Index of|\(disambiguation\)/.test(t));
+}
+
+/* One-line summaries + thumbnails for a batch of titles. */
+async function summarise(titles){
+  if (!titles.length) return [];
+  const j = await jget(qs({ action:'query', prop:'extracts|pageimages', exintro:'1', explaintext:'1',
+                            exsentences:'1', piprop:'thumbnail', pithumbsize:'240',
+                            titles: titles.join('|') }));
+  const pages = (j.query && j.query.pages) || [];
+  const byTitle = {};
+  pages.forEach(p => { byTitle[p.title] = { title:p.title, extract:p.extract || '',
+                                            thumb:p.thumbnail ? p.thumbnail.source : null }; });
+  return titles.map(t => byTitle[t] || { title:t, extract:'', thumb:null });
+}
+
+function shuffle(a){
+  a = a.slice();
+  for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+
+/* ------------------------------ render ----------------------------- */
+function renderTrail(){
+  $('trail').innerHTML = trail.map((s, i) =>
+    '<span class="step' + (i === 0 ? ' first' : '') + (i === trail.length-1 ? ' here' : '') + '">' +
+    '<b data-i="' + i + '">' + esc(s.title) + '</b></span>').join('');
+  [...$('trail').querySelectorAll('b')].forEach(b => {
+    b.onclick = () => { const i = +b.dataset.i; if (i < trail.length - 1){ trail.length = i + 1; show(); } };
+  });
+  $('trail').scrollLeft = $('trail').scrollWidth;
+}
+
+function renderStats(){
+  $('s-depth').textContent = Math.max(0, trail.length - 1);
+  $('s-seen').textContent = visited.size;
+  $('s-from').textContent = trail.length ? (trail[0].title.length > 15 ? trail[0].title.slice(0,14) + '…' : trail[0].title) : '—';
+  $('back').disabled = trail.length < 2;
+}
+
+function tickClock(){
+  const s = Math.floor((Date.now() - started) / 1000);
+  $('s-time').textContent = Math.floor(s/60) + ':' + String(s % 60).padStart(2,'0');
+}
+setInterval(tickClock, 1000);
+
+function stageArticle(a, doorsHtml){
+  $('stage').innerHTML =
+    '<div class="here-card">' +
+      (a.thumb ? '<div class="pic"><img src="' + esc(a.thumb) + '" alt=""></div>' : '') +
+      '<div class="txt">' +
+        '<div class="depth">' + (trail.length === 1 ? 'you started here' : 'link ' + (trail.length-1) + ' deep') + '</div>' +
+        '<h2>' + esc(a.title) + '</h2>' +
+        '<p>' + esc(a.extract || 'No summary available for this one.') + '</p>' +
+        '<a class="src" href="https://en.wikipedia.org/wiki/' + encodeURIComponent(a.title.replace(/ /g,'_')) +
+          '" target="_blank" rel="noopener">read it on wikipedia →</a>' +
+      '</div>' +
+    '</div>' +
+    '<div class="doors-label">where you could go next</div>' +
+    '<div class="doors" id="doors">' + doorsHtml + '</div>';
+}
+
+async function show(){
+  if (busy) return;
+  busy = true;
+  const a = trail[trail.length - 1];
+  visited.add(a.title);
+  renderTrail(); renderStats();
+  stageArticle(a, '<div class="state skel">Opening doors…</div>');
+
+  try {
+    const links = await linksFrom(a.title);
+    if (!links.length){
+      stageArticle(a, '<div class="state"><b>Dead end</b>This article links nowhere useful. ' +
+        'Teleport somewhere else, or go back up.</div>');
+      busy = false; return;
+    }
+    const picks = shuffle(links).slice(0, 6);
+    const cards = await summarise(picks);
+    const html = cards.map(c =>
+      '<button class="door' + (visited.has(c.title) ? ' visited' : '') + '" data-t="' + esc(c.title) + '">' +
+        '<b>' + esc(c.title) + '</b>' +
+        '<span>' + esc((c.extract || '').slice(0, 110) + ((c.extract||'').length > 110 ? '…' : '')) + '</span>' +
+      '</button>').join('');
+    stageArticle(a, html);
+    [...document.querySelectorAll('.door')].forEach((d, i) => {
+      d.onclick = () => { trail.push(cards[i]); show(); };
+    });
+  } catch (err) {
+    stageArticle(a, '<div class="state"><b>Lost the thread</b>Could not reach Wikipedia (' +
+      esc(err.message) + '). Try again, or teleport.</div>');
+  }
+  busy = false;
+}
+
+async function teleport(reset){
+  if (busy) return;
+  busy = true;
+  $('stage').innerHTML = '<div class="state">Falling…</div>';
+  try {
+    const a = await randomArticle();
+    if (reset){ trail = [a]; visited = new Set(); started = Date.now(); }
+    else trail.push(a);
+    busy = false;
+    show();
+  } catch (err) {
+    $('stage').innerHTML = '<div class="state"><b>No answer</b>Wikipedia did not respond (' +
+      esc(err.message) + '). Try again in a moment.</div>';
+    busy = false;
+  }
+}
+
+$('back').addEventListener('click', () => { if (trail.length > 1){ trail.pop(); show(); } });
+$('tele').addEventListener('click', () => teleport(false));
+$('reset').addEventListener('click', () => teleport(true));
+
+teleport(true);
+</script>
+</body>
+</html>

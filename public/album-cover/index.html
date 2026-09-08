@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Album Cover of the Day</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%231A1A1C'/><circle cx='16' cy='16' r='9' fill='none' stroke='%23E6E1D8' stroke-width='2'/><circle cx='16' cy='16' r='2' fill='%23D9603B'/></svg>">
+<style>
+:root{
+  --bg:#141416;
+  --bg-2:#1C1C1F;
+  --panel:#212125;
+  --line:#33333A;
+  --text:#E9E5DC;
+  --dim:#8C8880;
+  --accent:#D9603B;
+  --sans:ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);color:var(--text);font-family:var(--sans);
+  min-height:100vh;padding:30px 18px 60px;
+}
+.wrap{ max-width:900px;margin:0 auto }
+
+header{ display:flex;align-items:baseline;gap:13px;flex-wrap:wrap;margin-bottom:20px }
+h1{ margin:0;font-size:clamp(22px,4vw,30px);font-weight:300;letter-spacing:-.01em }
+h1 b{ font-weight:700 }
+.sub{ font-family:var(--mono);font-size:10.5px;color:var(--dim);letter-spacing:.11em;text-transform:uppercase }
+
+.modes{ display:flex;border:1px solid var(--line);margin-bottom:20px;max-width:340px }
+.modes button{
+  flex:1;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  background:transparent;border:0;border-right:1px solid var(--line);color:var(--dim);
+  padding:11px 8px;cursor:pointer;
+}
+.modes button:last-child{ border-right:0 }
+.modes button[aria-pressed="true"]{ background:var(--text);color:var(--bg);font-weight:700 }
+.modes button:focus-visible{ outline:2px solid var(--accent);outline-offset:-2px }
+
+.stage{ display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:24px;align-items:start }
+@media (max-width:740px){ .stage{ grid-template-columns:1fr } }
+
+.sleeve{ position:relative;background:var(--bg-2);box-shadow:0 20px 60px rgba(0,0,0,.55) }
+canvas#cover{ width:100%;height:auto;display:block }
+.sleeve::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.07), inset 3px 0 12px rgba(0,0,0,.4);
+}
+
+.side h2{ margin:0 0 3px;font-size:19px;font-weight:700;line-height:1.28 }
+.side .artist{ font-size:14px;color:var(--dim);margin-bottom:12px }
+dl.facts{ margin:0 0 18px;display:grid;grid-template-columns:auto 1fr;gap:5px 12px;font-family:var(--mono);font-size:11px }
+dl.facts dt{ color:var(--dim) }
+dl.facts dd{ margin:0;text-align:right;color:var(--text) }
+
+.deck{ display:flex;flex-direction:column;gap:8px }
+.btn{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+  background:transparent;color:var(--text);border:1px solid var(--line);
+  padding:11px 14px;cursor:pointer;text-align:center;
+}
+.btn:hover{ border-color:var(--accent);color:var(--accent) }
+.btn.solid{ background:var(--text);color:var(--bg);border-color:var(--text);font-weight:700 }
+.btn.solid:hover{ background:#fff;color:var(--bg);border-color:#fff }
+.btn:focus-visible{ outline:2px solid var(--accent);outline-offset:2px }
+.btn:disabled{ opacity:.35;cursor:default }
+
+.drop{
+  border:1px dashed var(--line);padding:20px 16px;text-align:center;
+  font-family:var(--mono);font-size:11px;color:var(--dim);line-height:1.7;cursor:pointer;
+}
+.drop:hover, .drop.over{ border-color:var(--accent);color:var(--text) }
+input[type=file]{ display:none }
+
+.fx{ margin-top:14px;border-top:1px solid var(--line);padding-top:14px;display:none }
+.fx.on{ display:block }
+.fx h3{ margin:0 0 9px;font-family:var(--mono);font-size:9.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--dim);font-weight:400 }
+.fx label{ display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:11px;padding:5px 0;cursor:pointer;color:var(--text) }
+.fx input[type=checkbox]{ accent-color:var(--accent);width:14px;height:14px }
+.fx .row{ display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:11px;padding:5px 0;color:var(--dim) }
+.fx input[type=range]{ flex:1;accent-color:var(--accent) }
+
+.note{ font-family:var(--mono);font-size:10.5px;color:var(--dim);margin-top:10px;line-height:1.7 }
+.note.warn{ color:var(--accent) }
+
+footer{
+  margin-top:34px;padding-top:15px;border-top:1px solid var(--line);
+  font-family:var(--mono);font-size:10.5px;color:#6A6862;line-height:1.8;
+}
+footer a{ color:var(--dim) }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Album Cover <b>of the Day</b></h1>
+    <span class="sub">one sleeve, generated daily</span>
+  </header>
+
+  <div class="modes" id="modes">
+    <button data-m="daily" aria-pressed="true">Today's cover</button>
+    <button data-m="photo" aria-pressed="false">Use my photo</button>
+  </div>
+
+  <div class="stage">
+    <div class="sleeve"><canvas id="cover" width="900" height="900"></canvas></div>
+
+    <div class="side">
+      <h2 id="title">—</h2>
+      <div class="artist" id="artist"></div>
+      <dl class="facts">
+        <dt>genre</dt><dd id="f-genre">—</dd>
+        <dt>label</dt><dd id="f-label">—</dd>
+        <dt>catalogue</dt><dd id="f-cat">—</dd>
+        <dt>side</dt><dd id="f-side">—</dd>
+      </dl>
+
+      <div class="deck">
+        <div id="daily-deck">
+          <button class="btn" id="reroll" style="width:100%">Another sleeve</button>
+        </div>
+        <div id="photo-deck" hidden>
+          <div class="drop" id="drop">
+            drop a photo here<br>or click to choose one
+          </div>
+          <input type="file" id="file" accept="image/*">
+        </div>
+        <button class="btn solid" id="save">Download PNG</button>
+      </div>
+
+      <div class="fx" id="fx">
+        <h3>Treatment</h3>
+        <label><input type="checkbox" id="fx-duo" checked> duotone</label>
+        <label><input type="checkbox" id="fx-half"> halftone</label>
+        <label><input type="checkbox" id="fx-grain" checked> grain</label>
+        <label><input type="checkbox" id="fx-vig" checked> vignette</label>
+        <label><input type="checkbox" id="fx-type" checked> title overlay</label>
+        <div class="row"><span>dots</span><input type="range" id="fx-cell" min="5" max="18" value="9"></div>
+      </div>
+
+      <div class="note" id="note"></div>
+    </div>
+  </div>
+
+  <footer>
+    Artwork is drawn in the browser with canvas — no images are downloaded or looked up.
+    In photo mode the picture is read straight off your disk and never leaves this machine;
+    nothing is uploaded anywhere. <a href="/">← back to the cabinet</a>
+  </footer>
+</div>
+
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+const cv = $('cover');
+const ctx = cv.getContext('2d', { willReadFrequently: true });
+const S = 900;
+
+/* --------------------- deterministic randomness -------------------- */
+function hash(str){
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < str.length; i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
+  return h >>> 0;
+}
+function mulberry(seed){
+  return function(){
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+let rnd = mulberry(1);
+const rr = (a, b) => a + rnd() * (b - a);
+const ri = (a, b) => Math.floor(rr(a, b + 1));
+const one = (arr) => arr[Math.floor(rnd() * arr.length)];
+
+/* ----------------------------- stock ------------------------------- */
+const PALETTES = [
+  ['#12121A','#E8E3D6','#D9603B','#3E6B8A'],
+  ['#F3EDE1','#1C1C1C','#C8452F','#7A8B6F'],
+  ['#0E1C1B','#EFE7D2','#E0A93B','#4C8074'],
+  ['#1A1230','#F0EAF7','#B65BC4','#5A4AE0'],
+  ['#221A14','#F5E9D8','#C8703A','#6E5A3E'],
+  ['#08131C','#DDE9EF','#4FB3C4','#B7D64A'],
+  ['#2B0F14','#F6E3DC','#E24C4B','#8A5A3B'],
+  ['#101410','#E4EAD9','#8FBF4A','#37503A'],
+];
+const WORDS_A = ['Slow','Paper','Northern','Second','Hollow','Amber','Quiet','Modern','Blue','Static','Distant','Common','Salt','Winter','Idle','Low','Careful','Late'];
+const WORDS_B = ['Weather','Harbour','Machines','Rooms','Signals','Gardens','Mornings','Circuits','Letters','Traffic','Windows','Anchors','Hours','Lanterns','Corners','Frequencies','Tides','Errands'];
+const PHRASES = ['Nothing to Declare','Held Over for a Week','Music for Waiting Rooms','A Short History of Delay','Everything, Eventually','Return Postage Included','The Long Way Round','Closed for Repairs','Some Assembly Required','Notes Left for the Milkman'];
+const ARTISTS_A = ['The','','','A'];
+const ARTISTS_B = ['Meridian','Hollowfield','Ostrander','Pale Fountain','Cassette Club','Vega','Nightporter','Ida Grove','Thin Harbour','Marram','Ferrylight','Wren & Sons'];
+const GENRES = ['ambient folk','post-everything','library music','slowcore','dream pop','minimal wave','tape jazz','field recordings','synth pastoral','kosmische lite','shoegaze adjacent','third-stream'];
+const LABELS = ['Marram Recordings','Blue Ledger','Ninth Quarter Sound','Furrow & Co.','Static Post','Harbour Tapes','Almanac Editions','Low Terrace'];
+
+let sleeve = null;    // current metadata
+let photo = null;     // HTMLImageElement in photo mode
+let mode = 'daily';
+
+function makeMeta(seedStr){
+  rnd = mulberry(hash(seedStr));
+  const pal = one(PALETTES);
+  const title = rnd() < 0.34 ? one(PHRASES) : one(WORDS_A) + ' ' + one(WORDS_B);
+  const pre = one(ARTISTS_A);
+  const artist = (pre ? pre + ' ' : '') + one(ARTISTS_B);
+  return {
+    seed: seedStr, pal, title, artist,
+    genre: one(GENRES),
+    label: one(LABELS),
+    cat: one(['MR','BL','NQ','FC','SP','HT']) + '-' + ri(100, 999),
+    side: one(['A / B','one of two','single sided','A only']),
+    style: ri(0, 5),
+  };
+}
+
+/* --------------------------- artwork ------------------------------- */
+function drawGenerated(m){
+  rnd = mulberry(hash(m.seed + ':art'));
+  const [bg, ink, hot, cool] = m.pal;
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, S, S);
+
+  const styles = [
+    () => { // concentric rings, off-centre
+      const cx = rr(.3,.7)*S, cy = rr(.3,.7)*S, n = ri(9, 22);
+      for (let i = n; i > 0; i--){
+        ctx.beginPath(); ctx.arc(cx, cy, (i/n) * S * rr(.42,.62), 0, 6.2832);
+        ctx.fillStyle = [ink, hot, cool][i % 3]; ctx.globalAlpha = .92; ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    },
+    () => { // horizon and sun
+      const h = rr(.45,.68)*S;
+      ctx.fillStyle = cool; ctx.fillRect(0, 0, S, h);
+      ctx.fillStyle = ink; ctx.fillRect(0, h, S, S-h);
+      ctx.beginPath(); ctx.arc(rr(.25,.75)*S, h - rr(.02,.18)*S, rr(.10,.20)*S, 0, 6.2832);
+      ctx.fillStyle = hot; ctx.fill();
+      for (let i = 0; i < ri(6, 16); i++){
+        const y = h + (i+1) * ((S-h)/18) * rr(.7,1.5);
+        ctx.fillStyle = bg; ctx.globalAlpha = .18;
+        ctx.fillRect(0, y, S, rr(2, 9));
+      }
+      ctx.globalAlpha = 1;
+    },
+    () => { // grid of blocks
+      const n = ri(4, 9), c = S/n;
+      for (let x = 0; x < n; x++) for (let y = 0; y < n; y++){
+        const r = rnd();
+        ctx.fillStyle = r < .42 ? bg : (r < .68 ? ink : (r < .86 ? cool : hot));
+        ctx.fillRect(x*c, y*c, c, c);
+        if (rnd() < .22){
+          ctx.beginPath(); ctx.arc(x*c + c/2, y*c + c/2, c*rr(.16,.36), 0, 6.2832);
+          ctx.fillStyle = hot; ctx.fill();
+        }
+      }
+    },
+    () => { // diagonal sweep
+      ctx.save(); ctx.translate(S/2, S/2); ctx.rotate(rr(-0.7, 0.7)); ctx.translate(-S, -S);
+      let y = 0;
+      while (y < S*2){
+        const t = rr(10, 78);
+        ctx.fillStyle = [ink, hot, cool, bg][ri(0,3)];
+        ctx.fillRect(0, y, S*2, t); y += t + rr(2, 26);
+      }
+      ctx.restore();
+    },
+    () => { // orbits
+      ctx.fillStyle = ink; ctx.fillRect(0, 0, S, S);
+      const cx = S/2, cy = S/2;
+      for (let k = 0; k < ri(3, 7); k++){
+        const R = rr(.12,.46)*S;
+        ctx.beginPath(); ctx.arc(cx, cy, R, 0, 6.2832);
+        ctx.strokeStyle = bg; ctx.globalAlpha = .5; ctx.lineWidth = rr(1,3); ctx.stroke();
+        ctx.globalAlpha = 1;
+        for (let d = 0; d < ri(3, 12); d++){
+          const a = rr(0, 6.2832);
+          ctx.beginPath(); ctx.arc(cx + R*Math.cos(a), cy + R*Math.sin(a), rr(4, 20), 0, 6.2832);
+          ctx.fillStyle = d % 2 ? hot : cool; ctx.fill();
+        }
+      }
+    },
+    () => { // hard split shapes
+      ctx.fillStyle = ink; ctx.fillRect(0, 0, S, S);
+      for (let i = 0; i < ri(3, 7); i++){
+        ctx.beginPath();
+        ctx.moveTo(rr(0,S), rr(0,S));
+        ctx.lineTo(rr(0,S), rr(0,S));
+        ctx.lineTo(rr(0,S), rr(0,S));
+        ctx.closePath();
+        ctx.fillStyle = [bg, hot, cool][i % 3];
+        ctx.globalAlpha = rr(.55, 1); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    },
+  ];
+  styles[m.style % styles.length]();
+  grain(0.05);
+  if ($('fx-type') && !$('fx-type').checked) return;
+  typeOverlay(m, inkForBand(Math.round(S*0.72), S), m.pal[0]);
+}
+
+/* --------------------------- treatments ---------------------------- */
+function duotone(dark, light){
+  const img = ctx.getImageData(0, 0, S, S), d = img.data;
+  const c1 = hex(dark), c2 = hex(light);
+  for (let i = 0; i < d.length; i += 4){
+    const l = (d[i]*0.2126 + d[i+1]*0.7152 + d[i+2]*0.0722) / 255;
+    d[i]   = c1[0] + (c2[0]-c1[0]) * l;
+    d[i+1] = c1[1] + (c2[1]-c1[1]) * l;
+    d[i+2] = c1[2] + (c2[2]-c1[2]) * l;
+  }
+  ctx.putImageData(img, 0, 0);
+}
+function hex(h){
+  const n = parseInt(h.slice(1), 16);
+  return [(n>>16)&255, (n>>8)&255, n&255];
+}
+function halftone(cell, bg, dot){
+  const img = ctx.getImageData(0, 0, S, S), d = img.data;
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, S, S);
+  ctx.fillStyle = dot;
+  const r = cell / 2;
+  for (let y = 0; y < S; y += cell){
+    for (let x = 0; x < S; x += cell){
+      const i = ((y + (cell>>1)) * S + (x + (cell>>1))) * 4;
+      const l = (d[i]*0.2126 + d[i+1]*0.7152 + d[i+2]*0.0722) / 255;
+      const rad = (1 - l) * r * 1.34;
+      if (rad > 0.35){ ctx.beginPath(); ctx.arc(x + r, y + r, rad, 0, 6.2832); ctx.fill(); }
+    }
+  }
+}
+function grain(amount){
+  const img = ctx.getImageData(0, 0, S, S), d = img.data;
+  for (let i = 0; i < d.length; i += 4){
+    const n = (Math.random() - 0.5) * 255 * amount;
+    d[i] += n; d[i+1] += n; d[i+2] += n;
+  }
+  ctx.putImageData(img, 0, 0);
+}
+function vignette(){
+  const g = ctx.createRadialGradient(S/2, S/2, S*0.28, S/2, S/2, S*0.76);
+  g.addColorStop(0, 'rgba(0,0,0,0)');
+  g.addColorStop(1, 'rgba(0,0,0,0.55)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, S, S);
+}
+// The artwork underneath varies wildly, so pick the text colour from the
+// pixels it will actually sit on rather than trusting the palette.
+function inkForBand(y0, y1){
+  const d = ctx.getImageData(0, y0, S, Math.max(1, y1 - y0)).data;
+  let sum = 0, n = 0;
+  for (let i = 0; i < d.length; i += 4 * 53){
+    sum += 0.2126*d[i] + 0.7152*d[i+1] + 0.0722*d[i+2];
+    n++;
+  }
+  const mean = n ? sum / n : 128;
+  return mean > 140 ? '#12121A' : '#F7F4EC';
+}
+
+function typeOverlay(m, fg, shadow){
+  const pad = S * 0.072;
+  ctx.textBaseline = 'alphabetic';
+  ctx.shadowColor = 'rgba(0,0,0,.45)'; ctx.shadowBlur = 18;
+  ctx.fillStyle = fg;
+  ctx.font = '700 ' + Math.round(S*0.062) + 'px ui-sans-serif, system-ui, Helvetica, Arial, sans-serif';
+  const words = m.title.split(' ');
+  const lines = [];
+  let line = '';
+  for (const w of words){
+    const t = line ? line + ' ' + w : w;
+    if (ctx.measureText(t).width > S - pad*2 && line){ lines.push(line); line = w; } else line = t;
+  }
+  lines.push(line);
+  let y = S - pad - (lines.length - 1) * S*0.072 - S*0.045;
+  lines.forEach(l => { ctx.fillText(l, pad, y); y += S*0.072; });
+  ctx.font = '400 ' + Math.round(S*0.030) + 'px ui-monospace, SFMono-Regular, Menlo, monospace';
+  ctx.globalAlpha = .82;
+  ctx.fillText(m.artist.toUpperCase(), pad, S - pad + S*0.006);
+  ctx.globalAlpha = 1;
+  ctx.shadowBlur = 0;
+}
+
+/* --------------------------- photo mode ---------------------------- */
+function drawPhoto(){
+  if (!photo || !sleeve) return;
+  const [bg, ink, hot, cool] = sleeve.pal;
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, S, S);
+
+  // cover-fit the photo into the square
+  const scale = Math.max(S / photo.width, S / photo.height);
+  const w = photo.width * scale, h = photo.height * scale;
+  ctx.drawImage(photo, (S - w)/2, (S - h)/2, w, h);
+
+  if ($('fx-duo').checked) duotone(bg, ink);
+  if ($('fx-half').checked) halftone(+$('fx-cell').value, bg, ink);
+  if ($('fx-grain').checked) grain(0.10);
+  if ($('fx-vig').checked) vignette();
+  if ($('fx-type').checked) typeOverlay(sleeve, inkForBand(Math.round(S*0.72), S), bg);
+}
+
+function redraw(){
+  if (mode === 'photo' && photo) drawPhoto();
+  else if (mode === 'photo') placeholderPanel();
+  else drawGenerated(sleeve);
+}
+
+function placeholderPanel(){
+  const [bg, ink] = sleeve.pal;
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, S, S);
+  ctx.fillStyle = ink; ctx.globalAlpha = .25;
+  ctx.font = '400 ' + Math.round(S*0.045) + 'px ui-monospace, monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('drop a photo', S/2, S/2);
+  ctx.textAlign = 'left'; ctx.globalAlpha = 1;
+}
+
+/* ---------------------------- metadata ----------------------------- */
+function showMeta(m){
+  $('title').textContent = m.title;
+  $('artist').textContent = m.artist;
+  $('f-genre').textContent = m.genre;
+  $('f-label').textContent = m.label;
+  $('f-cat').textContent = m.cat;
+  $('f-side').textContent = m.side;
+}
+
+function todaySeed(){
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function setSleeve(seedStr){
+  sleeve = makeMeta(seedStr);
+  showMeta(sleeve);
+  redraw();
+}
+
+/* ----------------------------- events ------------------------------ */
+$('modes').addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  mode = b.dataset.m;
+  [...$('modes').children].forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  $('daily-deck').hidden = mode !== 'daily';
+  $('photo-deck').hidden = mode !== 'photo';
+  $('fx').classList.toggle('on', mode === 'photo');
+  $('note').textContent = mode === 'photo'
+    ? 'Your photo stays in this browser tab.'
+    : 'Today’s sleeve is generated from the date, so everyone sees the same one.';
+  redraw();
+});
+
+$('reroll').addEventListener('click', () => setSleeve(todaySeed() + ':' + Math.random()));
+
+$('drop').addEventListener('click', () => $('file').click());
+['dragenter','dragover'].forEach(ev => $('drop').addEventListener(ev, (e) => {
+  e.preventDefault(); $('drop').classList.add('over');
+}));
+['dragleave','drop'].forEach(ev => $('drop').addEventListener(ev, (e) => {
+  e.preventDefault(); $('drop').classList.remove('over');
+}));
+$('drop').addEventListener('drop', (e) => {
+  const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+  if (f) loadPhoto(f);
+});
+$('file').addEventListener('change', (e) => { if (e.target.files[0]) loadPhoto(e.target.files[0]); });
+
+function loadPhoto(file){
+  if (!/^image\//.test(file.type)){
+    $('note').innerHTML = '<span class="warn">That is not an image file.</span>';
+    return;
+  }
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  img.onload = () => {
+    photo = img;
+    URL.revokeObjectURL(url);
+    $('note').textContent = file.name + ' — ' + img.width + '×' + img.height + ', kept in this tab only.';
+    redraw();
+  };
+  img.onerror = () => {
+    URL.revokeObjectURL(url);
+    $('note').innerHTML = '<span class="warn">The browser could not decode that image.</span>';
+  };
+  img.src = url;
+}
+
+['fx-duo','fx-half','fx-grain','fx-vig','fx-type'].forEach(id =>
+  $(id).addEventListener('change', redraw));
+$('fx-cell').addEventListener('input', () => { if ($('fx-half').checked) redraw(); });
+
+$('save').addEventListener('click', () => {
+  try {
+    const a = document.createElement('a');
+    a.download = (sleeve.title.replace(/[^\w]+/g,'-').toLowerCase() || 'cover') + '.png';
+    a.href = cv.toDataURL('image/png');
+    document.body.appendChild(a); a.click(); a.remove();
+    $('note').textContent = 'Saved ' + a.download;
+  } catch (e) {
+    $('note').innerHTML = '<span class="warn">The browser blocked the download (' + e.message + ').</span>';
+  }
+});
+
+setSleeve(todaySeed());
+$('note').textContent = 'Today’s sleeve is generated from the date, so everyone sees the same one.';
+</script>
+</body>
+</html>

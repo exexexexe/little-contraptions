@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Good News Wire</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23E6F4EA'/><path d='M8 17 l5 5 l11 -12' stroke='%231E7A4C' stroke-width='3.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+<style>
+:root{
+  --mint:#E8F5EC;
+  --mint-2:#D3EBDC;
+  --paper:#FFFFFF;
+  --ink:#12291D;
+  --ink-2:#3F5A4B;
+  --dim:#7B9587;
+  --green:#1E7A4C;
+  --green-2:#2FA36A;
+  --sun:#E8A83A;
+  --line:#C6E0D0;
+  --sans:ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--mint);
+  background-image:radial-gradient(1000px 500px at 50% -20%, #F4FBF6 0%, transparent 70%);
+  color:var(--ink);font-family:var(--sans);
+  min-height:100vh;padding:0 0 50px;
+}
+.wrap{ max-width:820px;margin:0 auto;padding:0 18px }
+
+/* ---------- wire header ---------- */
+.wire{ background:var(--green);color:#EAF7EF;overflow:hidden;position:relative }
+.wire-in{ display:flex;align-items:center;height:38px;white-space:nowrap }
+.wire-tag{
+  background:var(--sun);color:#2A1C05;font-family:var(--mono);font-size:10px;
+  letter-spacing:.16em;text-transform:uppercase;padding:0 12px;height:38px;
+  display:flex;align-items:center;flex:none;z-index:2;font-weight:700;
+}
+.wire-track{ display:inline-flex;align-items:center;padding-left:100%;animation:wire 50s linear infinite }
+.wire-track span{ font-size:12.5px;padding-right:44px;opacity:.95 }
+.wire-track span::before{ content:"✓";color:var(--sun);margin-right:9px;font-weight:700 }
+@keyframes wire{ from{transform:translateX(0)} to{transform:translateX(-100%)} }
+
+header{ text-align:center;padding:34px 0 6px }
+h1{ margin:0;font-size:clamp(30px,6vw,46px);font-weight:800;letter-spacing:-.028em;line-height:1.05 }
+h1 em{ font-style:normal;color:var(--green) }
+.sub{ margin:9px auto 0;max-width:44ch;font-size:14.5px;color:var(--ink-2);line-height:1.6 }
+
+/* ---------- sources ---------- */
+.sources{ display:flex;gap:7px;justify-content:center;flex-wrap:wrap;margin:20px 0 4px }
+.sources button{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;
+  background:var(--paper);color:var(--ink-2);border:1px solid var(--line);
+  padding:9px 14px;cursor:pointer;border-radius:999px;
+}
+.sources button:hover{ border-color:var(--green-2);color:var(--green) }
+.sources button[aria-pressed="true"]{ background:var(--green);border-color:var(--green);color:#fff;font-weight:700 }
+.sources button:focus-visible{ outline:2px solid var(--sun);outline-offset:2px }
+
+.bar{ display:flex;align-items:center;gap:10px;margin:16px 0 12px;flex-wrap:wrap }
+.bar .count{ font-family:var(--mono);font-size:11px;color:var(--dim) }
+.bar .spacer{ flex:1 }
+.btn{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+  background:var(--paper);color:var(--ink);border:1px solid var(--line);padding:9px 14px;cursor:pointer;
+}
+.btn:hover{ border-color:var(--green-2) }
+.btn:focus-visible{ outline:2px solid var(--sun);outline-offset:2px }
+
+/* ---------- stories ---------- */
+.list{ display:flex;flex-direction:column;gap:11px }
+.story{
+  background:var(--paper);border:1px solid var(--line);
+  padding:17px 19px;display:block;text-decoration:none;color:inherit;
+  transition:transform .14s, box-shadow .14s, border-color .14s;
+}
+.story:hover{ transform:translateY(-2px);box-shadow:0 8px 22px rgba(30,122,76,.13);border-color:var(--green-2) }
+.story:focus-visible{ outline:2px solid var(--green);outline-offset:2px }
+.story .meta{
+  font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--dim);display:flex;gap:9px;align-items:center;margin-bottom:7px;flex-wrap:wrap;
+}
+.story .meta b{ color:var(--green);font-weight:700 }
+.story h2{ margin:0 0 6px;font-size:clamp(16.5px,2.6vw,20px);line-height:1.32;font-weight:700;letter-spacing:-.01em }
+.story p{ margin:0;font-size:13.5px;line-height:1.6;color:var(--ink-2) }
+
+.state{
+  background:var(--paper);border:1px dashed var(--line);padding:22px;
+  font-family:var(--mono);font-size:12px;color:var(--ink-2);line-height:1.75;
+}
+.state b{ display:block;color:var(--green);margin-bottom:6px;letter-spacing:.09em }
+
+footer{
+  margin-top:28px;padding-top:15px;border-top:1px solid var(--line);
+  font-family:var(--mono);font-size:10.5px;color:var(--dim);line-height:1.8;
+}
+footer a{ color:var(--ink-2) }
+
+@media (prefers-reduced-motion:reduce){
+  .wire-track{ animation:none;padding-left:12px }
+  .story:hover{ transform:none }
+}
+</style>
+</head>
+<body>
+
+<div class="wire">
+  <div class="wire-in">
+    <div class="wire-tag">On the wire</div>
+    <div class="wire-track" id="wire"></div>
+  </div>
+</div>
+
+<div class="wrap">
+  <header>
+    <h1>The <em>Good</em> News Wire</h1>
+    <p class="sub">A feed that only carries the other kind of story. Real reporting, real outlets — just a narrower slice of it.</p>
+  </header>
+
+  <div class="sources" id="sources"></div>
+
+  <div class="bar">
+    <span class="count" id="count"></span>
+    <span class="spacer"></span>
+    <button class="btn" id="refresh">Pull the wire again</button>
+  </div>
+
+  <div class="list" id="list">
+    <div class="state">Opening the line…</div>
+  </div>
+
+  <footer>
+    Stories are relayed unedited from each outlet's own RSS feed through this site's server —
+    RSS hosts do not allow browsers to read them directly. Headlines, links and credit belong to the
+    publishers. <a href="/">← back to the cabinet</a>
+  </footer>
+</div>
+
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+let feeds = [];
+let current = null;
+let items = [];
+
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+/* RSS descriptions are HTML; take the text and lose the markup. */
+function plain(html, limit){
+  const d = document.createElement('div');
+  d.innerHTML = html || '';
+  let t = (d.textContent || '').replace(/\s+/g, ' ').trim();
+  if (limit && t.length > limit) t = t.slice(0, limit).replace(/\s+\S*$/, '') + '…';
+  return t;
+}
+
+function when(str){
+  const d = new Date(str);
+  if (isNaN(d)) return '';
+  const days = Math.floor((Date.now() - d.getTime()) / 86400000);
+  if (days <= 0) return 'today';
+  if (days === 1) return 'yesterday';
+  if (days < 30) return days + ' days ago';
+  return d.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+}
+
+/* Handles both RSS <item> and Atom <entry>. */
+function parseFeed(xmlText){
+  const doc = new DOMParser().parseFromString(xmlText, 'application/xml');
+  if (doc.querySelector('parsererror')) throw new Error('feed did not parse as XML');
+  const nodes = [...doc.querySelectorAll('item'), ...doc.querySelectorAll('entry')];
+  return nodes.map(n => {
+    const get = (sel) => { const e = n.querySelector(sel); return e ? e.textContent : ''; };
+    let link = get('link');
+    if (!link){
+      const a = n.querySelector('link[href]');
+      if (a) link = a.getAttribute('href');
+    }
+    return {
+      title: plain(get('title')),
+      link: (link || '').trim(),
+      date: get('pubDate') || get('published') || get('updated') || '',
+      blurb: plain(get('description') || get('summary') || get('content'), 190),
+    };
+  }).filter(x => x.title && x.link);
+}
+
+async function loadFeeds(){
+  const r = await fetch('/api/rss/list');
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return r.json();
+}
+
+async function load(key){
+  current = key;
+  renderSources();
+  $('list').innerHTML = '<div class="state">Pulling from the wire…</div>';
+  $('count').textContent = '';
+  try {
+    const r = await fetch('/api/rss?feed=' + encodeURIComponent(key));
+    if (!r.ok){
+      const j = await r.json().catch(() => ({}));
+      throw new Error(j.error || ('HTTP ' + r.status));
+    }
+    items = parseFeed(await r.text());
+    if (!items.length) throw new Error('the feed came back empty');
+    render();
+  } catch (err) {
+    $('list').innerHTML = '<div class="state"><b>The line went quiet</b>' +
+      'Could not read this feed (' + esc(err.message) + ').<br>' +
+      'It is relayed through this site\'s own server, so either the outlet is down or the relay is. ' +
+      'Try another source, or pull again in a minute.</div>';
+  }
+}
+
+function render(){
+  const f = feeds.find(x => x.key === current) || {};
+  $('count').textContent = items.length + ' stories · ' + (f.site || '');
+  $('list').innerHTML = items.map(it =>
+    '<a class="story" href="' + esc(it.link) + '" target="_blank" rel="noopener">' +
+      '<div class="meta"><b>' + esc(f.title || '') + '</b>' +
+        (when(it.date) ? '<span>' + esc(when(it.date)) + '</span>' : '') + '</div>' +
+      '<h2>' + esc(it.title) + '</h2>' +
+      (it.blurb ? '<p>' + esc(it.blurb) + '</p>' : '') +
+    '</a>').join('');
+
+  const head = items.slice(0, 14).map(i => i.title);
+  $('wire').innerHTML = head.concat(head).map(t => '<span>' + esc(t) + '</span>').join('');
+}
+
+function renderSources(){
+  $('sources').innerHTML = '';
+  feeds.forEach(f => {
+    const b = document.createElement('button');
+    b.textContent = f.title;
+    b.setAttribute('aria-pressed', String(f.key === current));
+    b.onclick = () => load(f.key);
+    $('sources').appendChild(b);
+  });
+}
+
+$('refresh').addEventListener('click', () => { if (current) load(current); });
+
+(async function boot(){
+  try {
+    feeds = await loadFeeds();
+    if (!feeds.length) throw new Error('no feeds configured');
+    renderSources();
+    load(feeds[0].key);
+  } catch (err) {
+    $('list').innerHTML = '<div class="state"><b>No wire available</b>' +
+      'The server did not list any feeds (' + esc(err.message) + ').</div>';
+  }
+})();
+</script>
+</body>
+</html>
