@@ -26,6 +26,13 @@ Opens on http://localhost:3000.
 3. Remove the "still being built" ghost card if it's no longer the last
    free slot, or leave it if there's still room.
 
+## Live
+
+https://hub-production-c107.up.railway.app
+
+Railway project `little-contraptions`, service `hub`, deploying from
+`main`. Pushes to `main` redeploy automatically.
+
 ## Deploy
 
 Push to GitHub, then point Railway's create-deployment (or
