@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Time Capsule</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23141C24'/><rect x='8' y='9' width='16' height='16' rx='2' fill='none' stroke='%23C8A85C' stroke-width='2'/><path d='M12 9V7a4 4 0 018 0v2' fill='none' stroke='%23C8A85C' stroke-width='2'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --deep:#141C24;
+  --deep-2:#1D2831;
+  --brass:#C8A85C;
+  --paper:#E8E4DA;
+  --dim:#7E8C96;
+  --green:#7FBF8A;
+  --rule:#2B3A45;
+  --sans:ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --serif:"Iowan Old Style","Palatino Linotype",Georgia,serif;
+  --display:"Avenir Next Condensed","Roboto Condensed","Arial Narrow",var(--sans);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{ background:radial-gradient(700px 480px at 50% -6%, var(--deep-2), var(--deep) 60%);
+  color:var(--paper);font-family:var(--sans);min-height:100vh;padding:28px 18px 64px }
+.wrap{ max-width:700px;margin:0 auto }
+h1{ font-family:var(--display);font-size:clamp(26px,5.6vw,40px);margin:0;letter-spacing:.06em;text-transform:uppercase;font-weight:700 }
+.sub{ font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-top:8px }
+
+.panel{ background:var(--deep-2);border:1px solid var(--rule);border-radius:4px;padding:22px;margin-top:20px }
+label{ display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--dim);margin-bottom:7px }
+textarea, input[type=date], input[type=text]{
+  width:100%;background:#0F161C;border:1px solid var(--rule);color:var(--paper);
+  font-family:var(--serif);font-size:16px;padding:12px 14px;border-radius:2px;line-height:1.6;
+}
+input[type=date], input[type=text]{ font-family:var(--mono);font-size:14px }
+textarea{ min-height:150px;resize:vertical }
+textarea:focus, input:focus{ outline:2px solid var(--brass);outline-offset:-1px }
+.row{ display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-top:14px }
+.count{ font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:7px;text-align:right }
+
+.deck{ display:flex;gap:9px;flex-wrap:wrap;margin-top:16px }
+.btn{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
+  background:var(--brass);color:#1A1305;border:0;padding:12px 20px;cursor:pointer;font-weight:700;border-radius:2px;
+}
+.btn:hover{ background:#DCBE72 }
+.btn[disabled]{ opacity:.4;cursor:default }
+.btn.sec{ background:transparent;color:var(--paper);border:1px solid var(--rule);font-weight:400 }
+.btn.sec:hover{ border-color:var(--brass);color:var(--brass) }
+.btn:focus-visible{ outline:2px solid var(--brass);outline-offset:3px }
+
+.list{ margin-top:26px }
+.list h2{ font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);font-weight:400;margin:0 0 12px }
+.cap{
+  border:1px solid var(--rule);border-radius:4px;background:var(--deep-2);
+  padding:18px 20px;margin-bottom:12px;position:relative;
+}
+.cap.sealed{ border-left:3px solid var(--brass) }
+.cap.open{ border-left:3px solid var(--green) }
+.cap .meta{
+  display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);
+  margin-bottom:11px;
+}
+.cap .meta .st{ color:var(--brass) }
+.cap.open .meta .st{ color:var(--green) }
+.cap h3{ font-family:var(--serif);font-size:17px;margin:0 0 8px;font-weight:600 }
+.cap .body{ font-family:var(--serif);font-size:15.5px;line-height:1.7;color:#C4CDD4;white-space:pre-wrap }
+.cap .locked{
+  font-family:var(--mono);font-size:12px;color:var(--dim);line-height:1.8;
+  background:#0F161C;border:1px dashed var(--rule);padding:14px;border-radius:3px;
+}
+.cap .locked b{ color:var(--brass) }
+.cap .acts{ margin-top:12px;display:flex;gap:8px;flex-wrap:wrap }
+.cap .acts button{
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;
+  background:transparent;border:1px solid var(--rule);color:var(--dim);padding:6px 10px;cursor:pointer;border-radius:2px;
+}
+.cap .acts button:hover{ border-color:#C46A62;color:#C46A62 }
+.empty{ font-family:var(--mono);font-size:12px;color:var(--dim);opacity:.65 }
+
+.warn{
+  margin-top:18px;border-left:3px solid var(--brass);background:rgba(200,168,92,.08);
+  padding:12px 15px;font-size:13.5px;line-height:1.65;color:#D8CCA8;
+}
+
+footer{
+  max-width:700px;margin:26px auto 0;padding-top:14px;border-top:1px solid var(--rule);
+  font-family:var(--mono);font-size:10.5px;line-height:1.8;color:var(--dim);
+}
+footer a{ color:#C8B888 }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+body{ padding-bottom:64px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media print{ #lc-back{ display:none } }
+@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } }
+</style>
+</head>
+<body>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<div class="wrap">
+  <h1>Time Capsule</h1>
+  <div class="sub">write it now · read it then</div>
+
+  <div class="panel">
+    <label for="msg">a message to whoever you are by then</label>
+    <textarea id="msg" maxlength="4000" placeholder="What is true today that you might not remember?"></textarea>
+    <div class="count"><span id="chars">0</span> / 4000</div>
+
+    <div class="row">
+      <div>
+        <label for="when">seal until</label>
+        <input type="date" id="when">
+      </div>
+      <div>
+        <label for="title">a label for the outside</label>
+        <input type="text" id="title" maxlength="48" placeholder="optional">
+      </div>
+    </div>
+
+    <div class="deck">
+      <button class="btn" id="seal">Seal it</button>
+      <button class="btn sec" id="quick">Seal for a year</button>
+    </div>
+  </div>
+
+  <div class="warn" id="warn">
+    These live in this browser only — in <b>localStorage</b>, on this device. They are not sent
+    anywhere and there is no account. Clearing your browser data, or opening this on another
+    machine, means they are gone. Treat it as a drawer, not a vault.
+  </div>
+
+  <div class="list">
+    <h2>the drawer · <span id="tally">0</span></h2>
+    <div id="caps"><div class="empty">nothing sealed yet</div></div>
+  </div>
+</div>
+
+<footer>
+  Sealed capsules stay unreadable until their date — the text is hidden from the page and only
+  written back into view once the date has passed. That is a courtesy, not security: anyone who
+  can open this browser's storage can read them. <a href="/">← back to the cabinet</a>
+</footer>
+
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+const KEY = 'lc:time-capsule:v1';
+
+function load(){
+  try { return JSON.parse(localStorage.getItem(KEY) || '[]'); }
+  catch (e) { return []; }
+}
+function save(list){
+  try { localStorage.setItem(KEY, JSON.stringify(list)); return true; }
+  catch (e) {
+    // private mode, or the quota is gone — say so rather than failing quietly
+    $('warn').innerHTML = '<b>This browser refused to save.</b> That usually means private ' +
+      'browsing or storage is full. The capsule below exists only until you close the tab.';
+    return false;
+  }
+}
+
+let caps = load();
+
+function fmt(d){
+  return new Date(d).toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
+}
+function daysLeft(iso){
+  const now = new Date(); now.setHours(0,0,0,0);
+  const then = new Date(iso); then.setHours(0,0,0,0);
+  return Math.round((then - now) / 86400000);
+}
+
+function render(){
+  $('tally').textContent = caps.length ? caps.length + (caps.length === 1 ? ' capsule' : ' capsules') : '0';
+  if (!caps.length){
+    $('caps').innerHTML = '<div class="empty">nothing sealed yet</div>';
+    return;
+  }
+  caps.sort((a, b) => new Date(a.when) - new Date(b.when));
+  $('caps').innerHTML = caps.map((c, i) => {
+    const left = daysLeft(c.when);
+    const open = left <= 0;
+    return '<div class="cap ' + (open ? 'open' : 'sealed') + '">' +
+      '<div class="meta">' +
+        '<span>sealed ' + esc(fmt(c.sealed)) + '</span>' +
+        '<span class="st">' + (open ? 'open' : 'sealed until ' + esc(fmt(c.when))) + '</span>' +
+      '</div>' +
+      (c.title ? '<h3>' + esc(c.title) + '</h3>' : '') +
+      (open
+        ? '<div class="body">' + esc(c.text) + '</div>'
+        : '<div class="locked">Sealed. <b>' + left + (left === 1 ? ' day' : ' days') + '</b> to go — ' +
+          esc(fmt(c.when)) + '.<br>' + c.text.length + ' characters, written ' + esc(fmt(c.sealed)) + '.</div>') +
+      '<div class="acts"><button data-i="' + i + '">discard</button></div>' +
+    '</div>';
+  }).join('');
+}
+
+function seal(months){
+  const text = $('msg').value.trim();
+  if (!text){ $('msg').focus(); return; }
+  let when = $('when').value;
+  if (months){
+    const d = new Date(); d.setFullYear(d.getFullYear() + 1);
+    when = d.toISOString().slice(0, 10);
+  }
+  if (!when){ $('when').focus(); return; }
+  // a capsule you can open immediately is not a capsule
+  if (daysLeft(when) <= 0){
+    $('when').focus();
+    $('warn').innerHTML = '<b>Pick a date in the future.</b> A capsule that opens today is just a note.';
+    return;
+  }
+  caps.push({ text, when, title: $('title').value.trim(), sealed: new Date().toISOString().slice(0, 10) });
+  save(caps);
+  $('msg').value = ''; $('title').value = ''; $('chars').textContent = '0';
+  render();
+}
+
+$('msg').addEventListener('input', () => { $('chars').textContent = $('msg').value.length; });
+$('seal').addEventListener('click', () => seal(false));
+$('quick').addEventListener('click', () => seal(true));
+$('caps').addEventListener('click', (e) => {
+  const b = e.target.closest('button[data-i]');
+  if (!b) return;
+  const i = Number(b.dataset.i);
+  const c = caps[i];
+  const open = daysLeft(c.when) <= 0;
+  if (!confirm(open ? 'Discard this capsule?' : 'This one is still sealed. Discard it unread?')) return;
+  caps.splice(i, 1);
+  save(caps);
+  render();
+});
+
+// default the date to a year out so the control is never empty
+const d = new Date(); d.setFullYear(d.getFullYear() + 1);
+$('when').value = d.toISOString().slice(0, 10);
+$('when').min = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+
+render();
+</script>
+</body>
+</html>
