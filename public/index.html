@@ -141,6 +141,65 @@ h1{
   padding:3px 8px;
 }
 
+/* ------------------------------------------------------------------ *
+ *  Things that are not advertised.
+ * ------------------------------------------------------------------ */
+.peel{
+  position:absolute;top:0;right:0;width:34px;height:34px;z-index:4;
+  cursor:grab;touch-action:none;
+}
+.peel:active{ cursor:grabbing }
+.card-slot .lift{
+  position:absolute;top:0;right:0;z-index:3;pointer-events:none;
+  width:0;height:0;border-style:solid;border-width:0 26px 26px 0;
+  border-color:transparent var(--accent) transparent transparent;
+  filter:drop-shadow(-2px 2px 3px rgba(0,0,0,.35));
+  transition:border-width .22s ease;
+}
+.card-slot.peeling .lift{ transition:none }
+.card-slot .under{
+  position:absolute;inset:0;z-index:2;padding:22px 22px 20px;
+  display:flex;align-items:center;justify-content:center;text-align:center;
+  background:#DCD2BA;color:#3A3227;
+  font-family:"Bradley Hand","Segoe Script","Comic Sans MS",ui-serif,cursive;
+  font-size:15.5px;line-height:1.5;
+  opacity:0;pointer-events:none;transition:opacity .18s ease;
+  border:1px solid #B9AE93;
+}
+.card-slot.peeling .under{ transition:none }
+.card-slot .card{ transition:transform .18s ease, opacity .18s ease }
+.card-slot.peeling .card{ transition:none }
+
+#lc-neal{
+  position:fixed;left:50%;bottom:26px;transform:translateX(-50%);
+  z-index:9998;background:rgba(20,15,32,.94);color:#F4EFE2;
+  border:1px solid rgba(224,165,72,.5);padding:13px 20px;
+  font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  font-size:12px;letter-spacing:.04em;border-radius:3px;
+  opacity:0;transition:opacity .5s ease;pointer-events:none;max-width:min(460px,90vw);
+  text-align:center;line-height:1.6;
+}
+#lc-neal.on{ opacity:1 }
+
+.shuffling .card-slot{ animation:lc-shuffle .7s cubic-bezier(.3,.9,.3,1) }
+@keyframes lc-shuffle{
+  0%{ transform:translate(0,0) rotate(0) }
+  40%{ transform:translate(var(--sx,0),var(--sy,0)) rotate(var(--sr,0)) }
+  100%{ transform:translate(0,0) rotate(0) }
+}
+
+#w98-bsod{
+  position:fixed;inset:0;z-index:9999;background:#0000AA;color:#DDDDDD;
+  font-family:"Pixelated MS Sans Serif","MS Sans Serif",Tahoma,monospace;
+  font-size:14px;line-height:1.7;padding:9vh 8vw;letter-spacing:.02em;
+}
+#w98-bsod[hidden]{ display:none }
+#w98-bsod b{ background:#AAAAAA;color:#0000AA;padding:0 7px;display:inline-block;margin-bottom:22px }
+@media (prefers-reduced-motion: reduce){
+  .shuffling .card-slot{ animation:none }
+  .card-slot .lift, .card-slot .under{ transition:none }
+}
+
 .ghost{
   border:1px dashed rgba(244,239,226,.35);
   background:transparent;
@@ -421,7 +480,7 @@ footer{
   image-rendering:crisp-edges;   /* Firefox */
 }
 .wx-read{
-  display:flex;align-items:baseline;gap:5px;
+  display:flex;align-items:center;gap:6px;
   margin-top:4px;
 }
 .wx-temp{
@@ -2154,7 +2213,41 @@ footer{
       return '<a class="w98-icon" role="listitem" href="' + esc(t.href) + '" ' +
              'title="' + esc(t.title) + ' — ' + esc(t.tag) + '" data-slug="' + esc(t.slug) + '">' +
              svg(t.icon) + '<span class="lbl">' + esc(t.title) + '</span></a>';
-    }).join('');
+    }).join('') +
+    // Not a drawer. It is at the end of the desktop where a system icon would
+    // be, it is not in the Start menu, and it does exactly what you would
+    // expect a machine of this vintage to do when you open something.
+    '<a class="w98-icon" role="listitem" href="#" data-egg="bsod" title="System">' +
+      svg('pc') + '<span class="lbl">System</span></a>';
+  }
+
+  function blueScreen(){
+    var s = document.getElementById('w98-bsod');
+    if (!s){
+      s = document.createElement('div');
+      s.id = 'w98-bsod';
+      s.setAttribute('aria-hidden', 'true');
+      s.innerHTML =
+        '<b>Contraptions</b><br><br>' +
+        'A fatal exception 0E has occurred at 0028:C11B3ADC in module<br>' +
+        'CABINET.DRV. The current drawer will be terminated.<br><br>' +
+        '*&nbsp; Press any key to terminate the current drawer.<br>' +
+        '*&nbsp; Press CTRL+ALT+DEL again to restart your cabinet. You will<br>' +
+        '&nbsp;&nbsp; lose any unsaved curiosity in all drawers.<br><br>' +
+        'Press any key to continue&nbsp;_';
+      document.body.appendChild(s);
+    }
+    s.hidden = false;
+    var done = function(){
+      s.hidden = true;
+      window.removeEventListener('keydown', done);
+      window.removeEventListener('pointerdown', done);
+    };
+    setTimeout(function(){
+      window.addEventListener('keydown', done);
+      window.addEventListener('pointerdown', done);
+    }, 60);
+    setTimeout(done, 2600);
   }
 
   function select(el){
@@ -2168,6 +2261,12 @@ footer{
   iconWrap.addEventListener('click', function(e){
     var a = e.target.closest ? e.target.closest('.w98-icon') : null;
     if (!a) return;
+    if (a.dataset.egg){                    // not a drawer, so never navigate
+      e.preventDefault();
+      if (e.detail === 0 || tapToOpen()) blueScreen();
+      else select(a);
+      return;
+    }
     if (e.detail === 0) return;            // keyboard Enter: let it navigate
     if (tapToOpen()) return;               // touch: a tap opens it
     e.preventDefault();
@@ -2177,6 +2276,7 @@ footer{
     var a = e.target.closest ? e.target.closest('.w98-icon') : null;
     if (!a) return;
     e.preventDefault();
+    if (a.dataset.egg){ blueScreen(); return; }
     window.location.href = a.getAttribute('href');
   });
   document.getElementById('w98-desktop').addEventListener('click', function(e){
@@ -2312,6 +2412,27 @@ footer{
         b.style.width = Math.max(22, Math.min(88, w)).toFixed(0) + '%';
       });
     }
+    // The station's local time, which is the point of saying where it is.
+    var wxClock = document.getElementById('wx-clock');
+    if (wxClock){
+      var label = '';
+      if (wx.tz){
+        try {
+          label = new Intl.DateTimeFormat([], { hour: '2-digit', minute: '2-digit',
+                    hour12: false, timeZone: wx.tz }).format(d);
+        } catch (e) { label = ''; }
+      }
+      if (wxClock.textContent !== label) wxClock.textContent = label;
+    }
+
+    // Once someone has pulled a ball, the caption stops explaining and
+    // starts reporting: the swing it actually measured, not the formula.
+    var crCap = document.querySelector('.cradle-cap');
+    if (crCap){
+      var say = (crTouched && crPeriod) ? crPeriod.toFixed(2) + ' s per swing' : 'drag a ball';
+      if (crCap.textContent !== say) crCap.textContent = say;
+    }
+
     if (!calm && wgCount % 34 === 0 && scenes.length > 1){
       // setAttribute, not .hidden: that property is defined on HTMLElement,
       // and these are SVG elements, so assigning to it sets a plain JS
@@ -2327,11 +2448,756 @@ footer{
     if (wgTimer) clearInterval(wgTimer);
     widgetTick();
     wgTimer = setInterval(widgetTick, 1000);
+    startLive();
   }
   function stopWidgets(){
     if (wgTimer) clearInterval(wgTimer);
     wgTimer = null;
+    stopLive();
   }
+
+  /* ---- the live ornaments ------------------------------------------ *
+   * Three of the widgets do real work. The weather monitor reports the
+   * actual sky wherever the visitor is; the cradle integrates five real
+   * pendulums; the defragmenter tidies a drive that does not exist.
+   *
+   * All three are drawn on canvases whose backing store is the size the
+   * art was drawn at — 84 pixels across — and blown up by CSS with
+   * smoothing off, so a "pixel" is a pixel and stays one at any width.
+   *
+   * They share a single animation frame, which runs only while the
+   * desktop is up, the tab is in front, and the rail is actually on
+   * screen. Under reduced motion the loop draws one still frame of each
+   * and stops, waking again only for a drag on the cradle — motion the
+   * visitor asked for by hand is not the motion that setting is about.
+   * ------------------------------------------------------------------ */
+
+  function pane(id){
+    var c = document.getElementById(id);
+    if (!c || !c.getContext) return null;
+    var g = c.getContext('2d');
+    if (!g) return null;
+    g.imageSmoothingEnabled = false;
+    return { el: c, g: g, w: c.width, h: c.height };
+  }
+
+  var skyPane = pane('wx-sky');
+  window.__WXTEST = function(k,d){ wx.kind=k; wx.day=d; wx.drops.length=0; };
+  var cradlePane = pane('cradle');
+  var dfgPane = pane('dfg');
+
+  /* =================================================================
+   *  1. The weather monitor
+   * ================================================================= */
+
+  // WMO code -> [which sky to draw, what to call it]. Open-Meteo speaks
+  // this vocabulary; the drawing only cares about the seven broad kinds.
+  var WMO = {
+    0:['clear','clear sky'],
+    1:['few','mainly clear'], 2:['few','partly cloudy'], 3:['cloud','overcast'],
+    45:['fog','fog'], 48:['fog','freezing fog'],
+    51:['rain','light drizzle'], 53:['rain','drizzle'], 55:['rain','heavy drizzle'],
+    56:['rain','freezing drizzle'], 57:['rain','freezing drizzle'],
+    61:['rain','light rain'], 63:['rain','rain'], 65:['rain','heavy rain'],
+    66:['rain','freezing rain'], 67:['rain','freezing rain'],
+    71:['snow','light snow'], 73:['snow','snow'], 75:['snow','heavy snow'],
+    77:['snow','snow grains'],
+    80:['rain','rain showers'], 81:['rain','rain showers'], 82:['rain','violent showers'],
+    85:['snow','snow showers'], 86:['snow','heavy snow showers'],
+    95:['storm','thunderstorm'], 96:['storm','storm with hail'], 99:['storm','storm with hail']
+  };
+
+  // Four sky bands, top to bottom, then the silhouette and its lit windows.
+  var SKIES = {
+    'clear-day':  ['#2F6FBF','#4A87D0','#74A9E0','#A6CCEF','#16202B','#FFE9A8'],
+    'clear-night':['#080D28','#111A42','#1D2A5E','#2E3F77','#04060E','#FFE9A8'],
+    'few-day':    ['#4780C2','#6C9FD4','#95BEE4','#C2D8F0','#1A2430','#FFE9A8'],
+    'few-night':  ['#0D1434','#17204C','#243266','#33447C','#05070F','#FFE9A8'],
+    'cloud-day':  ['#7A8794','#8D98A4','#A2ABB5','#B8BFC6','#1F252B','#FFE3A0'],
+    'cloud-night':['#20272F','#2B333C','#373F49','#444D57','#080A0E','#FFE3A0'],
+    'fog-day':    ['#959C9C','#A5AAAA','#B3B7B6','#C2C4C2','#3A403F','#FFE3A0'],
+    'fog-night':  ['#262A2C','#313537','#3C4143','#484D4F','#0D1010','#FFE3A0'],
+    'rain-day':   ['#57646F','#67737E','#78838D','#8994A0','#1B2026','#FFDE90'],
+    'rain-night': ['#171D24','#20262E','#292F38','#333A44','#070910','#FFDE90'],
+    'snow-day':   ['#828C9B','#929BA9','#A2AAB6','#B3BAC4','#2A3038','#FFE3A0'],
+    'snow-night': ['#1F2531','#282F3C','#313847','#3B4252','#090C12','#FFE3A0'],
+    'storm-day':  ['#3A414C','#464E59','#535A66','#606874','#141820','#FFD070'],
+    'storm-night':['#10141A','#171B23','#1E232B','#262B34','#04060A','#FFD070']
+  };
+
+  // One cloud, drawn as chunky rects on a 20x9 grid. Reused at three
+  // offsets and two tints rather than storing three clouds.
+  var CLOUD = [[5,2,10,3],[2,4,16,3],[0,6,20,2]];
+  // The skyline. Nothing real — a low town with one tall thing in it.
+  var SKYLINE = [[0,3],[5,2],[9,5],[13,3],[17,2],[22,4],[26,7],[30,3],[35,2],
+                 [40,5],[44,3],[49,2],[53,6],[58,3],[62,2],[66,4],[70,2],[75,3],[79,2]];
+
+  var wx = {
+    kind: 'few',            // which sky is being drawn
+    day: true,
+    desc: '',
+    tz: '',                 // the station's own zone, for the title-bar clock
+    ready: false,
+    t: 0,                   // seconds of animation, for drift and twinkle
+    flash: 0,               // lightning: seconds of glare left
+    nextFlash: 4,
+    drops: [],
+    stars: []
+  };
+
+  // Stars sit still and only change brightness, so their positions are
+  // drawn once from a fixed sequence rather than re-rolled every frame.
+  (function seedStars(){
+    var seed = 20220419;
+    function rnd(){ seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; }
+    for (var i = 0; i < 26; i++){
+      wx.stars.push({ x: Math.floor(rnd() * 84), y: Math.floor(rnd() * 19),
+                      p: rnd() * 6.28, s: 0.6 + rnd() * 1.8 });
+    }
+  })();
+
+  function px(g, x, y, w, h, c){ g.fillStyle = c; g.fillRect(x | 0, y | 0, w, h); }
+
+  function drawCloud(g, x, y, tint, shade){
+    for (var i = 0; i < CLOUD.length; i++){
+      var r = CLOUD[i];
+      // The top lump catches the light; the underside does not.
+      px(g, x + r[0], y + r[1], r[2], r[3], i === 0 ? tint : shade);
+      // Wrap, so a cloud leaving the right edge is already arriving at the left.
+      if (x + r[0] + r[2] > 84) px(g, x + r[0] - 84, y + r[1], r[2], r[3], i === 0 ? tint : shade);
+      if (x + r[0] < 0) px(g, x + r[0] + 84, y + r[1], r[2], r[3], i === 0 ? tint : shade);
+    }
+  }
+
+  function skyDraw(dt){
+    if (!skyPane) return;
+    var g = skyPane.g;
+    var pal = SKIES[wx.kind + '-' + (wx.day ? 'day' : 'night')] || SKIES['few-day'];
+
+    if (!calm) wx.t += dt;
+    var t = wx.t;
+
+    // --- the sky itself: four bands of six rows -------------------
+    for (var b = 0; b < 4; b++) px(g, 0, b * 6, 84, 6, pal[b]);
+
+    // --- stars, when there is any chance of seeing them -----------
+    if (!wx.day && (wx.kind === 'clear' || wx.kind === 'few')){
+      for (var i = 0; i < wx.stars.length; i++){
+        var s = wx.stars[i];
+        var a = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(t * s.s + s.p));
+        g.globalAlpha = calm ? 0.8 : a;
+        px(g, s.x, s.y, 1, 1, '#FFFFFF');
+      }
+      g.globalAlpha = 1;
+    }
+
+    // --- sun or moon ----------------------------------------------
+    if (wx.kind === 'clear' || wx.kind === 'few'){
+      var cx = 64, cy = 8;
+      if (wx.day){
+        // A pixel sun: a 7x7 body with the corners knocked off, and rays
+        // that breathe rather than spin — spinning reads as a loading dial.
+        if (wx.kind === 'clear'){
+          var rr = 5 + (calm ? 0 : Math.round(Math.sin(t * 1.4) * 0.5 + 0.5));
+          g.globalAlpha = 0.30;
+          px(g, cx - rr, cy - 1, rr * 2 + 1, 3, '#FFF0B0');
+          px(g, cx - 1, cy - rr, 3, rr * 2 + 1, '#FFF0B0');
+          g.globalAlpha = 1;
+        }
+        px(g, cx - 2, cy - 3, 5, 7, '#FFD84A');
+        px(g, cx - 3, cy - 2, 7, 5, '#FFD84A');
+        px(g, cx - 1, cy - 2, 3, 3, '#FFF0A8');
+      } else {
+        px(g, cx - 2, cy - 3, 5, 7, '#E8E6D2');
+        px(g, cx - 3, cy - 2, 7, 5, '#E8E6D2');
+        // The bite that makes it a crescent is painted in the sky's own
+        // colour, so it works against every palette without a mask.
+        px(g, cx - 3, cy - 3, 4, 6, pal[1]);
+        px(g, cx - 4, cy - 2, 4, 4, pal[1]);
+      }
+    }
+
+    // --- cloud cover ----------------------------------------------
+    var cover = { clear:0, few:1, cloud:3, fog:0, rain:3, snow:2, storm:3 }[wx.kind] || 0;
+    if (cover){
+      var speed = wx.kind === 'storm' ? 3.4 : (wx.kind === 'rain' ? 2.4 : 1.5);
+      var tint  = wx.day ? '#EDEFF2' : '#5A6270';
+      var shade = wx.day ? (wx.kind === 'clear' || wx.kind === 'few' ? '#CBD2DA' : '#9AA3AC') : '#3D4450';
+      for (var c = 0; c < cover; c++){
+        var x = ((t * speed * (1 + c * 0.35) + c * 31) % 104) - 20;
+        drawCloud(g, Math.round(x), 1 + c * 4, tint, shade);
+      }
+    }
+
+    // --- fog: flat bands sliding past each other ------------------
+    if (wx.kind === 'fog'){
+      g.globalAlpha = 0.5;
+      for (var f = 0; f < 3; f++){
+        var fx = ((t * (0.7 + f * 0.5) + f * 40) % 124) - 40;
+        px(g, Math.round(fx), 7 + f * 5, 40, 2, wx.day ? '#E4E7E4' : '#77807F');
+      }
+      g.globalAlpha = 1;
+    }
+
+    // --- the skyline, before the weather falls in front of it -----
+    for (var k = 0; k < SKYLINE.length; k++){
+      var col = SKYLINE[k][0], hgt = SKYLINE[k][1];
+      var wdt = (k + 1 < SKYLINE.length ? SKYLINE[k + 1][0] : 84) - col;
+      px(g, col, 30 - hgt, wdt, hgt, pal[4]);
+      // A couple of windows stay on after dark. Fixed, not random, so the
+      // town does not flicker like a fault.
+      if (!wx.day && wdt > 3 && hgt > 2 && k % 3 === 0){
+        px(g, col + 1, 30 - hgt + 1, 1, 1, pal[5]);
+        if (hgt > 4) px(g, col + wdt - 2, 30 - hgt + 3, 1, 1, pal[5]);
+      }
+    }
+
+    // --- what is falling ------------------------------------------
+    if (wx.kind === 'rain' || wx.kind === 'snow' || wx.kind === 'storm'){
+      var snowy = wx.kind === 'snow';
+      var want = snowy ? 26 : 34;
+      while (wx.drops.length < want){
+        wx.drops.push({ x: Math.random() * 84, y: Math.random() * 30,
+                        v: snowy ? 7 + Math.random() * 5 : 46 + Math.random() * 26,
+                        p: Math.random() * 6.28 });
+      }
+      wx.drops.length = want;
+      for (var d = 0; d < wx.drops.length; d++){
+        var o = wx.drops[d];
+        if (!calm){
+          o.y += o.v * dt;
+          o.x += snowy ? Math.sin(wx.t * 1.6 + o.p) * 5 * dt : 9 * dt;
+          if (o.y > 30){ o.y = -2; o.x = Math.random() * 84; }
+          if (o.x > 84) o.x -= 84;
+        }
+        if (snowy) px(g, o.x, o.y, 1, 1, '#F2F6FA');
+        else px(g, o.x, o.y, 1, wx.kind === 'storm' ? 3 : 2, wx.day ? '#C8D6E4' : '#7E93A8');
+      }
+    } else {
+      wx.drops.length = 0;
+    }
+
+    // --- lightning -------------------------------------------------
+    if (wx.kind === 'storm' && !calm){
+      wx.nextFlash -= dt;
+      if (wx.nextFlash <= 0){ wx.flash = 0.16; wx.nextFlash = 3 + Math.random() * 7; }
+      if (wx.flash > 0){
+        wx.flash -= dt;
+        // Two quick beats rather than one long glare, which is what a
+        // strike actually looks like from a long way off.
+        var lit = wx.flash > 0.12 || (wx.flash < 0.08 && wx.flash > 0.05);
+        if (lit){
+          g.globalAlpha = 0.55;
+          px(g, 0, 0, 84, 24, '#FFFFFF');
+          g.globalAlpha = 1;
+          px(g, 26, 8, 1, 5, '#FFF8C0');
+          px(g, 25, 13, 1, 4, '#FFF8C0');
+          px(g, 27, 17, 1, 4, '#FFF8C0');
+        }
+      }
+    }
+  }
+
+  /* ---- where the visitor is, and what the sky is doing there ------- *
+   * Placed from the caller's IP by /api/where, so the front door never
+   * raises a browser permission prompt for what is, after all, an
+   * ornament. If that misses, the browser's own time zone names a city
+   * often enough to be worth a geocode. If that misses too, the monitor
+   * says so and keeps drawing a sky from the local clock — an instrument
+   * that admits it is not reading anything is better than a fake number.
+   */
+  var WX_URL = 'https://api.open-meteo.com/v1/forecast';
+  var GEO_URL = 'https://geocoding-api.open-meteo.com/v1/search';
+  // The three countries that would not thank you for Celsius.
+  var FAHRENHEIT = { US:1, LR:1, MM:1, KY:1, PW:1, FM:1, MH:1, BS:1, BZ:1 };
+
+  var wxPlace = null;      // { lat, lon, label, cc, tz }
+  var wxTimer = null;
+
+  function el(id){ return document.getElementById(id); }
+  function setText(id, s){ var n = el(id); if (n) n.textContent = s; }
+
+  function getJson(url){
+    return fetch(url, { headers: { Accept: 'application/json' } }).then(function(r){
+      if (!r.ok) throw new Error('http ' + r.status);
+      return r.json();
+    });
+  }
+
+  function tzTail(){
+    // "America/Argentina/Buenos_Aires" -> "Buenos Aires". Not a real
+    // geocoder, but zone names are city names far more often than not.
+    var tz = '';
+    try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) {}
+    var bits = tz.split('/');
+    var tail = bits[bits.length - 1] || '';
+    return { tz: tz, city: tail.replace(/_/g, ' ') };
+  }
+
+  function findPlace(){
+    return getJson('/api/where').then(function(j){
+      if (!j || !j.ok) throw new Error(j && j.reason || 'not located');
+      var label = j.city ? j.city + (j.country ? ', ' + j.country : '') : (j.country || 'your area');
+      return { lat: j.lat, lon: j.lon, label: label, cc: j.countryCode || '', tz: j.timezone || '' };
+    }).catch(function(){
+      var guess = tzTail();
+      if (!guess.city) throw new Error('no zone');
+      return getJson(GEO_URL + '?count=1&language=en&format=json&name=' +
+                     encodeURIComponent(guess.city)).then(function(j){
+        var h = j && j.results && j.results[0];
+        if (!h) throw new Error('no match');
+        return { lat: h.latitude, lon: h.longitude,
+                 label: h.name + (h.country ? ', ' + h.country : ''),
+                 cc: h.country_code || '', tz: h.timezone || guess.tz };
+      });
+    });
+  }
+
+  function loadWeather(){
+    if (!wxPlace) return;
+    var f = !!FAHRENHEIT[wxPlace.cc];
+    var url = WX_URL + '?latitude=' + wxPlace.lat.toFixed(3) + '&longitude=' + wxPlace.lon.toFixed(3) +
+      '&current=temperature_2m,is_day,weather_code,wind_speed_10m' +
+      '&daily=temperature_2m_max,temperature_2m_min&forecast_days=1&timezone=auto' +
+      (f ? '&temperature_unit=fahrenheit&wind_speed_unit=mph' : '');
+
+    getJson(url).then(function(j){
+      var c = j && j.current;
+      if (!c) throw new Error('no reading');
+      var pair = WMO[c.weather_code] || ['few', 'weather unclear'];
+      wx.kind = pair[0];
+      wx.day = c.is_day !== 0;
+      wx.ready = true;
+      if (j.timezone) wxPlace.tz = j.timezone;
+      wx.tz = wxPlace.tz;
+
+      setText('wx-temp', Math.round(c.temperature_2m) + '°');
+      setText('wx-desc', pair[1]);
+
+      var d = j.daily || {};
+      var hi = d.temperature_2m_max && d.temperature_2m_max[0];
+      var lo = d.temperature_2m_min && d.temperature_2m_min[0];
+      var bits = [];
+      if (typeof hi === 'number' && typeof lo === 'number'){
+        bits.push('H' + Math.round(hi) + '° L' + Math.round(lo) + '°');
+      }
+      if (typeof c.wind_speed_10m === 'number'){
+        bits.push(Math.round(c.wind_speed_10m) + (f ? 'mph' : 'km/h'));
+      }
+      setText('wx-wind', bits.join(' · ') || ' ');
+      setText('wx-place', wxPlace.label);
+      wake();
+    }).catch(function(){
+      // A reading that failed is left showing whatever it last had, with
+      // the description saying why, rather than blanked back to dashes.
+      setText('wx-desc', wx.ready ? 'last good reading' : 'station unreachable');
+      if (!wx.ready) setText('wx-place', wxPlace.label);
+    });
+  }
+
+  function startWeather(){
+    if (wxTimer) return;                       // already running
+    // Fifteen minutes. Open-Meteo updates a good deal less often than that,
+    // and this is a widget in the corner of a desktop.
+    wxTimer = setInterval(function(){ if (!document.hidden) loadWeather(); }, 15 * 60 * 1000);
+    if (wxPlace){ loadWeather(); return; }
+    findPlace().then(function(p){
+      wxPlace = p;
+      wx.tz = p.tz;
+      setText('wx-place', p.label);
+      loadWeather();
+    }).catch(function(){
+      // Nothing placed us. Draw the sky the local clock implies and say so.
+      var h = new Date().getHours();
+      wx.day = h >= 7 && h < 19;
+      wx.tz = tzTail().tz;
+      setText('wx-temp', '—°');
+      setText('wx-desc', 'no station');
+      setText('wx-wind', 'location unknown');
+      setText('wx-place', 'somewhere with a sky');
+      wake();
+    });
+  }
+  function stopWeather(){
+    if (wxTimer) clearInterval(wxTimer);
+    wxTimer = null;
+  }
+
+  /* =================================================================
+   *  2. Newton's cradle
+   *
+   *  Five real pendulums. Each one is integrated as it would be on
+   *  paper — angular acceleration is -(g/L)sin(theta), not a spring or
+   *  a canned easing curve — with a little air resistance. When two
+   *  neighbours touch, the horizontal velocities exchange through an
+   *  equal-mass elastic impulse, which is the whole trick: one ball in
+   *  at the left, one ball out at the right, two in and two out.
+   *
+   *  Drag a ball and it becomes immovable for as long as you hold it,
+   *  so it shoves the others rather than being shoved.
+   * ================================================================= */
+
+  var CR = {
+    n: 5,
+    r: 3.9,          // collision radius, a shade under the drawn one so the
+    draw: 4,         // balls read as touching at rest without jittering
+    gap: 8,          // pivot spacing = the drawn diameter
+    len: 26,         // string length, in the same pixels
+    g: 850,          // gravity in those pixels: about a 1.1 s swing
+    air: 0.10,       // s^-1 — a cradle on a desk runs down in a minute or so
+    e: 0.992,        // restitution; steel on steel is very nearly perfect
+    top: 5,          // y of the pivots
+    lim: 1.05        // radians a ball is allowed to reach
+  };
+  var crX = [], crTh = [], crW = [];
+  for (var ci = 0; ci < CR.n; ci++){
+    crX.push(42 - (CR.n - 1) * CR.gap / 2 + ci * CR.gap);
+    crTh.push(0); crW.push(0);
+  }
+  crTh[0] = -0.62;                               // it arrives mid-swing
+
+  var crDrag = -1, crIdle = 0, crTouched = false;
+  var crLastSide = null;
+  var crPeriod = 0, crLastCross = 0, crClock = 0;
+
+  // An 8-pixel ball, one row at a time: [first column, width]. Drawn from
+  // a table rather than an arc so the edge is stepped, not feathered.
+  var BALL = [[2,4],[1,6],[0,8],[0,8],[0,8],[0,8],[1,6],[2,4]];
+  var BALL_SHADE = ['#D2D8DF','#BEC5CD','#A2AAB4','#949CA6','#848C97','#727A85','#5F6771','#4E555E'];
+
+  function ballX(i){ return crX[i] + CR.len * Math.sin(crTh[i]); }
+  function ballY(i){ return CR.top + CR.len * Math.cos(crTh[i]); }
+  function ballV(i){ return CR.len * crW[i] * Math.cos(crTh[i]); }   // horizontal speed
+  function setBallV(i, v){
+    var c = Math.cos(crTh[i]);
+    crW[i] = c > 0.2 ? v / (CR.len * c) : 0;
+  }
+
+  function crCollide(){
+    for (var i = 0; i < CR.n - 1; i++){
+      var overlap = 2 * CR.r - (ballX(i + 1) - ballX(i));
+      if (overlap <= 0) continue;
+
+      var va = ballV(i), vb = ballV(i + 1);
+      // A dragged ball is treated as infinitely heavy: it keeps its own
+      // velocity and hands the impulse entirely to its neighbour.
+      var ma = i === crDrag ? 1e6 : 1;
+      var mb = (i + 1) === crDrag ? 1e6 : 1;
+
+      if (vb - va < 0){                        // still closing, so they hit
+        var sum = ma + mb;
+        var na = (ma * va + mb * vb + mb * CR.e * (vb - va)) / sum;
+        var nb = (ma * va + mb * vb + ma * CR.e * (va - vb)) / sum;
+        setBallV(i, na); setBallV(i + 1, nb);
+      }
+
+      // Then push them apart, so the next frame does not find them still
+      // inside one another and fire a second, phantom impulse.
+      var share = mb / (ma + mb);
+      var ca = Math.cos(crTh[i]), cb = Math.cos(crTh[i + 1]);
+      if (ma < 1e5 && ca > 0.2) crTh[i]     -= (overlap * share)       / (CR.len * ca);
+      if (mb < 1e5 && cb > 0.2) crTh[i + 1] += (overlap * (1 - share)) / (CR.len * cb);
+    }
+  }
+
+  function crStep(dt){
+    // Four substeps: the collisions are resolved by position, and at one
+    // step per frame a fast ball can pass clean through its neighbour.
+    var sub = 4, h = dt / sub;
+    for (var s = 0; s < sub; s++){
+      for (var i = 0; i < CR.n; i++){
+        if (i === crDrag) continue;
+        crW[i] += -(CR.g / CR.len) * Math.sin(crTh[i]) * h;
+        crW[i] *= (1 - CR.air * h);
+        crTh[i] += crW[i] * h;
+        if (crTh[i] >  CR.lim){ crTh[i] =  CR.lim; if (crW[i] > 0) crW[i] = 0; }
+        if (crTh[i] < -CR.lim){ crTh[i] = -CR.lim; if (crW[i] < 0) crW[i] = 0; }
+      }
+      crCollide();
+      crCollide();                              // a second pass carries a
+    }                                           // hit along a row of five
+
+    // The measured swing, taken from the left ball crossing the vertical.
+    // It is the honest number, not 2*pi*sqrt(L/g) written out.
+    crClock += dt;
+    if (crDrag !== 0 && Math.abs(crTh[0]) > 0.05){
+      var side = crTh[0] > 0;
+      if (crLastSide !== null && side !== crLastSide){
+        var half = crClock - crLastCross;
+        if (half > 0.2 && half < 4){
+          crPeriod = crPeriod ? crPeriod * 0.7 + half * 2 * 0.3 : half * 2;
+        }
+        crLastCross = crClock;
+      }
+      crLastSide = side;
+    }
+
+    // Left alone it winds down, as it should. Then something taps it.
+    var peak = 0;
+    for (var k = 0; k < CR.n; k++) peak = Math.max(peak, Math.abs(crTh[k]));
+    if (crDrag < 0 && peak < 0.05){
+      crIdle += dt;
+      if (crIdle > 2.4 && !calm){
+        crIdle = 0;
+        var lift = Math.random() < 0.28 ? 2 : 1;      // sometimes two go up
+        var left = Math.random() < 0.5;
+        for (var m = 0; m < lift; m++){
+          var idx = left ? m : CR.n - 1 - m;
+          crTh[idx] = (left ? -1 : 1) * (0.5 + Math.random() * 0.22);
+          crW[idx] = 0;
+        }
+      }
+    } else if (peak >= 0.05){
+      crIdle = 0;
+    }
+  }
+
+  function crDraw(){
+    if (!cradlePane) return;
+    var g = cradlePane.g;
+    px(g, 0, 0, 84, 46, '#161A20');
+    // A little light on the back wall, so the balls have something to be in
+    // front of rather than floating in a black box.
+    px(g, 8, 6, 68, 30, '#1D222A');
+    px(g, 12, 8, 60, 26, '#232936');
+
+    // frame: two uprights, a top rail and a base
+    px(g, 13, 4, 3, 36, '#6E747C');  px(g, 13, 4, 1, 36, '#9AA1A9');
+    px(g, 68, 4, 3, 36, '#6E747C');  px(g, 70, 4, 1, 36, '#4A5058');
+    px(g, 13, 3, 58, 3, '#8A9098');  px(g, 13, 3, 58, 1, '#B9BFC6');
+    px(g, 9, 40, 66, 4, '#5A6068');  px(g, 9, 40, 66, 1, '#8A9098');
+    px(g, 9, 43, 66, 1, '#3A3F46');
+
+    for (var i = 0; i < CR.n; i++){
+      var bx = ballX(i), by = ballY(i);
+      // the string, stepped down one row at a time so it stays 1px hard
+      var ty = by - CR.draw;
+      for (var y = CR.top; y < ty; y++){
+        var f = (y - CR.top) / (ty - CR.top || 1);
+        px(g, Math.round(crX[i] + (bx - crX[i]) * f), y, 1, 1, '#9EA5AD');
+      }
+      px(g, Math.round(crX[i]) - 1, CR.top - 1, 3, 2, '#C4CAD1');   // the eyelet
+
+      var ox = Math.round(bx) - CR.draw, oy = Math.round(by) - CR.draw;
+      for (var row = 0; row < 8; row++){
+        px(g, ox + BALL[row][0], oy + row, BALL[row][1], 1, BALL_SHADE[row]);
+      }
+      px(g, ox + 2, oy + 1, 2, 2, '#F2F5F8');                        // the glint
+      if (i === crDrag) px(g, ox + 2, oy + 5, 4, 1, '#FFD54A');      // held
+    }
+  }
+
+  /* ---- dragging a ball -------------------------------------------- *
+   * The one ornament that takes the pointer, and the only place the
+   * rail's pointer-events:none is lifted. It is a bare canvas with no
+   * tabindex and nothing behind it, so it cannot swallow a click meant
+   * for a desktop icon and puts nothing focusable inside the
+   * aria-hidden rail. Capture keeps the grab alive off the edge.
+   */
+  function crLocal(e){
+    var box = cradlePane.el.getBoundingClientRect();
+    if (!box.width) return null;
+    return { x: (e.clientX - box.left) * (84 / box.width),
+             y: (e.clientY - box.top) * (46 / box.height) };
+  }
+
+  if (cradlePane){
+    var view = cradlePane.el;
+    var grabT = 0;
+
+    view.addEventListener('pointerdown', function(e){
+      var p = crLocal(e);
+      if (!p) return;
+      var best = -1, bestD = 7;                 // a little slack around each ball
+      for (var i = 0; i < CR.n; i++){
+        var dx = ballX(i) - p.x, dy = ballY(i) - p.y;
+        var d = Math.sqrt(dx * dx + dy * dy);
+        if (d < bestD){ bestD = d; best = i; }
+      }
+      if (best < 0) return;
+      e.preventDefault();
+      crDrag = best;
+      crW[best] = 0;
+      crTouched = true;
+      grabT = 0;
+      view.classList.add('pulling');
+      try { view.setPointerCapture(e.pointerId); } catch (err) {}
+      wake();
+    });
+
+    view.addEventListener('pointermove', function(e){
+      if (crDrag < 0) return;
+      var p = crLocal(e);
+      if (!p) return;
+      e.preventDefault();
+      var want = (p.x - crX[crDrag]) / CR.len;
+      want = Math.max(-0.86, Math.min(0.86, want));
+      var next = Math.asin(want);
+      // The release speed is the speed of the hand, so a flick throws the
+      // ball and a slow lift lets it go from rest.
+      var dt = Math.max(0.008, (performance.now() - grabT) / 1000);
+      if (grabT) crW[crDrag] = Math.max(-9, Math.min(9, (next - crTh[crDrag]) / dt));
+      grabT = performance.now();
+      crTh[crDrag] = next;
+    });
+
+    function release(e){
+      if (crDrag < 0) return;
+      crDrag = -1;
+      view.classList.remove('pulling');
+      try { view.releasePointerCapture(e.pointerId); } catch (err) {}
+    }
+    view.addEventListener('pointerup', release);
+    view.addEventListener('pointercancel', release);
+  }
+
+  /* =================================================================
+   *  3. The defragmenter
+   *
+   *  Windows 98 could hold a room. Nothing here is a real disk: 168
+   *  blocks, some of them scattered, and a head that walks the drive
+   *  moving each stray one down to the first free space it can find.
+   * ================================================================= */
+
+  var DF = { cols: 21, rows: 8, cell: 4 };
+  var DF_COLOR = ['#1C1C1C', '#2B4FD0', '#C03430', '#28B83C', '#D8C426'];
+  //               free       used       scattered  reading   writing
+  var dfBlocks = [], dfHead = 0, dfPhase = 0, dfHold = 0, dfSrc = -1, dfDst = -1;
+  var dfClock = 0, dfDone = false;
+  var DF_ACTS = ['Reading drive', 'Moving data', 'Writing block', 'Checking drive'];
+  var dfAct = 0;
+
+  function dfScramble(){
+    dfBlocks.length = 0;
+    var total = DF.cols * DF.rows;
+    for (var i = 0; i < total; i++){
+      var r = Math.random();
+      dfBlocks.push(r < 0.42 ? 1 : (r < 0.62 ? 2 : 0));
+    }
+    dfHead = 0; dfPhase = 0; dfSrc = -1; dfDst = -1; dfDone = false; dfHold = 0;
+  }
+  dfScramble();
+
+  function dfStep(){
+    var total = DF.cols * DF.rows;
+    if (dfDone){
+      dfHold -= 1;
+      if (dfHold <= 0) dfScramble();
+      return;
+    }
+    if (dfPhase === 0){
+      // The head sweeps one block at a time whether or not there is
+      // anything to do there, so the percentage creeps the way it did —
+      // the whole appeal of the thing was that it took all afternoon.
+      if (dfHead >= total){
+        dfDone = true; dfHold = 24; dfAct = 3;
+        return;
+      }
+      if (dfBlocks[dfHead] !== 2){ dfHead++; dfAct = 3; return; }
+      dfSrc = dfHead;
+      dfBlocks[dfSrc] = 3;                       // reading
+      dfDst = -1;
+      for (var i = 0; i < dfSrc; i++){ if (dfBlocks[i] === 0){ dfDst = i; break; } }
+      dfPhase = 1;
+      dfAct = 0;
+    } else if (dfPhase === 1){
+      if (dfDst >= 0){ dfBlocks[dfDst] = 4; dfAct = 2; }   // writing
+      else dfAct = 1;
+      dfPhase = 2;
+    } else {
+      if (dfDst >= 0){ dfBlocks[dfDst] = 1; dfBlocks[dfSrc] = 0; }
+      else dfBlocks[dfSrc] = 1;                  // nowhere to move it: leave it
+      dfHead++;
+      dfPhase = 0;
+    }
+  }
+
+  function dfDraw(){
+    if (!dfgPane) return;
+    var g = dfgPane.g;
+    px(g, 0, 0, 84, 32, '#101010');
+    for (var i = 0; i < dfBlocks.length; i++){
+      var c = i % DF.cols, r = (i / DF.cols) | 0;
+      px(g, c * DF.cell, r * DF.cell, 3, 3, DF_COLOR[dfBlocks[i]]);
+    }
+    var total = DF.cols * DF.rows || 1;
+    var pct = dfDone ? 100 : Math.min(99, Math.round(dfHead / total * 100));
+    setText('dfg-pct', pct + '%');
+    setText('dfg-act', dfDone ? 'Defragmentation complete' : DF_ACTS[dfAct]);
+  }
+
+  /* =================================================================
+   *  4. One frame for all three
+   * ================================================================= */
+
+  var rafId = null, lastT = 0;
+
+  // Under reduced motion nothing runs on its own: the loop draws a still
+  // frame and stops, and only a hand on the cradle or a fresh weather
+  // reading starts it again.
+  function busy(){
+    if (!calm) return true;
+    if (crDrag >= 0) return true;
+    for (var i = 0; i < CR.n; i++){
+      if (Math.abs(crTh[i]) > 0.02 || Math.abs(crW[i]) > 0.05) return true;
+    }
+    return false;
+  }
+
+  function onScreen(){
+    // offsetParent is null exactly when the rail is display:none, which is
+    // every width and height where it has been dropped.
+    return !!(wgWrap && wgWrap.offsetParent !== null);
+  }
+
+  function frame(now){
+    var dt = lastT ? (now - lastT) / 1000 : 0.016;
+    lastT = now;
+    // A tab that was in the background hands back a gap of many seconds.
+    // Integrating that in one go would fling the cradle through the frame.
+    if (dt > 0.05) dt = 0.05;
+
+    if (onScreen()){
+      skyDraw(dt);
+      if (!calm || crDrag >= 0 || busy()) crStep(dt);
+      crDraw();
+      if (!calm){
+        dfClock += dt;
+        while (dfClock > 0.33){ dfClock -= 0.33; dfStep(); }
+      }
+      dfDraw();
+    }
+
+    if (document.hidden || !busy()){ rafId = null; lastT = 0; return; }
+    rafId = requestAnimationFrame(frame);
+  }
+
+  // Anything that gives the loop something new to show calls this.
+  function wake(){
+    if (rafId !== null || !liveOn) return;
+    lastT = 0;
+    rafId = requestAnimationFrame(frame);
+  }
+
+  var liveOn = false;
+  function startLive(){
+    liveOn = true;
+    startWeather();
+    wake();
+  }
+  function stopLive(){
+    liveOn = false;
+    stopWeather();
+    if (rafId !== null) cancelAnimationFrame(rafId);
+    rafId = null; lastT = 0;
+  }
+
+  // A backgrounded tab gets no frames anyway; this stops the loop cleanly
+  // rather than leaving one queued, and picks it up again on return.
+  document.addEventListener('visibilitychange', function(){
+    if (document.hidden) return;
+    if (liveOn){ if (wxPlace) loadWeather(); wake(); }
+  });
 
   /* ---- the toggle -------------------------------------------------- */
   var cssLink = document.getElementById('w98-css');
@@ -2390,6 +3256,229 @@ footer{
   var stored = 'w98';
   try { stored = localStorage.getItem(KEY) === 'vanilla' ? 'vanilla' : 'w98'; } catch (e) {}
   setMode(stored, false);
+})();
+</script>
+
+<script>
+/* ==================================================================== *
+ *  Undocumented things.
+ *
+ *  Nothing in here changes how the cabinet works if it is never found.
+ *  Every one of them is additive: no existing handler is replaced, and
+ *  the card grid, the filters and the Windows 98 view all behave the
+ *  same whether or not any of this fires.
+ * ==================================================================== */
+(function eggs(){
+  'use strict';
+
+  var slots = [].slice.call(document.querySelectorAll('.card-slot'));
+  var ghost = document.querySelector('.ghost');
+  var calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---- 1. the corner of every card lifts ---------------------------- *
+   * Notes are assigned by hashing the slug, so a given drawer always has
+   * the same thing written under it however many times you look.       */
+  var NOTES = [
+    'built between midnight and four',
+    'the third attempt. the first two are not in here',
+    'this one was supposed to take an evening',
+    'nobody has ever clicked the thing in the corner',
+    'made because the idea would not go away',
+    'the hard part was not the part you can see',
+    'rewrote this twice and kept the first version',
+    'i still do not know if this one is any good',
+    'the data took longer than the drawer did',
+    'this started as a joke and stopped being one',
+    'there is a bug in here somewhere. probably',
+    'shipped at 3am, regretted at 9',
+    'the animation is the only reason this exists',
+    'one sitting. never touched again',
+    'the fourth idea. the first three were worse',
+    'i had to look up how to do this',
+    'kept in because it made me laugh once',
+    'the maths in this is genuinely correct',
+    'this was the easy one',
+    'took a whole weekend and looks like an hour',
+    'the good version of a bad idea',
+    'nothing here is faked. that was the whole rule',
+    'built on a train',
+    'the title took longer than the toy',
+    'somebody will find this note eventually',
+    'this drawer sticks a bit',
+    'i am not sure this counts as a contraption',
+    'the first thing that worked first time',
+    'made to test something else, then kept',
+    'this one is quietly my favourite',
+    'the boring part was the interesting part',
+    'do not look at the source of this one',
+    'it does more than it lets on',
+    'this took three goes to get the feel right',
+    'the whole thing hangs on one number',
+    'i built this instead of sleeping. obviously'
+  ];
+  function noteFor(key){
+    var n = 0;
+    for (var i = 0; i < key.length; i++) n = (n * 31 + key.charCodeAt(i)) >>> 0;
+    return NOTES[n % NOTES.length];
+  }
+
+  slots.forEach(function(slot){
+    var card = slot.querySelector('.card');
+    if (!card) return;
+    var slug = (card.getAttribute('href') || '').replace(/^\/|\/$/g, '');
+
+    var under = document.createElement('div');
+    under.className = 'under';
+    under.setAttribute('aria-hidden', 'true');
+    under.textContent = noteFor(slug || 'x');
+
+    var lift = document.createElement('div');
+    lift.className = 'lift';
+    lift.setAttribute('aria-hidden', 'true');
+
+    var grip = document.createElement('div');
+    grip.className = 'peel';
+    grip.setAttribute('aria-hidden', 'true');
+
+    slot.appendChild(under);
+    slot.appendChild(lift);
+    slot.appendChild(grip);
+
+    var dragging = false, ox = 0, oy = 0;
+    function progress(e){
+      var d = Math.max(0, (ox - e.clientX)) + Math.max(0, (e.clientY - oy));
+      return Math.max(0, Math.min(1, d / 95));
+    }
+    function apply(t){
+      var size = 26 + t * 150;
+      lift.style.borderWidth = '0 ' + size + 'px ' + size + 'px 0';
+      under.style.opacity = t;
+      card.style.opacity = 1 - t * 0.92;
+    }
+    grip.addEventListener('pointerdown', function(e){
+      dragging = true; ox = e.clientX; oy = e.clientY;
+      slot.classList.add('peeling');
+      grip.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    });
+    grip.addEventListener('pointermove', function(e){
+      if (!dragging) return;
+      apply(progress(e));
+    });
+    function release(e){
+      if (!dragging) return;
+      dragging = false;
+      slot.classList.remove('peeling');
+      try { grip.releasePointerCapture(e.pointerId); } catch (err) {}
+      lift.style.borderWidth = '';
+      under.style.opacity = '';
+      card.style.opacity = '';
+    }
+    grip.addEventListener('pointerup', release);
+    grip.addEventListener('pointercancel', release);
+    grip.addEventListener('pointerleave', release);
+  });
+
+  /* ---- 2. the drawer that is still being built ---------------------- */
+  if (ghost){
+    var p = ghost.querySelector('p');
+    var original = p ? p.innerHTML : '';
+    var taps = 0;
+    var LINES = [
+      'Drawer 82 is still<br>being built.',
+      'Still being built.',
+      'Yes, still.',
+      'It is a big drawer.',
+      'Look, these take a while.',
+      'You have clicked this seven times.',
+      'The drawer is fine. I am the problem.',
+      'Fine. It is not being built.<br>It never was.',
+      'There is no drawer 82.<br>There is only this.'
+    ];
+    ghost.style.cursor = 'pointer';
+    ghost.addEventListener('click', function(){
+      taps++;
+      if (!p) return;
+      if (taps < LINES.length){ p.innerHTML = LINES[taps]; }
+      else if (taps === LINES.length){
+        p.innerHTML = 'Go on then. Something will<br>go in here eventually.';
+      } else if (taps > LINES.length + 4){
+        taps = 0; p.innerHTML = original;
+      }
+    });
+  }
+
+  /* ---- 3. a small acknowledgement ----------------------------------- */
+  var buf = '';
+  var neal = null;
+  function say(html, ms){
+    if (!neal){
+      neal = document.createElement('div');
+      neal.id = 'lc-neal';
+      document.body.appendChild(neal);
+    }
+    neal.innerHTML = html;
+    requestAnimationFrame(function(){ neal.classList.add('on'); });
+    clearTimeout(say._t);
+    say._t = setTimeout(function(){
+      neal.classList.remove('on');
+    }, ms || 4200);
+  }
+
+  /* ---- 4. up up down down ------------------------------------------- */
+  var KONAMI = ['arrowup','arrowup','arrowdown','arrowdown','arrowleft','arrowright','arrowleft','arrowright','b','a'];
+  var kbuf = [];
+
+  function shuffle(){
+    var visible = slots.filter(function(s){ return !s.hidden; });
+    if (!visible.length) return;
+    visible.forEach(function(s){
+      s.style.setProperty('--sx', ((Math.random() - 0.5) * 90).toFixed(1) + 'px');
+      s.style.setProperty('--sy', ((Math.random() - 0.5) * 60).toFixed(1) + 'px');
+      s.style.setProperty('--sr', ((Math.random() - 0.5) * 14).toFixed(1) + 'deg');
+    });
+    var grid = document.querySelector('.grid');
+    document.body.classList.add('shuffling');
+    setTimeout(function(){
+      // put them back in a different order, which is a real reshuffle and
+      // not an animation — the cabinet stays shuffled until you reload
+      var order = visible.slice().sort(function(){ return Math.random() - 0.5; });
+      order.forEach(function(s){ grid.insertBefore(s, ghost || null); });
+      if (ghost) grid.appendChild(ghost);
+      document.body.classList.remove('shuffling');
+    }, calm ? 0 : 640);
+    say('The cabinet has been reshuffled. It will sort itself out when you reload.', 4600);
+  }
+
+  window.addEventListener('keydown', function(e){
+    var t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+    var k = (e.key || '').toLowerCase();
+
+    kbuf.push(k);
+    if (kbuf.length > KONAMI.length) kbuf.shift();
+    if (kbuf.length === KONAMI.length && kbuf.join(',') === KONAMI.join(',')){
+      kbuf = [];
+      shuffle();
+      return;
+    }
+
+    if (k.length !== 1) return;
+    buf = (buf + k).slice(-8);
+    if (buf.indexOf('neal') >= 0){
+      buf = '';
+      say('Yes — this whole cabinet is standing on the shoulders of ' +
+          '<b>neal.fun</b>. If you have not been, go there instead of here.', 5200);
+    }
+  });
+
+  window.__eggs = {
+    notes: slots.length,
+    noteFor: noteFor,
+    ghostTaps: function(){ return ghost ? ghost.querySelector('p').innerHTML : ''; },
+    konami: KONAMI.join(''),
+    say: say
+  };
 })();
 </script>
 
