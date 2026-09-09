@@ -8,6 +8,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const store = require('./store');   // SQLite on the Railway volume; degrades to off
 
 const ROOT = path.join(__dirname, 'public');
 const PORT = process.env.PORT || 3000;
@@ -114,6 +115,53 @@ async function fetchUpstream(url, headers) {
 
 
 /* ------------------------------------------------------------------ *
+ *  Coarse geolocation.
+ *
+ *  One address in, one city out. Shares /api/where's six-hour cache, so
+ *  a visitor who has already been placed for the desktop widget costs
+ *  nothing extra here. The address is a local variable and a cache key
+ *  in a Map that dies with the process; it is never written anywhere.
+ *  Returns null rather than throwing — an unplaceable visitor is normal.
+ * ------------------------------------------------------------------ */
+const PRIVATE_IP =
+  /^(::1$|::ffff:127\.|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|169\.254\.|f[cd])/i;
+
+async function geoLookup(ip) {
+  const key = 'where:' + ip;
+  const hit = cacheGet(key);
+  if (hit) return hit.body && hit.body.ok ? hit.body : null;
+
+  const routable = ip && ip !== 'unknown' && !PRIVATE_IP.test(ip);
+  try {
+    const up = await fetchUpstream(
+      'http://ip-api.com/json/' + (routable ? encodeURIComponent(ip) : '') +
+      '?fields=status,country,countryCode,city,regionName,lat,lon,timezone',
+      { Accept: 'application/json' });
+    if (up.status >= 400) return null;
+
+    let j;
+    try { j = JSON.parse(up.body); } catch (e) { return null; }
+    if (!j || j.status !== 'success') return null;
+
+    const body = {
+      ok: true,
+      city: j.city || '',
+      region: j.regionName || '',
+      country: j.country || '',
+      countryCode: j.countryCode || '',
+      lat: typeof j.lat === 'number' ? j.lat : null,
+      lon: typeof j.lon === 'number' ? j.lon : null,
+      timezone: j.timezone || '',
+    };
+    cacheSet(key, 200, body, 6 * 60 * 60 * 1000);
+    return body;
+  } catch (e) {
+    return null;
+  }
+}
+
+
+/* ------------------------------------------------------------------ *
  *  Text generation (Groq).
  *
  *  One route, one prompt table, one rate limiter, shared by every toy
@@ -174,6 +222,27 @@ function rateCheck(ip) {
     }
   }
   return { ok: true, remaining: RATE_MAX - hits.length };
+}
+
+/* The generate limiter is 20/hour and shared. Casting a bottle writes text
+   that other people will read, so it gets its own, much meaner allowance. */
+const CAST_MAX = 6;
+const castHits = new Map();
+function castCheck(ip) {
+  const now = Date.now();
+  let hits = (castHits.get(ip) || []).filter((t) => now - t < RATE_WINDOW);
+  if (hits.length >= CAST_MAX) {
+    castHits.set(ip, hits);
+    return { ok: false, retryAfter: Math.ceil((RATE_WINDOW - (now - hits[0])) / 1000) };
+  }
+  hits.push(now);
+  castHits.set(ip, hits);
+  if (castHits.size > 5000) {
+    for (const [k, v] of castHits) {
+      if (!v.length || now - v[v.length - 1] > RATE_WINDOW) castHits.delete(k);
+    }
+  }
+  return { ok: true, remaining: CAST_MAX - hits.length };
 }
 
 function readBody(req) {
@@ -962,6 +1031,68 @@ async function handleApi(req, res, url) {
     return sendJson(res, 200, { text: out.text, model: out.model, ms: ms, remaining: gate.remaining });
   }
 
+  // --- who else is here --------------------------------------------
+  //
+  // The address is used once, here, to ask which city it is, and is then
+  // gone: it is never a column, never a log line, never a cache key beyond
+  // the six-hour geocode this shares with /api/where. What reaches the
+  // database is a city name and a lat/lon rounded to one decimal place.
+  //
+  // People are counted by a random token their own browser made up. That
+  // is the only identifier, and it identifies a browser, not a person.
+  if (path === '/api/presence') {
+    if (!store.ready()) return sendJson(res, 200, { ok: false, why: 'no_store' });
+
+    if (req.method === 'POST') {
+      let body = {};
+      try { body = JSON.parse(await readBody(req) || '{}'); } catch (e) { body = {}; }
+      const token = typeof body.token === 'string' ? body.token : '';
+
+      let place = {};
+      try {
+        const ip = clientIp(req);                 // in memory only, never stored
+        const p = await geoLookup(ip);
+        if (p) {
+          // same one-decimal coarsening the store applies, so nothing finer
+          // than the stored value ever reaches a browser
+          const round1 = (n) => (typeof n === 'number' && isFinite(n)) ? Math.round(n * 10) / 10 : null;
+          place = { city: p.city, country: p.country, cc: p.countryCode,
+                    lat: round1(p.lat), lon: round1(p.lon) };
+        }
+      } catch (e) { /* an unplaceable visitor still counts */ }
+
+      const w = store.seen(token, place);
+      if (!w.ok) return sendJson(res, 400, { ok: false, why: w.why });
+      return sendJson(res, 200, Object.assign({ you: place.city ? place : null }, store.roster()));
+    }
+    return sendJson(res, 200, store.roster());
+  }
+
+  // --- message in a bottle -----------------------------------------
+  if (path === '/api/bottle') {
+    if (!store.ready()) return sendJson(res, 200, { ok: false, why: 'no_store' });
+
+    if (req.method === 'POST') {
+      const gate = castCheck(clientIp(req));
+      if (!gate.ok) {
+        return sendJson(res, 429, { ok: false, why: 'too_many', retryAfter: gate.retryAfter });
+      }
+      let body = {};
+      try { body = JSON.parse(await readBody(req) || '{}'); }
+      catch (e) { return sendJson(res, 400, { ok: false, why: 'bad_body' }); }
+      const out = store.castBottle(body.text, body.days);
+      return sendJson(res, out.ok ? 200 : 400, out);
+    }
+    return sendJson(res, 200, store.findBottle());
+  }
+
+  if (path === '/api/bottle/found' && req.method === 'POST') {
+    if (!store.ready()) return sendJson(res, 200, { ok: false, why: 'no_store' });
+    let body = {};
+    try { body = JSON.parse(await readBody(req) || '{}'); } catch (e) { body = {}; }
+    return sendJson(res, 200, store.markFound(body.id));
+  }
+
   // --- which optional keys are configured --------------------------
   // Lets a toy render an honest "needs a key" state instead of failing.
   if (path === '/api/keys') {
@@ -970,6 +1101,7 @@ async function handleApi(req, res, url) {
       tmdb: !!process.env.TMDB_API_KEY,
       groq: !!process.env.GROQ_API_KEY,
       pexels: !!process.env.PEXELS_API_KEY,
+      store: store.ready(),
     });
   }
 
@@ -981,7 +1113,8 @@ const server = http.createServer((req, res) => {
 
   // POST is allowed for the one route that takes a body; everything else
   // is still read-only, as it was.
-  const writable = req.method === 'POST' && parsed.pathname === '/api/generate';
+  const WRITABLE = ['/api/generate', '/api/presence', '/api/bottle', '/api/bottle/found'];
+  const writable = req.method === 'POST' && WRITABLE.includes(parsed.pathname);
   if (req.method !== 'GET' && req.method !== 'HEAD' && !writable) {
     res.writeHead(405).end('Method not allowed');
     return;
