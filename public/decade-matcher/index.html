@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Which Decade Are You</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23140E1E'/><circle cx='16' cy='16' r='10' fill='%231F1730' stroke='%23D86FA8'/><circle cx='16' cy='16' r='3' fill='%23D86FA8'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --bg:#120C1B;
+  --bg-2:#1C1429;
+  --pink:#D86FA8;
+  --pale:#F0EAF4;
+  --dim:#9287A0;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:radial-gradient(860px 660px at 50% 2%, var(--bg-2) 0%, var(--bg) 66%);
+  color:var(--pale);font-family:var(--serif);min-height:100vh;
+  padding:30px 16px 80px;display:flex;flex-direction:column;align-items:center;
+}
+.wrap{ max-width:580px;width:100% }
+header{ text-align:center;margin-bottom:24px }
+h1{
+  font-family:var(--mono);font-size:clamp(15px,3.6vw,21px);margin:0;
+  letter-spacing:.26em;text-transform:uppercase;color:var(--pink);font-weight:500;
+}
+.sub{ font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-top:10px }
+
+.bar{ height:3px;background:rgba(240,234,244,.12);margin-bottom:26px }
+.bar i{ display:block;height:100%;background:var(--pink);width:0;transition:width .3s ease }
+
+.step{ font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin-bottom:12px }
+.qtext{ font-size:clamp(20px,4.8vw,28px);line-height:1.3;margin:0 0 22px }
+.opts{ display:flex;flex-direction:column;gap:8px }
+.opts button{
+  text-align:left;font-family:var(--serif);font-size:16px;line-height:1.45;
+  background:rgba(240,234,244,.05);color:var(--pale);
+  border:1px solid rgba(240,234,244,.16);padding:15px 16px;cursor:pointer;
+}
+.opts button:hover{ background:rgba(216,111,168,.16);border-color:var(--pink) }
+.opts button:focus-visible{ outline:2px solid var(--pink);outline-offset:3px }
+
+.result[hidden], .quiz[hidden]{ display:none }
+.decade{ text-align:center;margin-bottom:8px }
+.decade b{ display:block;font-size:clamp(32px,9vw,58px);line-height:1;color:var(--pink) }
+.decade span{ display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin-top:12px }
+.blurb{ font-size:16px;line-height:1.75;margin:22px 0 0 }
+.genres{ display:flex;flex-wrap:wrap;gap:6px;margin-top:20px }
+.genres span{
+  font-family:var(--mono);font-size:10px;letter-spacing:.1em;
+  border:1px solid rgba(216,111,168,.5);color:var(--pink);padding:5px 9px;
+}
+.runner{
+  margin-top:22px;padding-top:16px;border-top:1px solid rgba(240,234,244,.14);
+  font-size:14px;line-height:1.7;color:var(--dim);
+}
+.again{
+  margin-top:24px;width:100%;
+  font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  background:transparent;color:var(--pink);border:1px solid var(--pink);padding:15px;cursor:pointer;
+}
+.again:hover{ background:var(--pink);color:#140E1E }
+.note{ margin-top:26px;font-size:13px;line-height:1.7;color:var(--dim) }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media print{ #lc-back{ display:none } }
+@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } .bar i{ transition:none } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Which Decade Are You</h1>
+    <p class="sub">Eight questions about how it sounds, not what it is</p>
+  </header>
+
+  <div class="bar"><i id="fill"></i></div>
+
+  <div class="quiz" id="quiz">
+    <p class="step" id="step">—</p>
+    <h2 class="qtext" id="qtext">—</h2>
+    <div class="opts" id="opts"></div>
+  </div>
+
+  <div class="result" id="result" hidden>
+    <div class="decade">
+      <b id="r-name">—</b>
+      <span id="r-tag">—</span>
+    </div>
+    <p class="blurb" id="r-blurb"></p>
+    <div class="genres" id="r-genres"></div>
+    <p class="runner" id="r-runner"></p>
+    <button class="again" id="again" type="button">Answer again</button>
+  </div>
+
+  <p class="note">
+    The matching runs on production and arrangement — how it was recorded, what the low end is doing,
+    where the voice sits — because those are the things that actually date a record. No song titles
+    are involved anywhere in it. The decade descriptions are a straight account of what was going on
+    musically, not a claim about you.
+  </p>
+</div>
+
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<script src="data.js"></script>
+<script>
+(function(){
+  'use strict';
+  var D = window.DECADES, Q = window.QUESTIONS;
+  var IDS = Object.keys(D);
+  var idx = 0, score = {};
+
+  function $(id){ return document.getElementById(id); }
+  function esc(t){ return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function reset(){
+    idx = 0; score = {};
+    IDS.forEach(function(i){ score[i] = 0; });
+    $('result').hidden = true;
+    $('quiz').hidden = false;
+    ask();
+  }
+
+  function ask(){
+    var q = Q[idx];
+    $('step').textContent = 'Question ' + (idx + 1) + ' of ' + Q.length;
+    $('qtext').textContent = q.q;
+    $('fill').style.width = (idx / Q.length * 100) + '%';
+    $('opts').innerHTML = q.a.map(function(a, i){
+      return '<button type="button" data-i="' + i + '">' + esc(a[0]) + '</button>';
+    }).join('');
+  }
+
+  $('opts').addEventListener('click', function(e){
+    var b = e.target.closest ? e.target.closest('button') : null;
+    if (!b) return;
+    var w = Q[idx].a[parseInt(b.dataset.i, 10)][1];
+    for (var k in w) score[k] = (score[k] || 0) + w[k];
+    idx++;
+    if (idx < Q.length) ask(); else finish();
+  });
+
+  function finish(){
+    $('fill').style.width = '100%';
+    $('quiz').hidden = true;
+    var order = IDS.slice().sort(function(a, b){ return score[b] - score[a]; });
+    var top = D[order[0]], second = D[order[1]];
+    $('r-name').textContent = top.n;
+    $('r-tag').textContent = top.tag;
+    $('r-blurb').textContent = top.d;
+    $('r-genres').innerHTML = top.genres.map(function(g){ return '<span>' + esc(g) + '</span>'; }).join('');
+    $('r-runner').textContent = score[order[0]] === score[order[1]]
+      ? 'Dead level with ' + second.n + '. Your answers point at both equally, which happens when ' +
+        'the things you picked were themselves crossing over.'
+      : 'Runner-up: ' + second.n + '. A few of your answers pointed there instead.';
+    $('result').hidden = false;
+  }
+
+  $('again').addEventListener('click', reset);
+  reset();
+
+  window.__decade = {
+    questions: Q.length,
+    decades: IDS.length,
+    answerAll: function(choice){
+      reset();
+      for (var i = 0; i < Q.length; i++){
+        var n = typeof choice === 'function' ? choice(i) : choice;
+        var b = $('opts').querySelectorAll('button')[Math.min(n, Q[i].a.length - 1)];
+        b.click();
+      }
+      return { name: $('r-name').textContent, shown: !$('result').hidden,
+               genres: $('r-genres').children.length, runner: $('r-runner').textContent.slice(0, 30) };
+    },
+    scores: function(){ return score; }
+  };
+})();
+</script>
+</body>
+</html>
