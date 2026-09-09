@@ -50,9 +50,14 @@ The hub filters them by the tag on each card.
 | 28 | [Civilizations, Ranked](/civilizations/) | scroll story | Up the Kardashev scale — build a Dyson swarm, send a message through a wormhole. |
 | 29 | [The Loot Terminal](/loot-terminal/) | generator | Fantasy item appraisal with a compendium that persists in the browser. |
 
-Still to build: Movie night (needs `TMDB_API_KEY`). `/api/keys` reports which optional keys are
-configured — `nasa`, `tmdb`, `groq` and `pexels`. Only `pexels` gates a built toy: without it
-`/atmosphere/` says so on the page and everything else is unaffected.
+Still to build: Movie night. `TMDB_API_KEY` is plumbed through `/api/keys` and gates nothing,
+because the toy itself was never written — no page, no route, no markup, in this tree or anywhere
+in the history. Setting the key today would change nothing you can see.
+
+`/api/keys` reports which optional keys are configured — `nasa`, `tmdb`, `groq`, `pexels` — plus
+`store`, which is not a key but says whether the shared database is open. `pexels` gates
+`/atmosphere/`; `store` gates `/message-in-a-bottle/` and `/who-else-is-here/`. Each says so on
+its own page and nothing else is affected.
 
 `GROQ_API_KEY` powers `POST /api/generate`, the shared text-generation route used by
 what-beats-this, character-match, universes-colliding, espionage, bureaucracy and
@@ -135,6 +140,9 @@ nothing moves at all until a hand is on the cradle.
     /api/iss/tle           Celestrak orbital elements, 2 h cache
     /api/where             coarse location from the caller's IP, 6 h cache
     /api/photos?mode=      Pexels relay for /atmosphere/, fixed search list, 1 h cache
+    /api/presence          POST: record this visit by city, GET: today's roster
+    /api/bottle            GET: a surfaced note at random, POST: cast one
+    /api/bottle/found      POST: mark a note as actually read
 
 Keys are read from the environment and never reach the browser. The RSS relay
 takes a short feed name, never a URL — an arbitrary `?url=` would make it an
