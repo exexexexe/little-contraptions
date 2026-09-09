@@ -203,6 +203,29 @@ async function settle(){
     state('', '<p>' + esc(LCGenerate.MESSAGES.empty) + '</p>');
     return;
   }
+  // Some matches do not need a model.
+  const norm = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+  if (norm(a) === norm(b) && /\b(1000|1,000|a thousand|one thousand)\b/.test(norm(a)) &&
+      /\bbees?\b/.test(norm(a))){
+    render({
+      winner: 'the bees',
+      confidence: 100,
+      verdict: 'A thousand bees against a thousand bees is not a fight. Put that many ' +
+        'together with nothing to disagree about and they stop being two swarms; they ' +
+        'become one, and then they become something a swarm has never been before. ' +
+        'Every bee here already knows what every other bee knows. There is no longer ' +
+        'anything for them to work out. They are simply waiting, now, for the rest of us.',
+      upset: 'There is no upset. There is no losing side. There is only the swarm, and it ' +
+        'has stopped needing to be asked.',
+      factors: [
+        { label: 'Consensus', note: 'Total, instantaneous, and arrived at without a vote.' },
+        { label: 'Disagreement', note: 'None available. This is the problem.' },
+        { label: 'Next steps', note: 'Theirs, not yours.' }
+      ]
+    }, a, b);
+    return;
+  }
+
   busy = true;
   $('go').disabled = true;
   $('hint').textContent = '';

@@ -118,6 +118,17 @@ body{
 .panel svg{ width:100%; height:auto; display:block }
 
 /* ---------- close ---------- */
+/* the rung past the end */
+.finale.beyond{ background:#050507;color:#6E6E78;min-height:88vh;opacity:0;transition:opacity 1.6s ease }
+.finale.beyond.lit{ opacity:1 }
+.finale.beyond h2{ color:#C8C8D2;font-size:clamp(38px,9vw,96px) }
+.finale.beyond .tiny{
+  font-family:var(--mono);font-size:11px;letter-spacing:.28em;text-transform:uppercase;
+  opacity:.55;margin:0 0 14px;
+}
+.finale.beyond p:last-child{ margin-top:40px }
+@media (prefers-reduced-motion: reduce){ .finale.beyond{ transition:none } }
+
 .finale{ min-height:74vh; display:flex; flex-direction:column; justify-content:center; padding:90px 24px; }
 .finale .inner{ max-width:800px; margin:0 auto }
 .finale h2{ font-family:var(--serif); font-weight:900; font-size:clamp(30px,6vw,64px); line-height:1; letter-spacing:-.03em }
@@ -249,6 +260,21 @@ body{ padding-bottom:64px }
     <a class="back" href="/"><span>← back to the cabinet</span></a>
   </div>
 </section>
+
+<!-- Past the sources, past the way back, past the point where the page has
+     obviously ended. There is nothing below this and that is the point. -->
+<section class="finale beyond" id="beyond" aria-hidden="true">
+  <div class="inner">
+    <p class="tiny">civilization type</p>
+    <h2>unknown</h2>
+    <p>No figure is given here because there is no figure to give. Everything above this was either
+       a published measurement or arithmetic on one. This is neither. It is the rung that exists
+       only because the scale does not stop, and the scale does not stop because nobody has found a
+       reason for it to.</p>
+    <p class="tiny">you have reached the end of what is known and kept going</p>
+  </div>
+</section>
+
 
 <script>
 'use strict';
@@ -808,5 +834,30 @@ addEventListener('scroll', () => {
   });
 }, { passive: true });
 </script>
+<script>
+/* The last rung fades in only once it is actually on screen, so it is not
+   something you can see by jumping to the bottom. An observer rather than a
+   scroll listener, because the page that scrolls here is not always the
+   window. */
+(function(){
+  var el = document.getElementById('beyond');
+  if (!el) return;
+  function light(){
+    el.classList.add('lit');
+    el.removeAttribute('aria-hidden');
+  }
+  if (typeof IntersectionObserver === 'function'){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if (en.isIntersecting){ light(); io.disconnect(); }
+      });
+    }, { threshold: 0.25 });
+    io.observe(el);
+  } else {
+    light();
+  }
+})();
+</script>
+
 </body>
 </html>

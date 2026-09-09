@@ -22,6 +22,9 @@
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
+/* the cracked halves fly 172px either side, which was pushing a scrollbar
+   onto narrow screens */
+body{overflow-x:hidden}
 body{
   background:radial-gradient(700px 520px at 50% 8%, var(--lac-2) 0%, var(--lac) 62%);
   color:var(--slip);font-family:var(--serif);min-height:100vh;
@@ -250,7 +253,12 @@ function crumbs(){
 function crack(){
   const stage = $('cookie').parentElement;
   if (stage.classList.contains('cracked')) return;
-  currentFortune = pick(FORTUNES);
+  // The hundredth cookie of a session is not drawn from the pile.
+  currentFortune = (cracked + 1 === 100)
+    ? 'You have opened one hundred of these in a row. There are only so many ' +
+      'things a slip of paper can tell you, and you have now had most of them. ' +
+      'The cabinet has noticed. It is not judging. It is, however, counting.'
+    : pick(FORTUNES);
   const nums = [];
   while (nums.length < 6){
     const n = ri(1, 49);

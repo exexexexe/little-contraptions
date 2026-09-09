@@ -2429,7 +2429,7 @@ footer{
     // starts reporting: the swing it actually measured, not the formula.
     var crCap = document.querySelector('.cradle-cap');
     if (crCap){
-      var say = (crTouched && crPeriod) ? crPeriod.toFixed(2) + ' s per swing' : 'drag a ball';
+      var say = crTouched ? crClicks.toLocaleString() + ' clicks' : 'drag a ball';
       if (crCap.textContent !== say) crCap.textContent = say;
     }
 
@@ -2482,7 +2482,6 @@ footer{
   }
 
   var skyPane = pane('wx-sky');
-  window.__WXTEST = function(k,d){ wx.kind=k; wx.day=d; wx.drops.length=0; };
   var cradlePane = pane('cradle');
   var dfgPane = pane('dfg');
 
@@ -2857,8 +2856,12 @@ footer{
   crTh[0] = -0.62;                               // it arrives mid-swing
 
   var crDrag = -1, crIdle = 0, crTouched = false;
-  var crLastSide = null;
-  var crPeriod = 0, crLastCross = 0, crClock = 0;
+  // Impacts, counted the way they are heard rather than the way they are
+  // solved. One ball landing sends the impulse through all four pairs
+  // inside a single frame, and that is one click, not four — so a short
+  // lockout collapses the burst, and a per-pair flag keeps a row of balls
+  // resting against one another from rattling off thousands more.
+  var crClicks = 0, crHot = [false, false, false, false], crLock = 0;
 
   // An 8-pixel ball, one row at a time: [first column, width]. Drawn from
   // a table rather than an arc so the edge is stepped, not feathered.
@@ -2876,7 +2879,10 @@ footer{
   function crCollide(){
     for (var i = 0; i < CR.n - 1; i++){
       var overlap = 2 * CR.r - (ballX(i + 1) - ballX(i));
-      if (overlap <= 0) continue;
+      // Balls at rest sit in permanent light contact, so the flag only
+      // clears once they are properly apart. Otherwise a row standing
+      // still would rattle off thousands of imaginary impacts.
+      if (overlap <= 0){ if (overlap < -0.1) crHot[i] = false; continue; }
 
       var va = ballV(i), vb = ballV(i + 1);
       // A dragged ball is treated as infinitely heavy: it keeps its own
@@ -2885,6 +2891,10 @@ footer{
       var mb = (i + 1) === crDrag ? 1e6 : 1;
 
       if (vb - va < 0){                        // still closing, so they hit
+        if (!crHot[i] && va - vb > 3){
+          crHot[i] = true;
+          if (crLock <= 0){ crClicks++; crLock = 0.09; }
+        }
         var sum = ma + mb;
         var na = (ma * va + mb * vb + mb * CR.e * (vb - va)) / sum;
         var nb = (ma * va + mb * vb + ma * CR.e * (va - vb)) / sum;
@@ -2904,6 +2914,7 @@ footer{
     // Four substeps: the collisions are resolved by position, and at one
     // step per frame a fast ball can pass clean through its neighbour.
     var sub = 4, h = dt / sub;
+    if (crLock > 0) crLock -= dt;
     for (var s = 0; s < sub; s++){
       for (var i = 0; i < CR.n; i++){
         if (i === crDrag) continue;
@@ -2916,21 +2927,6 @@ footer{
       crCollide();
       crCollide();                              // a second pass carries a
     }                                           // hit along a row of five
-
-    // The measured swing, taken from the left ball crossing the vertical.
-    // It is the honest number, not 2*pi*sqrt(L/g) written out.
-    crClock += dt;
-    if (crDrag !== 0 && Math.abs(crTh[0]) > 0.05){
-      var side = crTh[0] > 0;
-      if (crLastSide !== null && side !== crLastSide){
-        var half = crClock - crLastCross;
-        if (half > 0.2 && half < 4){
-          crPeriod = crPeriod ? crPeriod * 0.7 + half * 2 * 0.3 : half * 2;
-        }
-        crLastCross = crClock;
-      }
-      crLastSide = side;
-    }
 
     // Left alone it winds down, as it should. Then something taps it.
     var peak = 0;
