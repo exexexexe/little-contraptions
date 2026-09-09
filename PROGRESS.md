@@ -2,6 +2,10 @@
 
 ## Summary — batches 15 to 20, the credits egg, and fifteen more eggs
 
+> **Later addition.** The two items this batch deliberately left alone — the
+> draggable desktop and the icon style selector — were built afterwards in their
+> own session. See "The two dedicated-session items" below.
+
 **Twenty-two new drawers, 110 to 132.** Plus the arcade's fourteenth game, five new
 TV-voice archetypes, a third mode for Atmosphere, a third handset for the Zone PDA,
 seventeen easter eggs, and four shared modules extracted out of toys that already
@@ -260,18 +264,96 @@ out at 328 Hz, which is E4.
 
 ---
 
-### Still pending their own sessions — NOT part of this batch
+### The two dedicated-session items — now done
 
-Two items were named in the brief as explicitly out of scope, both in the same
-higher-blast-radius category as the original Windows 98 hub work, and **neither
-was attempted**:
+Both were named in the overnight brief as explicitly out of scope and were left
+alone during it. They were built afterwards, in their own session, which is what
+the brief asked for.
 
-1. **Draggable icons and folders on the Windows 98 desktop.** The desktop is
-   still deliberately not a window manager — icons navigate to `/slug/` exactly
-   as the cards do.
-2. **The icon style selector** (pixel / cartoonish / flat / realistic).
+#### 1. Draggable icons, and folders to put them in
 
-Both still need a dedicated session.
+The desktop starts auto-arranged — the grid it always was. Drag an icon and the
+surface goes into free mode with every icon pinned exactly where it already sat.
+Drop a drawer on a folder to file it, drag it out of the open window to unfile
+it, right-click anything for the same operations as a list. Positions, folders
+and membership are remembered.
+
+**The rule it is built under.** The widget rail next door is decoration, and it
+is fair to make that pointer-only. These are the navigation, so: every icon
+stays an `<a href>` a keyboard can tab to and open; every pointer gesture has an
+equivalent in the context menu, which Shift+F10 and the menu key both open, the
+arrows walk and Escape closes with focus returned; and **the Start menu goes on
+listing all 132 drawers whatever has been done out here.** That last one is the
+safety net — nothing a visitor does to this desktop can lose them a toy.
+Verified after filing three away: still 132 of 132, all reachable.
+
+**Five bugs, every one found by driving it rather than reading it.** This is the
+part worth the time:
+
+1. **Pointer capture on the wrong element.** Capture was taken on the icon
+   *wrapper*, and capture retargets the click and dblclick the browser derives
+   from the pointer events too — so every click arrived with the wrapper as its
+   target, `closest('.w98-icon')` came back null, and **double-click to open
+   silently stopped working**. `elementFromPoint` at the very same coordinates
+   still correctly reported the icon, which is what made it puzzling for so
+   long. Capture is on the icon now.
+
+2. **The grid cell was guessed, not measured.** The grid is
+   `repeat(auto-fill, minmax(88px,1fr))` with a row gap, so the real track is
+   neither 88 wide nor 88 tall and both move with the window. Snapping to a
+   hard-coded cell shifted **113 of 135 icons by up to 37px** at the instant of
+   the first grab — which also moved the folder out from under the pointer that
+   was about to drop something on it. The cell is measured now, and entering
+   free mode pins at the exact measured offset rather than a snapped one, so it
+   is a photograph of the grid: 0 icons move.
+
+3. **`dragEnd` nulled `drag` before `dropTargetAt` read `drag.el`**, so every
+   drop onto a folder threw and silently did nothing.
+
+4. **`deskForget()` cleared the record but left the layout.** The free class
+   makes every icon `position:absolute`, so forgetting without removing it
+   dropped all 134 into a heap at 0,0.
+
+5. **The new-folder rename ate the next gesture.**
+
+**Restoring is self-healing**, which matters because a record written by an
+older version can name a cell something else now claims, and a drawer added
+since has no remembered place at all. Checked against a deliberately poisoned
+record with six icons all claiming 0,0: 134 icons, 134 distinct cells, and the
+healed record written back.
+
+Display Properties gave up its own icon and its own right-click menu on the way
+— it used to append the icon to the grid directly, which did not survive the
+grid being rebuilt for a new folder, and its "Properties" menu opened alongside
+the new one on the same click.
+
+A folder cannot go inside a folder, and says so. One level is the point: a
+desktop you can tidy, not a filesystem to get lost in.
+
+#### 2. The icon style selector
+
+Four styles — pixel, cartoon, flat, realistic — from a row at the top of the
+Icons tab, remembered with the rest of the appearance.
+
+**The mechanism was tested before it was designed.** Document CSS cannot reach
+inside a `<use>` shadow tree, but *custom properties inherit into it* — a probe
+confirmed it by painting one circle red on the defaults and green with the
+variable set. So every outline in the sprite is
+`stroke="var(--ic-ink, <its own colour>)"` with a matching `--ic-sw`, and with
+no style chosen **nothing changes at all**: the fallbacks are the values that
+were already there.
+
+Only outlines are parameterised, by a mechanical rule. A stroke on a shape with
+a real fill is a contour — 68 of those, and they are what a style thickens,
+lightens or removes. A stroke on `fill="none"` is the drawing itself, and a
+stroke with no fill attribute is a detail line. Those 34 keep their own colour
+and weight in every style, **which is why the flat set still has all its detail
+instead of going blank.**
+
+Checked side by side at 40px and live at 32px: the four are plainly different,
+and the style reaches the icons inside an open folder window too. The realistic
+bevel is a per-icon SVG filter, so anybody who has asked for reduced motion gets
+a plain drop shadow instead.
 
 ---
 

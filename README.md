@@ -212,6 +212,32 @@ the address goes upstream, the answer is cached against it for six hours, and
 that cache dies with the process. Failure answers `200 {ok:false}`, not a 5xx,
 because the caller is an ornament with its own fallback.
 
+## The Windows 98 desktop
+
+The toggle in the corner swaps the card grid for a desktop. It is generated
+from the cards, so a new drawer needs no edit there.
+
+**Icons can be moved.** It starts auto-arranged; dragging one pins every icon
+where it already sat and from then on they are placed by hand, snapped to the
+grid's own measured cell. **Folders** hold drawers: drop one on a folder to
+file it, drag it out of the open window to unfile it. Right-click anything for
+the same operations as a list. All of it is remembered in `lc-w98-desktop`.
+
+The rule the whole thing is built under: the desktop ornaments are decoration
+and are fair to make pointer-only, but **the icons are the navigation**. So
+every icon stays an `<a href>` a keyboard can reach, every gesture has a
+context-menu equivalent (Shift+F10 and the menu key open it), and the Start
+menu lists every drawer whatever the desktop looks like. Nothing a visitor does
+out there can lose them a toy.
+
+**Icon styles** — pixel, cartoon, flat, realistic — live in Display Properties.
+One set of drawings; what changes is the contour. Every outline in the sprite is
+`stroke="var(--ic-ink, <its own colour>)"`, which works because custom
+properties inherit into a `<use>` shadow tree even though selectors do not. Only
+contours are parameterised: a stroke on `fill="none"` is the drawing itself and
+a stroke with no fill is a detail line, and both keep their own colour in every
+style.
+
 ## Structure
 
     server.js            static file server and API relays, respects $PORT
