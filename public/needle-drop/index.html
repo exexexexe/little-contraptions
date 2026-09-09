@@ -305,7 +305,11 @@ footer a{ color:var(--dim) }
 </div>
 
 <script src="/shared/lc-id.js"></script>
-<script src="data.js"></script>
+<!-- The version is the track count, and it is a cache-buster, not decoration.
+     Static files here are served with max-age=3600, so without it a returning
+     visitor replays yesterday's pool for an hour and the counts look wrong.
+     Bump it whenever data.js changes. -->
+<script src="data.js?v=304"></script>
 <script>
 (function(){
   'use strict';
