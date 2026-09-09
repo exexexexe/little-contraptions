@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ondaric</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23120F1A'/><path d='M8 21c3-9 6-9 8-4s5 5 8-4' fill='none' stroke='%237FD4C1' stroke-width='2.2' stroke-linecap='round'/><circle cx='16' cy='8' r='1.8' fill='%23E0B25C'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --void:#120F1A;
+  --void-2:#1B1729;
+  --panel:#221D33;
+  --edge:rgba(127,212,193,.22);
+  --pale:#EAE6F2;
+  --jade:#7FD4C1;
+  --gold:#E0B25C;
+  --dim:#8F87A6;
+  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --disp:"Avenir Next Condensed","Roboto Condensed","Arial Narrow",var(--serif);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:radial-gradient(900px 640px at 50% -8%, var(--void-2) 0%, var(--void) 64%);
+  color:var(--pale);font-family:var(--serif);min-height:100vh;
+  padding:34px 18px 78px;display:flex;flex-direction:column;align-items:center;
+}
+.wrap{ max-width:680px;width:100% }
+header{ text-align:center }
+h1{
+  font-family:var(--disp);font-size:clamp(27px,6vw,42px);margin:0;
+  letter-spacing:.24em;text-transform:uppercase;color:var(--jade);font-weight:700;
+}
+.sub{ font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;opacity:.55;margin-top:9px }
+
+.key{
+  display:flex;align-items:center;gap:10px;margin:24px 0 0;
+  background:var(--panel);border:1px solid var(--edge);border-radius:3px;padding:12px 14px;
+}
+.key label{ font-family:var(--mono);font-size:9.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--jade);flex:0 0 auto }
+.key input{
+  flex:1 1 auto;min-width:0;background:transparent;border:0;color:var(--pale);
+  font-family:var(--mono);font-size:13px;padding:2px 0;
+}
+.key input:focus{ outline:none }
+.key input::placeholder{ color:var(--dim);opacity:.7 }
+.keynote{ font-family:var(--mono);font-size:9.5px;line-height:1.7;color:var(--dim);margin-top:8px }
+
+.pane{ margin-top:16px }
+.pane .lbl{
+  display:flex;justify-content:space-between;align-items:baseline;gap:10px;
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:7px;
+}
+.pane .lbl b{ color:var(--jade);font-weight:400 }
+.pane textarea{
+  width:100%;min-height:112px;resize:vertical;
+  background:var(--panel);border:1px solid var(--edge);border-radius:3px;
+  color:var(--pale);font-family:var(--serif);font-size:16px;line-height:1.62;
+  padding:14px 15px;
+}
+#ond{ font-family:var(--mono);font-size:14.5px;color:#CFEDE5 }
+.pane textarea:focus{ outline:2px solid var(--jade);outline-offset:-1px }
+.tools{ display:flex;gap:8px;margin-top:9px;flex-wrap:wrap }
+.tools button{
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+  background:transparent;color:var(--pale);border:1px solid var(--edge);
+  padding:8px 13px;cursor:pointer;border-radius:2px;
+}
+.tools button:hover{ border-color:var(--jade);color:var(--jade) }
+.tools button:focus-visible{ outline:2px solid var(--gold);outline-offset:2px }
+.swap{
+  display:block;margin:14px auto 0;
+  font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+  background:var(--jade);color:var(--void);border:0;border-radius:2px;
+  padding:11px 22px;cursor:pointer;font-weight:700;
+}
+.swap:hover{ filter:brightness(1.08) }
+.swap:focus-visible{ outline:2px solid var(--gold);outline-offset:2px }
+
+/* ---------- the grammar ---------- */
+.rules{ margin-top:34px }
+.rules h2{
+  font-family:var(--disp);font-size:16px;letter-spacing:.16em;text-transform:uppercase;
+  margin:0 0 14px;color:var(--gold);font-weight:700;
+}
+.rules ol{ margin:0 0 20px;padding-left:20px }
+.rules li{ font-size:15px;line-height:1.68;margin-bottom:9px;color:#D8D2E4 }
+.rules li b{ color:var(--jade);font-weight:400;font-family:var(--mono);font-size:13px }
+.tbl{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:5px;
+  margin-bottom:18px;
+}
+.tbl span{
+  font-family:var(--mono);font-size:11.5px;text-align:center;
+  background:var(--panel);border:1px solid var(--edge);border-radius:2px;padding:6px 2px;
+  color:var(--pale);
+}
+.tbl span i{ font-style:normal;color:var(--jade) }
+.tbl span em{ font-style:normal;color:var(--dim);padding:0 3px }
+.plist{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:5px;margin-bottom:18px;
+}
+.plist span{
+  font-family:var(--mono);font-size:11px;
+  background:var(--panel);border:1px solid var(--edge);border-radius:2px;padding:6px 8px;
+}
+.plist span i{ font-style:normal;color:var(--jade) }
+.plist span em{ font-style:normal;color:var(--dim) }
+
+footer{
+  max-width:680px;margin:30px auto 0;padding-top:14px;border-top:1px solid var(--edge);
+  font-family:var(--mono);font-size:10.5px;line-height:1.8;color:var(--dim);
+}
+footer a{ color:var(--jade) }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } }
+</style>
+</head>
+<body>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<div class="wrap">
+  <header>
+    <h1>Ondaric</h1>
+    <div class="sub">a small language, and a way to keep a message in it</div>
+  </header>
+
+  <div class="key">
+    <label for="pass">Shared word</label>
+    <input id="pass" type="text" autocomplete="off" spellcheck="false"
+           placeholder="leave empty for plain Ondaric">
+  </div>
+  <div class="keynote" id="keynote"></div>
+
+  <div class="pane">
+    <div class="lbl"><span>English</span><b id="c-en"></b></div>
+    <textarea id="en" spellcheck="false" placeholder="Meet me at the bridge at midnight."></textarea>
+    <div class="tools">
+      <button type="button" data-copy="en">Copy</button>
+      <button type="button" id="clear">Clear both</button>
+    </div>
+  </div>
+
+  <button class="swap" id="swap" type="button">&darr; &nbsp; put it into Ondaric &nbsp; &darr;</button>
+
+  <div class="pane">
+    <div class="lbl"><span>Ondaric</span><b id="c-ond"></b></div>
+    <textarea id="ond" spellcheck="false" placeholder="…"></textarea>
+    <div class="tools">
+      <button type="button" data-copy="ond">Copy</button>
+      <button type="button" id="back">&uarr; read it back into English</button>
+    </div>
+  </div>
+
+  <div class="rules">
+    <h2>The whole grammar</h2>
+    <ol>
+      <li>The sentence <b>runs backwards</b>. Ondaric is head-final throughout, so what English puts first, Ondaric puts last.</li>
+      <li>Every letter has <b>one counterpart</b>. Vowels become vowels and consonants become consonants, so a word keeps its shape and stays sayable.</li>
+      <li>An article binds to the <b>front</b> of its noun with a turned comma: <b>sa&rsquo;</b>noun.</li>
+      <li>A preposition becomes a postposition and binds to the <b>back</b> with a hyphen: noun<b>-esh</b>. Both can happen at once.</li>
+      <li>Punctuation becomes a <b>particle word</b>, written with a raised dot so it can never be mistaken for a root.</li>
+      <li>A capital letter stays a capital.</li>
+    </ol>
+
+    <h2>The letters, as your key has them</h2>
+    <div class="tbl" id="tbl"></div>
+
+    <h2>The particles, as your key has them</h2>
+    <div class="plist" id="plist"></div>
+  </div>
+</div>
+
+<footer>
+  Ondaric was built backwards from one requirement: whatever goes in has to come out again. Every
+  rule above is reversible, and the pair of them round-trips four thousand randomly generated
+  sentences without losing a word. The shared word reshuffles both the letters and the particles, so
+  two people who agree on a word have a language that a third person cannot read even with this page
+  open in front of them &mdash; but it is a party trick, not cryptography, and a determined reader
+  with a page of your text and an afternoon will get it. Do not use it for anything that matters.
+  Letters, digits and the punctuation with a particle of its own all survive; other symbols
+  &mdash; currency signs, brackets, the at-sign &mdash; have no word in Ondaric and are dropped.
+  <a href="/">&larr; back to the cabinet</a>
+</footer>
+
+<script src="ondaric.js"></script>
+<script>
+'use strict';
+const $ = (id) => document.getElementById(id);
+
+function tables(){ return buildTables($('pass').value.trim()); }
+
+function paintTables(){
+  const t = tables();
+  const letters = VOWELS.concat(CONSONANTS);
+  $('tbl').innerHTML = letters.map(function(ch){
+    const to = t.v[ch] || t.c[ch];
+    return '<span>' + ch + '<em>&rarr;</em><i>' + to + '</i></span>';
+  }).join('');
+
+  const rows = [];
+  for (const k in t.art) rows.push([k, t.art[k] + '’…']);
+  for (const k in t.prep) rows.push([k, '…-' + t.prep[k]]);
+  const punctName = { '.': 'full stop', '?': 'question', '!': 'exclaim', ',': 'comma', ';': 'semicolon', ':': 'colon' };
+  for (const k in t.stop) rows.push([punctName[k] || k, '·' + t.stop[k]]);
+  $('plist').innerHTML = rows.map(function(r){
+    return '<span><em>' + r[0] + '</em> <i>' + r[1] + '</i></span>';
+  }).join('');
+
+  const p = $('pass').value.trim();
+  $('keynote').textContent = p
+    ? 'Your friend needs this word exactly — "' + p + '" — and nothing else. A different word is a different language.'
+    : 'With no shared word this is plain Ondaric, and anyone with this page can read it. Put a word in and it becomes yours.';
+}
+
+function encode(){
+  $('ond').value = toOndaric($('en').value, $('pass').value.trim());
+  counts();
+}
+function decode(){
+  $('en').value = fromOndaric($('ond').value, $('pass').value.trim());
+  counts();
+}
+function counts(){
+  const w = (s) => (s.trim() ? s.trim().split(/\s+/).length : 0);
+  $('c-en').textContent = w($('en').value) + ' words';
+  $('c-ond').textContent = w($('ond').value) + ' words';
+}
+
+$('swap').addEventListener('click', encode);
+$('back').addEventListener('click', decode);
+$('en').addEventListener('input', encode);
+$('ond').addEventListener('input', function(){ counts(); });
+$('pass').addEventListener('input', function(){
+  paintTables();
+  if ($('en').value.trim()) encode();
+});
+$('clear').addEventListener('click', function(){
+  $('en').value = ''; $('ond').value = ''; counts(); $('en').focus();
+});
+
+document.querySelectorAll('[data-copy]').forEach(function(b){
+  b.addEventListener('click', async function(){
+    const el = $(b.dataset.copy);
+    const was = b.textContent;
+    try {
+      await navigator.clipboard.writeText(el.value);
+      b.textContent = 'Copied';
+    } catch (e) {
+      // Clipboard access can be refused outright; selecting the text at
+      // least leaves the visitor one keystroke from the same result.
+      el.select();
+      b.textContent = 'Selected — press copy';
+    }
+    setTimeout(function(){ b.textContent = was; }, 1600);
+  });
+});
+
+$('en').value = 'Meet me at the bridge at midnight. Bring the map.';
+paintTables();
+encode();
+</script>
+</body>
+</html>

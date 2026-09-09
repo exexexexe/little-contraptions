@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dungeon Room of the Day</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23181410'/><rect x='7' y='8' width='18' height='16' fill='none' stroke='%23C89B4A' stroke-width='2'/><circle cx='13' cy='16' r='1.8' fill='%23A8443C'/><circle cx='20' cy='19' r='1.8' fill='%23C89B4A'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --dark:#181410;
+  --dark-2:#241D16;
+  --panel:#2B231A;
+  --edge:rgba(200,155,74,.24);
+  --parch:#EDE3CE;
+  --gold:#C89B4A;
+  --blood:#A8443C;
+  --moss:#7A9161;
+  --dim:#9A8B72;
+  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --disp:"Avenir Next Condensed","Roboto Condensed","Arial Narrow",var(--serif);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:radial-gradient(900px 640px at 50% -8%, var(--dark-2) 0%, var(--dark) 64%);
+  color:var(--parch);font-family:var(--serif);min-height:100vh;
+  padding:34px 18px 78px;display:flex;flex-direction:column;align-items:center;
+}
+.wrap{ max-width:640px;width:100% }
+header{ text-align:center }
+h1{
+  font-family:var(--disp);font-size:clamp(24px,5.4vw,36px);margin:0;
+  letter-spacing:.15em;text-transform:uppercase;color:var(--gold);font-weight:700;
+}
+.sub{ font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;opacity:.55;margin-top:9px }
+.depth{ font-family:var(--mono);font-size:9.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--dim);text-align:center;margin-top:20px }
+
+.plan{
+  margin-top:14px;background:#120E0A;border:1px solid var(--edge);border-radius:3px;padding:10px;
+}
+.plan canvas{ display:block;width:100%;height:auto;image-rendering:pixelated }
+.legend{
+  display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-top:9px;
+  font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);
+}
+.legend i{ display:inline-block;width:8px;height:8px;margin-right:5px;vertical-align:baseline }
+
+.card{
+  background:var(--panel);border:1px solid var(--edge);border-radius:3px;
+  margin-top:16px;padding:22px 20px 20px;
+}
+.card h2{
+  font-family:var(--disp);font-size:22px;letter-spacing:.08em;text-transform:uppercase;
+  margin:0 0 12px;color:var(--gold);font-weight:700;
+}
+.card p{ margin:0 0 12px;font-size:16px;line-height:1.68;color:#E0D6C1 }
+.card p:last-child{ margin-bottom:0 }
+.block{ border-top:1px solid var(--edge);margin-top:18px;padding-top:16px }
+.block .tag{
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;
+  margin-bottom:8px;
+}
+.block.mon .tag{ color:var(--blood) }
+.block.loot .tag{ color:var(--moss) }
+.block h3{ font-family:var(--disp);font-size:19px;letter-spacing:.06em;margin:0 0 8px;font-weight:700 }
+.block.mon h3{ color:#D98C84 }
+.block.loot h3{ color:#A8C089 }
+.block .d{ font-size:15.5px;line-height:1.64;color:#DCD2BE;margin-bottom:9px }
+.block .w{ font-size:15px;line-height:1.6;color:var(--dim);font-style:italic }
+
+.row{ display:flex;gap:9px;margin-top:18px;flex-wrap:wrap }
+.row button{
+  font-family:var(--mono);font-size:10px;letter-spacing:.15em;text-transform:uppercase;
+  border-radius:2px;padding:12px 18px;cursor:pointer;border:1px solid var(--edge);
+  background:transparent;color:var(--parch);flex:1 1 auto;
+}
+.row button.go{ background:var(--gold);border-color:var(--gold);color:#1A1206;font-weight:700 }
+.row button:hover{ filter:brightness(1.08) }
+.row button:not(.go):hover{ border-color:var(--gold);color:var(--gold) }
+.row button:focus-visible{ outline:2px solid var(--moss);outline-offset:2px }
+
+footer{
+  max-width:640px;margin:26px auto 0;padding-top:14px;border-top:1px solid var(--edge);
+  font-family:var(--mono);font-size:10.5px;line-height:1.8;color:var(--dim);
+}
+footer a{ color:var(--gold) }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } }
+</style>
+</head>
+<body>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<div class="wrap">
+  <header>
+    <h1>Dungeon Room of the Day</h1>
+    <div class="sub">one room &middot; one occupant &middot; one thing worth taking</div>
+  </header>
+
+  <div class="depth" id="depth"></div>
+
+  <div class="plan">
+    <canvas id="plan" width="240" height="150"></canvas>
+    <div class="legend">
+      <span><i style="background:#A8443C"></i>occupant</span>
+      <span><i style="background:#7A9161"></i>the item</span>
+      <span><i style="background:#C89B4A"></i>way in</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 id="title"></h2>
+    <p id="desc"></p>
+    <p id="feature"></p>
+
+    <div class="block mon">
+      <div class="tag">What is in here with you</div>
+      <h3 id="m-name"></h3>
+      <div class="d" id="m-desc"></div>
+      <div class="w" id="m-want"></div>
+    </div>
+
+    <div class="block loot">
+      <div class="tag">What is worth taking</div>
+      <h3 id="l-name"></h3>
+      <div class="d" id="l-desc"></div>
+      <div class="w" id="l-eff"></div>
+    </div>
+  </div>
+
+  <div class="row">
+    <button class="go" id="deeper" type="button">Go deeper</button>
+    <button id="today" type="button">Back to today&rsquo;s room</button>
+  </div>
+</div>
+
+<footer>
+  The room at the top is the same room for everyone who opens this page today &mdash; it is seeded
+  from the date, not from chance. Going deeper is yours alone and does not persist; come back
+  tomorrow and the surface room will have changed. The plan shows the room's own furniture and where
+  the two of you are standing in it; the line about what is odd in here is its own thing, and the
+  plan makes no attempt to draw a door attached to nothing. If you want the item appraised
+  properly rather than described, the <a href="/loot-terminal/">loot terminal</a> two drawers over
+  does nothing else all day.
+  <a href="/">&larr; back to the cabinet</a>
+</footer>
+
+<script src="rooms.js"></script>
+<script>
+'use strict';
+const $ = (id) => document.getElementById(id);
+
+/* Seeded so today's room is today's room, wherever it is opened. */
+function rng(seed){
+  let a = seed >>> 0;
+  return function(){
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function hash(str){
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+const pick = (a, r) => a[Math.floor(r() * a.length)];
+
+function todayKey(){
+  const d = new Date();
+  return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+}
+
+let depth = 0;
+
+function build(){
+  const r = rng(hash('dungeon|' + todayKey() + '|' + depth));
+  const shape = pick(SHAPE, r);
+  const room = {
+    shape: shape,
+    floor: pick(FLOOR, r),
+    air: pick(AIR, r),
+    light: pick(LIGHT, r),
+    feature: pick(FEATURE, r),
+    monster: pick(MONSTER, r),
+    loot: pick(LOOT, r),
+    cond: pick(CONDITION, r),
+    // where things stand, in room squares
+    mon: null, item: null, door: null,
+    pillars: r() < 0.4, water: r() < 0.3, pit: r() < 0.25, rubble: r() < 0.4
+  };
+  const w = shape.w, h = shape.h;
+
+  /* A round vault has no corners, so nothing may be placed in one. The
+     same test decides what gets drawn and what gets stood on, or the
+     occupant ends up outside its own wall. */
+  room.inside = function(x, y){
+    if (x < 1 || y < 1 || x > w - 2 || y > h - 2) return false;
+    if (!shape.round) return true;
+    const dx = (x - (w - 1) / 2) / ((w - 1) / 2 - 0.6);
+    const dy = (y - (h - 1) / 2) / ((h - 1) / 2 - 0.6);
+    return dx * dx + dy * dy <= 1;
+  };
+  const spot = () => {
+    for (let i = 0; i < 200; i++){
+      const x = 1 + Math.floor(r() * (w - 2));
+      const y = 1 + Math.floor(r() * (h - 2));
+      if (room.inside(x, y)) return { x: x, y: y };
+    }
+    return { x: Math.floor(w / 2), y: Math.floor(h / 2) };
+  };
+
+  room.mon = spot();
+  do { room.item = spot(); } while (room.item.x === room.mon.x && room.item.y === room.mon.y);
+
+  // The way in sits on the wall, which for a round room means the cell
+  // just outside the floor rather than a corner of a box that isn't there.
+  if (shape.round){
+    const ang = r() * Math.PI * 2;
+    room.door = {
+      x: Math.round((w - 1) / 2 + Math.cos(ang) * ((w - 1) / 2 - 0.2)),
+      y: Math.round((h - 1) / 2 + Math.sin(ang) * ((h - 1) / 2 - 0.2))
+    };
+  } else {
+    room.door = r() < 0.5
+      ? { x: 0, y: 1 + Math.floor(r() * (h - 2)) }
+      : { x: 1 + Math.floor(r() * (w - 2)), y: h - 1 };
+  }
+
+  room.rubbleAt = [];
+  if (room.rubble){
+    const n = 2 + Math.floor(r() * 5);
+    for (let i = 0; i < n; i++) room.rubbleAt.push(spot());
+  }
+  return room;
+}
+
+function draw(room){
+  const c = $('plan'), g = c.getContext('2d');
+  const w = room.shape.w, h = room.shape.h;
+  // One canvas size, whatever the room; the cell grows or shrinks to fit
+  // so a long gallery and a square chamber both fill the same frame.
+  const cell = Math.floor(Math.min((c.width - 16) / w, (c.height - 16) / h));
+  const ox = Math.floor((c.width - cell * w) / 2);
+  const oy = Math.floor((c.height - cell * h) / 2);
+  const px = (x, y, cw, ch, col) => { g.fillStyle = col; g.fillRect(ox + x * cell, oy + y * cell, cw * cell, ch * cell); };
+
+  g.fillStyle = '#120E0A';
+  g.fillRect(0, 0, c.width, c.height);
+
+  // floor
+  for (let y = 0; y < h; y++){
+    for (let x = 0; x < w; x++){
+      const edge = x === 0 || y === 0 || x === w - 1 || y === h - 1;
+      let inside = true;
+      if (room.shape.round){
+        const dx = (x - (w - 1) / 2) / ((w - 1) / 2), dy = (y - (h - 1) / 2) / ((h - 1) / 2);
+        inside = dx * dx + dy * dy <= 1.02;
+      }
+      if (!inside) continue;
+      px(x, y, 1, 1, edge || (room.shape.round && !inside) ? '#4A3D2C' : ((x + y) % 2 ? '#2A2218' : '#302719'));
+    }
+  }
+  // walls for the rectangular rooms
+  if (!room.shape.round){
+    for (let x = 0; x < w; x++){ px(x, 0, 1, 1, '#4A3D2C'); px(x, h - 1, 1, 1, '#4A3D2C'); }
+    for (let y = 0; y < h; y++){ px(0, y, 1, 1, '#4A3D2C'); px(w - 1, y, 1, 1, '#4A3D2C'); }
+  }
+  if (room.water){
+    const wy = Math.floor(h / 2);
+    for (let x = 1; x < w - 1; x++) if (room.inside(x, wy)) px(x, wy, 1, 1, '#2E4A52');
+  }
+  if (room.pit){
+    const cx = Math.floor(w / 2), cy = Math.floor(h / 2);
+    px(cx - 1, cy - 1, 2, 2, '#0B0906');
+  }
+  if (room.pillars){
+    for (let x = 2; x < w - 2; x += 3){
+      if (room.inside(x, 2)) px(x, 2, 1, 1, '#5C4C36');
+      if (h > 6 && room.inside(x, h - 3)) px(x, h - 3, 1, 1, '#5C4C36');
+    }
+  }
+  for (const rb of room.rubbleAt) px(rb.x, rb.y, 1, 1, '#3E3323');
+
+  px(room.door.x, room.door.y, 1, 1, '#C89B4A');
+  px(room.item.x, room.item.y, 1, 1, '#7A9161');
+  px(room.mon.x, room.mon.y, 1, 1, '#A8443C');
+}
+
+function show(){
+  const room = build();
+  $('depth').textContent = DEPTH_NOTE[Math.min(depth, DEPTH_NOTE.length - 1)];
+  $('title').textContent = room.shape.n.replace(/^a |^an /, '').replace(/^./, (m) => m.toUpperCase());
+
+  const bits = [
+    'You are standing in ' + room.shape.n + ', ' + room.shape.w + ' paces by ' + room.shape.h + '.',
+    'The floor is ' + room.floor + '.',
+    'The air is ' + room.air + '.',
+    'There is ' + room.light + '.'
+  ];
+  $('desc').textContent = bits.join(' ');
+  $('feature').innerHTML = room.feature;
+
+  $('m-name').innerHTML = room.monster.n.replace(/^./, (m) => m.toUpperCase());
+  $('m-desc').innerHTML = room.monster.d.replace(/^./, (m) => m.toUpperCase()) + '.';
+  $('m-want').innerHTML = room.monster.w;
+
+  $('l-name').innerHTML = room.loot.n;
+  $('l-desc').innerHTML = room.loot.d.replace(/^./, (m) => m.toUpperCase()) + ', ' + room.cond + '.';
+  $('l-eff').innerHTML = room.loot.e;
+
+  draw(room);
+}
+
+$('deeper').addEventListener('click', function(){ depth++; show(); });
+$('today').addEventListener('click', function(){ depth = 0; show(); });
+show();
+</script>
+</body>
+</html>

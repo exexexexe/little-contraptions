@@ -1,0 +1,589 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Flag Desk</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23122A33'/><rect x='9' y='7' width='3' height='19' fill='%23C9B98A'/><path d='M12 8h13l-3 4.5 3 4.5H12z' fill='%23D9744A'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --deep:#101F27;
+  --deep-2:#17303B;
+  --panel:#1D3A46;
+  --edge:rgba(201,185,138,.24);
+  --cream:#F0E9D6;
+  --sand:#C9B98A;
+  --rust:#D9744A;
+  --sea:#5FA8A0;
+  --dim:#8DA3AC;
+  --good:#6FBF73;
+  --bad:#D4695F;
+  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --disp:"Avenir Next Condensed","Roboto Condensed","Arial Narrow",var(--serif);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:
+    radial-gradient(900px 620px at 50% -8%, var(--deep-2) 0%, var(--deep) 64%);
+  color:var(--cream);font-family:var(--serif);min-height:100vh;
+  padding:34px 18px 78px;display:flex;flex-direction:column;align-items:center;
+}
+.wrap{ max-width:620px;width:100% }
+
+header{ text-align:center }
+h1{
+  font-family:var(--disp);font-size:clamp(25px,5.6vw,38px);margin:0;
+  letter-spacing:.15em;text-transform:uppercase;color:var(--sand);font-weight:700;
+}
+.sub{ font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;opacity:.55;margin-top:9px }
+
+/* ---------- mode tabs ---------- */
+.modes{ display:flex;gap:8px;justify-content:center;margin:22px 0 4px;flex-wrap:wrap }
+.modes button{
+  font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  background:transparent;color:var(--cream);border:1px solid var(--edge);
+  padding:8px 14px;cursor:pointer;border-radius:2px;
+}
+.modes button:hover{ border-color:var(--sand);color:var(--sand) }
+.modes button[aria-pressed="true"]{ background:var(--sand);border-color:var(--sand);color:var(--deep);font-weight:700 }
+.modes button:focus-visible{ outline:2px solid var(--sea);outline-offset:2px }
+
+/* ---------- scoreboard ---------- */
+.score{
+  display:flex;justify-content:center;gap:22px;margin:16px 0 0;
+  font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);
+}
+.score b{ display:block;font-size:19px;letter-spacing:.02em;color:var(--cream);margin-top:4px;font-weight:400 }
+.score .hot b{ color:var(--rust) }
+
+/* ---------- the card ---------- */
+.card{
+  background:var(--panel);border:1px solid var(--edge);border-radius:3px;
+  margin-top:22px;padding:22px 20px 20px;
+  box-shadow:0 18px 44px rgba(0,0,0,.42);
+}
+.ask{
+  font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--sea);text-align:center;margin-bottom:16px;
+}
+.flagbox{
+  display:flex;align-items:center;justify-content:center;
+  min-height:150px;margin-bottom:18px;
+}
+.flagbox img{
+  display:block;max-width:260px;width:100%;height:auto;
+  border:1px solid rgba(0,0,0,.5);
+  box-shadow:0 8px 22px rgba(0,0,0,.45);
+  background:#0B171D;
+}
+.prompt-word{
+  text-align:center;font-size:clamp(23px,5vw,31px);line-height:1.2;
+  margin:6px 0 20px;color:var(--cream);
+}
+.prompt-word small{
+  display:block;font-family:var(--mono);font-size:10px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--dim);margin-top:9px;
+}
+
+.opts{ display:grid;gap:9px }
+.opts button{
+  font-family:var(--serif);font-size:15.5px;text-align:left;
+  background:rgba(240,233,214,.05);color:var(--cream);
+  border:1px solid var(--edge);border-radius:2px;
+  padding:12px 14px;cursor:pointer;
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+  transition:background .13s, border-color .13s;
+}
+.opts button .tag{
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--dim);flex:0 0 auto;
+}
+.opts button:hover:not(:disabled){ background:rgba(240,233,214,.11);border-color:var(--sand) }
+.opts button:focus-visible{ outline:2px solid var(--sea);outline-offset:2px }
+.opts button:disabled{ cursor:default }
+.opts button.right{ background:rgba(111,191,115,.19);border-color:var(--good);color:#DDF3DE }
+.opts button.wrong{ background:rgba(212,105,95,.17);border-color:var(--bad);color:#F6DEDB }
+.opts button.faded{ opacity:.42 }
+
+.verdict{
+  margin-top:16px;min-height:22px;text-align:center;
+  font-size:14.5px;line-height:1.55;color:var(--dim);
+}
+.verdict b{ color:var(--cream);font-weight:400 }
+.next{
+  display:block;width:100%;margin-top:16px;
+  font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  background:var(--rust);color:#1A0D07;border:0;border-radius:2px;
+  padding:13px;cursor:pointer;font-weight:700;
+}
+.next:hover{ filter:brightness(1.08) }
+.next:focus-visible{ outline:2px solid var(--sea);outline-offset:2px }
+.next[hidden]{ display:none }
+
+footer{
+  max-width:620px;margin:26px auto 0;padding-top:14px;border-top:1px solid var(--edge);
+  font-family:var(--mono);font-size:10.5px;line-height:1.8;color:var(--dim);
+}
+footer a{ color:var(--sand) }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media (prefers-reduced-motion: reduce){
+  #lc-back, .opts button{ transition:none }
+}
+</style>
+</head>
+<body>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<div class="wrap">
+  <header>
+    <h1>The Flag Desk</h1>
+    <div class="sub">193 member states &middot; no half marks</div>
+  </header>
+
+  <div class="modes" id="modes" role="group" aria-label="Round type">
+    <button type="button" data-m="flag" aria-pressed="true">Flags</button>
+    <button type="button" data-m="cur" aria-pressed="false">Currency</button>
+    <button type="button" data-m="cap" aria-pressed="false">Capitals</button>
+    <button type="button" data-m="mix" aria-pressed="false">All three</button>
+  </div>
+
+  <div class="score">
+    <div>Score<b id="s-score">0</b></div>
+    <div>Asked<b id="s-asked">0</b></div>
+    <div class="hot">Streak<b id="s-streak">0</b></div>
+    <div>Best<b id="s-best">0</b></div>
+  </div>
+
+  <div class="card">
+    <div class="ask" id="ask">&nbsp;</div>
+    <div id="stage"></div>
+    <div class="opts" id="opts"></div>
+    <div class="verdict" id="verdict"></div>
+    <button class="next" id="next" type="button" hidden>Next</button>
+  </div>
+</div>
+
+<footer>
+  Country names, capitals and currencies come from the open
+  <a href="https://github.com/mledoze/countries" target="_blank" rel="noopener">mledoze/countries</a>
+  dataset (ODbL), the same one the REST Countries API is built from — that API now needs a signed-up
+  key, so the data is baked in here instead and nothing on this page phones home for it. Flags are
+  served by <a href="https://flagcdn.com/" target="_blank" rel="noopener">flagcdn.com</a>. Only the
+  193 UN member states are asked about, which keeps the awkward questions about what counts as a
+  country out of a quiz that has no business settling them. Wrong answers are drawn from the same
+  part of the world as the right one, so a lucky guess has to be an informed one.
+  <a href="/">&larr; back to the cabinet</a>
+</footer>
+
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+const pick = (a) => a[Math.floor(Math.random() * a.length)];
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+/* [name, iso2, capital, currency code, currency name, subregion] */
+const C = [["Afghanistan","af","Kabul","AFN","Afghan afghani","Southern Asia"],
+["Albania","al","Tirana","ALL","Albanian lek","Southeast Europe"],
+["Algeria","dz","Algiers","DZD","Algerian dinar","Northern Africa"],
+["Andorra","ad","Andorra la Vella","EUR","Euro","Southern Europe"],
+["Angola","ao","Luanda","AOA","Angolan kwanza","Middle Africa"],
+["Antigua and Barbuda","ag","Saint John's","XCD","Eastern Caribbean dollar","Caribbean"],
+["Argentina","ar","Buenos Aires","ARS","Argentine peso","South America"],
+["Armenia","am","Yerevan","AMD","Armenian dram","Western Asia"],
+["Australia","au","Canberra","AUD","Australian dollar","Australia and New Zealand"],
+["Austria","at","Vienna","EUR","Euro","Central Europe"],
+["Azerbaijan","az","Baku","AZN","Azerbaijani manat","Western Asia"],
+["Bahamas","bs","Nassau","BSD","Bahamian dollar","Caribbean"],
+["Bahrain","bh","Manama","BHD","Bahraini dinar","Western Asia"],
+["Bangladesh","bd","Dhaka","BDT","Bangladeshi taka","Southern Asia"],
+["Barbados","bb","Bridgetown","BBD","Barbadian dollar","Caribbean"],
+["Belarus","by","Minsk","BYN","Belarusian ruble","Eastern Europe"],
+["Belgium","be","Brussels","EUR","Euro","Western Europe"],
+["Belize","bz","Belmopan","BZD","Belize dollar","Central America"],
+["Benin","bj","Porto-Novo","XOF","West African CFA franc","Western Africa"],
+["Bhutan","bt","Thimphu","BTN","Bhutanese ngultrum","Southern Asia"],
+["Bolivia","bo","Sucre","BOB","Bolivian boliviano","South America"],
+["Bosnia and Herzegovina","ba","Sarajevo","BAM","Bosnia and Herzegovina convertible mark","Southeast Europe"],
+["Botswana","bw","Gaborone","BWP","Botswana pula","Southern Africa"],
+["Brazil","br","Brasília","BRL","Brazilian real","South America"],
+["Brunei","bn","Bandar Seri Begawan","BND","Brunei dollar","South-Eastern Asia"],
+["Bulgaria","bg","Sofia","EUR","Euro","Southeast Europe"],
+["Burkina Faso","bf","Ouagadougou","XOF","West African CFA franc","Western Africa"],
+["Burundi","bi","Gitega","BIF","Burundian franc","Eastern Africa"],
+["Cambodia","kh","Phnom Penh","KHR","Cambodian riel","South-Eastern Asia"],
+["Cameroon","cm","Yaoundé","XAF","Central African CFA franc","Middle Africa"],
+["Canada","ca","Ottawa","CAD","Canadian dollar","North America"],
+["Cape Verde","cv","Praia","CVE","Cape Verdean escudo","Western Africa"],
+["Central African Republic","cf","Bangui","XAF","Central African CFA franc","Middle Africa"],
+["Chad","td","N'Djamena","XAF","Central African CFA franc","Middle Africa"],
+["Chile","cl","Santiago","CLP","Chilean peso","South America"],
+["China","cn","Beijing","CNY","Chinese yuan","Eastern Asia"],
+["Colombia","co","Bogotá","COP","Colombian peso","South America"],
+["Comoros","km","Moroni","KMF","Comorian franc","Eastern Africa"],
+["Congo","cg","Brazzaville","XAF","Central African CFA franc","Middle Africa"],
+["Costa Rica","cr","San José","CRC","Costa Rican colón","Central America"],
+["Croatia","hr","Zagreb","EUR","Euro","Southeast Europe"],
+["Cuba","cu","Havana","CUC","Cuban convertible peso","Caribbean"],
+["Cyprus","cy","Nicosia","EUR","Euro","Southern Europe"],
+["Czechia","cz","Prague","CZK","Czech koruna","Central Europe"],
+["DR Congo","cd","Kinshasa","CDF","Congolese franc","Middle Africa"],
+["Denmark","dk","Copenhagen","DKK","Danish krone","Northern Europe"],
+["Djibouti","dj","Djibouti","DJF","Djiboutian franc","Eastern Africa"],
+["Dominica","dm","Roseau","XCD","Eastern Caribbean dollar","Caribbean"],
+["Dominican Republic","do","Santo Domingo","DOP","Dominican peso","Caribbean"],
+["Ecuador","ec","Quito","USD","United States dollar","South America"],
+["Egypt","eg","Cairo","EGP","Egyptian pound","Northern Africa"],
+["El Salvador","sv","San Salvador","USD","United States dollar","Central America"],
+["Equatorial Guinea","gq","Malabo","XAF","Central African CFA franc","Middle Africa"],
+["Eritrea","er","Asmara","ERN","Eritrean nakfa","Eastern Africa"],
+["Estonia","ee","Tallinn","EUR","Euro","Northern Europe"],
+["Eswatini","sz","Lobamba","SZL","Swazi lilangeni","Southern Africa"],
+["Ethiopia","et","Addis Ababa","ETB","Ethiopian birr","Eastern Africa"],
+["Fiji","fj","Suva","FJD","Fijian dollar","Melanesia"],
+["Finland","fi","Helsinki","EUR","Euro","Northern Europe"],
+["France","fr","Paris","EUR","Euro","Western Europe"],
+["Gabon","ga","Libreville","XAF","Central African CFA franc","Middle Africa"],
+["Gambia","gm","Banjul","GMD","dalasi","Western Africa"],
+["Georgia","ge","Tbilisi","GEL","lari","Western Asia"],
+["Germany","de","Berlin","EUR","Euro","Western Europe"],
+["Ghana","gh","Accra","GHS","Ghanaian cedi","Western Africa"],
+["Greece","gr","Athens","EUR","Euro","Southern Europe"],
+["Grenada","gd","St. George's","XCD","Eastern Caribbean dollar","Caribbean"],
+["Guatemala","gt","Guatemala City","GTQ","Guatemalan quetzal","Central America"],
+["Guinea","gn","Conakry","GNF","Guinean franc","Western Africa"],
+["Guinea-Bissau","gw","Bissau","XOF","West African CFA franc","Western Africa"],
+["Guyana","gy","Georgetown","GYD","Guyanese dollar","South America"],
+["Haiti","ht","Port-au-Prince","HTG","Haitian gourde","Caribbean"],
+["Honduras","hn","Tegucigalpa","HNL","Honduran lempira","Central America"],
+["Hungary","hu","Budapest","HUF","Hungarian forint","Central Europe"],
+["Iceland","is","Reykjavik","ISK","Icelandic króna","Northern Europe"],
+["India","in","New Delhi","INR","Indian rupee","Southern Asia"],
+["Indonesia","id","Jakarta","IDR","Indonesian rupiah","South-Eastern Asia"],
+["Iran","ir","Tehran","IRR","Iranian rial","Southern Asia"],
+["Iraq","iq","Baghdad","IQD","Iraqi dinar","Western Asia"],
+["Ireland","ie","Dublin","EUR","Euro","Northern Europe"],
+["Israel","il","Jerusalem","ILS","Israeli new shekel","Western Asia"],
+["Italy","it","Rome","EUR","Euro","Southern Europe"],
+["Ivory Coast","ci","Yamoussoukro","XOF","West African CFA franc","Western Africa"],
+["Jamaica","jm","Kingston","JMD","Jamaican dollar","Caribbean"],
+["Japan","jp","Tokyo","JPY","Japanese yen","Eastern Asia"],
+["Jordan","jo","Amman","JOD","Jordanian dinar","Western Asia"],
+["Kazakhstan","kz","Astana","KZT","Kazakhstani tenge","Central Asia"],
+["Kenya","ke","Nairobi","KES","Kenyan shilling","Eastern Africa"],
+["Kiribati","ki","South Tarawa","AUD","Australian dollar","Micronesia"],
+["Kuwait","kw","Kuwait City","KWD","Kuwaiti dinar","Western Asia"],
+["Kyrgyzstan","kg","Bishkek","KGS","Kyrgyzstani som","Central Asia"],
+["Laos","la","Vientiane","LAK","Lao kip","South-Eastern Asia"],
+["Latvia","lv","Riga","EUR","Euro","Northern Europe"],
+["Lebanon","lb","Beirut","LBP","Lebanese pound","Western Asia"],
+["Lesotho","ls","Maseru","LSL","Lesotho loti","Southern Africa"],
+["Liberia","lr","Monrovia","LRD","Liberian dollar","Western Africa"],
+["Libya","ly","Tripoli","LYD","Libyan dinar","Northern Africa"],
+["Liechtenstein","li","Vaduz","CHF","Swiss franc","Western Europe"],
+["Lithuania","lt","Vilnius","EUR","Euro","Northern Europe"],
+["Luxembourg","lu","Luxembourg","EUR","Euro","Western Europe"],
+["Madagascar","mg","Antananarivo","MGA","Malagasy ariary","Eastern Africa"],
+["Malawi","mw","Lilongwe","MWK","Malawian kwacha","Eastern Africa"],
+["Malaysia","my","Kuala Lumpur","MYR","Malaysian ringgit","South-Eastern Asia"],
+["Maldives","mv","Malé","MVR","Maldivian rufiyaa","Southern Asia"],
+["Mali","ml","Bamako","XOF","West African CFA franc","Western Africa"],
+["Malta","mt","Valletta","EUR","Euro","Southern Europe"],
+["Marshall Islands","mh","Majuro","USD","United States dollar","Micronesia"],
+["Mauritania","mr","Nouakchott","MRU","Mauritanian ouguiya","Western Africa"],
+["Mauritius","mu","Port Louis","MUR","Mauritian rupee","Eastern Africa"],
+["Mexico","mx","Mexico City","MXN","Mexican peso","North America"],
+["Moldova","md","Chișinău","MDL","Moldovan leu","Eastern Europe"],
+["Monaco","mc","Monaco","EUR","Euro","Western Europe"],
+["Mongolia","mn","Ulan Bator","MNT","Mongolian tögrög","Eastern Asia"],
+["Montenegro","me","Podgorica","EUR","Euro","Southeast Europe"],
+["Morocco","ma","Rabat","MAD","Moroccan dirham","Northern Africa"],
+["Mozambique","mz","Maputo","MZN","Mozambican metical","Eastern Africa"],
+["Myanmar","mm","Naypyidaw","MMK","Burmese kyat","South-Eastern Asia"],
+["Namibia","na","Windhoek","NAD","Namibian dollar","Southern Africa"],
+["Nauru","nr","Yaren","AUD","Australian dollar","Micronesia"],
+["Nepal","np","Kathmandu","NPR","Nepalese rupee","Southern Asia"],
+["Netherlands","nl","Amsterdam","EUR","Euro","Western Europe"],
+["New Zealand","nz","Wellington","NZD","New Zealand dollar","Australia and New Zealand"],
+["Nicaragua","ni","Managua","NIO","Nicaraguan córdoba","Central America"],
+["Niger","ne","Niamey","XOF","West African CFA franc","Western Africa"],
+["Nigeria","ng","Abuja","NGN","Nigerian naira","Western Africa"],
+["North Korea","kp","Pyongyang","KPW","North Korean won","Eastern Asia"],
+["North Macedonia","mk","Skopje","MKD","denar","Southeast Europe"],
+["Norway","no","Oslo","NOK","Norwegian krone","Northern Europe"],
+["Oman","om","Muscat","OMR","Omani rial","Western Asia"],
+["Pakistan","pk","Islamabad","PKR","Pakistani rupee","Southern Asia"],
+["Palau","pw","Ngerulmud","USD","United States dollar","Micronesia"],
+["Panama","pa","Panama City","PAB","Panamanian balboa","Central America"],
+["Papua New Guinea","pg","Port Moresby","PGK","Papua New Guinean kina","Melanesia"],
+["Paraguay","py","Asunción","PYG","Paraguayan guaraní","South America"],
+["Peru","pe","Lima","PEN","Peruvian sol","South America"],
+["Philippines","ph","Manila","PHP","Philippine peso","South-Eastern Asia"],
+["Poland","pl","Warsaw","PLN","Polish złoty","Central Europe"],
+["Portugal","pt","Lisbon","EUR","Euro","Southern Europe"],
+["Qatar","qa","Doha","QAR","Qatari riyal","Western Asia"],
+["Romania","ro","Bucharest","RON","Romanian leu","Southeast Europe"],
+["Russia","ru","Moscow","RUB","Russian ruble","Eastern Europe"],
+["Rwanda","rw","Kigali","RWF","Rwandan franc","Eastern Africa"],
+["Saint Kitts and Nevis","kn","Basseterre","XCD","Eastern Caribbean dollar","Caribbean"],
+["Saint Lucia","lc","Castries","XCD","Eastern Caribbean dollar","Caribbean"],
+["Saint Vincent and the Grenadines","vc","Kingstown","XCD","Eastern Caribbean dollar","Caribbean"],
+["Samoa","ws","Apia","WST","Samoan tālā","Polynesia"],
+["San Marino","sm","City of San Marino","EUR","Euro","Southern Europe"],
+["Saudi Arabia","sa","Riyadh","SAR","Saudi riyal","Western Asia"],
+["Senegal","sn","Dakar","XOF","West African CFA franc","Western Africa"],
+["Serbia","rs","Belgrade","RSD","Serbian dinar","Southeast Europe"],
+["Seychelles","sc","Victoria","SCR","Seychellois rupee","Eastern Africa"],
+["Sierra Leone","sl","Freetown","SLE","Sierra Leonean leone","Western Africa"],
+["Singapore","sg","Singapore","SGD","Singapore dollar","South-Eastern Asia"],
+["Slovakia","sk","Bratislava","EUR","Euro","Central Europe"],
+["Slovenia","si","Ljubljana","EUR","Euro","Central Europe"],
+["Solomon Islands","sb","Honiara","SBD","Solomon Islands dollar","Melanesia"],
+["Somalia","so","Mogadishu","SOS","Somali shilling","Eastern Africa"],
+["South Africa","za","Pretoria","ZAR","South African rand","Southern Africa"],
+["South Korea","kr","Seoul","KRW","South Korean won","Eastern Asia"],
+["South Sudan","ss","Juba","SSP","South Sudanese pound","Middle Africa"],
+["Spain","es","Madrid","EUR","Euro","Southern Europe"],
+["Sri Lanka","lk","Colombo","LKR","Sri Lankan rupee","Southern Asia"],
+["Sudan","sd","Khartoum","SDG","Sudanese pound","Northern Africa"],
+["Suriname","sr","Paramaribo","SRD","Surinamese dollar","South America"],
+["Sweden","se","Stockholm","SEK","Swedish krona","Northern Europe"],
+["Switzerland","ch","Bern","CHF","Swiss franc","Western Europe"],
+["Syria","sy","Damascus","SYP","Syrian pound","Western Asia"],
+["São Tomé and Príncipe","st","São Tomé","STN","São Tomé and Príncipe dobra","Middle Africa"],
+["Tajikistan","tj","Dushanbe","TJS","Tajikistani somoni","Central Asia"],
+["Tanzania","tz","Dodoma","TZS","Tanzanian shilling","Eastern Africa"],
+["Thailand","th","Bangkok","THB","Thai baht","South-Eastern Asia"],
+["Timor-Leste","tl","Dili","USD","United States dollar","South-Eastern Asia"],
+["Togo","tg","Lomé","XOF","West African CFA franc","Western Africa"],
+["Tonga","to","Nuku'alofa","TOP","Tongan paʻanga","Polynesia"],
+["Trinidad and Tobago","tt","Port of Spain","TTD","Trinidad and Tobago dollar","Caribbean"],
+["Tunisia","tn","Tunis","TND","Tunisian dinar","Northern Africa"],
+["Turkmenistan","tm","Ashgabat","TMT","Turkmenistan manat","Central Asia"],
+["Tuvalu","tv","Funafuti","AUD","Australian dollar","Polynesia"],
+["Türkiye","tr","Ankara","TRY","Turkish lira","Western Asia"],
+["Uganda","ug","Kampala","UGX","Ugandan shilling","Eastern Africa"],
+["Ukraine","ua","Kyiv","UAH","Ukrainian hryvnia","Eastern Europe"],
+["United Arab Emirates","ae","Abu Dhabi","AED","United Arab Emirates dirham","Western Asia"],
+["United Kingdom","gb","London","GBP","British pound","Northern Europe"],
+["United States","us","Washington D.C.","USD","United States dollar","North America"],
+["Uruguay","uy","Montevideo","UYU","Uruguayan peso","South America"],
+["Uzbekistan","uz","Tashkent","UZS","Uzbekistani soʻm","Central Asia"],
+["Vanuatu","vu","Port Vila","VUV","Vanuatu vatu","Melanesia"],
+["Vatican City","va","Vatican City","EUR","Euro","Southern Europe"],
+["Venezuela","ve","Caracas","VES","Venezuelan bolívar soberano","South America"],
+["Vietnam","vn","Hanoi","VND","Vietnamese đồng","South-Eastern Asia"],
+["Yemen","ye","Sana'a","YER","Yemeni rial","Western Asia"],
+["Zambia","zm","Lusaka","ZMW","Zambian kwacha","Eastern Africa"],
+["Zimbabwe","zw","Harare","BWP","Botswana pula","Eastern Africa"]];
+
+const NAME = 0, ISO = 1, CAP = 2, CUR = 3, CURN = 4, SUB = 5;
+
+/* ---------------------------------------------------------------- *
+ *  Picking the three wrong answers.
+ *
+ *  Drawn from the same subregion as the right one wherever there are
+ *  enough of them, and topped up from the wider world when there are
+ *  not — a quiz whose distractors are picked at random off the whole
+ *  list is a quiz you can win by recognising the continent.
+ * ---------------------------------------------------------------- */
+function distractors(right, keyOf, n){
+  const want = keyOf(right);
+  const seen = new Set([want]);
+  const near = [], far = [];
+  for (const c of C){
+    const k = keyOf(c);
+    if (seen.has(k)) continue;
+    seen.add(k);
+    (c[SUB] === right[SUB] ? near : far).push(c);
+  }
+  shuffle(near); shuffle(far);
+  return near.concat(far).slice(0, n);
+}
+
+function shuffle(a){
+  for (let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* ---------------------------------------------------------------- *
+ *  The three kinds of question.
+ *
+ *  Each returns the prompt, the right answer, and how an option is
+ *  labelled — so the asking machinery below never has to know which
+ *  kind it is running.
+ * ---------------------------------------------------------------- */
+const ROUNDS = {
+  flag: {
+    ask: 'Whose flag is this?',
+    key: (c) => c[NAME],
+    stage: (c) => '<div class="flagbox"><img src="https://flagcdn.com/w320/' + esc(c[ISO]) +
+                  '.png" width="320" alt="A national flag, unlabelled" loading="eager"></div>',
+    label: (c) => esc(c[NAME]),
+    tag: () => '',
+    after: (c) => 'Capital ' + esc(c[CAP]) + '. They spend the ' + esc(c[CURN].toLowerCase()) + '.'
+  },
+  cur: {
+    ask: 'What do they spend here?',
+    key: (c) => c[CUR],
+    stage: (c) => '<div class="prompt-word">' + esc(c[NAME]) +
+                  '<small>' + esc(c[SUB]) + '</small></div>',
+    label: (c) => esc(c[CURN]),
+    tag: (c) => esc(c[CUR]),
+    after: (c) => 'The ' + esc(c[CURN].toLowerCase()) + ', ' + esc(c[CUR]) + '.'
+  },
+  cap: {
+    ask: 'Where do they govern from?',
+    key: (c) => c[CAP],
+    stage: (c) => '<div class="prompt-word">' + esc(c[NAME]) +
+                  '<small>' + esc(c[SUB]) + '</small></div>',
+    label: (c) => esc(c[CAP]),
+    tag: () => '',
+    after: (c) => esc(c[CAP]) + ', in ' + esc(c[SUB].toLowerCase()) + '.'
+  }
+};
+
+/* ---------------------------------------------------------------- *
+ *  State
+ * ---------------------------------------------------------------- */
+const KEY = 'lc-flagdesk';
+let mode = 'flag';
+let score = 0, asked = 0, streak = 0, best = 0;
+let current = null, answered = false;
+let recent = [];             // so the same country is not asked twice in a row
+
+try { best = parseInt(localStorage.getItem(KEY), 10) || 0; } catch (e) {}
+
+function saveBest(){
+  try { localStorage.setItem(KEY, String(best)); } catch (e) {}
+}
+
+function paintScore(){
+  $('s-score').textContent = score;
+  $('s-asked').textContent = asked;
+  $('s-streak').textContent = streak;
+  $('s-best').textContent = best;
+}
+
+function nextCountry(){
+  for (let tries = 0; tries < 40; tries++){
+    const c = pick(C);
+    if (recent.indexOf(c[ISO]) < 0){
+      recent.push(c[ISO]);
+      if (recent.length > 25) recent.shift();
+      return c;
+    }
+  }
+  return pick(C);
+}
+
+function newRound(){
+  answered = false;
+  const kind = mode === 'mix' ? pick(['flag', 'cur', 'cap']) : mode;
+  const r = ROUNDS[kind];
+  const right = nextCountry();
+  const wrong = distractors(right, r.key, 3);
+  const options = shuffle([right].concat(wrong));
+
+  current = { kind, r, right, options };
+  $('ask').textContent = r.ask;
+  $('stage').innerHTML = r.stage(right);
+  $('verdict').textContent = '';
+  $('next').hidden = true;
+
+  $('opts').innerHTML = options.map(function(c, i){
+    const tag = r.tag(c);
+    return '<button type="button" data-i="' + i + '">' +
+           '<span>' + r.label(c) + '</span>' +
+           (tag ? '<span class="tag">' + tag + '</span>' : '') +
+           '</button>';
+  }).join('');
+
+  [...$('opts').children].forEach(function(b, i){
+    b.addEventListener('click', function(){ answer(b, options[i]); });
+  });
+}
+
+function answer(btn, chosen){
+  if (answered) return;
+  answered = true;
+  const { r, right } = current;
+  const correct = r.key(chosen) === r.key(right);
+
+  asked++;
+  if (correct){
+    score++; streak++;
+    if (streak > best){ best = streak; saveBest(); }
+  } else {
+    streak = 0;
+  }
+  paintScore();
+
+  // Mark up the row by what each option actually is, not by reading its
+  // rendered label back out — the labels are HTML-escaped on the way in,
+  // and comparing them again through textContent is a trap. Options are
+  // built from distinct answer values, so at most one of them is right,
+  // but the comparison is by value so a duplicate could never mislead.
+  [...$('opts').children].forEach(function(b, i){
+    b.disabled = true;
+    if (r.key(current.options[i]) === r.key(right)) b.classList.add('right');
+    else if (b === btn) b.classList.add('wrong');
+    else b.classList.add('faded');
+  });
+
+  $('verdict').innerHTML = (correct ? '<b>Yes.</b> ' : '<b>No — ' + esc(right[NAME]) + '.</b> ') +
+                           esc(r.after(right));
+  $('next').hidden = false;
+  $('next').focus();
+}
+
+$('next').addEventListener('click', newRound);
+$('modes').addEventListener('click', function(e){
+  const b = e.target.closest('button');
+  if (!b) return;
+  mode = b.dataset.m;
+  [...$('modes').children].forEach(function(x){
+    x.setAttribute('aria-pressed', String(x === b));
+  });
+  newRound();
+});
+
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Enter' && !$('next').hidden){ e.preventDefault(); newRound(); return; }
+  const n = parseInt(e.key, 10);
+  if (n >= 1 && n <= 4 && !answered){
+    const b = $('opts').children[n - 1];
+    if (b) b.click();
+  }
+});
+
+paintScore();
+newRound();
+</script>
+</body>
+</html>

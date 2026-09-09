@@ -1,5 +1,77 @@
 # Overnight batch — progress log
 
+## Summary — batch 8, the ten that were still undone
+
+**Ten toys built, verified in a real browser, and added to the hub. The cabinet went from 81 drawers
+to 91.** Everything on the list got built, in the order given, and nothing was left half-finished.
+One additive server route (`/api/photos`) and one added field on `/api/keys`; no other change to
+`server.js`, and no structural change to the hub shell beyond ten cards and ten desktop-icon
+mappings.
+
+**Not built, as instructed:** the full custom globe/planet editor, device-detected retro hub
+theming, message in a bottle, who else is here, the pixel outpost builder, and Room Tone. Nothing
+outside the list was built.
+
+**Not deployed.** The commits are local. Deploying is a manual step whenever you want it.
+
+### Look at these first
+
+1. **The premise of the flag toy was out of date and I changed the source.** REST Countries'
+   keyless API is gone — v1 through v4 are deprecated and v5 wants a signed-up key. Rather than
+   ship a toy that needs a key for country names, I took the data from
+   [mledoze/countries](https://github.com/mledoze/countries), which is the open dataset REST
+   Countries is *built from*, ODbL, and baked the 193 UN member states into the page. It is 13 kB,
+   it is attributed on the page, and the toy now makes no network call for its data at all. Flags
+   come from flagcdn.com at runtime. **If you would rather pay for or sign up to the real API, that
+   is a one-file change and your call, not mine.**
+
+2. **`/cipher/` is the one with real engineering in it, and it is worth ten minutes.** Ondaric is a
+   constructed language built backwards from one requirement: whatever goes in must come out again,
+   or your friend cannot read it. Six rules, all reversible. It round-trips **4,000 randomly
+   generated sentences with zero losses**, and getting there took five separate bug fixes that a
+   fuzzer found and I would not have: a non-bijective letter table, prepositions binding across
+   numbers, accented letters being silently dropped, a substituted word colliding with a grammar
+   particle (under one passphrase "you" came out as the word for a comma), and a two-piece parse
+   that could not tell an article in front from a postposition behind. The passphrase reshuffles
+   the particles as well as the letters, so a wrong key garbles the grammar too. **It is a party
+   trick, not cryptography, and the page says so in those words.**
+
+3. **`/atmosphere/` is built and wired but its live API call is unverified, because there is no
+   Pexels key.** Everything else about it is verified: the needs-a-key panel, the route's allowlist,
+   the 400 on an unknown mode, and — by stubbing the route with the exact response shape — image
+   loading, the fade, attribution rendering with both links, caption stability, swipe and arrows.
+   Set `PEXELS_API_KEY` and it should work; the one thing nobody has watched is Pexels' own
+   response. **Stubbing it also caught a genuine bug that would have shipped:** a photograph whose
+   file failed to load made the page skip to the next one, which at the end of the deck fetched
+   more, which also failed — an unbounded loop that made **95 API calls in four seconds**. Both ends
+   are bounded now, and the same guard went into the Zone gallery.
+
+4. **The README's toy table has drifted badly and I did not fix it.** It still lists 29 toys and
+   describes the cabinet as it was several batches ago. I updated only the parts this session
+   touched — the routes list and the keys paragraph. Rewriting 91 rows is a job in its own right
+   and it needs someone who knows which of the older entries are still accurate.
+
+5. **Another session was committing to `main` while I worked.** Its last commit was 11:55 and the
+   tree was clean when I started, so nothing collided, but two agents are writing to
+   `public/index.html`. Worth settling before the next batch.
+
+### What was verified, and how
+
+Every toy was opened in a real browser and driven, not just checked for a 200. All ten return 200,
+carry the standard back-to-the-cabinet control, appear as both a card and a desktop icon with a
+hand-picked icon rather than a tag fallback, and are findable in the Start menu search. No page
+threw a script error.
+
+Specifically beyond that: the flag desk's distractors come from the same subregion as the answer;
+the fallacy quiz marks by value rather than by re-reading its own rendered labels; the dilemma
+tally moves only when you answer; the five verse registers have five different line counts and
+three different rhyme schemes; the dungeon room is stable across a reload and identical for
+everyone today; changing the charge on the flag changes exactly one line of the country dossier and
+nothing else; masterpiece roulette loads real images with CC0 attribution and a link to the record.
+
+---
+
+
 ## Summary — batches 9, 10 and 11, plus the easter-egg pass
 
 **16 toys built, verified in a real browser, and added to the hub. The cabinet went from 65 drawers
@@ -972,3 +1044,179 @@ with a coarse pointer: plenty of desktops expose DeviceOrientation and never mea
 offering tilt there would switch the reader into a mode that does nothing. Holding the pointer is the
 default everywhere and the fallback is automatic, not a prompt. The message rides in the URL fragment,
 so nothing is stored anywhere and the link is the whole delivery mechanism.
+
+---
+
+# Batch 8 — the ten toys
+
+## 1. `/flag-guesser/` — The Flag Desk
+
+Flags, currencies and capitals for the 193 UN member states, in four modes.
+
+The brief said REST Countries was "free, keyless". It is not any more: v1–v4 are deprecated and v5
+requires `Authorization: Bearer`. I took the data from mledoze/countries instead — the ODbL dataset
+REST Countries is built from — and baked the 193 UN members in as a 13 kB table, attributed on the
+page. The toy makes no network call for its data. Flags come from flagcdn.com, which is keyless and
+sends `access-control-allow-origin: *`.
+
+Restricting it to UN members keeps a quiz out of arguments about what counts as a country, which it
+has no business settling. Distractors are drawn from the answer's own subregion where there are
+enough of them — Nepal's flag offers Pakistan, India and Iran, not Chile.
+
+One bug worth recording: the first version marked answers by comparing each button's `textContent`
+against the re-rendered label. The labels are HTML-escaped on the way in, so that comparison was one
+apostrophe away from silently marking a right answer wrong. It compares by value now.
+
+## 2. `/name-that-fallacy/` — Name That Fallacy
+
+Twenty-four fallacies with their standard definitions, two worked examples each, and — the part that
+makes it more than trivia — what the argument would have to do instead. Quiz mode and a full
+reference list.
+
+Every example is invented and nobody in them is a real person: the speakers are a neighbour, a
+colleague, someone at a bus stop. An argument is easier to look at when there is no one to defend.
+The footer says the thing these lists usually leave off, which is that spotting a fallacy makes a
+conclusion unsupported rather than false.
+
+The appeal-to-authority entry says outright that citing a real expert in their own field is not the
+fallacy, because half the internet has that one backwards.
+
+## 3. `/dilemma/` — The Philosopher's Dilemma
+
+Eighteen dilemmas, several of them the classical thought experiments in their standard form — the
+lever, the footbridge, the transplant, the pond, the experience machine, the veil.
+
+Each answer is tagged with the tradition it leans on, and after three answers the page starts
+showing a tally of which kind of reason you keep reaching for. It is a record, not a verdict, and
+it says so: these traditions have disagreed in print for two centuries and a web page cannot settle
+it. Local only, resets when you leave, no shared statistics — as specified.
+
+The lever and the footbridge sit next to each other on purpose, and the note under the second one
+points out that the arithmetic has not changed.
+
+## 4. `/cipher/` — Ondaric
+
+The technical centrepiece. A constructed language with six reversible rules: the sentence runs
+backwards, every letter has one counterpart, articles bind in front with a turned comma,
+prepositions become postpositions and bind behind with a hyphen, punctuation becomes a marked
+particle word, and capitals survive.
+
+**Round-trips 4,000 randomly generated sentences with zero losses**, plus a hand-written suite of
+awkward cases. Five bugs were found by fuzzing and fixed:
+
+- The hand-written consonant table was written for looks and was not a bijection. It is repaired
+  into a permutation at load, so decoding is never a guess.
+- A preposition looked past a number for its noun, so "at 7 on Tuesday" bound the wrong word.
+- Accented letters were outside the word pattern and were being dropped entirely.
+- A substituted word could land exactly on a grammar particle — under one passphrase "you" came
+  out as "vei", the word for a comma. Particles wear a raised dot now, and a root can never contain
+  one.
+- `X'Y` could not be parsed reliably: the root for "I" really does come out as "A", which is also
+  the article. Articles and postpositions have separate binders now.
+
+The passphrase reshuffles the particles as well as the letters, so a wrong key garbles the grammar
+too — without that, "at the" survived intact and anyone who knew Ondaric could read the shape of
+your sentence. The page calls it a party trick rather than cryptography and tells you not to use it
+for anything that matters. Symbols with no particle — currency signs, brackets, the at-sign — are
+dropped, and the page says so rather than pretending.
+
+## 5. `/shanty-ifier/` — Five Ways To Say It
+
+A sentence about your day, set to verse in five registers: sea shanty, pirate, ye-olde chronicle,
+Shakespearean, and noir.
+
+They are five different shapes on the page, not one template in five hats — six, six, six, seven
+and five lines; the shanty has a repeated response line set in from the margin, the chronicle does
+not rhyme at all, and the detective refuses to rhyme on principle. Every line was written for this
+page. Nothing reproduces a real shanty, chantey, ballad or song, and the footer says so.
+
+Two fixes after reading the output: rhymes were being picked line by line, which produced couplets
+rhyming "smile" with "tall" — they are chosen as pairs now. And the keyword picker preferred the
+longest word, which meant "the arguing" instead of "the printer"; `-ing` and `-ed` words get
+passed over unless nothing else is left.
+
+## 6. `/dungeon-room/` — Dungeon Room of the Day
+
+One room, one occupant, one thing worth taking, with a drawn floor plan.
+
+Seeded from the date, so everyone who opens it today stands in the same room; going deeper re-seeds
+and is yours alone. Verified stable across a reload. The plan is generated from the room, and a
+round vault turned up a real bug — the occupant was being placed in a corner the round wall does
+not have. Placement and drawing now share one inside-the-floor test.
+
+The footer points at the loot terminal for anyone who wants the item appraised rather than
+described.
+
+## 7. `/design-a-country/` — Design Your Own Country
+
+Pick a flag; the country follows from it. This is the scoped version, as instructed — no globe.
+
+The claim on the page is that it is a design tool rather than a random generator, so I tested the
+claim: changing the charge changed exactly one row of the ten-row dossier and left the other nine
+untouched. Pattern sets government and founding, field sets land and crops, charge sets belief,
+second colour sets what they argue about. The flag is SVG and the charge is inked dark or pale
+depending on what it lands on; the map is a generated coastline with rivers, hills and a capital.
+Names are assembled from invented syllables and the footer says that a resemblance to a real place
+is the alphabet's fault.
+
+## 8. `/masterpiece-roulette/` — Masterpiece Roulette
+
+Real public-domain works from the Art Institute of Chicago, one at a time, through the existing
+`/api/art` image proxy.
+
+The obvious implementation does not work: the search endpoint refuses any offset past 1,000, so
+random deep paging 403s, and paging shallowly would show the same slice of 62,056 works forever. It
+picks a word from a broad list instead — river, portrait, blue, horse, winter, sixty-odd of them
+pulling in every direction — which reorders the whole set, then takes a shallow page into that.
+Verified across four consecutive works: Italian jewellery, a Chinese garden painting, a Renoir, and
+a Dutch etching.
+
+The caption is a gallery guide who has been given no notes. Everything it says is about the act of
+looking; it makes no claim about who made a thing, when, or why, because the museum's own metadata
+is doing that on the plaque above. It is attributed to nobody, in the page's own words, because
+nobody said it. Seeded from the artwork id, so a piece keeps its paragraph.
+
+## 9. `/atmosphere/` — Atmosphere
+
+Two modes, Nostalgia and Liminal, with a swipe. **Built and wired, live API call unverified — there
+is no `PEXELS_API_KEY` on this machine.**
+
+The route is `/api/photos?mode=&term=&page=`. Search terms are a fixed allowlist per mode indexed by
+number, so the browser never sends a query string and this cannot become a free image search on
+someone else's quota — the same rule as the RSS relay. Missing key answers `200 {ok:false,
+reason:"no_key"}`, not a 5xx, because the caller has a state for it.
+
+Verified: the needs-a-key panel, the mode switch (which also swaps the accent colour and the
+caption typeface), the 400 on an unknown mode. Then, by stubbing the route with the exact shape it
+returns: image load and fade, attribution with both links, caption stability going back and forth,
+next/previous/swipe.
+
+**Stubbing caught a bug that would have shipped.** An image that failed to load made the page step
+to the next one; at the end of the deck that fetched more; those failed too. 95 API calls in four
+seconds. Consecutive image failures and empty fetches are both bounded now and say so on screen.
+The same guard went into the Zone gallery, which had the same shape.
+
+The two voices are deliberately different in more than vocabulary: Nostalgia is warm, past tense,
+allowed a second clause; Liminal is flat, present tense, monospaced on the page, and says one thing
+at a time. Neither says anything about where the photograph was actually taken, because neither
+knows.
+
+## 10. `/the-zone-gallery/` — Zone Survey, Photographic Annexe
+
+The companion to the field PDA, in its palette and its voice — institutional, measured, reporting
+the impossible in the tone it would use for the weather.
+
+Real photographs from Wikimedia Commons by search: Soviet-era modernist and brutalist building,
+panel housing, sanatoria, bus shelters, abandoned works, cooling towers. Category browsing was
+tried first and abandoned — most of the obvious categories are containers with no files directly in
+them. Each plate carries its photographer, its date, its licence with a link, and a link to the file
+page, because those licences ask for it.
+
+**No film stills.** Commons does not host them, the search terms are architectural, and the footer
+states the boundary in plain words. The survey note underneath is invented and describes nothing
+that happened; the page says that too, and says the buildings are real buildings standing in places
+that are not the Zone.
+
+Commons' credit line arrives as HTML. It is never inserted as HTML — tags are stripped and what
+remains is escaped. Batches are shuffled because search returns consecutive files from one upload,
+which without shuffling meant four photographs of the same wall.

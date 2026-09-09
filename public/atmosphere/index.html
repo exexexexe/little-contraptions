@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atmosphere</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23141216'/><circle cx='11' cy='12' r='4' fill='%23E0A85C'/><path d='M4 24l7-7 5 4 5-6 7 9z' fill='%236E7E8C'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --bg:#141216;
+  --bg-2:#1E1A22;
+  --edge:rgba(255,255,255,.14);
+  --pale:#EFE9E2;
+  --dim:#9A9188;
+  --warm:#E0A85C;
+  --cold:#6E8C9E;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+  --disp:"Avenir Next Condensed","Roboto Condensed","Arial Narrow",var(--serif);
+  --accent:var(--warm);
+}
+:root[data-mode="liminal"]{ --accent:var(--cold); --bg:#101215; --bg-2:#171B20 }
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);color:var(--pale);font-family:var(--serif);min-height:100vh;
+  padding:26px 16px 74px;display:flex;flex-direction:column;align-items:center;
+  transition:background .5s ease;
+}
+.wrap{ max-width:760px;width:100% }
+header{ text-align:center }
+h1{
+  font-family:var(--disp);font-size:clamp(23px,5.2vw,34px);margin:0;
+  letter-spacing:.24em;text-transform:uppercase;color:var(--accent);font-weight:700;
+  transition:color .5s ease;
+}
+.sub{ font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;opacity:.5;margin-top:8px }
+
+.tabs{ display:flex;gap:8px;justify-content:center;margin:20px 0 0 }
+.tabs button{
+  font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+  background:transparent;color:var(--pale);border:1px solid var(--edge);
+  padding:9px 18px;cursor:pointer;border-radius:2px;
+}
+.tabs button:hover{ border-color:var(--accent);color:var(--accent) }
+.tabs button[aria-pressed="true"]{ background:var(--accent);border-color:var(--accent);color:var(--bg);font-weight:700 }
+.tabs button:focus-visible{ outline:2px solid var(--pale);outline-offset:2px }
+
+.stage{
+  margin-top:18px;position:relative;background:#0A0A0C;border:1px solid var(--edge);
+  border-radius:3px;overflow:hidden;
+  aspect-ratio:3/2;display:flex;align-items:center;justify-content:center;
+  touch-action:pan-y;
+}
+.stage img{
+  width:100%;height:100%;object-fit:cover;display:block;
+  opacity:0;transition:opacity .55s ease;
+}
+.stage img.on{ opacity:1 }
+.stage .msg{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  text-align:center;padding:28px;
+  font-family:var(--mono);font-size:11px;line-height:1.85;letter-spacing:.04em;color:var(--dim);
+}
+.stage .msg b{ display:block;color:var(--pale);font-weight:400;letter-spacing:.16em;text-transform:uppercase;margin-bottom:11px }
+.stage .credit{
+  position:absolute;right:9px;bottom:8px;
+  font-family:var(--mono);font-size:9px;letter-spacing:.04em;
+  color:rgba(255,255,255,.82);background:rgba(0,0,0,.55);
+  padding:4px 8px;border-radius:2px;backdrop-filter:blur(4px);
+}
+.stage .credit a{ color:inherit }
+.nav{
+  position:absolute;top:0;bottom:0;width:22%;border:0;background:transparent;cursor:pointer;
+  color:transparent;
+}
+.nav:hover{ background:linear-gradient(90deg,rgba(0,0,0,.28),transparent) }
+.nav.r{ right:0 }
+.nav.r:hover{ background:linear-gradient(270deg,rgba(0,0,0,.28),transparent) }
+.nav:focus-visible{ outline:2px solid var(--accent);outline-offset:-4px;color:var(--pale) }
+
+.caption{
+  margin-top:16px;border-left:3px solid var(--accent);padding:2px 0 2px 15px;
+  min-height:52px;transition:border-color .5s ease;
+}
+.caption p{ margin:0;font-size:clamp(16px,3.3vw,19px);line-height:1.66;color:#E4DCD3 }
+:root[data-mode="liminal"] .caption p{
+  font-family:var(--mono);font-size:14px;line-height:1.8;color:#C6CDD2;letter-spacing:.01em;
+}
+
+.row{ display:flex;gap:9px;margin-top:18px;flex-wrap:wrap;align-items:center }
+.row button{
+  font-family:var(--mono);font-size:10px;letter-spacing:.15em;text-transform:uppercase;
+  border-radius:2px;padding:12px 18px;cursor:pointer;border:1px solid var(--edge);
+  background:transparent;color:var(--pale);flex:1 1 auto;
+}
+.row button:hover{ border-color:var(--accent);color:var(--accent) }
+.row button:focus-visible{ outline:2px solid var(--accent);outline-offset:2px }
+.row .count{ font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);flex:0 0 auto;padding:0 4px }
+
+footer{
+  max-width:760px;margin:26px auto 0;padding-top:14px;border-top:1px solid var(--edge);
+  font-family:var(--mono);font-size:10.5px;line-height:1.8;color:var(--dim);
+}
+footer a{ color:var(--accent) }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media (prefers-reduced-motion: reduce){
+  #lc-back, body, h1, .stage img, .caption{ transition:none }
+}
+</style>
+</head>
+<body>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<div class="wrap">
+  <header>
+    <h1>Atmosphere</h1>
+    <div class="sub" id="sub">warm places &middot; and the other kind</div>
+  </header>
+
+  <div class="tabs" id="tabs" role="group" aria-label="Mode">
+    <button type="button" data-m="nostalgia" aria-pressed="true">Nostalgia</button>
+    <button type="button" data-m="liminal" aria-pressed="false">Liminal</button>
+  </div>
+
+  <div class="stage" id="stage">
+    <div class="msg" id="msg"><b>loading</b>finding somewhere&hellip;</div>
+    <button class="nav l" id="prev" type="button" aria-label="Previous photograph">&larr;</button>
+    <button class="nav r" id="next" type="button" aria-label="Next photograph">&rarr;</button>
+  </div>
+
+  <div class="caption"><p id="cap">&nbsp;</p></div>
+
+  <div class="row">
+    <button id="b-prev" type="button">&larr; Back</button>
+    <span class="count" id="count"></span>
+    <button id="b-next" type="button">Next &rarr;</button>
+  </div>
+</div>
+
+<footer>
+  Photographs come from <a href="https://www.pexels.com/" target="_blank" rel="noopener">Pexels</a>
+  through their API, under the Pexels licence, and every one carries its photographer's name and a
+  link to their page whether or not the licence insists. The key stays on the server; the search
+  terms are a fixed list here rather than anything you type, so this cannot become a free image
+  search running on someone else's quota. Nothing is pulled from Reddit, Instagram or anyone's
+  social upload. The sentence under each photograph was written by this page and is not a caption
+  the photographer wrote, a title, or a claim about where the picture was taken &mdash; it is a mood,
+  and it belongs to the page rather than to the place.
+  <a href="/">&larr; back to the cabinet</a>
+</footer>
+
+<script>
+'use strict';
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+/* ---------------------------------------------------------------- *
+ *  The two voices.
+ *
+ *  Nostalgia is warm and looks backwards; it is allowed a second
+ *  clause and a bit of ache. Liminal is flat, present tense, and says
+ *  one thing at a time — the unease comes from what it declines to
+ *  explain rather than from adjectives. Neither says anything about
+ *  where the photograph was actually taken, because neither knows.
+ * ---------------------------------------------------------------- */
+const NOSTALGIA = [
+  'Somebody stood exactly here once and thought they would remember it without trying.',
+  'The light does this for about twenty minutes and then it is gone for a year.',
+  'You were told to come in before dark, and you were always a little late.',
+  'It smells like the inside of a car with the windows down.',
+  'There was a whole summer of this and at the time it seemed ordinary.',
+  'This is the part of the afternoon that used to go on for hours.',
+  'Nobody photographed the good days. They were too busy having them.',
+  'You could still turn back from here and be home before anyone noticed.',
+  'It is the kind of quiet you only recognise later, when it has stopped.',
+  'Someone is calling you in. You have not heard them yet.',
+  'The whole year narrows down to about six of these evenings.',
+  'You have been happier since. You have not been quite this unhurried.',
+  'This is what you picture when someone says the word "summer", and it is not any particular one.',
+  'The warmth on the back of your neck is the part you will actually keep.'
+];
+const LIMINAL = [
+  'It is 3 a.m. everywhere in this building.',
+  'The lights were on before anyone arrived and will be on after.',
+  'There is a way out. It is not the one you came in by.',
+  'This corridor is longer than the building it is in.',
+  'Somebody maintains this. Nobody uses it.',
+  'The air conditioning has been running for a decade at the same setting.',
+  'You have been here before and you were also alone then.',
+  'The floor was cleaned recently. There are no footprints.',
+  'It is neither open nor closed. It has not been either for some time.',
+  'Every door here leads to a room exactly like this one.',
+  'The sound of your own footsteps arrives slightly late.',
+  'This place was designed for a crowd that never came.',
+  'You are between two places and this is not one of them.',
+  'Nothing is wrong. Nothing here is right either.'
+];
+
+const MODES = {
+  nostalgia: { lines: NOSTALGIA, sub: 'warm places, and the twenty minutes they last' },
+  liminal:   { lines: LIMINAL,   sub: 'somewhere between two places, at the wrong hour' }
+};
+
+function rng(seed){
+  let a = seed >>> 0;
+  return function(){
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/* A photograph keeps its sentence: the caption is seeded from the photo
+   id, so going back does not rewrite what you were just looking at. */
+function captionFor(mode, photo){
+  const lines = MODES[mode].lines;
+  const r = rng((photo.id >>> 0) ^ (mode === 'liminal' ? 0x9E3779B9 : 0x85EBCA6B));
+  return lines[Math.floor(r() * lines.length)];
+}
+
+let mode = 'nostalgia';
+const decks = { nostalgia: [], liminal: [] };
+const at = { nostalgia: -1, liminal: -1 };
+let loading = false;
+
+/* A photograph whose file will not load makes the page skip to the next
+   one, and the next one is sometimes a fresh request. Left unbounded
+   that is a loop: every failure asks for more, every batch fails, and
+   the page sits there hammering the API. Both ends are counted, and
+   both give up out loud rather than quietly spinning. */
+let imgFails = 0, emptyLoads = 0;
+const MAX_IMG_FAILS = 4, MAX_EMPTY_LOADS = 2;
+
+function say(head, body){
+  $('msg').innerHTML = '<b>' + esc(head) + '</b>' + body;
+  $('msg').style.display = '';
+}
+
+async function loadMore(){
+  if (loading) return false;
+  loading = true;
+  try {
+    const term = Math.floor(Math.random() * 10);
+    const page = 1 + Math.floor(Math.random() * 8);
+    const r = await fetch('/api/photos?mode=' + mode + '&term=' + term + '&page=' + page);
+    const j = await r.json();
+    if (!j.ok){
+      if (j.reason === 'no_key'){
+        say('needs a key', 'This one runs on the Pexels API, which is free but wants you signed up.<br><br>' +
+          'Set <b style="display:inline">PEXELS_API_KEY</b> in the server environment and it works ' +
+          'immediately &mdash; no other change, no redeploy of anything else. Everything else in the ' +
+          'cabinet is unaffected.');
+      } else if (j.reason === 'bad_key'){
+        say('key refused', 'The server has a PEXELS_API_KEY but Pexels would not accept it.');
+      } else if (j.reason === 'rate_limited'){
+        say('too many', 'Pexels has had enough for this hour. It resets on its own.');
+      } else {
+        say('no answer', 'Pexels could not be reached just now. Try again in a moment.');
+      }
+      return false;
+    }
+    const have = new Set(decks[mode].map((p) => p.id));
+    // Same reason as next door: a batch arrives in search order, and in
+    // search order the first four are often one shoot.
+    const batch = j.photos.slice();
+    for (let i = batch.length - 1; i > 0; i--){
+      const k = Math.floor(Math.random() * (i + 1));
+      const t = batch[i]; batch[i] = batch[k]; batch[k] = t;
+    }
+    let added = 0;
+    for (const p of batch) if (!have.has(p.id)){ decks[mode].push(p); added++; }
+    // Asking again and being handed nothing new twice over means there is
+    // nothing new to be handed.
+    emptyLoads = added ? 0 : emptyLoads + 1;
+    if (emptyLoads >= MAX_EMPTY_LOADS){
+      say('that is all of it', 'Pexels has stopped offering anything new for these searches. ' +
+        'The other mode will have its own.');
+      return false;
+    }
+    return decks[mode].length > 0;
+  } catch (e){
+    say('no answer', 'Something went wrong reaching the photographs.');
+    return false;
+  } finally {
+    loading = false;
+  }
+}
+
+function paint(){
+  const deck = decks[mode];
+  const i = at[mode];
+  if (i < 0 || !deck[i]) return;
+  const p = deck[i];
+
+  $('msg').style.display = 'none';
+  const old = $('stage').querySelector('img');
+  const img = new Image();
+  img.alt = p.alt || 'A photograph';
+  img.onload = function(){
+    imgFails = 0;
+    if (old) old.remove();
+    $('stage').insertBefore(img, $('stage').firstChild);
+    // one frame before the class, so the fade actually runs
+    requestAnimationFrame(function(){ img.classList.add('on'); });
+  };
+  img.onerror = function(){
+    imgFails++;
+    if (imgFails >= MAX_IMG_FAILS){
+      say('not loading', 'Several photographs in a row would not load. That is usually the ' +
+        'network rather than the page. Try again in a moment.');
+      return;
+    }
+    step(1);
+  };
+  img.src = p.src;
+
+  let credit = $('stage').querySelector('.credit');
+  if (!credit){
+    credit = document.createElement('div');
+    credit.className = 'credit';
+    $('stage').appendChild(credit);
+  }
+  credit.innerHTML = 'Photo: <a href="' + esc(p.byUrl || p.page) + '" target="_blank" rel="noopener">' +
+    esc(p.by || 'unknown') + '</a> / <a href="' + esc(p.page) +
+    '" target="_blank" rel="noopener">Pexels</a>';
+
+  $('cap').textContent = captionFor(mode, p);
+  $('count').textContent = (i + 1) + ' of ' + deck.length;
+}
+
+async function step(d){
+  const deck = decks[mode];
+  let i = at[mode] + d;
+  if (i < 0) i = 0;
+  if (i >= deck.length){
+    const ok = await loadMore();
+    if (!ok) return;
+    i = Math.min(i, decks[mode].length - 1);
+  }
+  at[mode] = i;
+  paint();
+}
+
+async function enter(m){
+  mode = m;
+  imgFails = 0; emptyLoads = 0;
+  document.documentElement.setAttribute('data-mode', m);
+  $('sub').textContent = MODES[m].sub;
+  [...$('tabs').children].forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.m === m)));
+  const img = $('stage').querySelector('img');
+  if (img) img.remove();
+  const credit = $('stage').querySelector('.credit');
+  if (credit) credit.remove();
+  $('cap').textContent = '';
+  $('count').textContent = '';
+  if (!decks[m].length){
+    say('loading', 'finding somewhere&hellip;');
+    const ok = await loadMore();
+    if (!ok) return;
+    at[m] = 0;
+  }
+  if (at[m] < 0) at[m] = 0;
+  paint();
+}
+
+$('tabs').addEventListener('click', function(e){
+  const b = e.target.closest('button');
+  if (b) enter(b.dataset.m);
+});
+['next', 'b-next'].forEach((id) => $(id).addEventListener('click', () => step(1)));
+['prev', 'b-prev'].forEach((id) => $(id).addEventListener('click', () => step(-1)));
+document.addEventListener('keydown', function(e){
+  if (e.key === 'ArrowRight'){ e.preventDefault(); step(1); }
+  if (e.key === 'ArrowLeft'){ e.preventDefault(); step(-1); }
+});
+
+/* swipe, for the mechanic the brief actually asked for */
+let sx = null;
+$('stage').addEventListener('pointerdown', function(e){ sx = e.clientX; });
+$('stage').addEventListener('pointerup', function(e){
+  if (sx === null) return;
+  const dx = e.clientX - sx;
+  sx = null;
+  if (Math.abs(dx) > 46) step(dx < 0 ? 1 : -1);
+});
+
+enter('nostalgia');
+</script>
+</body>
+</html>
