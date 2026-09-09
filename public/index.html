@@ -546,9 +546,12 @@ footer{
    the whole rail. The two that survive longest are the two that are
    actually doing something: the weather and the cradle. */
 @media (max-width:1080px){ #w98-widgets{ display:none } }
-@media (max-height:770px){ .w98-widget.p3, .w98-note.p3{ display:none } }
-@media (max-height:710px){ .w98-widget.p2{ display:none } }
-@media (max-height:665px){ .w98-widget.p1{ display:none } }
+/* Measured, not guessed: the six widgets stack to 759px, and the rail has
+   44px of padding and taskbar to clear. Each threshold is the height at
+   which the tier above it no longer fits. */
+@media (max-height:812px){ .w98-widget.p3, .w98-note.p3{ display:none } }
+@media (max-height:756px){ .w98-widget.p2{ display:none } }
+@media (max-height:652px){ .w98-widget.p1{ display:none } }
 @media (max-height:600px){ #w98-widgets{ display:none } }
 @media (prefers-reduced-motion: reduce){
   .cam-scan{ animation:none;opacity:0 }
@@ -2843,7 +2846,7 @@ footer{
     gap: 8,          // pivot spacing = the drawn diameter
     len: 26,         // string length, in the same pixels
     g: 850,          // gravity in those pixels: about a 1.1 s swing
-    air: 0.10,       // s^-1 — a cradle on a desk runs down in a minute or so
+    air: 0.22,       // s^-1 — a desk cradle runs down in about half a minute
     e: 0.992,        // restitution; steel on steel is very nearly perfect
     top: 5,          // y of the pivots
     lim: 1.05        // radians a ball is allowed to reach
@@ -2853,7 +2856,10 @@ footer{
     crX.push(42 - (CR.n - 1) * CR.gap / 2 + ci * CR.gap);
     crTh.push(0); crW.push(0);
   }
-  crTh[0] = -0.62;                               // it arrives mid-swing
+  // It arrives mid-swing — unless the visitor has asked for stillness, in
+  // which case it hangs there until a hand moves it and nothing on the
+  // desktop moves on its own.
+  if (!calm) crTh[0] = -0.62;
 
   var crDrag = -1, crIdle = 0, crTouched = false;
   // Impacts, counted the way they are heard rather than the way they are

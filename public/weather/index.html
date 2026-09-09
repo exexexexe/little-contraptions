@@ -86,6 +86,15 @@ body{
   letter-spacing:.01em;
   color:var(--text);
 }
+.void-note{
+  margin:12px 0 0;text-align:center;
+  font-family:var(--mono,ui-monospace,Menlo,monospace);font-size:10.5px;
+  letter-spacing:.14em;text-transform:uppercase;opacity:.62;
+}
+.prose.extreme{
+  margin-top:14px;padding-left:12px;border-left:2px solid #C8503C;
+}
+
 .dial-wrap{
   display:flex;justify-content:center;margin:14px 0 4px;
 }
@@ -571,6 +580,48 @@ const CLOSERS = [
 
 /* ------------------------------ state ------------------------------- */
 let current = PLACES[0];
+
+/* ------------------------------------------------------------------ *
+ *  Two things the almanac does not advertise.
+ *
+ *  The first: visit every place it lists, in one sitting, and it will
+ *  admit to one more. It is the same shape as every other entry, so it
+ *  goes through exactly the same report machinery — it just has nothing
+ *  to say, which is the entry.
+ * ------------------------------------------------------------------ */
+const VOID_PLACE = {
+  name: 'The Unlisted Floor', tag: 'no record', unit: '\u00B0C',
+  tempRange: [23, 23],
+  windOptions: ['none. the air here has not moved in some time'],
+  pressureOptions: ['unchanged. it has always been unchanged'],
+  omenRange: [0, 0], omenLabel: 'exits', omenUnit: '',
+  meteorologist: 'nobody, and the entry is filed anyway',
+  conditions: [
+    { adj: 'unchanging', phenomenon: 'the hum of lights with no fitting above them',
+      mood: 'none', advice: 'keep walking and do not stop to check how long you have been walking',
+      intensity: 0, effect: 'calm' },
+    { adj: 'exactly as before', phenomenon: 'carpet that continues in every direction you have tried',
+      mood: 'none', advice: 'the next room is this room',
+      intensity: 0, effect: 'calm' }
+  ]
+};
+const visited = new Set();
+let voidFound = false;
+
+function noteVisit(p){
+  if (voidFound || p === VOID_PLACE) return;
+  visited.add(p.name);
+  if (visited.size < PLACES.length) return;
+  voidFound = true;
+  PLACES.push(VOID_PLACE);
+  renderPlaces();
+  const note = document.createElement('p');
+  note.className = 'void-note';
+  note.textContent = 'You have now been everywhere the almanac lists. It has one more.';
+  const wrap = $('places');
+  if (wrap && wrap.parentNode) wrap.parentNode.insertBefore(note, wrap.nextSibling);
+  revealActivePlate();
+}
 const motionQuery = matchMedia('(prefers-reduced-motion: reduce)');
 let reduceMotion = motionQuery.matches;
 
@@ -1124,7 +1175,7 @@ function renderPlaces(){
     const b = document.createElement('button');
     b.className = 'plate' + (p === current ? ' on' : '');
     b.textContent = p.name;
-    b.onclick = () => { current = p; renderPlaces(); roll(); };
+    b.onclick = () => { current = p; renderPlaces(); roll(); noteVisit(p); };
     wrap.appendChild(b);
   });
 }
@@ -1144,6 +1195,7 @@ function surpriseMe(){
   renderPlaces();
   roll();
   revealActivePlate();
+  noteVisit(current);
 }
 
 function roll(){
@@ -1173,7 +1225,25 @@ function roll(){
     <div class="byline fade">filed by ${p.meteorologist}</div>
   `;
   $('report').innerHTML = html;
-  setNeedle(reduceMotion ? c.intensity : c.intensity);
+
+  /* The second: about one report in four hundred comes back off the end of
+     the dial. Nothing else changes — the same place, the same machinery —
+     and it is gone again as soon as you roll another. */
+  let intensity = c.intensity;
+  if (p !== VOID_PLACE && Math.random() < 0.0025){
+    intensity = 1;
+    const line = document.createElement('div');
+    line.className = 'prose fade extreme';
+    line.innerHTML = 'The needle has gone past the end of the dial and stopped there. ' +
+      'This reading is not within the range the instrument was built for and the almanac ' +
+      'is printing it unaltered, because it does not have a procedure for not printing it.';
+    $('report').appendChild(line);
+    const led = $('report').querySelector('.ledger');
+    if (led){
+      led.innerHTML += '<dt>advisory</dt><dd>do not go outside on the strength of this</dd>';
+    }
+  }
+  setNeedle(intensity);
   setEffect(c.effect);
 }
 
@@ -1201,5 +1271,19 @@ motionQuery.addEventListener('change', (e) => {
   applyMotionPref();
 });
 </script>
+<script>
+window.__almanac = {
+  places: () => PLACES.map(p => p.name),
+  visitAll: () => { PLACES.slice().forEach(p => { current = p; noteVisit(p); }); return PLACES.length; },
+  voidFound: () => voidFound,
+  goVoid: () => { current = PLACES[PLACES.length - 1]; renderPlaces(); roll(); return $('report').innerText; },
+  forceExtreme: () => {
+    const r = Math.random; Math.random = () => 0.0001;
+    try { roll(); } finally { Math.random = r; }
+    return $('report').innerText;
+  }
+};
+</script>
+
 </body>
 </html>
