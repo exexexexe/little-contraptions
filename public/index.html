@@ -1280,12 +1280,18 @@ footer{
                 <rect x="14" y="52" width="18" height="14" fill="#3E4750"/>
               </svg>
               <svg class="cam-scene" viewBox="0 0 160 100" preserveAspectRatio="none" hidden>
-                <rect width="160" height="100" fill="#585B4E"/>
-                <path d="M16 0h128v100H16z" fill="#686B5A"/>
-                <path d="M28 92h104v8H28zM38 84h94v8H38zM48 76h84v8H48zM58 68h74v8H58zM68 60h64v8H68z" fill="#797C69"/>
-                <path d="M26 90L124 46" stroke="#3C3F34" stroke-width="3" fill="none"/>
-                <rect x="98" y="16" width="24" height="10" fill="#1E5E2E"/>
-                <rect x="101" y="19" width="18" height="4" fill="#5FD07A"/>
+                <rect width="160" height="100" fill="#4B4E3E"/>
+                <rect width="160" height="34" fill="#666A54"/>
+                <path d="M0 100H20V90H44V80H68V70H92V60H116V50H160V100Z" fill="#8B8F76"/>
+                <path d="M0 100H20V90H44V80H68V70H92V60H116V50H160" fill="none"
+                      stroke="#2C2F24" stroke-width="2"/>
+                <path d="M20 90H44M44 80H68M68 70H92M92 60H116M116 50H160"
+                      fill="none" stroke="#A9AD92" stroke-width="1"/>
+                <path d="M10 78L152 24" fill="none" stroke="#31342A" stroke-width="3"/>
+                <path d="M30 90V70M54 80V61M78 70V52M102 60V44M126 50V35"
+                      fill="none" stroke="#31342A" stroke-width="2"/>
+                <rect x="112" y="8" width="26" height="11" fill="#14401F"/>
+                <rect x="115" y="11" width="20" height="5" fill="#5FD07A"/>
               </svg>
               <div class="cam-scan"></div>
               <div class="cam-stamp">--:--:--</div>
@@ -2019,9 +2025,12 @@ footer{
       });
     }
     if (!calm && wgCount % 34 === 0 && scenes.length > 1){
-      scenes[scene].hidden = true;
+      // setAttribute, not .hidden: that property is defined on HTMLElement,
+      // and these are SVG elements, so assigning to it sets a plain JS
+      // property and the picture never changes.
+      scenes[scene].setAttribute('hidden', '');
       scene = (scene + 1) % scenes.length;
-      scenes[scene].hidden = false;
+      scenes[scene].removeAttribute('hidden');
       if (capEl) capEl.textContent = CAPS[scene % CAPS.length];
     }
   }
