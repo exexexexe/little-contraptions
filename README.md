@@ -287,8 +287,18 @@ reconnect the repo in the Railway service settings.
 
 ## Deploy
 
-Push to GitHub, then trigger the deploy manually — either **Deploy Latest
-Commit** from Railway's command palette, or point `connect-service-source` at
-the repo again. Railway detects the Node app via
-`package.json` and runs `npm start` automatically — no build config
-needed.
+Push to GitHub, then trigger the deploy — Railway does **not** deploy on push
+here. Either **Deploy Latest Commit** from Railway's command palette, or point
+`connect-service-source` at the repo again with the branch you mean. Railway
+detects the Node app via `package.json` and runs `npm start` automatically — no
+build config needed.
+
+One thing worth checking before you trigger it: **which branch the service is
+actually tracking.** It is not always `main` — a narrow fix has more than once
+been shipped on its own branch, and the service goes on tracking that branch
+afterwards. Pointing it back at `main` will roll that work back unless `main`
+already contains it, so compare first:
+
+    git diff --stat <deployed-commit> HEAD -- <the files that branch touched>
+
+An empty diff means `main` carries it and the switch is safe.
