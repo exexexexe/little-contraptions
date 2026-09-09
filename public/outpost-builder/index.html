@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Outpost Builder</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230E1218'/><rect x='4' y='20' width='24' height='8' fill='%238A6E52'/><rect x='7' y='12' width='8' height='8' fill='%2364C8E0'/><rect x='18' y='9' width='7' height='11' fill='%23E0A548'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --ink:#E8EDF2;
+  --dim:#8894A0;
+  --dimmer:#5A6672;
+  --bg:#0E1218;
+  --panel:#161C24;
+  --line:rgba(232,237,242,.13);
+  --go:#6ED6A0;
+  --warn:#E8A05A;
+  --bad:#E06A6A;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);color:var(--ink);
+  font-family:var(--mono);font-size:13px;line-height:1.5;
+  padding:0 0 78px;-webkit-user-select:none;user-select:none;
+}
+
+/* ---------- shared: back to the cabinet ---------- */
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 var(--mono);
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{
+  width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6);
+}
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } }
+
+.wrap{ max-width:760px;margin:0 auto;padding:0 16px }
+
+h1{
+  font-size:11px;letter-spacing:.24em;text-transform:uppercase;font-weight:600;
+  margin:26px 0 16px;color:var(--dim);
+}
+
+/* ---------- planet rail ---------- */
+.rail{ display:flex;gap:5px;flex-wrap:wrap;margin:0 0 14px }
+.pin{
+  flex:1 1 auto;min-width:72px;
+  background:var(--panel);border:1px solid var(--line);border-radius:3px;
+  padding:8px 6px 7px;text-align:center;cursor:pointer;color:var(--dim);
+  font:600 9.5px/1.3 var(--mono);letter-spacing:.1em;text-transform:uppercase;
+}
+.pin:hover:not(:disabled){ border-color:rgba(232,237,242,.4);color:var(--ink) }
+.pin[aria-current=true]{ background:var(--ink);color:#0E1218;border-color:var(--ink) }
+.pin:disabled{ opacity:.32;cursor:not-allowed }
+.pin .st{ display:block;font-size:8.5px;letter-spacing:.06em;opacity:.72;margin-top:3px }
+.pin[aria-current=true] .st{ opacity:.6 }
+.pin.done{ border-color:rgba(110,214,160,.5) }
+.pin.done .st{ color:var(--go) }
+.pin[aria-current=true].done .st{ color:#1B6B45 }
+.pin:focus-visible{ outline:2px solid var(--go);outline-offset:2px }
+
+/* ---------- planet head ---------- */
+.phead{ margin:0 0 12px }
+.pname{ font-size:20px;font-weight:600;letter-spacing:.02em;margin:0 0 4px }
+.pfacts{ font-size:11px;color:var(--dimmer);margin:0 0 6px }
+.pfacts b{ color:var(--dim);font-weight:600 }
+.pblurb{ font-size:12px;color:var(--dim);margin:0;max-width:60ch;line-height:1.55 }
+
+/* ---------- stats ---------- */
+.stats{ display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 10px }
+.stat{
+  flex:1 1 118px;background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:9px 11px;
+}
+.stat .k{ font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--dimmer) }
+.stat .v{ font-size:19px;font-weight:600;margin-top:3px;font-variant-numeric:tabular-nums }
+.stat .v small{ font-size:11px;font-weight:400;color:var(--dim);margin-left:3px }
+.stat.low .v{ color:var(--bad) }
+
+.bar{ height:6px;background:rgba(232,237,242,.09);border-radius:3px;overflow:hidden;margin-top:8px }
+.bar i{ display:block;height:100%;background:var(--go);width:0;transition:width .3s ease }
+@media (prefers-reduced-motion: reduce){ .bar i{ transition:none } }
+
+.msg{
+  font-size:11.5px;min-height:1.5em;margin:2px 0 12px;color:var(--dim);
+}
+.msg.warn{ color:var(--warn) } .msg.bad{ color:var(--bad) } .msg.go{ color:var(--go) }
+
+/* ---------- board ---------- */
+#board{
+  display:block;width:100%;height:auto;image-rendering:pixelated;
+  border:1px solid var(--line);border-radius:3px;cursor:pointer;touch-action:manipulation;
+}
+
+/* ---------- palette ---------- */
+.pal{ display:flex;gap:7px;flex-wrap:wrap;margin:12px 0 0 }
+.tool{
+  flex:1 1 132px;text-align:left;
+  background:var(--panel);border:1px solid var(--line);border-radius:3px;
+  padding:9px 10px;cursor:pointer;color:var(--ink);font-family:var(--mono);
+}
+.tool:hover:not(:disabled){ border-color:rgba(232,237,242,.4) }
+.tool[aria-pressed=true]{ border-color:var(--go);background:rgba(110,214,160,.10) }
+.tool:disabled{ opacity:.4;cursor:not-allowed }
+.tool:focus-visible{ outline:2px solid var(--go);outline-offset:2px }
+.tool .tn{ font-size:12px;font-weight:600;display:flex;justify-content:space-between;gap:8px }
+.tool .tc{ color:var(--warn);font-weight:400 }
+.tool .td{ font-size:10px;color:var(--dimmer);margin-top:3px;line-height:1.45 }
+
+.acts{ display:flex;gap:7px;margin:12px 0 0;flex-wrap:wrap }
+.btn{
+  font:600 10px/1 var(--mono);letter-spacing:.13em;text-transform:uppercase;
+  color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:3px;
+  padding:0 13px;height:36px;cursor:pointer;
+}
+.btn:hover{ border-color:rgba(232,237,242,.4) }
+.btn:focus-visible{ outline:2px solid var(--go);outline-offset:2px }
+.btn.primary{ background:var(--go);color:#0E1218;border-color:var(--go) }
+
+footer{
+  margin:34px 0 0;padding:18px 0 0;border-top:1px solid var(--line);
+  color:var(--dimmer);font-size:11px;line-height:1.65;max-width:68ch;
+}
+footer a{ color:var(--dim) }
+
+/* ---------- the finished-planet card ---------- */
+.done-card{
+  position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;
+  background:rgba(14,18,24,.82);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+  padding:20px;
+}
+.done-card[hidden]{ display:none !important }
+.done-inner{
+  background:var(--panel);border:1px solid var(--go);border-radius:4px;
+  padding:26px 24px;max-width:390px;text-align:center;
+}
+.done-inner h2{ font-size:15px;letter-spacing:.14em;text-transform:uppercase;margin:0 0 10px;color:var(--go) }
+.done-inner p{ font-size:12.5px;color:var(--dim);margin:0 0 18px;line-height:1.6 }
+</style>
+</head>
+<body>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">&#8592;</span><span class="w">cabinet</span></a>
+
+<div class="wrap">
+  <h1>Outpost Builder</h1>
+
+  <div class="rail" id="rail" role="group" aria-label="Planets"></div>
+
+  <div class="phead">
+    <p class="pname" id="pname"></p>
+    <p class="pfacts" id="pfacts"></p>
+    <p class="pblurb" id="pblurb"></p>
+  </div>
+
+  <div class="stats">
+    <div class="stat" id="sPower">
+      <div class="k">Power</div>
+      <div class="v"><span id="vPowerUsed">0</span><small>/ <span id="vPowerMade">0</span></small></div>
+    </div>
+    <div class="stat" id="sOre">
+      <div class="k">Ore</div>
+      <div class="v" id="vOre">0</div>
+    </div>
+    <div class="stat">
+      <div class="k">Research</div>
+      <div class="v"><span id="vRes">0</span><small>/ <span id="vTarget">0</span></small></div>
+      <div class="bar"><i id="barRes"></i></div>
+    </div>
+  </div>
+
+  <p class="msg" id="msg" role="status" aria-live="polite"></p>
+
+  <canvas id="board" aria-label="Outpost grid. Click a tile to build."></canvas>
+
+  <div class="pal" id="pal" role="group" aria-label="What to build"></div>
+
+  <div class="acts">
+    <button class="btn" id="bulldoze" type="button" aria-pressed="false">Demolish</button>
+    <button class="btn" id="reset" type="button">Clear this planet</button>
+  </div>
+
+  <footer>
+    <p>
+      One planet at a time; finish it and the next unlocks. The sunlight figure on each
+      world is real &mdash; it is just one over the square of that planet&rsquo;s distance
+      from the sun in astronomical units, which is why a solar collector on Mercury is
+      worth six thousand times one at Neptune, and why the outer planets have to be run
+      on reactors. Everything else &mdash; ore, costs, targets &mdash; is balance, not data.
+      Progress is kept in this browser only.
+    </p>
+    <p><a href="/">&#8592; back to the cabinet</a></p>
+  </footer>
+</div>
+
+<div class="done-card" id="doneCard" hidden>
+  <div class="done-inner">
+    <h2 id="doneTitle">Outpost established</h2>
+    <p id="doneBody"></p>
+    <button class="btn primary" id="doneNext" type="button">Next planet</button>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script>
+(function(){
+  'use strict';
+  var PLANETS = window.PLANETS, B = window.BUILDINGS;
+  var COLS = 12, ROWS = 8, CELL = 8;          // each tile is an 8x8 block of pixels
+  var TICK = 620;
+
+  var $ = function(id){ return document.getElementById(id); };
+  var cv = $('board'), ctx = cv.getContext('2d');
+
+  /* ---- state ---- */
+  var KEY = 'lc-outpost-v1';
+  var save = { done:{}, at:0, boards:{} };
+  try {
+    var raw = localStorage.getItem(KEY);
+    if (raw) { var p = JSON.parse(raw); if (p && typeof p === 'object') save = Object.assign(save, p); }
+  } catch (e) {}
+  function persist(){ try { localStorage.setItem(KEY, JSON.stringify(save)); } catch (e) {} }
+
+  var idx = Math.min(save.at || 0, PLANETS.length - 1);
+  var planet, terrain, built, ore, research, tool = 'collector', bulldoze = false;
+
+  /* ---- terrain: seeded, so a planet is the same room every time ---- */
+  function makeTerrain(seed){
+    var s = seed, out = [];
+    function rnd(){ s = (s * 1103515245 + 12345) & 0x7fffffff; return s / 0x7fffffff; }
+    for (var i = 0; i < COLS * ROWS; i++) {
+      var r = rnd();
+      out.push(r < 0.13 ? 2 : r < 0.34 ? 1 : 0);   // 2 blocked, 1 rock, 0 flat
+    }
+    // never strand the player: guarantee at least 30 flat tiles
+    var flat = out.filter(function(t){ return t === 0; }).length;
+    for (var j = 0; flat < 30 && j < out.length; j++) {
+      if (out[j] !== 0) { out[j] = 0; flat++; }
+    }
+    return out;
+  }
+
+  function loadPlanet(n){
+    idx = n; planet = PLANETS[n];
+    terrain = makeTerrain(planet.seed);
+    var st = save.boards[planet.key];
+    if (st && st.built && st.built.length === COLS * ROWS) {
+      built = st.built.slice(); ore = st.ore; research = st.research;
+    } else {
+      built = new Array(COLS * ROWS).fill(null);
+      ore = planet.start; research = 0;
+    }
+    save.at = n; persist();
+    sizeBoard(); paintChrome(); render(); refresh();
+  }
+
+  function storeBoard(){
+    save.boards[planet.key] = { built:built, ore:ore, research:research };
+    persist();
+  }
+
+  /* ---- pixel sprites, 8x8, drawn a pixel at a time ---- */
+  var SPRITES = {
+    collector: ['........','........','.FFFFFF.','.FCCCCF.','.FCCCCF.','.FFFFFF.','...FF...','..FFFF..'],
+    reactor:   ['........','..FFFF..','.FBBBBF.','.FBGGBF.','.FBGGBF.','.FBBBBF.','.FFFFFF.','.FFFFFF.'],
+    drill:     ['...FF...','...FF...','..FFFF..','..FRRF..','.FFFFFF.','.FRRRRF.','..F..F..','..F..F..'],
+    lab:       ['........','..FFFF..','.FWWWWF.','FWWWWWWF','FWWWWWWF','FWFFFFWF','FWWWWWWF','FFFFFFFF'],
+  };
+  var SPAL = {
+    collector: { F:'#232B33', C:'#64C8E0' },
+    reactor:   { F:'#232B33', B:'#2E6B4E', G:'#7CF0B0' },
+    drill:     { F:'#232B33', R:'#E0A548' },
+    lab:       { F:'#232B33', W:'#D8E2EC' },
+  };
+
+  /* ---- board sizing: integer pixel scale, so it stays crisp ---- */
+  var SCALE = 4;
+  function sizeBoard(){
+    var avail = cv.parentElement.clientWidth;
+    SCALE = Math.max(2, Math.floor(avail / (COLS * CELL)));
+    cv.width = COLS * CELL * SCALE;
+    cv.height = ROWS * CELL * SCALE;
+    cv.style.width = '100%';
+    ctx.imageSmoothingEnabled = false;
+  }
+
+  /* a cheap deterministic hash, so the grain is the same on every repaint */
+  function hash(i, k){
+    var v = (i * 374761393 + k * 668265263) & 0x7fffffff;
+    v = (v ^ (v >> 13)) * 1274126177;
+    return (v ^ (v >> 16)) & 0x7fffffff;
+  }
+
+  function px(x, y, w, h, colour){
+    ctx.fillStyle = colour;
+    ctx.fillRect(x * SCALE, y * SCALE, w * SCALE, h * SCALE);
+  }
+
+  function render(){
+    var pal = planet.pal;
+    ctx.fillStyle = pal.sky;
+    ctx.fillRect(0, 0, cv.width, cv.height);
+
+    for (var r = 0; r < ROWS; r++) {
+      for (var c = 0; c < COLS; c++) {
+        var i = r * COLS + c, t = terrain[i];
+        var ox = c * CELL, oy = r * CELL;
+
+        /* One flat field with scattered grain, rather than a highlight band per
+           tile — banding every tile made the whole surface read as brickwork. */
+        px(ox, oy, CELL, CELL, t === 2 ? pal.shade : t === 1 ? pal.rock : pal.ground);
+
+        if (t === 0) {                       // open ground: a little light grain
+          for (var g = 0; g < 4; g++) {
+            var h = hash(i, g);
+            px(ox + (h & 7), oy + ((h >> 3) & 7), 1, 1, (h & 8) ? pal.high : pal.shade);
+          }
+        } else if (t === 1) {                // ore-bearing rock: coarse, obvious chunks
+          for (var g2 = 0; g2 < 5; g2++) {
+            var h2 = hash(i, g2 + 9);
+            var rx = h2 & 6, ry = (h2 >> 3) & 6;
+            px(ox + rx, oy + ry, 2, 2, (h2 & 8) ? pal.high : pal.far);
+          }
+          px(ox, oy + CELL - 1, CELL, 1, pal.shade);
+          // one ore pip, the same amber on every world, so "this tile takes a
+          // drill and nothing else" is readable at a glance on any palette
+          px(ox + 6, oy + 1, 1, 1, '#E0A548');
+          px(ox + 5, oy + 2, 2, 1, '#E0A548');
+        } else {                             // blocked: a boulder, plainly in the way
+          px(ox + 1, oy + 4, 6, 3, pal.far);
+          px(ox + 2, oy + 2, 4, 3, pal.far);
+          px(ox + 3, oy + 2, 2, 1, pal.rock);
+          px(ox + 1, oy + CELL - 1, 6, 1, '#000');
+        }
+
+        var b = built[i];
+        if (b) {
+          var sp = SPRITES[b], sc = SPAL[b];
+          for (var y = 0; y < 8; y++) {
+            var row = sp[y];
+            for (var x = 0; x < 8; x++) {
+              var ch = row[x];
+              if (ch !== '.') px(ox + x, oy + y, 1, 1, sc[ch]);
+            }
+          }
+        }
+      }
+    }
+
+    // grid lines, one screen pixel, drawn over the top
+    ctx.fillStyle = 'rgba(0,0,0,.13)';
+    for (var gc = 1; gc < COLS; gc++) ctx.fillRect(gc * CELL * SCALE, 0, 1, cv.height);
+    for (var gr = 1; gr < ROWS; gr++) ctx.fillRect(0, gr * CELL * SCALE, cv.width, 1);
+  }
+
+  /* ---- economy ---- */
+  function tally(){
+    var n = { collector:0, reactor:0, drill:0, lab:0 }, oreRate = 0;
+    for (var i = 0; i < built.length; i++) {
+      var b = built[i]; if (!b) continue;
+      n[b]++;
+      if (b === 'drill') oreRate += terrain[i] === 1 ? 3 : 1;
+    }
+    var made = n.collector * 3 * planet.solar + n.reactor * 9;
+    var used = n.drill * 2 + n.lab * 5;
+    return { n:n, made:made, used:used, oreRate:oreRate };
+  }
+
+  function step(){
+    var t = tally();
+    if (t.n.drill + t.n.lab === 0 && t.n.collector + t.n.reactor === 0) return;
+
+    var eff = t.used > 0 ? Math.min(1, t.made / t.used) : 1;
+    var oreIn = t.oreRate * eff;
+    var labEff = eff;
+    var want = t.n.lab * 2 * eff;
+    if (want > 0 && ore + oreIn < want) {
+      // not enough ore to feed every lab: run them at whatever is affordable
+      labEff = Math.min(eff, Math.max(0, (ore + oreIn) / (t.n.lab * 2)));
+    }
+    var oreOut = t.n.lab * 2 * labEff;
+
+    ore = Math.max(0, ore + oreIn - oreOut);
+    research += t.n.lab * labEff;
+
+    if (research >= planet.target) { research = planet.target; finish(); }
+    storeBoard(); refresh();
+  }
+
+  function refresh(){
+    var t = tally();
+    $('vPowerUsed').textContent = Math.round(t.used);
+    $('vPowerMade').textContent = t.made >= 10 ? Math.round(t.made)
+                                : t.made >= 1 ? t.made.toFixed(1)
+                                : t.made.toFixed(2);
+    $('vOre').textContent = Math.floor(ore);
+    $('vRes').textContent = Math.floor(research);
+    $('vTarget').textContent = planet.target;
+    $('barRes').style.width = Math.min(100, (research / planet.target) * 100) + '%';
+    $('sPower').classList.toggle('low', t.used > t.made + 1e-9);
+    $('sOre').classList.toggle('low', ore < 10);
+
+    // what to build is limited by what is in the bank
+    [].forEach.call($('pal').children, function(el){
+      var k = el.dataset.k;
+      el.disabled = ore < B[k].cost;
+      el.setAttribute('aria-pressed', String(!bulldoze && tool === k));
+    });
+    $('bulldoze').setAttribute('aria-pressed', String(bulldoze));
+
+    var m = $('msg'); m.className = 'msg';
+    if (save.done[planet.key]) { m.textContent = 'Outpost complete. Build on, or move along the rail.'; m.className = 'msg go'; }
+    else if (t.n.lab === 0) m.textContent = 'Nothing is producing research yet. A lab is the only thing that finishes a planet.';
+    else if (t.used > t.made + 1e-9) { m.textContent = 'Short of power — everything is running at ' + Math.round((t.made / t.used) * 100) + '%.'; m.className = 'msg warn'; }
+    else if (ore <= 0 && t.n.lab > 0) { m.textContent = 'Out of ore. The labs have stalled — build more drills, ideally on rock.'; m.className = 'msg bad'; }
+    else m.textContent = 'Running.';
+  }
+
+  /* ---- placing ---- */
+  function cellAt(ev){
+    var r = cv.getBoundingClientRect();
+    var x = Math.floor(((ev.clientX - r.left) / r.width) * COLS);
+    var y = Math.floor(((ev.clientY - r.top) / r.height) * ROWS);
+    if (x < 0 || y < 0 || x >= COLS || y >= ROWS) return -1;
+    return y * COLS + x;
+  }
+
+  cv.addEventListener('click', function(ev){
+    var i = cellAt(ev); if (i < 0) return;
+    var m = $('msg');
+    if (bulldoze) {
+      if (!built[i]) return;
+      ore += Math.floor(B[built[i]].cost * 0.5);      // half back, so mistakes are not fatal
+      built[i] = null; render(); storeBoard(); refresh();
+      return;
+    }
+    if (terrain[i] === 2) { m.textContent = 'That tile is solid rock. Nothing goes there.'; m.className = 'msg warn'; return; }
+    if (built[i])         { m.textContent = 'Already built on. Use Demolish to clear it.'; m.className = 'msg warn'; return; }
+    var spec = B[tool];
+    if (spec.needs === 'flat' && terrain[i] === 1) {
+      m.textContent = 'A ' + spec.name.toLowerCase() + ' needs level ground. Rock takes drills.';
+      m.className = 'msg warn'; return;
+    }
+    if (ore < spec.cost) { m.textContent = 'Not enough ore for that.'; m.className = 'msg bad'; return; }
+    ore -= spec.cost; built[i] = tool;
+    render(); storeBoard(); refresh();
+  });
+
+  /* ---- finishing a planet ---- */
+  function finish(){
+    if (save.done[planet.key]) return;
+    save.done[planet.key] = true; persist();
+    paintChrome();
+    var next = PLANETS[idx + 1];
+    $('doneTitle').textContent = planet.name + ' outpost established';
+    $('doneBody').textContent = next
+      ? 'Target met. ' + next.name + ' is open — and it gets ' +
+        (next.solar < 0.05 ? 'almost no sunlight at all, so bring reactors.'
+                           : 'about ' + (next.solar >= 1 ? next.solar.toFixed(2) : next.solar.toFixed(3)) +
+                             ' times Earth’s sunlight.')
+      : 'That is all eight, out to Neptune at a thousandth of Earth’s light. Nothing further out to build on.';
+    $('doneNext').textContent = next ? 'On to ' + next.name : 'Close';
+    $('doneCard').hidden = false;
+    $('doneNext').focus();
+  }
+
+  $('doneNext').addEventListener('click', function(){
+    $('doneCard').hidden = true;
+    if (idx + 1 < PLANETS.length) loadPlanet(idx + 1);
+  });
+
+  /* ---- chrome ---- */
+  function unlocked(n){
+    return n === 0 || !!save.done[PLANETS[n - 1].key];
+  }
+
+  function paintChrome(){
+    var html = '';
+    for (var i = 0; i < PLANETS.length; i++) {
+      var p = PLANETS[i], open = unlocked(i), done = !!save.done[p.key];
+      html += '<button class="pin' + (done ? ' done' : '') + '" data-i="' + i + '"' +
+              (open ? '' : ' disabled') +
+              ' aria-current="' + (i === idx) + '">' + p.name +
+              '<span class="st">' + (done ? 'done' : open ? 'open' : 'locked') + '</span></button>';
+    }
+    $('rail').innerHTML = html;
+
+    $('pname').textContent = planet.name;
+    $('pfacts').innerHTML =
+      '<b>' + planet.au.toFixed(3) + ' AU</b> from the sun &nbsp;·&nbsp; sunlight <b>' +
+      (planet.solar >= 1 ? planet.solar.toFixed(2) : planet.solar.toFixed(5)) +
+      '&times;</b> Earth&rsquo;s &nbsp;·&nbsp; target <b>' + planet.target + '</b> research';
+    $('pblurb').textContent = planet.blurb;
+  }
+
+  $('rail').addEventListener('click', function(e){
+    var b = e.target.closest('.pin'); if (!b || b.disabled) return;
+    loadPlanet(+b.dataset.i);
+  });
+
+  (function buildPalette(){
+    var html = '';
+    Object.keys(B).forEach(function(k){
+      var s = B[k];
+      html += '<button class="tool" type="button" data-k="' + k + '" aria-pressed="' + (k === tool) + '">' +
+              '<span class="tn">' + s.name + '<span class="tc">' + s.cost + ' ore</span></span>' +
+              '<span class="td">' + s.desc + '</span></button>';
+    });
+    $('pal').innerHTML = html;
+    $('pal').addEventListener('click', function(e){
+      var b = e.target.closest('.tool'); if (!b || b.disabled) return;
+      tool = b.dataset.k; bulldoze = false; refresh();
+    });
+  })();
+
+  $('bulldoze').addEventListener('click', function(){ bulldoze = !bulldoze; refresh(); });
+  $('reset').addEventListener('click', function(){
+    built = new Array(COLS * ROWS).fill(null);
+    ore = planet.start; research = 0;
+    delete save.done[planet.key];
+    storeBoard(); paintChrome(); render(); refresh();
+  });
+
+  window.addEventListener('resize', function(){ sizeBoard(); render(); });
+
+  loadPlanet(idx);
+  setInterval(step, TICK);
+})();
+</script>
+</body>
+</html>
