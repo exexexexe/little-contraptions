@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Visualiser</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23101010'/><rect x='5' y='7' width='22' height='18' fill='%23181818' stroke='%23585858'/><path d='M8 21v-5M11 21v-9M14 21v-6M17 21v-11M20 21v-4M23 21v-8' stroke='%2350E070' stroke-width='2'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --steel:#3A3A3E;
+  --steel-2:#242428;
+  --face:#2E2E33;
+  --lcd:#0B1410;
+  --green:#54E878;
+  --amber:#E8B054;
+  --pale:#D8D8D4;
+  --dim:#84848C;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:#111114;
+  background-image:
+    radial-gradient(700px 520px at 50% 0%, #1C1C22 0%, #0C0C0F 70%);
+  color:var(--pale);font-family:var(--serif);min-height:100vh;
+  padding:30px 16px 80px;display:flex;flex-direction:column;align-items:center;
+}
+.wrap{ max-width:560px;width:100% }
+
+/* the player */
+.player{
+  background:linear-gradient(180deg,var(--face),var(--steel-2));
+  border:1px solid #4A4A50;
+  box-shadow:0 16px 40px rgba(0,0,0,.6),
+             inset 1px 1px 0 rgba(255,255,255,.14),
+             inset -1px -1px 0 rgba(0,0,0,.5);
+  padding:4px;
+}
+.title{
+  height:22px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 7px;background:linear-gradient(180deg,#5A6A8A,#33405A);
+  font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:#E4EAF4;
+  text-shadow:0 1px 0 rgba(0,0,0,.5);overflow:hidden;white-space:nowrap;
+}
+.title .dots{ display:flex;gap:3px;flex:0 0 auto;margin-left:8px }
+.title .dots i{ width:9px;height:9px;background:#8C99B4;border:1px solid #2A3348;display:block }
+.marquee{ overflow:hidden;flex:1 1 auto;min-width:0 }
+.marquee span{ display:inline-block;padding-left:100%;animation:slide 14s linear infinite }
+@keyframes slide{ to{ transform:translateX(-100%) } }
+
+.screen{ position:relative;margin-top:4px;background:var(--lcd);border:1px solid #101418;aspect-ratio:2/1 }
+.screen canvas{ display:block;width:100%;height:100% }
+.screen::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(180deg,rgba(0,0,0,.26) 0 1px,transparent 1px 3px);
+}
+.strip{
+  margin-top:4px;height:30px;display:flex;align-items:center;gap:8px;padding:0 8px;
+  background:linear-gradient(180deg,#2A2A2F,#1E1E22);border:1px solid #101014;
+}
+.time{ font-family:var(--mono);font-size:12px;color:var(--green);text-shadow:0 0 8px rgba(84,232,120,.5);letter-spacing:.06em }
+.bar{ flex:1 1 auto;height:6px;background:#111;border:1px solid #000;position:relative;overflow:hidden }
+.bar i{ position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#2E7A46,var(--green));width:0 }
+.mode{ font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);flex:0 0 auto }
+
+.controls{ display:flex;gap:6px;margin-top:4px;padding:5px;background:#232327;border:1px solid #101014;flex-wrap:wrap }
+button{
+  font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+  background:linear-gradient(180deg,#43434A,#303036);color:var(--pale);
+  border:1px solid #14141A;box-shadow:inset 1px 1px 0 rgba(255,255,255,.12);
+  padding:9px 12px;cursor:pointer;
+}
+button:hover{ background:linear-gradient(180deg,#50505A,#3A3A42) }
+button:active{ box-shadow:inset 1px 1px 3px rgba(0,0,0,.6) }
+button:focus-visible{ outline:2px solid var(--green);outline-offset:2px }
+
+textarea{
+  width:100%;margin-top:18px;min-height:110px;resize:vertical;
+  font-family:var(--mono);font-size:12.5px;line-height:1.6;
+  background:rgba(216,216,212,.05);color:var(--pale);
+  border:1px solid #3A3A42;padding:13px;border-radius:2px;
+}
+textarea:focus{ outline:none;border-color:var(--green) }
+label{ display:block;margin-top:18px;font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim) }
+.note{ margin-top:20px;font-size:13.5px;line-height:1.7;color:var(--dim) }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media print{ #lc-back{ display:none } }
+@media (prefers-reduced-motion: reduce){
+  #lc-back{ transition:none }
+  .marquee span{ animation:none;padding-left:0 }
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="player">
+    <div class="title">
+      <div class="marquee"><span id="track">nothing loaded</span></div>
+      <div class="dots"><i></i><i></i><i></i></div>
+    </div>
+    <div class="screen">
+      <canvas id="vis" role="img" aria-label="An abstract visualiser driven by the text below."></canvas>
+    </div>
+    <div class="strip">
+      <span class="time" id="time">00:00</span>
+      <div class="bar"><i id="prog"></i></div>
+      <span class="mode" id="modeName">bars</span>
+    </div>
+    <div class="controls">
+      <button id="play" type="button">Pause</button>
+      <button id="next" type="button">Next mode</button>
+      <button id="auto" type="button">Auto-cycle: on</button>
+    </div>
+  </div>
+
+  <label for="text">Paste something for it to play</label>
+  <textarea id="text" spellcheck="false"></textarea>
+
+  <p class="note">
+    There is no audio here and nothing is being analysed. The player is reading your text the way a
+    visualiser reads a signal: the letters <em>are</em> the waveform. The playhead runs along them,
+    each character's code becomes a value, and the bars, the scope and the ribbon are three ways of
+    drawing the same numbers. Change a word and the shape changes with it.
+  </p>
+</div>
+
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<script>
+(function(){
+  'use strict';
+
+  var cv = document.getElementById('vis');
+  var ctx = cv.getContext('2d');
+  var ta = document.getElementById('text');
+  var trackEl = document.getElementById('track');
+  var timeEl = document.getElementById('time');
+  var progEl = document.getElementById('prog');
+  var modeEl = document.getElementById('modeName');
+  var calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var DEFAULT =
+    'It is a truth universally acknowledged, that a single man in possession of a good fortune, ' +
+    'must be in want of a wife. However little known the feelings or views of such a man may be on ' +
+    'his first entering a neighbourhood, this truth is so well fixed in the minds of the surrounding ' +
+    'families, that he is considered as the rightful property of some one or other of their daughters.';
+  ta.value = DEFAULT;
+
+  /* ---- the text as a signal ----------------------------------------- *
+   * Character codes, normalised, are the waveform. Nothing is analysed
+   * and nothing is random: the same text always draws the same shape.  */
+  var sig = [];
+  function load(){
+    var t = ta.value || ' ';
+    sig = [];
+    for (var i = 0; i < t.length; i++){
+      var c = t.charCodeAt(i);
+      // letters spread across the range; spaces and punctuation sit low,
+      // which is what gives the picture its rhythm rather than a mush
+      var v = /[a-z]/i.test(t[i]) ? ((c | 32) - 97) / 25
+            : /[0-9]/.test(t[i]) ? 0.5 + (c - 48) / 40
+            : t[i] === ' ' ? 0.06 : 0.3;
+      sig.push(Math.max(0, Math.min(1, v)));
+    }
+    var words = t.trim().split(/\s+/).slice(0, 7).join(' ');
+    trackEl.textContent = (words || 'nothing loaded') + '   ·   ' + sig.length + ' characters   ·   ';
+  }
+  ta.addEventListener('input', load);
+  load();
+
+  /* ---- the modes ----------------------------------------------------- */
+  var MODES = ['bars', 'scope', 'ribbon'];
+  var mode = 0;
+  var BARS = 28;
+  var heights = new Float32Array(BARS), peaks = new Float32Array(BARS);
+
+  var W = 0, H = 0, DPR = 1;
+  function resize(){
+    DPR = Math.min(2, window.devicePixelRatio || 1);
+    W = cv.clientWidth; H = cv.clientHeight;
+    cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  var head = 0, playing = true, autoCycle = true, lastCycle = 0;
+  var RATE = 11;                                     // characters a second
+
+  function sample(i){ return sig.length ? sig[((i % sig.length) + sig.length) % sig.length] : 0; }
+
+  function drawBars(){
+    var w = W / BARS;
+    for (var i = 0; i < BARS; i++){
+      var target = 0;
+      for (var k = 0; k < 3; k++) target += sample(Math.floor(head) + i * 3 + k);
+      target /= 3;
+      heights[i] += (target - heights[i]) * (calm ? 0.2 : 0.36);
+      peaks[i] = Math.max(peaks[i] - 0.006, heights[i]);
+
+      var h = heights[i] * H * 0.9;
+      var x = i * w;
+      // the classic stacked-cell bar, lit from the bottom
+      var cells = Math.max(1, Math.round(h / 5));
+      for (var c = 0; c < cells; c++){
+        var frac = c / Math.max(1, (H * 0.9) / 5);
+        ctx.fillStyle = frac > 0.78 ? '#E85454' : frac > 0.56 ? '#E8B054' : '#54E878';
+        ctx.fillRect(x + 1, H - (c + 1) * 5 + 1, w - 2, 3.4);
+      }
+      ctx.fillStyle = 'rgba(216,232,220,.75)';
+      ctx.fillRect(x + 1, H - peaks[i] * H * 0.9 - 3, w - 2, 2);
+    }
+  }
+
+  function drawScope(){
+    ctx.strokeStyle = '#54E878';
+    ctx.lineWidth = 2;
+    ctx.shadowColor = 'rgba(84,232,120,.6)'; ctx.shadowBlur = 8;
+    ctx.beginPath();
+    var n = 130;
+    for (var i = 0; i < n; i++){
+      var v = sample(Math.floor(head) + i);
+      var x = i / (n - 1) * W;
+      var y = H / 2 + (v - 0.5) * H * 0.86;
+      i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+    }
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+
+  function drawRibbon(now){
+    // three drifting bands whose shape comes from the text under the playhead
+    for (var b = 0; b < 3; b++){
+      ctx.beginPath();
+      ctx.moveTo(0, H);
+      for (var x = 0; x <= W; x += 6){
+        var i = Math.floor(head) + Math.floor(x / 6) + b * 17;
+        var v = sample(i);
+        var y = H * (0.28 + b * 0.14) +
+                Math.sin(x * 0.014 + now / 900 + b * 2.1) * H * 0.14 +
+                (v - 0.5) * H * 0.3;
+        ctx.lineTo(x, y);
+      }
+      ctx.lineTo(W, H); ctx.closePath();
+      var g = ctx.createLinearGradient(0, 0, 0, H);
+      var hue = 140 + b * 42;
+      g.addColorStop(0, 'hsla(' + hue + ',68%,58%,.5)');
+      g.addColorStop(1, 'hsla(' + hue + ',68%,32%,.06)');
+      ctx.fillStyle = g;
+      ctx.fill();
+    }
+  }
+
+  function fmt(s){
+    var m = Math.floor(s / 60), r = Math.floor(s % 60);
+    return (m < 10 ? '0' : '') + m + ':' + (r < 10 ? '0' : '') + r;
+  }
+
+  var last = performance.now();
+  function frame(now){
+    var dt = Math.min(0.1, (now - last) / 1000); last = now;
+    if (playing) head += dt * RATE;
+
+    if (autoCycle && now - lastCycle > 9000){
+      lastCycle = now;
+      mode = (mode + 1) % MODES.length;
+      modeEl.textContent = MODES[mode];
+    }
+
+    ctx.fillStyle = '#0B1410';
+    ctx.fillRect(0, 0, W, H);
+
+    if (MODES[mode] === 'bars') drawBars();
+    else if (MODES[mode] === 'scope') drawScope();
+    else drawRibbon(now);
+
+    var pos = sig.length ? (head % sig.length) / sig.length : 0;
+    progEl.style.width = (pos * 100).toFixed(1) + '%';
+    timeEl.textContent = fmt(head / RATE);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  document.getElementById('play').addEventListener('click', function(){
+    playing = !playing;
+    this.textContent = playing ? 'Pause' : 'Play';
+  });
+  document.getElementById('next').addEventListener('click', function(){
+    mode = (mode + 1) % MODES.length;
+    modeEl.textContent = MODES[mode];
+    lastCycle = performance.now();
+  });
+  var autoBtn = document.getElementById('auto');
+  autoBtn.addEventListener('click', function(){
+    autoCycle = !autoCycle;
+    autoBtn.textContent = 'Auto-cycle: ' + (autoCycle ? 'on' : 'off');
+  });
+
+  window.__vis = function(){
+    return { chars: sig.length, mode: MODES[mode], playing: playing, head: Math.round(head),
+             track: trackEl.textContent.slice(0, 40), time: timeEl.textContent };
+  };
+  window.__setText = function(t){ ta.value = t; load(); return sig.length; };
+  window.__mode = function(){ document.getElementById('next').click(); return MODES[mode]; };
+})();
+</script>
+</body>
+</html>

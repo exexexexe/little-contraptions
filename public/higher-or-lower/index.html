@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Higher or Lower</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='16' height='32' fill='%231E3A4A'/><rect x='16' width='16' height='32' fill='%234A2436'/><path d='M9 12l-4 5h8z' fill='%2378D8C0'/><path d='M23 20l4-5h-8z' fill='%23E88FA8'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --left:#173341;
+  --right:#3E1E2E;
+  --pale:#F2EEE6;
+  --dim:#9AA6AC;
+  --up:#78D8C0;
+  --down:#E88FA8;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%}
+body{ background:#0C1015;color:var(--pale);font-family:var(--serif);min-height:100%;overflow-x:hidden }
+
+.top{
+  position:fixed;left:0;right:0;top:0;z-index:20;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  padding:11px 12px;background:linear-gradient(180deg,rgba(12,16,21,.94),rgba(12,16,21,0));
+  flex-wrap:wrap;
+}
+.tab{
+  font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  background:rgba(242,238,230,.07);color:var(--dim);border:1px solid rgba(242,238,230,.16);
+  padding:8px 12px;cursor:pointer;
+}
+.tab[aria-selected=true]{ background:var(--pale);color:#111;border-color:var(--pale) }
+.tab:focus-visible{ outline:2px solid var(--up);outline-offset:2px }
+.score{
+  font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--dim);margin-left:8px;
+}
+.score b{ color:var(--pale) }
+
+.board{ display:flex;min-height:100vh;min-height:100svh }
+.side{
+  flex:1 1 50%;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:96px 22px 40px;text-align:center;position:relative;transition:background .5s;
+}
+.side.a{ background:var(--left) }
+.side.b{ background:var(--right) }
+.name{ font-size:clamp(21px,4.4vw,34px);line-height:1.22;margin:0;max-width:15ch }
+.extra{ font-size:13px;line-height:1.55;color:rgba(242,238,230,.62);margin:12px 0 0;max-width:26ch;min-height:2.4em }
+.value{
+  font-family:var(--mono);font-size:clamp(26px,6vw,46px);font-weight:300;margin:20px 0 0;
+  letter-spacing:.02em;font-variant-numeric:tabular-nums;
+}
+.value small{ font-size:.42em;letter-spacing:.16em;margin-left:7px;color:var(--dim) }
+.lead{ font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:rgba(242,238,230,.5);margin:0 0 10px }
+
+.choices{ display:flex;flex-direction:column;gap:10px;margin-top:22px;width:min(230px,80%) }
+.choices button{
+  font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;
+  background:transparent;border:1px solid rgba(242,238,230,.5);color:var(--pale);
+  padding:15px 10px;cursor:pointer;transition:background .15s,color .15s;
+}
+.choices button:hover{ background:var(--pale);color:#141414 }
+.choices button:focus-visible{ outline:2px solid var(--up);outline-offset:3px }
+.choices[hidden]{ display:none }
+
+.verdict{ margin-top:22px;font-size:15px;line-height:1.6;min-height:3em;max-width:26ch }
+.verdict b{ display:block;font-family:var(--mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase;margin-bottom:7px }
+.verdict.win b{ color:var(--up) } .verdict.lose b{ color:var(--down) }
+.again{
+  margin-top:16px;font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  background:var(--pale);color:#141414;border:0;padding:14px 22px;cursor:pointer;
+}
+.again[hidden]{ display:none }
+.again:focus-visible{ outline:2px solid var(--up);outline-offset:3px }
+
+.note{
+  position:relative;z-index:5;max-width:60ch;margin:0 auto;padding:26px 22px 90px;
+  font-size:13px;line-height:1.75;color:#8D95A0;text-align:center;background:#0C1015;
+}
+@media (max-width:680px){
+  .board{ flex-direction:column }
+  .side{ padding:88px 20px 34px;min-height:52vh }
+  .side.b{ padding-top:34px }
+}
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media print{ #lc-back{ display:none } }
+@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } }
+</style>
+</head>
+<body>
+
+<div class="top" id="tabs" role="tablist" aria-label="Category"></div>
+
+<div class="board">
+  <div class="side a">
+    <p class="lead">this one</p>
+    <h2 class="name" id="an">—</h2>
+    <p class="extra" id="ae"></p>
+    <p class="value" id="av">—</p>
+  </div>
+  <div class="side b">
+    <p class="lead" id="bl">against this one</p>
+    <h2 class="name" id="bn">—</h2>
+    <p class="extra" id="be"></p>
+    <p class="value" id="bv">?</p>
+    <div class="choices" id="choices">
+      <button id="more" type="button">Higher</button>
+      <button id="less" type="button">Lower</button>
+    </div>
+    <p class="verdict" id="verdict"></p>
+    <button class="again" id="again" type="button" hidden>Play again</button>
+  </div>
+</div>
+
+<p class="note" id="note"></p>
+
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<script src="data.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  var CATS = window.CATEGORIES || [];
+  var KEY = 'lc-higherlower';
+  var cat = CATS[0], streak = 0, best = {}, over = false;
+  var a = null, b = null;
+
+  var $ = function(id){ return document.getElementById(id); };
+  var tabs = $('tabs'), choices = $('choices'), verdict = $('verdict'), again = $('again');
+
+  try { best = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { best = {}; }
+  function saveBest(){
+    try { localStorage.setItem(KEY, JSON.stringify(best)); } catch (e) {}
+  }
+
+  /* Two things within six per cent of each other is not a question, it is a
+     coin toss, so the next item is drawn from those far enough away to be
+     answerable. */
+  function pickAgainst(prev){
+    var pool = cat.items.filter(function(it){
+      if (it === prev) return false;
+      return Math.abs(it.v - prev.v) / Math.max(it.v, prev.v) >= 0.06;
+    });
+    if (!pool.length) pool = cat.items.filter(function(it){ return it !== prev; });
+    return pool[(Math.random() * pool.length) | 0];
+  }
+
+  function fmt(v){
+    if (v >= 100) return Math.round(v).toLocaleString();
+    if (v >= 1) return (Math.round(v * 100) / 100).toLocaleString();
+    return String(v);
+  }
+
+  function paintScore(){
+    var s = tabs.querySelector('.score');
+    s.innerHTML = 'streak <b>' + streak + '</b> &middot; best <b>' + (best[cat.id] || 0) + '</b>';
+  }
+
+  function render(revealB){
+    $('an').textContent = a.n;
+    $('ae').textContent = a.e || '';
+    $('av').innerHTML = fmt(a.v) + '<small>' + cat.unit + '</small>';
+    $('bn').textContent = b.n;
+    $('be').textContent = b.e || '';
+    $('bv').innerHTML = revealB ? fmt(b.v) + '<small>' + cat.unit + '</small>' : '?';
+    $('more').textContent = cat.more;
+    $('less').textContent = cat.less;
+    $('bl').textContent = cat.ask;
+    $('note').textContent = cat.note;
+    paintScore();
+  }
+
+  function newRound(keepB){
+    if (keepB){ a = b; } else { a = cat.items[(Math.random() * cat.items.length) | 0]; }
+    b = pickAgainst(a);
+    over = false;
+    choices.hidden = false;
+    again.hidden = true;
+    verdict.textContent = '';
+    verdict.className = 'verdict';
+    render(false);
+  }
+
+  function guess(higher){
+    if (over) return;
+    var right = higher ? b.v > a.v : b.v < a.v;
+    over = true;
+    choices.hidden = true;
+    render(true);
+
+    if (right){
+      streak++;
+      if (streak > (best[cat.id] || 0)){ best[cat.id] = streak; saveBest(); }
+      paintScore();
+      verdict.className = 'verdict win';
+      verdict.innerHTML = '<b>correct</b>' + b.n + ' is ' +
+        (b.v > a.v ? cat.more.toLowerCase() : cat.less.toLowerCase()) + '.';
+      setTimeout(function(){ if (over) newRound(true); }, 1150);
+    } else {
+      verdict.className = 'verdict lose';
+      verdict.innerHTML = '<b>no</b>' + b.n + ' is ' +
+        (b.v > a.v ? cat.more.toLowerCase() : cat.less.toLowerCase()) +
+        '. That is ' + streak + ' in a row before this one.';
+      again.hidden = false;
+      streak = 0;
+      paintScore();
+    }
+  }
+
+  $('more').addEventListener('click', function(){ guess(true); });
+  $('less').addEventListener('click', function(){ guess(false); });
+  again.addEventListener('click', function(){ newRound(false); });
+
+  /* ---- the switcher, built from whatever is in the data ------------- */
+  CATS.forEach(function(c, i){
+    var t = document.createElement('button');
+    t.className = 'tab';
+    t.type = 'button';
+    t.setAttribute('role', 'tab');
+    t.setAttribute('aria-selected', String(i === 0));
+    t.textContent = c.name;
+    t.addEventListener('click', function(){
+      if (cat === c) return;
+      cat = c;
+      streak = 0;
+      [].forEach.call(tabs.querySelectorAll('.tab'), function(x){
+        x.setAttribute('aria-selected', String(x === t));
+      });
+      newRound(false);
+    });
+    tabs.appendChild(t);
+  });
+  var sc = document.createElement('span');
+  sc.className = 'score';
+  tabs.appendChild(sc);
+
+  newRound(false);
+
+  window.__hol = function(){
+    return { cat: cat.id, cats: CATS.length, streak: streak, best: best[cat.id] || 0,
+             a: { n: a.n, v: a.v }, b: { n: b.n, v: b.v }, over: over,
+             gap: Math.abs(a.v - b.v) / Math.max(a.v, b.v),
+             revealed: $('bv').textContent };
+  };
+  window.__guess = function(hi){ guess(hi); };
+  window.__pickCat = function(i){ tabs.querySelectorAll('.tab')[i].click(); };
+})();
+</script>
+</body>
+</html>
