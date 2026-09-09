@@ -922,13 +922,40 @@ async function handleApi(req, res, url) {
     const rows = Array.isArray(body && body.data) ? body.data : [];
     const norm = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
     const wantA = norm(artist);
+    const wantT = norm(title);
     const withPreview = rows.filter((t) => t && typeof t.preview === 'string' && t.preview);
-    // prefer a row whose artist actually matches; fall back to the first
-    // playable result rather than refusing outright
-    const hit = withPreview.filter((t) => {
+
+    // A guessing game is ruined by a karaoke backing track or an
+    // instrumental: the clip plays, nobody can name it, and it looks like
+    // the game is broken. Reject those outright unless the asked-for title
+    // actually says so.
+    const JUNK = /(instrumental|karaoke|backing track|made famous|tribute|in the style of|cover version|originally performed)/i;
+    const asked = String(title).toLowerCase();
+    const clean_ = withPreview.filter((t) => {
+      const full = String(t.title || '') + ' ' + String(t.title_version || '');
+      if (!JUNK.test(full)) return true;
+      return JUNK.test(asked);            // they asked for it, so allow it
+    });
+
+    const artistOk = (t) => {
       const a = norm(t.artist && t.artist.name);
       return a && (a === wantA || a.indexOf(wantA) >= 0 || wantA.indexOf(a) >= 0);
-    })[0] || withPreview[0];
+    };
+    const titleOk = (t) => {
+      const n = norm(t.title);
+      return n === wantT || n.indexOf(wantT) >= 0 || wantT.indexOf(n) >= 0;
+    };
+    // best first: the exact title by the right artist, then a close title,
+    // then anything by the right artist, then anything playable
+    const exactT = (t) => norm(t.title) === wantT;
+    // a remix can be unrecognisable, so an unadorned title wins over a
+    // bracketed one before we fall back to anything playable
+    const plain = (t) => !/[([]/.test(String(t.title || ''));
+    const hit = clean_.filter((t) => artistOk(t) && exactT(t))[0]
+             || clean_.filter((t) => artistOk(t) && titleOk(t) && plain(t))[0]
+             || clean_.filter((t) => artistOk(t) && titleOk(t))[0]
+             || clean_.filter(artistOk)[0]
+             || clean_[0];
     if (!hit) {
       return sendJson(res, 404, { error: 'no_preview', message: 'No preview for that one.' });
     }

@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Needle Drop</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23140F1C'/><circle cx='16' cy='16' r='10' fill='none' stroke='%23C9A6F0' stroke-width='2'/><circle cx='16' cy='16' r='2.5' fill='%23F0C36B'/><path d='M24 7L18 14' stroke='%23F0C36B' stroke-width='2'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --ink:#F0ECF6; --dim:#9A92AC; --dimmer:#665E78;
+  --bg:#140F1C; --panel:#1D1729; --line:rgba(240,236,246,.13);
+  --violet:#C9A6F0; --gold:#F0C36B; --go:#7BD9A8; --bad:#E88A8A;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html{ background:var(--bg) }
+html,body{margin:0;padding:0;min-height:100%}
+body{
+  background:var(--bg);color:var(--ink);font-family:var(--mono);
+  font-size:13px;line-height:1.55;padding-bottom:74px;
+}
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;
+  text-decoration:none;white-space:nowrap;color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } }
+
+.wrap{ max-width:600px;margin:0 auto;padding:0 18px }
+header{ padding:38px 0 10px;text-align:center }
+h1{ font-size:12px;letter-spacing:.3em;text-transform:uppercase;font-weight:600;margin:0 0 6px;color:var(--violet) }
+.tag{ font-size:11.5px;color:var(--dim);margin:0 }
+
+/* ---------- the record ---------- */
+.deck{ display:flex;justify-content:center;padding:20px 0 6px }
+.disc{ position:relative;width:150px;height:150px;border-radius:50%;
+  background:radial-gradient(circle at 50% 50%, #2B2338 0 17%, #17121F 17.5% 100%);
+  border:1px solid rgba(240,236,246,.14);
+  box-shadow:0 10px 30px rgba(0,0,0,.5), inset 0 0 30px rgba(0,0,0,.6);
+}
+.disc::before{ content:"";position:absolute;inset:14px;border-radius:50%;
+  background:repeating-radial-gradient(circle, rgba(240,236,246,.05) 0 1px, transparent 1px 4px) }
+.disc::after{ content:"";position:absolute;left:50%;top:50%;width:9px;height:9px;margin:-4.5px;
+  border-radius:50%;background:var(--gold) }
+.disc.spin{ animation:rot 2.6s linear infinite }
+@keyframes rot{ to{ transform:rotate(360deg) } }
+@media (prefers-reduced-motion: reduce){ .disc.spin{ animation:none } }
+
+/* ---------- the reveal bar ---------- */
+.bar{ position:relative;height:12px;background:var(--panel);border:1px solid var(--line);
+  border-radius:3px;margin:18px 0 6px;overflow:hidden }
+.bar .win{ position:absolute;top:0;bottom:0;left:0;background:rgba(201,166,240,.20) }
+.bar .play{ position:absolute;top:0;bottom:0;left:0;background:var(--violet);width:0 }
+.ticks{ display:flex;justify-content:space-between;font-size:9.5px;color:var(--dimmer);
+  letter-spacing:.1em;margin-bottom:14px }
+
+/* ---------- transport ---------- */
+.row{ display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 10px }
+button{
+  font:600 10.5px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ink);background:var(--panel);border:1px solid var(--line);
+  border-radius:3px;padding:0 14px;height:40px;cursor:pointer;
+}
+button:hover:not(:disabled){ border-color:rgba(240,236,246,.4) }
+button:disabled{ opacity:.4;cursor:not-allowed }
+button:focus-visible{ outline:2px solid var(--violet);outline-offset:2px }
+button.primary{ background:var(--violet);color:#140F1C;border-color:var(--violet) }
+button.go{ background:var(--go);color:#140F1C;border-color:var(--go) }
+.vol{ display:flex;align-items:center;gap:8px;flex:1 1 150px;min-width:130px }
+.vol label{ font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--dimmer) }
+input[type=range]{ flex:1;accent-color:var(--violet);min-width:70px }
+
+select, input[type=text]{
+  font-family:var(--mono);font-size:13px;color:var(--ink);background:var(--panel);
+  border:1px solid var(--line);border-radius:3px;padding:11px 12px;
+}
+select:focus, input[type=text]:focus{ outline:none;border-color:var(--violet) }
+
+/* ---------- guessing ---------- */
+.guessbox{ margin:14px 0 0 }
+#guess{ width:100% }
+/* In the flow, not floating over it: as an overlay this list sat on top of
+   the Guess button and swallowed the click. */
+.sugg{ background:var(--panel);border:1px solid var(--line);border-top:0;
+  max-height:210px;overflow:auto }
+.sugg[hidden]{ display:none }
+.sugg button{ display:block;width:100%;text-align:left;border:0;border-radius:0;height:auto;
+  padding:9px 12px;background:transparent;text-transform:none;letter-spacing:0;
+  font-weight:400;font-size:12.5px }
+.sugg button:hover, .sugg button.on{ background:rgba(201,166,240,.16) }
+.sugg .a{ color:var(--dim) }
+
+/* ---------- guesses so far ---------- */
+ol.tries{ list-style:none;margin:14px 0 0;padding:0 }
+ol.tries li{ display:flex;gap:10px;align-items:baseline;padding:7px 10px;margin-bottom:4px;
+  border-radius:3px;background:var(--panel);font-size:12px }
+ol.tries li.miss{ color:var(--dim) }
+ol.tries li.skip{ color:var(--dimmer);font-style:italic }
+ol.tries .n{ color:var(--dimmer);font-size:10px;min-width:2.5ch }
+
+/* ---------- result ---------- */
+.result{ margin:16px 0 0;padding:16px;border-radius:4px;background:var(--panel);
+  border:1px solid var(--line);text-align:center }
+.result[hidden]{ display:none }
+.result.win{ border-color:var(--go) } .result.lose{ border-color:var(--bad) }
+.result h2{ font-size:12px;letter-spacing:.18em;text-transform:uppercase;margin:0 0 8px }
+.result.win h2{ color:var(--go) } .result.lose h2{ color:var(--bad) }
+.result .song{ font-size:17px;margin:0 0 2px }
+.result .by{ font-size:12.5px;color:var(--dim);margin:0 0 10px }
+.result a{ color:var(--violet);font-size:11px }
+
+.stats{ display:flex;gap:8px;margin:16px 0 0 }
+.stat{ flex:1;background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:9px 11px;text-align:center }
+.stat .k{ font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--dimmer) }
+.stat .v{ font-size:18px;font-weight:600;margin-top:2px }
+
+.msg{ font-size:11.5px;color:var(--dim);min-height:1.5em;margin:10px 0 0;text-align:center }
+.msg.bad{ color:var(--bad) }
+.note{ background:var(--panel);border:1px solid var(--line);border-radius:3px;
+  padding:13px 14px;margin:22px 0 0;font-size:11px;line-height:1.65;color:var(--dim) }
+.note b{ color:var(--ink);font-weight:600 }
+footer{ margin:24px 0 0;padding:16px 0 0;border-top:1px solid var(--line);color:var(--dimmer);font-size:11px }
+footer a{ color:var(--dim) }
+</style>
+</head>
+<body>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">&#8592;</span><span class="w">cabinet</span></a>
+
+<div class="wrap">
+  <header>
+    <h1>Needle Drop</h1>
+    <p class="tag">One second of it. Ask for more if you have to.</p>
+  </header>
+
+  <div class="deck"><div class="disc" id="disc"></div></div>
+
+  <div class="bar">
+    <div class="win" id="win"></div>
+    <div class="play" id="playhead"></div>
+  </div>
+  <div class="ticks" id="ticks"></div>
+
+  <div class="row">
+    <button class="primary" id="play">Play 1s</button>
+    <button id="pause" disabled>Pause</button>
+    <div class="vol">
+      <label for="vol">Vol</label>
+      <input type="range" id="vol" min="0" max="100" value="75" aria-label="Volume">
+    </div>
+  </div>
+
+  <div class="row">
+    <select id="era" aria-label="Filter by year">
+      <option value="all">Every year</option>
+      <option value="2000-2004">2000 &ndash; 2004</option>
+      <option value="2005-2009">2005 &ndash; 2009</option>
+      <option value="2010-2014">2010 &ndash; 2014</option>
+      <option value="2015-2021">2015 &ndash; 2021</option>
+    </select>
+    <select id="scene" aria-label="Filter by scene">
+      <option value="all">Everywhere</option>
+    </select>
+    <span id="poolCount" style="color:var(--dimmer);font-size:11px"></span>
+  </div>
+
+  <div class="guessbox">
+    <input type="text" id="guess" placeholder="Name it &mdash; start typing a title or artist"
+           autocomplete="off" aria-label="Your guess">
+    <div class="sugg" id="sugg" hidden></div>
+  </div>
+  <div class="row" style="margin-top:10px">
+    <button id="submit" disabled>Guess</button>
+    <button id="skip">Skip (+ more time)</button>
+    <button id="next" hidden class="go">Next track</button>
+  </div>
+
+  <p class="msg" id="msg" role="status" aria-live="polite"></p>
+
+  <ol class="tries" id="tries"></ol>
+
+  <div class="result" id="result" hidden>
+    <h2 id="rHead"></h2>
+    <p class="song" id="rSong"></p>
+    <p class="by" id="rBy"></p>
+    <a id="rLink" href="#" target="_blank" rel="noopener">Open on Deezer</a>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="k">Round</div><div class="v" id="sRound">1</div></div>
+    <div class="stat"><div class="k">Got</div><div class="v" id="sGot">0</div></div>
+    <div class="stat"><div class="k">Score</div><div class="v" id="sScore">0</div></div>
+  </div>
+
+  <div class="note">
+    <b>How the clip works.</b> The audio really does start at one second and grow: the same
+    thirty-second preview is played from the top and stopped at the window you have earned,
+    so asking for more time genuinely uncovers more music rather than revealing a bar that
+    was already playing. Guess sooner and it scores higher.
+    <b>Where it comes from.</b> Clips are the official previews from Deezer&rsquo;s own API,
+    fetched at play time and played from their servers &mdash; nothing is hosted or re-served
+    here. Every track in the pool was checked against that API before being included.
+  </div>
+
+  <footer><p><a href="/">&#8592; back to the cabinet</a></p></footer>
+</div>
+
+<script src="data.js"></script>
+<script>
+(function(){
+  'use strict';
+  var $ = function(id){ return document.getElementById(id); };
+  var TRACKS = window.TRACKS || [], SCENES = window.SCENES || {};
+  var STEPS = [1, 2, 4, 7, 11, 16];        // seconds unlocked, in order
+  var MAXW = STEPS[STEPS.length - 1];
+
+  var audio = new Audio();
+  audio.preload = 'none';
+  audio.volume = 0.75;
+  var stopAt = 0, raf = null;
+
+  var pool = [], track = null, step = 0, tries = [], over = false;
+  var round = 1, got = 0, score = 0;
+
+  /* ---- scene filter options ---- */
+  (function(){
+    var counts = {};
+    TRACKS.forEach(function(t){ counts[t[3]] = (counts[t[3]] || 0) + 1; });
+    Object.keys(SCENES).forEach(function(k){
+      if (!counts[k]) return;
+      var o = document.createElement('option');
+      o.value = k; o.textContent = SCENES[k] + ' (' + counts[k] + ')';
+      $('scene').appendChild(o);
+    });
+  })();
+
+  function buildPool(){
+    var era = $('era').value, sc = $('scene').value;
+    var lo = 0, hi = 9999;
+    if (era !== 'all') { var p = era.split('-'); lo = +p[0]; hi = +p[1]; }
+    pool = TRACKS.filter(function(t){
+      if (t[2] < lo || t[2] > hi) return false;
+      if (sc !== 'all' && t[3] !== sc) return false;
+      return true;
+    });
+    $('poolCount').textContent = pool.length + ' in the pool';
+    return pool;
+  }
+
+  function fmt(s){ return s.toFixed(1).replace(/\.0$/, '') + 's'; }
+
+  function paintTicks(){
+    $('ticks').innerHTML = STEPS.map(function(s, i){
+      return '<span style="color:' + (i <= step ? 'var(--violet)' : 'var(--dimmer)') + '">' + s + 's</span>';
+    }).join('');
+    $('win').style.width = (STEPS[step] / MAXW * 100) + '%';
+    $('play').textContent = 'Play ' + STEPS[step] + 's';
+  }
+
+  function newRound(){
+    if (!buildPool().length) {
+      $('msg').className = 'msg bad';
+      $('msg').textContent = 'Nothing in the pool with those filters.';
+      return;
+    }
+    track = pool[(Math.random() * pool.length) | 0];
+    step = 0; tries = []; over = false;
+    $('tries').innerHTML = '';
+    $('result').hidden = true;
+    $('next').hidden = true;
+    $('skip').disabled = false;
+    $('guess').value = ''; $('guess').disabled = false;
+    $('submit').disabled = true;
+    $('sugg').hidden = true;
+    $('msg').className = 'msg'; $('msg').textContent = '';
+    $('sRound').textContent = round;
+    stop();
+    paintTicks();
+    prefetch();
+  }
+
+  var srcUrl = null, fetching = false;
+  function prefetch(){
+    srcUrl = null; fetching = true;
+    var t = track;
+    fetch('/api/preview?title=' + encodeURIComponent(t[0]) + '&artist=' + encodeURIComponent(t[1]))
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        if (track !== t) return;                 // round moved on
+        fetching = false;
+        if (j && j.ok && j.preview) { srcUrl = j.preview; link = j.link || ''; }
+        else {
+          $('msg').className = 'msg bad';
+          $('msg').textContent = 'That one would not load. Skipping to another.';
+          setTimeout(newRound, 900);
+        }
+      })
+      .catch(function(){
+        fetching = false;
+        $('msg').className = 'msg bad';
+        $('msg').textContent = 'Could not reach the clip service.';
+      });
+  }
+  var link = '';
+
+  function tick(){
+    raf = requestAnimationFrame(tick);
+    var w = Math.min(1, audio.currentTime / MAXW);
+    $('playhead').style.width = (w * 100) + '%';
+    if (!audio.paused && audio.currentTime >= stopAt) {
+      audio.pause();
+      $('disc').classList.remove('spin');
+      $('pause').disabled = true;
+      $('playhead').style.width = (stopAt / MAXW * 100) + '%';
+    }
+  }
+
+  function play(){
+    if (!srcUrl) {
+      $('msg').className = 'msg';
+      $('msg').textContent = fetching ? 'Fetching the clip…' : 'No clip loaded yet.';
+      return;
+    }
+    if (audio.src !== srcUrl) { audio.src = srcUrl; }
+    stopAt = STEPS[step];
+    audio.currentTime = 0;
+    audio.play().then(function(){
+      $('disc').classList.add('spin');
+      $('pause').disabled = false;
+      $('pause').textContent = 'Pause';
+      if (raf) cancelAnimationFrame(raf);
+      tick();
+    }).catch(function(){
+      $('msg').className = 'msg bad';
+      $('msg').textContent = 'The browser would not start playback.';
+    });
+  }
+
+  function stop(){
+    try { audio.pause(); } catch (e) {}
+    if (raf) { cancelAnimationFrame(raf); raf = null; }
+    $('disc').classList.remove('spin');
+    $('pause').disabled = true;
+    $('playhead').style.width = '0';
+  }
+
+  $('play').addEventListener('click', play);
+  $('pause').addEventListener('click', function(){
+    if (audio.paused) {
+      audio.play(); $('disc').classList.add('spin'); $('pause').textContent = 'Pause';
+      if (!raf) tick();
+    } else {
+      audio.pause(); $('disc').classList.remove('spin'); $('pause').textContent = 'Resume';
+    }
+  });
+  $('vol').addEventListener('input', function(){ audio.volume = $('vol').value / 100; });
+  $('era').addEventListener('change', function(){ buildPool(); newRound(); });
+  $('scene').addEventListener('change', function(){ buildPool(); newRound(); });
+
+  /* ---- suggestions ---- */
+  var sel = -1, shown = [];
+  function suggest(){
+    var q = $('guess').value.trim().toLowerCase();
+    if (q.length < 1) { $('sugg').hidden = true; shown = []; return; }
+    shown = pool.filter(function(t){
+      return (t[0] + ' ' + t[1]).toLowerCase().indexOf(q) >= 0;
+    }).slice(0, 8);
+    if (!shown.length) { $('sugg').hidden = true; return; }
+    $('sugg').innerHTML = shown.map(function(t, i){
+      return '<button type="button" data-i="' + i + '" class="' + (i === sel ? 'on' : '') + '">' +
+             esc(t[0]) + ' <span class="a">&mdash; ' + esc(t[1]) + '</span></button>';
+    }).join('');
+    $('sugg').hidden = false;
+  }
+  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){
+    return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]; }); }
+
+  $('guess').addEventListener('input', function(){ sel = -1; suggest(); $('submit').disabled = !$('guess').value.trim(); });
+  $('sugg').addEventListener('click', function(e){
+    var b = e.target.closest('button'); if (!b) return;
+    var t = shown[+b.dataset.i];
+    $('guess').value = t[0] + ' — ' + t[1];
+    $('sugg').hidden = true; $('submit').disabled = false;
+  });
+  $('guess').addEventListener('keydown', function(e){
+    if ($('sugg').hidden) { if (e.key === 'Enter') $('submit').click(); return; }
+    if (e.key === 'ArrowDown') { e.preventDefault(); sel = Math.min(shown.length - 1, sel + 1); suggest(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); sel = Math.max(0, sel - 1); suggest(); }
+    else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (sel >= 0) { var t = shown[sel]; $('guess').value = t[0] + ' — ' + t[1]; $('sugg').hidden = true; $('submit').disabled = false; }
+      else $('submit').click();
+    } else if (e.key === 'Escape') $('sugg').hidden = true;
+  });
+
+  function addTry(text, cls){
+    tries.push(text);
+    var li = document.createElement('li');
+    li.className = cls;
+    li.innerHTML = '<span class="n">' + tries.length + '</span><span>' + esc(text) + '</span>';
+    $('tries').appendChild(li);
+  }
+
+  function finish(win){
+    over = true;
+    stop();
+    $('guess').disabled = true; $('submit').disabled = true; $('skip').disabled = true;
+    $('next').hidden = false;
+    var r = $('result');
+    r.hidden = false;
+    r.className = 'result ' + (win ? 'win' : 'lose');
+    $('rHead').textContent = win ? 'Got it in ' + STEPS[step] + ' seconds' : 'Out of time';
+    $('rSong').textContent = track[0];
+    $('rBy').textContent = track[1] + ' · ' + track[2] + ' · ' + (SCENES[track[3]] || track[3]);
+    if (link) { $('rLink').href = link; $('rLink').hidden = false; } else $('rLink').hidden = true;
+    if (win) {
+      got++;
+      score += [100, 80, 60, 45, 30, 15][step] || 10;
+    }
+    $('sGot').textContent = got;
+    $('sScore').textContent = score;
+  }
+
+  $('submit').addEventListener('click', function(){
+    if (over) return;
+    var raw = $('guess').value.trim();
+    if (!raw) return;
+    var norm = function(s){ return String(s).toLowerCase().replace(/[^a-z0-9Ѐ-ӿ]+/g, ''); };
+    var want = norm(track[0]) + norm(track[1]);
+    var guessed = norm(raw);
+    // accept the title alone, or the "title — artist" the picker fills in
+    var hit = guessed === norm(track[0]) || guessed === want ||
+              (guessed.length > 3 && norm(track[0]).indexOf(guessed) === 0);
+    if (hit) { addTry(raw, 'hit'); finish(true); return; }
+    addTry(raw, 'miss');
+    $('guess').value = ''; $('submit').disabled = true; $('sugg').hidden = true;
+    advance('Not that one.');
+  });
+
+  $('skip').addEventListener('click', function(){
+    if (over) return;
+    addTry('skipped', 'skip');
+    advance('Skipped.');
+  });
+
+  function advance(why){
+    if (step >= STEPS.length - 1) { finish(false); return; }
+    step++;
+    paintTicks();
+    $('msg').className = 'msg';
+    $('msg').textContent = why + ' You now have ' + STEPS[step] + ' seconds.';
+  }
+
+  $('next').addEventListener('click', function(){ round++; newRound(); });
+
+  document.addEventListener('click', function(e){
+    if (!e.target.closest('.guessbox')) $('sugg').hidden = true;
+  });
+
+  // expose a little of the state so the reveal can be checked from outside
+  window.NeedleDrop = {
+    get audio(){ return audio; },
+    get step(){ return step; },
+    get window(){ return STEPS[step]; },
+    get pool(){ return pool; },
+    get track(){ return track; },
+    STEPS: STEPS
+  };
+
+  buildPool();
+  newRound();
+})();
+</script>
+</body>
+</html>
