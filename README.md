@@ -56,7 +56,7 @@ Still to build: Movie night (needs `TMDB_API_KEY`) and Phase C (needs
 `GROQ_API_KEY` powers `POST /api/generate`, the shared text-generation route used by
 what-beats-this, character-match, universes-colliding, espionage, bureaucracy and
 interview-beyond. Without it those six show a "needs a key" state and everything else is
-unaffected. `GROQ_MODEL` optionally overrides the model (default `llama-3.3-70b-versatile`);
+unaffected. `GROQ_MODEL` optionally overrides the model (default `qwen/qwen3.8-27b`);
 `GROQ_URL` overrides the endpoint, which is only useful for testing. Rate limited to 20
 requests per IP per hour, in memory.
 

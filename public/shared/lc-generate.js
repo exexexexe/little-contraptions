@@ -16,6 +16,7 @@
     bad_key: 'The server has a key for this, but the generator would not accept it. ' +
              'Nothing you can do from here, sorry.',
     rate_limited: 'That is twenty of these in an hour, which is plenty. Try again a bit later.',
+    busy: 'The generator is busy for a moment — it has a per-minute budget. Try again shortly.',
     timeout: 'The generator took too long to answer. Try again — it is usually quicker than that.',
     failed: 'The generator could not be reached just now. Try again in a moment.',
     offline: 'No connection. Try again when you have one.',
@@ -26,7 +27,8 @@
     var err = (body && body.error) || '';
     if (err === 'no_api_key') return 'no_key';
     if (err === 'bad_api_key') return 'bad_key';
-    if (err === 'rate_limited' || err === 'upstream_rate_limited' || status === 429) return 'rate_limited';
+    if (err === 'upstream_rate_limited') return 'busy';        // Groq's limit, not yours
+    if (err === 'rate_limited' || status === 429) return 'rate_limited';   // this hub's limit
     if (err === 'upstream_timeout' || status === 504) return 'timeout';
     if (err === 'empty_input' || err === 'bad_input') return 'empty';
     return 'failed';

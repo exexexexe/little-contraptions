@@ -12,6 +12,36 @@ const path = require('path');
 const ROOT = path.join(__dirname, 'public');
 const PORT = process.env.PORT || 3000;
 
+/* ------------------------------------------------------------------ *
+ *  .env, for local development only.
+ *
+ *  Fifteen lines instead of a dependency. Anything already in the real
+ *  environment wins, so Railway's variables are never overridden by a
+ *  stray file, and a missing .env is the normal case in production
+ *  rather than an error.
+ * ------------------------------------------------------------------ */
+(function loadDotEnv() {
+  try {
+    const file = path.join(__dirname, '.env');
+    if (!fs.existsSync(file)) return;
+    for (const line of fs.readFileSync(file, 'utf8').split('\n')) {
+      const t = line.trim();
+      if (!t || t.startsWith('#')) continue;
+      const eq = t.indexOf('=');
+      if (eq < 1) continue;
+      const k = t.slice(0, eq).trim();
+      if (process.env[k] !== undefined) continue;      // real environment wins
+      let v = t.slice(eq + 1).trim();
+      if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
+        v = v.slice(1, -1);
+      }
+      process.env[k] = v;
+    }
+  } catch (e) {
+    console.warn('[env] could not read .env:', e && e.message);
+  }
+})();
+
 const TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
@@ -99,7 +129,12 @@ async function fetchUpstream(url, headers) {
 // Overridable so the failure paths can be exercised against a local stub,
 // and so any OpenAI-shaped endpoint can be pointed at without a code change.
 const GROQ_URL = process.env.GROQ_URL || 'https://api.groq.com/openai/v1/chat/completions';
-const GROQ_MODEL = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
+// Chosen against the key's actual model list rather than the docs: the
+// documented llama-3.3-70b-versatile is not available on this account, and
+// the openai/gpt-oss-* models are reasoning models that spend the whole
+// token budget on a hidden `reasoning` field and return empty content.
+// This one answers in ~0.4 s with no reasoning preamble.
+const GROQ_MODEL = process.env.GROQ_MODEL || 'qwen/qwen3.8-27b';
 const GENERATE_TIMEOUT = 22000;      // generous: a long briefing is a lot of tokens
 const MAX_BODY = 8 * 1024;           // nothing here needs more than a few hundred bytes
 
@@ -184,7 +219,8 @@ const HOUSE_RULES =
 
 const PROMPTS = {
   'universes-colliding': {
-    max_tokens: 700,
+    json: true,
+    max_tokens: 1000,
     temperature: 1.0,
     system:
       HOUSE_RULES + ' ' +
@@ -206,7 +242,8 @@ const PROMPTS = {
   },
 
   espionage: {
-    max_tokens: 700,
+    json: true,
+    max_tokens: 1100,
     temperature: 1.0,
     system:
       HOUSE_RULES + ' ' +
@@ -227,6 +264,7 @@ const PROMPTS = {
   },
 
   bureaucracy: {
+    json: true,
     max_tokens: 300,
     temperature: 1.0,
     system:
@@ -283,6 +321,7 @@ const PROMPTS = {
   },
 
   'character-match': {
+    json: true,
     max_tokens: 420,
     temperature: 0.95,
     system:
@@ -294,6 +333,9 @@ const PROMPTS = {
       'be a compliment. It should be a bit surprising and very specific. If ' +
       'you name a real person rather than a character, frame it as "inspired ' +
       'by their persona". ' +
+      'Accuracy matters more than obscurity: only name a character you are ' +
+      'certain exists under that name in that work. If you are not sure of ' +
+      'the name, pick a character you are sure of instead. ' +
       'Return JSON only, shaped exactly: {"name":"the character","from":"the ' +
       'work they are from","verdict":"2-3 sentences explaining the match, ' +
       'addressed to the person as you","evidence":["three short lines, each ' +
@@ -310,6 +352,7 @@ const PROMPTS = {
   },
 
   'what-beats-this': {
+    json: true,
     max_tokens: 420,
     temperature: 1.0,
     system:
@@ -332,6 +375,7 @@ const PROMPTS = {
   },
 
   'explain-to-an-era': {
+    json: true,
     max_tokens: 460,
     temperature: 0.95,
     system:
@@ -355,7 +399,7 @@ const PROMPTS = {
 
 /* ---- the call ---------------------------------------------------- */
 
-async function callGroq(entry, userText) {
+async function callGroq(entry, userText, noJsonMode) {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), GENERATE_TIMEOUT);
   try {
@@ -366,7 +410,7 @@ async function callGroq(entry, userText) {
         'Content-Type': 'application/json',
         Authorization: 'Bearer ' + process.env.GROQ_API_KEY,
       },
-      body: JSON.stringify({
+      body: JSON.stringify(Object.assign({
         model: GROQ_MODEL,
         temperature: typeof entry.temperature === 'number' ? entry.temperature : 1,
         max_tokens: entry.max_tokens || 512,
@@ -374,7 +418,10 @@ async function callGroq(entry, userText) {
           { role: 'system', content: entry.system },
           { role: 'user', content: userText },
         ],
-      }),
+        // Six of the seven toys parse the answer. Without this the model
+        // occasionally drops a closing bracket on a long object and the toy
+        // falls back for no good reason.
+      }, (entry.json && !noJsonMode) ? { response_format: { type: 'json_object' } } : {})),
     });
 
     const raw = await r.text();
@@ -389,11 +436,20 @@ async function callGroq(entry, userText) {
     catch (e) { return { ok: false, status: 502, detail: 'upstream sent something that was not JSON' }; }
 
     // Defensive all the way down: any of these can be missing on a bad day.
-    const text = j && j.choices && j.choices[0] && j.choices[0].message &&
-      typeof j.choices[0].message.content === 'string'
-      ? j.choices[0].message.content.trim()
-      : '';
-    if (!text) return { ok: false, status: 502, detail: 'upstream returned no text' };
+    const msg = j && j.choices && j.choices[0] && j.choices[0].message;
+    let text = msg && typeof msg.content === 'string' ? msg.content : '';
+    // Some models narrate their thinking into the content. Whatever the
+    // configured model does, only the answer should reach the page.
+    text = text.replace(/<think>[\s\S]*?<\/think>/gi, '')
+               .replace(/<think>[\s\S]*$/i, '')
+               .trim();
+    if (!text) {
+      // A reasoning model that spent its whole budget thinking lands here.
+      const thought = msg && typeof msg.reasoning === 'string' && msg.reasoning.length;
+      return { ok: false, status: 502,
+        detail: thought ? 'model returned reasoning but no answer (raise max_tokens or lower reasoning effort)'
+                        : 'upstream returned no text' };
+    }
     return { ok: true, text: text, model: j.model || GROQ_MODEL };
   } catch (e) {
     const aborted = e && (e.name === 'AbortError' || /abort/i.test(String(e.message || '')));
@@ -701,7 +757,14 @@ async function handleApi(req, res, url) {
     }
 
     const started = Date.now();
-    const out = await callGroq(entry, userText);
+    let out = await callGroq(entry, userText);
+    // JSON mode refuses a truncated object outright rather than returning it.
+    // One retry in free form, since the client's parser is forgiving about
+    // fences and stray prose, beats falling back to templates.
+    if (!out.ok && entry.json && out.status === 400 && /json/i.test(out.detail || '')) {
+      console.warn('[generate] %s: json mode refused, retrying free-form', toy);
+      out = await callGroq(entry, userText, true);
+    }
     const ms = Date.now() - started;
 
     if (!out.ok) {
@@ -715,11 +778,15 @@ async function handleApi(req, res, url) {
         });
       }
       const status = out.status === 429 ? 429 : (out.status === 504 ? 504 : 502);
+      const messages = {
+        429: 'The generator is busy — it has a per-minute budget and the cabinet has just used it. ' +
+             'Give it a minute.',
+        504: 'The generator took too long to answer. Try again.',
+        502: 'The generator could not be reached just now. Try again in a moment.',
+      };
       return sendJson(res, status, {
         error: status === 429 ? 'upstream_rate_limited' : (status === 504 ? 'upstream_timeout' : 'upstream_failed'),
-        message: status === 504
-          ? 'The generator took too long to answer. Try again.'
-          : 'The generator could not be reached just now. Try again in a moment.',
+        message: messages[status],
       });
     }
 
