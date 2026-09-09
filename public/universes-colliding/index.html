@@ -77,6 +77,18 @@ select:focus{ outline:2px solid var(--a);outline-offset:-1px }
   font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);
 }
 
+.fallback{
+  margin:0 0 14px;padding:12px 15px;border-radius:5px;
+  background:var(--panel);border:1px solid var(--rule);border-left:3px solid var(--dim);
+  font-size:13px;line-height:1.65;color:var(--ink-2);
+}
+.fallback b{ display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;
+  text-transform:uppercase;margin-bottom:4px;color:var(--ink);font-weight:700 }
+.fallback.key{ border-left-color:var(--a) }
+.fallback .quiet{ opacity:.75 }
+.dots:after{ content:'';animation:dots 1.2s steps(4,end) infinite }
+@keyframes dots{ 0%{content:''} 25%{content:'.'} 50%{content:'..'} 75%{content:'...'} }
+@media (prefers-reduced-motion: reduce){ .dots:after{ animation:none;content:'…' } }
 .note{ margin-top:20px;border-top:1px solid var(--rule);padding-top:14px;font-size:12.5px;line-height:1.8;color:#8B85A0 }
 
 #lc-back{
@@ -121,12 +133,15 @@ select:focus{ outline:2px solid var(--a);outline-offset:-1px }
   <div class="card" id="out"></div>
 
   <div class="note">
-    Nobody here is from anything. These are genre archetypes — the shapes stories reuse — with dialogue
-    assembled on the page from lines written for it. Nothing is quoted from, or written to echo, any
-    film, game, book or show, and no character, place or property from any of them appears.
+    Nobody here is from anything. These are genre archetypes — the shapes stories reuse — and the
+    dialogue is written fresh for each meeting by a language model told, in as many words, never to
+    quote or paraphrase a real line from any film, game, book or show. If it cannot be reached, the
+    page falls back to its own standing lines and says so. Either way nothing here is quoted from
+    anywhere, and no named property appears.
   </div>
 </div>
 
+<script src="/shared/lc-generate.js"></script>
 <script>
 'use strict';
 
@@ -403,9 +418,10 @@ function scene(A, B){
   };
 }
 
-function render(A, B){
-  const s = scene(A, B);
+/* One renderer, whichever source supplied the lines. */
+function paint(A, B, s, banner){
   $('out').innerHTML =
+    (banner || '') +
     '<div class="titlecard">' +
       '<div class="ep">crossover event · episode ' + (1 + Math.floor(Math.random() * 9)) + '</div>' +
       '<h2>' + esc(A.name) + '<br>×<br>' + esc(B.name) + '</h2>' +
@@ -414,13 +430,62 @@ function render(A, B){
     '<div class="script">' +
       s.turns.map(t =>
         '<div class="turn ' + t.side + '">' +
-          '<div class="em" aria-hidden="true">' + t.w.em + '</div>' +
-          '<div><div class="who">' + esc(t.w.name) + '</div>' +
+          '<div class="em" aria-hidden="true">' + (t.side === 'a' ? A.em : B.em) + '</div>' +
+          '<div><div class="who">' + esc(t.side === 'a' ? A.name : B.name) + '</div>' +
           '<p>' + esc(t.text) + '</p>' +
           (t.dir ? '<div class="dir">— ' + esc(t.dir) + '</div>' : '') +
           '</div></div>').join('') +
       '<div class="stinger">' + esc(s.stinger) + '</div>' +
     '</div>';
+}
+
+function banner(kind, message){
+  return '<div class="fallback' + (kind === 'no_key' ? ' key' : '') + '">' +
+    '<b>' + (kind === 'no_key' ? 'No writers\' room' : 'Writers\' room unreachable') + '</b>' +
+    esc(message) +
+    ' <span class="quiet">Scene below assembled from the standing lines instead.</span></div>';
+}
+
+let busy = false;
+
+async function render(A, B){
+  if (busy) return;
+  busy = true;
+  $('go').disabled = true;
+  $('rand').disabled = true;
+  $('out').innerHTML = '<div class="fallback pending"><b>Writing</b>' +
+    '<span class="dots">the two of them are being introduced</span></div>';
+
+  const out = await LCGenerate.run('universes-colliding', { a: A.name, b: B.name });
+
+  busy = false;
+  $('go').disabled = false;
+  $('rand').disabled = false;
+
+  if (out.ok){
+    const parsed = LCGenerate.parseJSON(out.text);
+    const turns = Array.isArray(parsed && parsed.turns)
+      ? parsed.turns
+          .filter(t => t && typeof t.text === 'string' && t.text.trim())
+          .slice(0, 12)
+          .map(t => ({ side: t.who === 'b' ? 'b' : 'a', text: t.text.trim() }))
+      : [];
+    const where = parsed && typeof parsed.where === 'string' ? parsed.where.trim() : '';
+    if (turns.length >= 4 && where){
+      // the exits are ours, not the model's — they are stage business
+      turns[turns.length - 1].dir = pick(turns[turns.length - 1].side === 'a' ? A.exit : B.exit);
+      paint(A, B, {
+        where: where,
+        turns: turns,
+        stinger: (parsed.stinger && String(parsed.stinger).trim()) || pick(STINGERS)
+      });
+      return;
+    }
+    paint(A, B, scene(A, B), banner('failed', 'The room sent back something unreadable.'));
+    return;
+  }
+
+  paint(A, B, scene(A, B), banner(out.kind, out.message));
 }
 
 function fillSelects(){
