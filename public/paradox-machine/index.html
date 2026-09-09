@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Paradox Machine</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230B1014'/><circle cx='16' cy='16' r='10' fill='none' stroke='%2364E0C8' stroke-width='2'/><circle cx='16' cy='16' r='5' fill='none' stroke='%23E06478' stroke-width='2'/><circle cx='16' cy='16' r='1.6' fill='%2364E0C8'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --bg:#0B1014;
+  --panel:#111A20;
+  --panel-2:#16232B;
+  --edge:#23343E;
+  --ink:#DCE8EC;
+  --dim:#7E939C;
+  --teal:#64E0C8;
+  --rose:#E06478;
+  --amber:#E0B464;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --serif:"Iowan Old Style","Palatino Linotype",Georgia,serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);
+  background-image:
+    radial-gradient(70% 46% at 50% 0%, rgba(100,224,200,.09), transparent 64%),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.012) 0 1px, transparent 1px 3px);
+  color:var(--ink);font-family:var(--mono);font-size:13px;
+  min-height:100vh;padding:24px 16px 84px;
+  display:flex;flex-direction:column;align-items:center;
+}
+.wrap{ max-width:740px;width:100% }
+
+header{ text-align:center }
+h1{ margin:0;font-size:clamp(17px,4.2vw,25px);letter-spacing:.26em;text-transform:uppercase;color:var(--teal);font-weight:700 }
+.sub{ margin-top:9px;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim) }
+
+/* ---------- input ---------- */
+.hopper{ margin-top:20px;background:var(--panel);border:1px solid var(--edge);padding:15px 17px }
+.hopper label{ display:block;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin-bottom:8px }
+textarea{
+  width:100%;font-family:var(--serif);font-size:17px;line-height:1.55;
+  background:#0B1216;border:1px solid var(--edge);color:var(--ink);
+  padding:12px 13px;resize:vertical;min-height:76px;
+}
+textarea:focus{ outline:2px solid var(--teal);outline-offset:1px }
+textarea::placeholder{ color:#5A6E77 }
+.row{ display:flex;gap:8px;flex-wrap:wrap;margin-top:11px;align-items:center }
+button{
+  font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;font-family:var(--mono);
+  background:var(--teal);color:#07110E;border:1px solid var(--teal);
+  padding:12px 20px;cursor:pointer;font-weight:700;
+}
+button:hover{ background:#8AEBD8 }
+button.sec{ background:transparent;color:var(--ink);border-color:var(--edge);font-weight:400 }
+button.sec:hover{ border-color:var(--teal);color:var(--teal) }
+button:focus-visible{ outline:2px solid var(--amber);outline-offset:2px }
+.presets{ display:flex;gap:5px;flex-wrap:wrap;margin-top:11px }
+.presets button{
+  background:transparent;color:var(--dim);border:1px solid var(--edge);
+  font-size:9.5px;letter-spacing:.1em;text-transform:none;padding:6px 10px;font-weight:400;
+}
+.presets button:hover{ border-color:var(--rose);color:var(--rose) }
+
+/* ---------- the meditation ---------- */
+.out{ margin-top:16px }
+.step{
+  background:var(--panel);border-left:3px solid var(--edge);
+  padding:14px 17px;margin-bottom:8px;
+  animation:in .32s ease-out both;
+}
+@keyframes in{ from{ opacity:0;transform:translateY(-5px) } to{ opacity:1;transform:none } }
+.step .n{
+  font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--dim);margin-bottom:6px;
+}
+.step p{ margin:0;font-family:var(--serif);font-size:16.5px;line-height:1.68 }
+/* each level indents and cools, so the tangle is visible as well as read */
+.step[data-l="1"]{ border-left-color:#3E7A72 } .step[data-l="1"] .n{ color:#4E9A90 }
+.step[data-l="2"]{ border-left-color:#4E9A90;margin-left:10px }
+.step[data-l="3"]{ border-left-color:#64E0C8;margin-left:20px }
+.step[data-l="4"]{ border-left-color:#9AD8C8;margin-left:30px }
+.step[data-l="5"]{ border-left-color:var(--amber);margin-left:40px }
+.step[data-l="6"]{ border-left-color:#E09A64;margin-left:50px }
+.step[data-l="7"]{ border-left-color:var(--rose);margin-left:60px }
+.step[data-l="8"]{ border-left-color:var(--rose);margin-left:70px }
+@media (max-width:560px){ .step[data-l]{ margin-left:0 !important } }
+.step.final{
+  border-left-color:var(--rose);background:var(--panel-2);
+}
+.step.final p{ font-size:18px;color:#F0E4E6 }
+
+/* ---------- the crash ---------- */
+.crash{
+  margin-top:16px;background:#0A0E12;border:2px solid var(--rose);
+  padding:20px 22px;font-size:12.5px;line-height:1.85;color:#F0C8CE;
+  white-space:pre-wrap;word-break:break-word;
+}
+.crash b{ display:block;color:var(--rose);letter-spacing:.2em;text-transform:uppercase;font-size:10px;margin-bottom:11px }
+.crash .frames{ color:#8FA6AE;margin-top:12px;font-size:11.5px;line-height:1.7 }
+.crash .last{ color:var(--amber);margin-top:12px }
+
+footer{
+  max-width:740px;width:100%;margin:24px auto 0;padding-top:14px;border-top:1px solid var(--edge);
+  font-size:10.5px;line-height:1.85;color:var(--dim);
+}
+footer a{ color:var(--teal) }
+
+/* ---------- shared: back to the cabinet ---------- */
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 var(--mono);
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } .step{ animation:none } }
+</style>
+</head>
+<body>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<div class="wrap">
+  <header>
+    <h1>The Paradox Machine</h1>
+    <div class="sub">put one in &middot; get a worse one out</div>
+  </header>
+
+  <div class="hopper">
+    <label for="q">A statement that eats itself</label>
+    <textarea id="q" maxlength="220" placeholder="This sentence is false."></textarea>
+    <div class="row">
+      <button id="go" type="button">Feed it in</button>
+      <button id="clear" class="sec" type="button">Clear</button>
+    </div>
+    <div class="presets" id="presets"></div>
+  </div>
+
+  <div class="out" id="out"></div>
+</div>
+
+<footer>
+  Every line the machine produces is assembled here from clause lists written for this cabinet; nothing
+  is quoted from any philosopher and nothing is fetched. Whatever you type stays in your browser. This is
+  not an argument and it is not logic: it is a machine for taking a snake that eats its own tail and
+  feeding it a slightly longer tail.
+  <a href="/">&larr; back to the cabinet</a>
+</footer>
+
+<script>
+'use strict';
+const $ = (id) => document.getElementById(id);
+const pick = (a) => a[Math.floor(Math.random() * a.length)];
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+/* ------------------------------------------------------------------ *
+ *  The escalation.
+ *
+ *  Eight rungs, each a different MOVE rather than a different sentence:
+ *  restate, invert, generalise, involve the observer, involve the
+ *  machine, involve time, involve the reader, and then give up in a
+ *  specific way. Each rung has several phrasings, so the same paradox
+ *  twice does not produce the same meditation — which matters, because
+ *  the same paradox twice is the easter egg.
+ * ------------------------------------------------------------------ */
+const RUNGS = [
+  { n:'first, plainly', lines:[
+    'You have handed the machine: “{P}” The machine accepts it. This is already the problem.',
+    'The statement is: “{P}” Nothing about it is complicated until you try to agree with it.',
+    'Taken at face value: “{P}” The face value is the trap. It always is.'
+  ]},
+  { n:'the turn', lines:[
+    'If it is true, then by its own terms it cannot be, and the moment it stops being true it becomes true again. It is not oscillating. It is doing both, patiently.',
+    'Assume it holds. The assumption is the thing it forbids. Assume it fails. The failure is the thing it requires.',
+    'There is a version of this where you simply decide, and that version lasts about four seconds.'
+  ]},
+  { n:'wider', lines:[
+    'This is not a fact about the sentence. It is a fact about any system that can talk about itself, which unfortunately includes you.',
+    'The same shape appears in every language that lets a thing point at itself, which is every language anybody has ever bothered to build.',
+    'Nothing has gone wrong here. This is what it looks like when nothing goes wrong and the answer is still not available.'
+  ]},
+  { n:'the observer', lines:[
+    'Notice that you are now inside it. You cannot check whether it is true without becoming a thing it is about.',
+    'The statement was stable until it was read. You are not a witness to this; you are a component.',
+    'Whatever you conclude, the conclusion becomes part of what is being described, and the description changes.'
+  ]},
+  { n:'the machine', lines:[
+    'The machine, for its part, was built to resolve exactly this and is currently resolving it in both directions simultaneously, which it is calling progress.',
+    'The machine has now considered the statement, considered its own consideration, and filed both under “pending”.',
+    'The machine notes that it is a system capable of describing itself, and is therefore also on the list.'
+  ]},
+  { n:'in time', lines:[
+    'Give it a moment. The moment does not help, and now you have also spent the moment.',
+    'It was true a second ago and it is false now and both of those were the same second.',
+    'It will resolve eventually. "Eventually" is doing an enormous amount of work in that sentence.'
+  ]},
+  { n:'the reader', lines:[
+    'You are, at this point, reading a description of yourself reading a description. There is no floor under this. There was never a floor.',
+    'The honest summary is that you understand it perfectly and cannot say what it means, and those are not in tension.',
+    'You will put this down shortly and it will keep going. That is not a joke about the machine.'
+  ]},
+  { n:'and so', lines:[
+    'So the machine returns it to you unresolved, slightly heavier, and asks you not to feed it back in.',
+    'So: no answer, and the absence of an answer is not a gap in the machine. It is the shape of the thing.',
+    'So the machine files it under “true, false, and also filed”, and moves on, which it cannot do.'
+  ]}
+];
+
+/* ---- egg #2 -------------------------------------------------------- *
+ *  Feed the machine the identical paradox twice in a row and it does the
+ *  only honest thing a self-referential system can do about recursion:
+ *  it overflows. The trace is fabricated but it is fabricated properly —
+ *  the same frame repeating, a depth counter, and a final line that is
+ *  itself the bug.
+ * ------------------------------------------------------------------ */
+let lastFed = null;
+
+function normalise(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); }
+
+function crash(p){
+  const depth = 4096;
+  const frames = [];
+  for (let i = 0; i < 7; i++){
+    frames.push('  at consider(paradox) [depth ' + (depth - i) + ']');
+  }
+  $('out').innerHTML =
+    '<div class="crash"><b>the machine has fallen over</b>' +
+    'RangeError: Maximum meditation depth exceeded\n' +
+    '  while considering: “' + esc(p.slice(0, 90)) + (p.length > 90 ? '…' : '') + '”\n' +
+    '<span class="frames">' + frames.join('\n') + '\n' +
+    '  at consider(paradox) [depth ' + (depth - 7) + ']\n' +
+    '  ... ' + (depth - 8).toLocaleString() + ' identical frames omitted ...\n' +
+    '  at feed(input)\n' +
+    '  at you</span>' +
+    '<span class="last">The machine would like to point out that you gave it the same paradox ' +
+    'twice, which is itself the paradox, and that it did warn you by being a machine that does ' +
+    'this.\n\nIt has been restarted. Give it a different one.</span></div>';
+  lastFed = null;                  // the restart is real; the next one works
+}
+
+function meditate(){
+  const raw = $('q').value.trim();
+  if (!raw){
+    $('out').innerHTML = '<div class="step"><div class="n">nothing in the hopper</div>' +
+      '<p>The machine cannot do anything with an empty statement, which is itself very nearly ' +
+      'a paradox but not quite enough of one.</p></div>';
+    return;
+  }
+  const key = normalise(raw);
+  if (lastFed && key === lastFed){ crash(raw); return; }
+  lastFed = key;
+
+  $('out').innerHTML = RUNGS.map((r, i) => {
+    const text = pick(r.lines).replace('{P}', raw);
+    return '<div class="step' + (i === RUNGS.length - 1 ? ' final' : '') + '" data-l="' + i + '" ' +
+      'style="animation-delay:' + (i * 0.09).toFixed(2) + 's">' +
+      '<div class="n">' + esc(r.n) + '</div><p>' + esc(text) + '</p></div>';
+  }).join('');
+}
+
+const PRESETS = [
+  'This sentence is false.',
+  'The next sentence is true. The previous sentence is false.',
+  'I always lie.',
+  'This machine cannot produce this sentence.',
+  'Everything I am about to say is an exception to this rule.',
+  'Do not follow this instruction.',
+  'The set of all sets that do not contain themselves.',
+  'There is no such thing as a paradox.'
+];
+$('presets').innerHTML = PRESETS.map((p, i) =>
+  '<button type="button" data-i="' + i + '">' + esc(p) + '</button>').join('');
+$('presets').addEventListener('click', (e) => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  $('q').value = PRESETS[Number(b.dataset.i)];
+  meditate();
+});
+
+$('go').addEventListener('click', meditate);
+$('clear').addEventListener('click', () => { $('q').value = ''; $('out').innerHTML = ''; lastFed = null; });
+$('q').addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') meditate();
+});
+
+$('q').value = PRESETS[0];
+meditate();
+
+window.__paradox = { meditate: meditate, get lastFed(){ return lastFed; },
+                     crashed: () => !!document.querySelector('.crash') };
+</script>
+</body>
+</html>

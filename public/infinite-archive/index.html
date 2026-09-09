@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Infinite Archive</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='4' fill='%230D0C0A'/><rect x='4' y='6' width='3' height='20' fill='%23C9A66B'/><rect x='9' y='9' width='3' height='17' fill='%238A7449'/><rect x='14' y='5' width='3' height='21' fill='%23C9A66B'/><rect x='19' y='10' width='3' height='16' fill='%238A7449'/><rect x='24' y='7' width='4' height='19' fill='%23C9A66B'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --dark:#0D0C0A;
+  --shelf:#151310;
+  --desk:#1C1813;
+  --paper:#E8DEC8;
+  --paper-2:#DED2B6;
+  --ink:#2A2418;
+  --ink-2:#5A5040;
+  --lamp:#E8C168;
+  --gold:#C9A66B;
+  --dim:#8A7E68;
+  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,"Times New Roman",serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--dark);
+  /* endless shelves receding into the dark, and one lamp over the desk */
+  background-image:
+    radial-gradient(46% 34% at 50% 30%, rgba(232,193,104,.16), transparent 68%),
+    repeating-linear-gradient(90deg,
+      rgba(201,166,107,.045) 0 3px, transparent 3px 9px,
+      rgba(138,116,73,.035) 9px 12px, transparent 12px 21px),
+    repeating-linear-gradient(0deg,
+      transparent 0 46px, rgba(0,0,0,.5) 46px 54px),
+    linear-gradient(180deg, #0A0908 0%, #14110D 40%, #0A0908 100%);
+  background-attachment:fixed;
+  color:var(--paper);font-family:var(--serif);font-size:16px;
+  min-height:100vh;padding:26px 16px 84px;
+  display:flex;flex-direction:column;align-items:center;
+}
+body::before{
+  /* the lamp cone */
+  content:'';position:fixed;left:50%;top:0;width:min(760px,96vw);height:340px;
+  transform:translateX(-50%);pointer-events:none;z-index:0;
+  background:radial-gradient(60% 100% at 50% 0%, rgba(232,193,104,.15), transparent 72%);
+}
+.wrap{ max-width:760px;width:100%;position:relative;z-index:1 }
+
+header{ text-align:center }
+h1{
+  margin:0;font-size:clamp(26px,6vw,40px);font-weight:400;letter-spacing:.03em;color:var(--lamp);
+  text-shadow:0 0 34px rgba(232,193,104,.28);
+}
+.sub{ margin-top:9px;font-family:var(--mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--dim) }
+
+/* ---------- the request slip ---------- */
+.slip{
+  margin-top:20px;background:var(--desk);border:1px solid #3A3225;
+  padding:15px 17px;box-shadow:0 12px 34px rgba(0,0,0,.5);
+}
+.slip label{ display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin-bottom:7px }
+.row{ display:flex;gap:9px;flex-wrap:wrap }
+input[type=text]{
+  flex:1;min-width:200px;font-family:var(--serif);font-size:16px;
+  background:#12100C;border:1px solid #3A3225;color:var(--paper);padding:11px 13px;
+}
+input[type=text]:focus{ outline:2px solid var(--gold);outline-offset:1px }
+input::placeholder{ color:#6B6252 }
+button{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;
+  background:var(--gold);color:#17130C;border:1px solid var(--lamp);
+  padding:12px 20px;cursor:pointer;font-weight:700;
+}
+button:hover{ background:var(--lamp) }
+button.sec{ background:transparent;color:var(--paper);border-color:#3A3225;font-weight:400 }
+button.sec:hover{ border-color:var(--gold);color:var(--gold) }
+button:focus-visible{ outline:2px solid var(--lamp);outline-offset:2px }
+
+/* ---------- the located page ---------- */
+.locator{
+  display:flex;gap:16px;flex-wrap:wrap;margin-top:16px;
+  font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);
+}
+.locator b{ color:var(--gold);letter-spacing:.06em }
+
+.page{
+  margin-top:11px;background:var(--paper);color:var(--ink);
+  padding:34px clamp(18px,4.4vw,44px);
+  box-shadow:0 20px 50px rgba(0,0,0,.6);
+  position:relative;
+}
+.page::after{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(120% 90% at 50% 0%, transparent 55%, rgba(90,70,40,.16) 100%);
+}
+.page .body{
+  font-size:15.5px;line-height:1.95;text-align:justify;hyphens:auto;
+  word-break:break-word;white-space:pre-wrap;
+}
+.page .hit{
+  background:#F5E27A;box-shadow:0 0 0 3px #F5E27A;color:#1A1509;font-weight:700;
+}
+.page .folio{
+  margin-top:26px;padding-top:12px;border-top:1px solid rgba(90,80,60,.3);
+  display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);
+}
+
+/* the meta answer */
+.meta{
+  margin-top:11px;background:#12100C;border:1px solid var(--gold);
+  padding:22px 24px;font-size:16.5px;line-height:1.8;color:var(--paper);
+}
+.meta .k{
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--gold);margin-bottom:11px;
+}
+.meta p{ margin:0 0 12px } .meta p:last-child{ margin:0 }
+.meta em{ color:var(--lamp);font-style:italic }
+
+.note{ margin-top:12px;font-family:var(--mono);font-size:11px;line-height:1.8;color:var(--dim) }
+.quiet{
+  display:flex;align-items:center;gap:7px;margin-top:11px;
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);
+}
+.quiet input{ width:15px;height:15px;accent-color:var(--gold) }
+
+footer{
+  max-width:760px;width:100%;margin:26px auto 0;padding-top:14px;border-top:1px solid #2A2419;
+  font-family:var(--mono);font-size:10.5px;line-height:1.85;color:var(--dim);position:relative;z-index:1;
+}
+footer a{ color:var(--gold) }
+
+/* ---------- shared: back to the cabinet ---------- */
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 var(--mono);
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } }
+</style>
+</head>
+<body>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<div class="wrap">
+  <header>
+    <h1>The Infinite Archive</h1>
+    <div class="sub">everything that can be written is already shelved here</div>
+  </header>
+
+  <div class="slip">
+    <label for="q">Request a passage</label>
+    <div class="row">
+      <input type="text" id="q" maxlength="140" placeholder="type anything at all"
+             autocomplete="off" aria-label="The passage to find">
+      <button id="go" type="button">Locate</button>
+      <button id="rand" class="sec" type="button">Open at random</button>
+    </div>
+    <label class="quiet"><input type="checkbox" id="snd" checked> a page turns, somewhere</label>
+    <div class="note" id="note"></div>
+  </div>
+
+  <div class="locator" id="locator"></div>
+  <div id="out"></div>
+</div>
+
+<footer>
+  Nothing here is fetched, stored, or searched: the page is constructed in your browser at the moment you
+  ask for it. The archive is a function, not a library &mdash; the shelf, volume and page numbers are
+  derived from what you typed, so the same request always reaches the same page, and a page nobody has
+  requested has never been anywhere at all. The idea is an old one in literature and belongs to nobody;
+  every word of this implementation, and every line of the text around your passage, was written here.
+  <a href="/">&larr; back to the cabinet</a>
+</footer>
+
+<script src="/shared/lc-audio.js"></script>
+<script>
+'use strict';
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+/* ------------------------------------------------------------------ *
+ *  The archive is a pure function of the request.
+ *
+ *  A hash of what you typed seeds a generator; the generator produces
+ *  the shelf, the volume, the page number, and every character of the
+ *  noise around your passage. So the location is stable — ask for the
+ *  same phrase tomorrow and you get the same page in the same hexagon —
+ *  and nothing is ever stored, because there is nothing to store.
+ * ------------------------------------------------------------------ */
+
+// FNV-1a, 32 bit. Small, fast, and good enough to scatter similar
+// strings to unrelated shelves, which is the only property needed here.
+function hash(str){
+  let h = 0x811c9dc5;
+  for (let i = 0; i < str.length; i++){
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h >>> 0;
+}
+
+function rng(seed){
+  let a = seed >>> 0;
+  return function(){
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/* The archive's alphabet: lower case, a space, and the four marks that
+   make noise look like prose rather than like a hex dump. */
+const ALPHA = 'abcdefghijklmnopqrstuvwxyz     ,.;\'';
+
+const PAGE_CHARS = 1800;
+
+function locate(q){
+  const h = hash(q);
+  const r = rng(h);
+  // Numbers large enough to be absurd and small enough to still read as
+  // numbers. They are derived, not random, so they never move.
+  return {
+    hexagon: 1 + Math.floor(r() * 4e9),
+    wall: 1 + Math.floor(r() * 4),
+    shelf: 1 + Math.floor(r() * 5),
+    volume: 1 + Math.floor(r() * 32),
+    page: 1 + Math.floor(r() * 410),
+    catalogue: h.toString(36).toUpperCase().padStart(7, '0')
+  };
+}
+
+function build(q){
+  const h = hash(q);
+  const r = rng(h ^ 0x9E3779B9);
+  const body = [];
+  for (let i = 0; i < PAGE_CHARS; i++) body.push(ALPHA[Math.floor(r() * ALPHA.length)]);
+  // where the passage sits on the page is also derived, so it is in the
+  // same place every time you come back to it
+  const at = Math.floor(rng(h ^ 0x85EBCA6B)() * (PAGE_CHARS - q.length - 2));
+  return { chars: body, at: at };
+}
+
+function render(q){
+  const loc = locate(q);
+  const { chars, at } = build(q);
+
+  const before = chars.slice(0, at).join('');
+  const after = chars.slice(at + q.length).join('');
+
+  $('locator').innerHTML =
+    '<span>hexagon <b>' + loc.hexagon.toLocaleString() + '</b></span>' +
+    '<span>wall <b>' + loc.wall + '</b></span>' +
+    '<span>shelf <b>' + loc.shelf + '</b></span>' +
+    '<span>volume <b>' + loc.volume + '</b></span>' +
+    '<span>page <b>' + loc.page + '</b></span>';
+
+  $('out').innerHTML =
+    '<div class="page"><div class="body">' +
+      esc(before) + '<span class="hit">' + esc(q) + '</span>' + esc(after) +
+    '</div>' +
+    '<div class="folio"><span>vol. ' + loc.volume + ' &middot; p. ' + loc.page + '</span>' +
+    '<span>cat. ' + loc.catalogue + '</span></div></div>';
+
+  $('note').textContent = 'Located. This page has always been on that shelf and will be there ' +
+    'again if you ask for it tomorrow.';
+}
+
+/* ---- egg #1 -------------------------------------------------------- *
+ *  Ask the archive for the name of the thing it is doing and it stops
+ *  pretending to be a library for a moment. It is the one request the
+ *  page can answer honestly rather than by construction.
+ * ------------------------------------------------------------------ */
+const SELF = /^\s*(the\s+)?library\s+of\s+babel\s*$/i;
+
+function meta(){
+  $('locator').innerHTML = '<span>hexagon <b>—</b></span><span>catalogue <b>SELF</b></span>';
+  $('out').innerHTML =
+    '<div class="meta"><div class="k">the librarian looks up</div>' +
+    '<p>Yes. That one is on the shelf too — of course it is, everything is — but you have not ' +
+    'asked for a passage this time. You have asked for the <em>name of the room</em>.</p>' +
+    '<p>So, honestly: there are no shelves. There is a hash of whatever you type, a seeded ' +
+    'generator, and one thousand eight hundred characters produced the instant you press the ' +
+    'button. Your phrase was never <em>found</em> here. It was placed here, by you, a fifth of a ' +
+    'second ago, and it will be placed there again every time you ask, which is the only sense in ' +
+    'which it was ever waiting.</p>' +
+    '<p>The idea is much older than this page and belongs to nobody. The disappointing part is ' +
+    'the same in both: a library containing every possible page contains no information at all, ' +
+    'because finding the true one requires already knowing it.</p>' +
+    '<p>Ask for something else. It will feel more like a library.</p></div>';
+  $('note').textContent = '';
+}
+
+/* ---- a page turning, several rooms away ---------------------------- *
+ *  Two soft bursts of filtered noise about 90 ms apart — the lift and
+ *  the settle — heavily rolled off and sent into the reverb, so it reads
+ *  as somewhere else in the building rather than as a sound effect.
+ * ------------------------------------------------------------------ */
+function pageTurn(){
+  if (!$('snd').checked) return;
+  LCAudio.sting((A) => {
+    A.burst('pink', { type:'bandpass', freq:1500 + Math.random() * 700, q:.8,
+                      attack:.012, dur:.13, level:.035, reverb:true });
+    A.burst('pink', { type:'bandpass', freq:900 + Math.random() * 500, q:.7,
+                      at:.085 + Math.random() * .04, attack:.008, dur:.16, level:.028, reverb:true });
+  });
+}
+
+function go(){
+  const q = $('q').value.trim();
+  if (!q){ $('note').textContent = 'Type something. Anything is in here.'; return; }
+  pageTurn();
+  if (SELF.test(q)){ meta(); return; }
+  render(q.toLowerCase().replace(/[^a-z0-9 ,.;']/gi, ''));
+}
+
+const SAMPLE = ['everything ends and that is the good news','i left the oven on',
+  'the last person to read this','a sentence nobody has needed yet',
+  'somewhere it is already tuesday','you were right about the thing'];
+
+$('go').addEventListener('click', go);
+$('q').addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); });
+$('rand').addEventListener('click', () => {
+  $('q').value = SAMPLE[Math.floor(Math.random() * SAMPLE.length)];
+  go();
+});
+
+$('q').value = 'the sentence you were about to type';
+// the first page is already open when you arrive, and arrives silently
+render($('q').value);
+
+window.__archive = { locate: locate, hash: hash, isSelf: (s) => SELF.test(s), render: render };
+</script>
+</body>
+</html>
