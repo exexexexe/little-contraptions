@@ -63,6 +63,38 @@ requests per IP per hour, in memory.
 Every toy carries the same back-to-the-hub control in the bottom-left corner,
 and the hub shows a live preview of a toy when you hover its card.
 
+## The desktop rail
+
+The Windows 98 mode keeps six widgets down the right-hand side. Three of them
+do real work:
+
+- **Weather Monitor** — the actual sky wherever the visitor is, from
+  Open-Meteo, placed by `/api/where`. Falls back to geocoding the browser's
+  time-zone name, then to an honest "no station" state. The sky is drawn as
+  pixel art per condition and per day/night: sun, stars, a crescent moon,
+  drifting cloud, rain, snow, fog bands and lightning. The title bar carries
+  the station's own local time.
+- **Desk Toy** — a Newton's cradle. Five real pendulums integrated as
+  `-(g/L)sin(theta)` with air resistance, exchanging horizontal velocity
+  through equal-mass elastic impulses when they touch. One in, one out; two
+  in, two out — that comes out of the physics, not out of a script. Drag a
+  ball; while held it is treated as infinitely heavy, so it shoves the others.
+  It runs down in about half a minute and then something taps it again.
+- **Defragmenting C:** — 168 blocks and a head that walks the drive.
+
+The other three are the older ornaments: a camera watching nothing, a meter
+measuring nothing, and a note from whoever left.
+
+The rail is decoration, so it is hidden from the accessibility tree and takes
+no pointer events — the one exception being the cradle's canvas, which has no
+tabindex and nothing behind it, so it can never swallow a click meant for a
+desktop icon. Everything is drawn on canvases 84 pixels across and blown up
+by CSS with smoothing off. Short viewports shed widgets from the bottom up at
+measured thresholds rather than letting the rail crowd the taskbar, and
+narrow ones drop it entirely. Nothing animates while the desktop is down, the
+tab is in the background, or the rail is off screen; under `prefers-reduced-
+motion` nothing moves at all until a hand is on the cradle.
+
 ## Server routes
 
     /api/keys              which optional keys are configured
@@ -71,10 +103,19 @@ and the hub shows a live preview of a toy when you hover its card.
     /api/rss/list          the allowlist
     /api/iss/position      Open Notify relay — it has no HTTPS of its own
     /api/iss/tle           Celestrak orbital elements, 2 h cache
+    /api/where             coarse location from the caller's IP, 6 h cache
 
 Keys are read from the environment and never reach the browser. The RSS relay
 takes a short feed name, never a URL — an arbitrary `?url=` would make it an
 open proxy.
+
+`/api/where` is keyless. It exists because the hub's weather widget wants
+somewhere to report on and the front door should not raise a browser
+permission prompt to get it, and because ip-api.com serves plain HTTP only —
+the same reason the ISS relay is here. City-level at best. Nothing is stored:
+the address goes upstream, the answer is cached against it for six hours, and
+that cache dies with the process. Failure answers `200 {ok:false}`, not a 5xx,
+because the caller is an ornament with its own fallback.
 
 ## Structure
 
