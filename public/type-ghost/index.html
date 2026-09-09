@@ -352,6 +352,14 @@ function finish(){
       ghost = ok ? mine : prev;
       title = 'Beat it by ' + d + ' wpm.';
       body = 'New ghost recorded at ' + s.wpm + ' wpm (' + s.acc + '% accurate), replacing ' + prev.wpm + ' wpm.';
+      // Nobody improves by forty words a minute between two runs of the same
+      // passage. The page is not going to accuse anyone. It is going to ask.
+      if (d >= 40 && s.acc >= 90){
+        title = 'Beat it by ' + d + ' wpm...';
+        body = 'New ghost recorded at ' + s.wpm + ' wpm, up from ' + prev.wpm + '. ' +
+               'That is a forty word a minute improvement on the same passage, at ' +
+               s.acc + ' per cent accuracy. Cheater?';
+      }
     } else if (d === 0){
       title = 'Dead heat — ' + s.wpm + ' wpm.';
       body = 'Identical to your ghost. The old run stays.';

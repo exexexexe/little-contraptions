@@ -286,6 +286,8 @@ function history(){
 
 let busy = false;
 
+let clean = 0;                 // consecutive submissions with nothing left blank
+
 async function submit(){
   if (busy) return;
   capture();
@@ -331,6 +333,27 @@ async function submit(){
       : (out.kind === 'no_key'
           ? ' (The reviewing officer is unavailable — no key is configured — so standing requirements have been applied.)'
           : ' (The reviewing officer could not be reached, so standing requirements have been applied.)');
+  }
+
+  // The joke is that it never ends. The joke has an end.
+  //
+  // Three submissions running with every single field completed is not
+  // something anyone does by accident, and a department that kept asking
+  // after that would not be absurd any more, only cruel.
+  const complete = filled === fields.length && fields.length >= 6;
+  clean = complete ? clean + 1 : 0;
+  if (clean >= 3){
+    $('notice').innerHTML =
+      '<div class="notice"><b>notice of determination</b>' +
+      'Your submission has been reviewed and found complete. It was found complete on the two ' +
+      'previous occasions as well, which the reviewing officer has been unable to explain. No ' +
+      'further information is required from you. No further form will be issued. ' +
+      '<strong>Congratulations, you are free.</strong> Please do not attempt to submit anything ' +
+      'else; there is nothing left to submit it to.</div>';
+    $('submit').disabled = true;
+    $('submit').textContent = 'Nothing further';
+    stats();
+    return;
   }
 
   const t = pick(NOTICES)

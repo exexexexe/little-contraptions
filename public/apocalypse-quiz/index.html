@@ -516,9 +516,18 @@ function finish(){
   const pct = Math.round(100 * got / max);
   const tier = TIERS.find(t => pct >= t.min);
 
-  $('r-pct').textContent = pct + '%';
-  $('r-tier').textContent = tier.name;
-  $('r-verdict').textContent = tier.v;
+  // Every single worst answer is not a low score, it is a pattern, and the
+  // Department has a different form for a pattern.
+  const allWorst = answers.length > 0 && answers.every(a => a.score === 0);
+
+  $('r-pct').textContent = allWorst ? '—' : pct + '%';
+  $('r-tier').textContent = allWorst ? 'You caused it' : tier.name;
+  $('r-verdict').textContent = allWorst
+    ? 'You did not answer one of these badly. You answered every one of them as badly as it ' +
+      'could be answered, which takes the same care as answering them well. The Department has ' +
+      'reclassified this submission from a readiness assessment to a statement of intent, and ' +
+      'is no longer asking what you would do about it.'
+    : tier.v;
 
   const best = answers.reduce((a, b) => b.score >= a.score ? b : a);
   const worst = answers.reduce((a, b) => b.score <= a.score ? b : a);
