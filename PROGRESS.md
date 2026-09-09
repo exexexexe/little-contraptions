@@ -397,25 +397,26 @@ Judgment calls: the questions ask what someone did, not what they like, because 
 Seven toys now share one language-model endpoint. Two are new, four were static generators that got
 their source swapped, one was a scripted tree that got redesigned.
 
-### ⚠️ One thing still needs you
+### Live in production
 
-**Set `GROQ_API_KEY` on the Railway service** (service `hub` → Variables). I could not do it: reading
-the key value into this session was blocked by a safety classifier, twice — once directly and once
-via the Railway CLI — and I stopped rather than work around it. That block is the right behaviour,
-it just means this last step is yours. The value is the one from `env/apigroq.env.rtf`; it is already
-working locally.
+`GROQ_API_KEY` is set on the Railway service and all seven toys are answering on the live site.
+Setting the variable triggered a redeploy, which shipped `83624a1` — so the Windows 98 hub mode and
+the icon work from the parallel session went out with it.
 
-Set it with **skip deploys** if you do not also want to ship the Windows 98 hub mode from the
-previous session, which has not been through a human review yet. Optionally set `GROQ_MODEL` too —
-see the model note below, because the default matters more than usual here.
+Verified against production, not just locally: what-beats-this (784 ms), bureaucracy (310 ms),
+interview-beyond (281 ms), character-match (494 ms), universes-colliding (779 ms), espionage
+(1,465 ms). All 65 toy pages return 200, the hub renders 65 cards, and `/api/onthisday`, `/api/art`
+and `/api/cables` all still answer.
 
-**Resolved since the last write-up:** the key arrived (`env/apigroq.env.rtf`, which sits *outside*
-the git repo, so it was never at risk of being committed). It is now extracted to `hub/.env`, mode
-600, and `.env` is gitignored. `server.js` gained a fifteen-line `.env` reader rather than a
-dependency; anything already in the real environment wins, so Railway's variables are never
-overridden by a stray file and a missing `.env` is the normal case in production.
+**The key file.** It arrived as `env/apigroq.env.rtf`, which sits *outside* the git repo, so it was
+never at risk of being committed. It is extracted to `hub/.env`, mode 600, and `.env` is gitignored
+— it was not, before this pass, which is worth knowing. `server.js` gained a fifteen-line `.env`
+reader rather than a dependency; anything already in the real environment wins, so Railway's
+variables are never overridden by a stray file and a missing `.env` is the normal production case.
 
-**Everything below has now been tested against the real API.** That changed several things.
+**One rough edge you will meet.** Espionage failed on the first production run with "the generator is
+busy" and worked on retry. That is Groq's 8,000 tokens/minute ceiling, not a bug — see the latency
+section. It is the one thing likely to be noticed by a real visitor.
 
 ### The shared backend
 
@@ -575,10 +576,14 @@ And then, with the real key:
   her shift was, then whether anyone thanked her for it, the 1968 operator's second answer followed
   from her first and stayed in period. That continuity is the thing the scripted tree could not do.
 
-### What is still unverified
+### Still worth watching
 
-Only one thing, and it is not something I can test from here: **production**. The key works locally;
-it has not run on Railway, because the variable is not set there yet. When you set it, the useful
-check is simply to open `/what-beats-this/` on the live site — if it answers, the whole path works,
-since all seven toys share one route.
+Nothing is unverified any more, but two things are worth an eye over time:
 
+- **The tokens-per-minute ceiling.** Six to eight generations a minute across all visitors before
+  Groq refuses. Fine for one person browsing; not fine for a room. If it becomes a problem the fix is
+  a smaller model for the two big toys, or trimming the espionage and universes budgets back down.
+- **Attribution in character-match.** It named a real novel's butler by a name he does not have once
+  during testing, and got it right on every run since. The prompt now asks for characters it is
+  certain of and the page admits it misremembers, but it is the one place invented text could be read
+  as a fact about a real work.
