@@ -206,7 +206,14 @@ function boot(){
     Matter.Bodies.rectangle(JAR.x - JAR.neckHalf - t / 2, JAR.top + 26, t, 72, wallOpts),
     Matter.Bodies.rectangle(JAR.x + JAR.neckHalf + t / 2, JAR.top + 26, t, 72, wallOpts),
   ];
-  Matter.Composite.add(world, walls);
+  neckWalls = [walls[walls.length - 2], walls[walls.length - 1]];
+  // a floor and two sides for the whole box, so a spill lands on the table
+  // rather than falling out of the world
+  Matter.Composite.add(world, walls.concat([
+    Matter.Bodies.rectangle(W / 2, H + t / 2 - 2, W * 2, t, wallOpts),
+    Matter.Bodies.rectangle(-t / 2, H / 2, t, H * 3, wallOpts),
+    Matter.Bodies.rectangle(W + t / 2, H / 2, t, H * 3, wallOpts)
+  ]));
 
   notes.forEach((n, i) => addSlip(n, true, i));
   loop();
@@ -329,6 +336,42 @@ function loop(){
 
 /* ---------- shaking ---------- */
 let drag = null;
+
+/* ------------------------------------------------------------------ *
+ *  Shake it hard enough, for long enough, and the lid gives.
+ *
+ *  Energy accrues while you are actually moving and bleeds away when you
+ *  are not, so a slow rock never gets there however long you keep it up.
+ *  Nothing is lost: the notes are still in storage the whole time, and
+ *  they are tipped back in afterwards.
+ * ------------------------------------------------------------------ */
+let neckWalls = [], shake = 0, spilling = false, lastShake = 0;
+const SPILL_AT = 2600;
+
+function spill(){
+  if (spilling || !slips.length) return;
+  spilling = true;
+  shake = 0;
+  neckWalls.forEach(b => { b.isSensor = true; });
+  slips.forEach(b => {
+    Matter.Body.setVelocity(b, { x: rr(-9, 9), y: rr(-26, -15) });
+    Matter.Body.setAngularVelocity(b, rr(-0.4, 0.4));
+  });
+  $('hint').textContent = 'everything came out at once';
+  setTimeout(function(){
+    neckWalls.forEach(b => { b.isSensor = false; });
+    // tip them back in over the mouth, one after another, so it settles
+    slips.forEach((b, i) => setTimeout(function(){
+      Matter.Body.setPosition(b, { x: JAR.x + rr(-JAR.neckHalf + 40, JAR.neckHalf - 40), y: JAR.top - 40 });
+      Matter.Body.setVelocity(b, { x: rr(-1, 1), y: 3 });
+      Matter.Body.setAngularVelocity(b, 0);
+    }, i * 90));
+    setTimeout(function(){
+      spilling = false;
+      $('hint').textContent = 'drag the jar to shake it';
+    }, slips.length * 90 + 900);
+  }, 4200);
+}
 cv.addEventListener('pointerdown', (e) => {
   if (!HAVE_PHYSICS) return;
   drag = { x: e.clientX, y: e.clientY, t: performance.now() };
@@ -347,7 +390,13 @@ cv.addEventListener('pointermove', (e) => {
     });
     Matter.Body.setAngularVelocity(b, b.angularVelocity + rr(-0.06, 0.06));
   });
-  $('hint').textContent = 'shaking';
+  // how hard, not how far: only real movement counts toward the lid
+  const now = performance.now();
+  shake = Math.max(0, shake - (now - lastShake) * 1.1) + Math.abs(dx) + Math.abs(dy) * 0.8;
+  lastShake = now;
+  if (!spilling && shake > SPILL_AT) spill();
+  $('hint').textContent = spilling ? 'everything came out at once'
+        : shake > SPILL_AT * 0.55 ? 'the lid is not going to hold' : 'shaking';
 });
 const endDrag = () => {
   if (!drag) return;
@@ -402,5 +451,16 @@ stats();
 boot();
 if (!HAVE_PHYSICS) draw();
 </script>
+<script>
+window.__jar = {
+  shake: () => shake,
+  spilling: () => spilling,
+  slips: () => slips.length,
+  forceShake: (n) => { shake = n; if (!spilling && shake > SPILL_AT) spill(); return spilling; },
+  above: () => slips.filter(b => b.position.y < JAR.top).length,
+  hint: () => document.getElementById('hint').textContent
+};
+</script>
+
 </body>
 </html>

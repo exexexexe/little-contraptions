@@ -49,6 +49,14 @@ h1 span{ color:var(--cyan) }
 .epoch{ margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--dim);text-align:right;line-height:1.6 }
 
 /* ---------- map ---------- */
+#homeline:empty{ display:none }
+.homeline{
+  margin-top:10px;padding:9px 12px;
+  font-family:var(--mono);font-size:11px;line-height:1.6;letter-spacing:.02em;
+  border-left:2px solid #5FA8D8;background:rgba(95,168,216,.09);color:#BFD8EA;
+}
+.homeline.near{ border-left-color:#E0B44A;background:rgba(224,180,74,.11);color:#F0DCA8 }
+
 .mapbox{ position:relative;border:1px solid var(--line);background:var(--sea);overflow:hidden }
 svg#map{ width:100%;height:auto;display:block }
 .land{ fill:var(--land);stroke:var(--coast);stroke-width:.35;stroke-linejoin:round }
@@ -208,6 +216,7 @@ h1{ font-family:var(--display) }
   </div>
 
   <div class="readout" id="readout"></div>
+  <div id="homeline"></div>
 
   <div class="cols">
     <div class="panel">
@@ -540,6 +549,46 @@ async function loadPosition(){
   }
 }
 
+/* ------------------------------------------------------------------ *
+ *  Where this cabinet is kept.
+ *
+ *  Not a guess and not a simulation: the station's own reported position
+ *  against a fixed point, by the same great-circle arithmetic the pass
+ *  finder uses. It says "near" rather than "overhead" because 600 km of
+ *  ground distance is near for something moving at 27,000 km/h and is
+ *  nothing like directly above you.
+ * ------------------------------------------------------------------ */
+const HOME = { name: 'Stockholm', lat: 59.3293, lon: 18.0686 };
+const NEAR_KM = 600;
+let lastNear = 0;
+
+function groundKm(aLat, aLon, bLat, bLon){
+  const R = 6371, d = Math.PI / 180;
+  const p1 = aLat * d, p2 = bLat * d;
+  const dp = (bLat - aLat) * d, dl = (bLon - aLon) * d;
+  const x = Math.sin(dp / 2) * Math.sin(dp / 2) +
+            Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) * Math.sin(dl / 2);
+  return 2 * R * Math.asin(Math.min(1, Math.sqrt(x)));
+}
+
+function homeLine(){
+  if (!live || live.lat == null || live.lon == null) return '';
+  const km = groundKm(live.lat, live.lon, HOME.lat, HOME.lon);
+  const now = Date.now();
+  if (km <= NEAR_KM){
+    lastNear = now;
+    return '<div class="homeline near">It is over ' + HOME.name + ' right now &mdash; ' +
+           Math.round(km) + ' km from the city, and moving.</div>';
+  }
+  const since = (now - lastNear) / 60000;
+  if (lastNear && since < 12){
+    return '<div class="homeline">It passed ' + HOME.name + ' about ' +
+           (since < 1 ? 'a minute' : Math.round(since) + ' minutes') + ' ago. ' +
+           'It is ' + Math.round(km) + ' km away now.</div>';
+  }
+  return '';
+}
+
 function renderReadout(){
   if(!live) return;
   const lit = live.visibility ? live.visibility!=='eclipsed' : (satrec ? sunlit(sgp4(satrec,(dateToJD(new Date())-jdEpoch)*1440), dateToJD(new Date())) : null);
@@ -550,6 +599,8 @@ function renderReadout(){
     (live.vel!=null?'<div class="r"><b>'+fmt(live.vel)+'</b><span>km/h</span></div>':'')+
     '<div class="r '+(lit?'lit':'ecl')+'"><b>'+(lit==null?'—':(lit?'sunlit':'eclipsed'))+'</b><span>right now</span></div>'+
     '<div class="r src"><b>'+esc(live.source.split(' ')[0])+'</b><span>source</span></div>';
+  const hl = document.getElementById('homeline');
+  if (hl) hl.innerHTML = homeLine();
 }
 
 let track3d = null;
@@ -910,5 +961,16 @@ addEventListener('load', () => setView('globe'));
   setInterval(()=>{ if(!document.hidden && satrec) renderPasses(); }, 60000);
 })();
 </script>
+<script>
+window.__iss = {
+  home: () => HOME,
+  distanceNow: () => (live && live.lat != null) ? Math.round(groundKm(live.lat, live.lon, HOME.lat, HOME.lon)) : null,
+  line: () => homeLine(),
+  fake: (lat, lon) => { if (!live) live = { source: 'test' }; live.lat = lat; live.lon = lon;
+                        const hl = document.getElementById('homeline');
+                        if (hl) hl.innerHTML = homeLine(); return hl ? hl.textContent : ''; }
+};
+</script>
+
 </body>
 </html>
