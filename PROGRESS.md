@@ -1378,3 +1378,57 @@ that are not the Zone.
 Commons' credit line arrives as HTML. It is never inserted as HTML — tags are stripped and what
 remains is escaped. Batches are shuffled because search returns consecutive files from one upload,
 which without shuffling meant four photographs of the same wall.
+
+---
+
+# Windows 98 mode — Display Properties
+
+Its own session, on top of the Windows 98 hub mode. Confirmed that mode existed and worked before
+starting: 97 icons, taskbar, Start menu, 98.css loading, toggle intact.
+
+**What it does.** A Display Properties panel inside the desktop, opened from a "Display" icon or by
+right-clicking the desktop and choosing Properties. Four tabs, a live preview window, and:
+
+- **Twenty colour schemes** — Teal, Storm, Plum, Wheat, Marine, Eggplant, Rose, Spruce, Slate, Brick,
+  Desert, Pumpkin, Lilac, Rainy Day, Maple, Pewter, Celery, Ink, Copper, Arctic. Each sets the title
+  gradient, title text, button face, window background and window text.
+- **Nine wallpapers** — Teal, Slate, Tiles, Weave, Dots, Waves, Circuit, Night, Dawn. All drawn with
+  CSS gradients; no images, nothing lifted.
+- **Three icon spacings**, **three fonts**, **three pointers** (the classic arrow is drawn here, and
+  hovering an icon over it gives an hourglass), **taskbar top or bottom**, and **sound on/off**.
+
+Everything persists in `localStorage` under `lc-w98-prefs`, the same pattern as the mode toggle.
+
+**The 98.css problem.** Version 0.1.21 declares no custom properties at all — every colour is a
+literal. So rather than fight it, this restates the few rules that carry colour in terms of
+variables, at a specificity the library cannot reach. Every selector is prefixed `.w98`, which is on
+`<html>` only in Windows 98 mode. That prefix wins the cascade whatever loaded last, *and* makes it
+structurally impossible for any of this to reach the card catalogue.
+
+**One thing changed after it already worked.** The layout and pointer classes were on `<html>` at
+first. The vanilla render was byte-identical even so, because every rule reading them is
+`.w98`-prefixed — but a class on the root element is a standing invitation for someone to write an
+unprefixed rule later and quietly restyle the catalogue. They hang off the `#w98` shell now, where
+that cannot happen.
+
+**Contrast was not left to taste.** Every scheme was checked before any interface existed: title text
+against *both* ends of its own gradient, window text against the content background and against the
+button face. Nine of the first twenty failed 4.5:1 against the light end — including the authentic
+silver-and-navy default, at 4.01 — so the light stops were solved for numerically rather than nudged
+by eye. Teal's light stop is therefore a shade deeper than the real thing. That is the one deliberate
+infidelity, and it is the only way the default scheme passes its own test.
+
+Re-measured afterwards from rendered styles in the browser rather than trusting the arithmetic:
+**worst case 4.55:1, at Pumpkin, nothing below 4.5.**
+
+**Verified.** All twenty schemes change the actual chrome — taskbar, panel, title bars and all five
+desktop widgets, including the three from the other session, which re-theme for free because they
+already share the `.w98-widget` and `.bar` classes. Nineteen distinct face colours (Teal and Pewter
+deliberately share silver and differ at the title bar). All nine wallpapers paint differently.
+Settings survive a reload. The panel fits a 390px screen with no overflow. The vanilla/98 toggle
+still works both ways and the icon grid rebuilds intact. And the card catalogue renders
+**byte-identically at 1280x9507** with defaults stored and with deliberately wild settings stored —
+zero differing pixels.
+
+**Not touched, as instructed:** the vanilla hub, the toggle mechanism itself, and device-detected
+retro theming, which is still waiting on the Retro OS toy's per-platform themes.
