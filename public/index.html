@@ -446,6 +446,55 @@ footer{
   image-rendering:pixelated;
   filter:drop-shadow(1px 1px 0 rgba(0,0,0,.45));
 }
+
+/* ---- the four icon styles ---- *
+ * One set of drawings, four treatments. The symbols are drawn once; what
+ * changes is the contour and how the shapes are rasterised.
+ *
+ * That is possible because CSS custom properties DO inherit into a <use>
+ * shadow tree — checked in a real browser before any of this was written,
+ * with a probe that painted one circle red on defaults and green with the
+ * variable set. Every outline in the sprite is
+ * stroke="var(--ic-ink, <its own colour>)" with a matching --ic-sw, so
+ * with no style chosen nothing changes at all.
+ *
+ * Only OUTLINES are parameterised. A stroke on fill="none" is the drawing
+ * itself — the waves in the ocean icon, the ring round the planet — and a
+ * stroke with no fill is a detail line, the ruling on a page or the rays
+ * of a sun. Those keep their own colour and weight in every style, which
+ * is why the flat set still has its detail and has not gone blank.
+ */
+#w98{ --ic-sw:1 }                     /* pixel: the original weight */
+
+#w98[data-icons="cartoon"]{ --ic-ink:#241C15; --ic-sw:2.2 }
+#w98[data-icons="cartoon"] .w98-icon svg{
+  image-rendering:auto;
+  shape-rendering:geometricPrecision;
+  stroke-linejoin:round;stroke-linecap:round;
+  paint-order:stroke fill;            /* outline behind the fill: a sticker */
+  filter:saturate(1.34) contrast(1.06) drop-shadow(1px 2px 0 rgba(0,0,0,.4));
+}
+
+#w98[data-icons="flat"]{ --ic-ink:transparent; --ic-sw:0 }
+#w98[data-icons="flat"] .w98-icon svg{
+  image-rendering:auto;
+  shape-rendering:geometricPrecision;
+  filter:saturate(.86) brightness(1.04);
+}
+
+#w98[data-icons="real"]{ --ic-ink:rgba(24,18,12,.5); --ic-sw:.75 }
+#w98[data-icons="real"] .w98-icon svg{
+  image-rendering:auto;
+  shape-rendering:geometricPrecision;
+  filter:url(#ic-real);
+}
+/* The bevel is expensive per icon and it is a decoration; anybody who has
+   asked for less movement gets the plain drawing with a shadow instead. */
+@media (prefers-reduced-motion: reduce){
+  #w98[data-icons="real"] .w98-icon svg{
+    filter:drop-shadow(0 1px 1px rgba(0,0,0,.5));
+  }
+}
 .w98-icon .lbl{
   font-size:11px;line-height:1.25;
   padding:1px 3px;
@@ -2629,6 +2678,9 @@ footer{
         </div>
 
         <div class="pane" id="w98-p-icons" role="tabpanel" hidden>
+          <fieldset><legend>Icon style</legend>
+            <div class="w98-row" id="w98-iconstyles" role="group" aria-label="Icon style"></div>
+          </fieldset>
           <fieldset><legend>Icon spacing</legend>
             <div class="w98-row" id="w98-layouts" role="group" aria-label="Icon spacing"></div>
           </fieldset>
@@ -2666,38 +2718,61 @@ footer{
      style="position:absolute;overflow:hidden" shape-rendering="crispEdges">
 <defs>
 
+<!-- The bevel the "realistic" icon style uses. A soft drop shadow under the
+     shape, and a specular highlight lit from the upper left, which is where
+     every icon of that era was lit from. Applied to the <use>, so it costs
+     nothing unless that style is chosen. -->
+<filter id="ic-real" x="-35%" y="-35%" width="180%" height="180%"
+        color-interpolation-filters="sRGB">
+  <feGaussianBlur in="SourceAlpha" stdDeviation="0.55" result="b"/>
+  <feOffset in="b" dx="0" dy="0.7" result="o"/>
+  <feFlood flood-color="#000000" flood-opacity="0.5"/>
+  <feComposite in2="o" operator="in" result="shadow"/>
+  <feSpecularLighting in="b" surfaceScale="2.6" specularConstant="0.62"
+                      specularExponent="18" lighting-color="#FFFFFF" result="spec">
+    <feDistantLight azimuth="235" elevation="58"/>
+  </feSpecularLighting>
+  <feComposite in="spec" in2="SourceAlpha" operator="in" result="sheen"/>
+  <feMerge>
+    <feMergeNode in="shadow"/>
+    <feMergeNode in="SourceGraphic"/>
+    <feMergeNode in="sheen"/>
+  </feMerge>
+</filter>
+
+
 <symbol id="ic-weather" viewBox="0 0 16 16">
-  <circle cx="11" cy="5" r="3" fill="#FFD54A" stroke="#B8860B"/>
-  <path d="M3 13h9a2.5 2.5 0 0 0 .2-5 3.4 3.4 0 0 0-6.1-1.6A2.6 2.6 0 0 0 3 13z" fill="#FFF" stroke="#7A7A7A"/>
+  <circle cx="11" cy="5" r="3" fill="#FFD54A" stroke="var(--ic-ink, #B8860B)" stroke-width="var(--ic-sw, 1)"/>
+  <path d="M3 13h9a2.5 2.5 0 0 0 .2-5 3.4 3.4 0 0 0-6.1-1.6A2.6 2.6 0 0 0 3 13z" fill="#FFF" stroke="var(--ic-ink, #7A7A7A)" stroke-width="var(--ic-sw, 1)"/>
 </symbol>
 
 <symbol id="ic-nature" viewBox="0 0 16 16">
   <rect x="7" y="9" width="2" height="5" fill="#6B4A2B"/>
-  <path d="M8 1l5 6H3z" fill="#2E7D32" stroke="#14501B"/>
-  <path d="M8 5l5 6H3z" fill="#3E9142" stroke="#14501B"/>
+  <path d="M8 1l5 6H3z" fill="#2E7D32" stroke="var(--ic-ink, #14501B)" stroke-width="var(--ic-sw, 1)"/>
+  <path d="M8 5l5 6H3z" fill="#3E9142" stroke="var(--ic-ink, #14501B)" stroke-width="var(--ic-sw, 1)"/>
 </symbol>
 
 <symbol id="ic-ocean" viewBox="0 0 16 16">
-  <rect x="1" y="2" width="14" height="12" fill="#0E4C6B" stroke="#062B3E"/>
+  <rect x="1" y="2" width="14" height="12" fill="#0E4C6B" stroke="var(--ic-ink, #062B3E)" stroke-width="var(--ic-sw, 1)"/>
   <path d="M2 6q2-2 4 0t4 0 4 0M2 9.5q2-2 4 0t4 0 4 0M2 13q2-2 4 0t4 0 4 0"
         fill="none" stroke="#57C4E5" stroke-width="1.3"/>
 </symbol>
 
 <symbol id="ic-planet" viewBox="0 0 16 16">
-  <circle cx="8" cy="8" r="4.4" fill="#8E6BC8" stroke="#4A2F7A"/>
+  <circle cx="8" cy="8" r="4.4" fill="#8E6BC8" stroke="var(--ic-ink, #4A2F7A)" stroke-width="var(--ic-sw, 1)"/>
   <path d="M4 9.4a4.4 4.4 0 0 0 7.6-2.4" fill="none" stroke="#B79BE6"/>
   <ellipse cx="8" cy="8" rx="7" ry="2.3" fill="none" stroke="#E0C36A" stroke-width="1.3"
            transform="rotate(-22 8 8)"/>
 </symbol>
 
 <symbol id="ic-star" viewBox="0 0 16 16">
-  <path d="M8 1l1.7 4.6L14 7l-4.3 1.4L8 13l-1.7-4.6L2 7l4.3-1.4z" fill="#FFD54A" stroke="#B8860B"/>
+  <path d="M8 1l1.7 4.6L14 7l-4.3 1.4L8 13l-1.7-4.6L2 7l4.3-1.4z" fill="#FFD54A" stroke="var(--ic-ink, #B8860B)" stroke-width="var(--ic-sw, 1)"/>
   <rect x="13" y="12" width="2" height="2" fill="#FFF"/>
   <rect x="2" y="2" width="1.5" height="1.5" fill="#FFF"/>
 </symbol>
 
 <symbol id="ic-globe" viewBox="0 0 16 16">
-  <circle cx="8" cy="8" r="6.2" fill="#1F7A8C" stroke="#0A3A45"/>
+  <circle cx="8" cy="8" r="6.2" fill="#1F7A8C" stroke="var(--ic-ink, #0A3A45)" stroke-width="var(--ic-sw, 1)"/>
   <path d="M4 5.5c2 .6 3 2.2 2.2 3.4-.8 1.2.4 2.6 1.8 2.4M11.4 4.6c-1.4.8-1 2 .2 2.3 1.2.3 1.6 1.6.6 2.6"
         fill="none" stroke="#5FD07A" stroke-width="1.4"/>
   <ellipse cx="8" cy="8" rx="2.6" ry="6.2" fill="none" stroke="#9FDCE6"/>
@@ -2705,7 +2780,7 @@ footer{
 </symbol>
 
 <symbol id="ic-game" viewBox="0 0 16 16">
-  <rect x="1" y="5" width="14" height="7" rx="2.6" fill="#9E9E9E" stroke="#3A3A3A"/>
+  <rect x="1" y="5" width="14" height="7" rx="2.6" fill="#9E9E9E" stroke="var(--ic-ink, #3A3A3A)" stroke-width="var(--ic-sw, 1)"/>
   <rect x="3.6" y="7.6" width="3.6" height="1.5" fill="#242424"/>
   <rect x="4.7" y="6.5" width="1.4" height="3.7" fill="#242424"/>
   <circle cx="11" cy="7.8" r="1.2" fill="#D32F2F"/>
@@ -2713,7 +2788,7 @@ footer{
 </symbol>
 
 <symbol id="ic-dice" viewBox="0 0 16 16">
-  <rect x="2.5" y="2.5" width="11" height="11" rx="1.5" fill="#FFF" stroke="#303030"/>
+  <rect x="2.5" y="2.5" width="11" height="11" rx="1.5" fill="#FFF" stroke="var(--ic-ink, #303030)" stroke-width="var(--ic-sw, 1)"/>
   <circle cx="5.5" cy="5.5" r="1.1" fill="#202020"/>
   <circle cx="10.5" cy="5.5" r="1.1" fill="#202020"/>
   <circle cx="8" cy="8" r="1.1" fill="#202020"/>
@@ -2722,13 +2797,13 @@ footer{
 </symbol>
 
 <symbol id="ic-doc" viewBox="0 0 16 16">
-  <path d="M3 1.5h7l3 3v10H3z" fill="#FFF" stroke="#606060"/>
-  <path d="M10 1.5v3h3" fill="#D8D8D8" stroke="#606060"/>
+  <path d="M3 1.5h7l3 3v10H3z" fill="#FFF" stroke="var(--ic-ink, #606060)" stroke-width="var(--ic-sw, 1)"/>
+  <path d="M10 1.5v3h3" fill="#D8D8D8" stroke="var(--ic-ink, #606060)" stroke-width="var(--ic-sw, 1)"/>
   <path d="M5 7h6M5 9.5h6M5 12h4" stroke="#8A8A8A" stroke-width="1.2"/>
 </symbol>
 
 <symbol id="ic-terminal" viewBox="0 0 16 16">
-  <rect x="1" y="2.5" width="14" height="11" fill="#C0C0C0" stroke="#404040"/>
+  <rect x="1" y="2.5" width="14" height="11" fill="#C0C0C0" stroke="var(--ic-ink, #404040)" stroke-width="var(--ic-sw, 1)"/>
   <rect x="2.5" y="4" width="11" height="8" fill="#101810"/>
   <path d="M4 6l2 1.6L4 9.2" fill="none" stroke="#4AE04A" stroke-width="1.2"/>
   <rect x="7.5" y="8.4" width="3" height="1.4" fill="#4AE04A"/>
@@ -2737,63 +2812,63 @@ footer{
 <symbol id="ic-chip" viewBox="0 0 16 16">
   <path d="M6 1v2M8 1v2M10 1v2M6 13v2M8 13v2M10 13v2M1 6h2M1 8h2M1 10h2M13 6h2M13 8h2M13 10h2"
         stroke="#9A9A9A" stroke-width="1.4"/>
-  <rect x="3" y="3" width="10" height="10" fill="#33383D" stroke="#15181B"/>
+  <rect x="3" y="3" width="10" height="10" fill="#33383D" stroke="var(--ic-ink, #15181B)" stroke-width="var(--ic-sw, 1)"/>
   <rect x="5.5" y="5.5" width="5" height="5" fill="none" stroke="#6FBF73" stroke-width="1.2"/>
 </symbol>
 
 <symbol id="ic-radio" viewBox="0 0 16 16">
   <path d="M11 5L14 1" stroke="#909090" stroke-width="1.2"/>
-  <rect x="1" y="5" width="14" height="9" rx="1" fill="#C0A97A" stroke="#5E4A2E"/>
-  <circle cx="5" cy="9.5" r="2.6" fill="#3A3128" stroke="#221C15"/>
+  <rect x="1" y="5" width="14" height="9" rx="1" fill="#C0A97A" stroke="var(--ic-ink, #5E4A2E)" stroke-width="var(--ic-sw, 1)"/>
+  <circle cx="5" cy="9.5" r="2.6" fill="#3A3128" stroke="var(--ic-ink, #221C15)" stroke-width="var(--ic-sw, 1)"/>
   <circle cx="5" cy="9.5" r="1" fill="#8A7C68"/>
-  <rect x="9.5" y="7" width="4" height="2" fill="#EDE3C8" stroke="#5E4A2E"/>
-  <circle cx="11" cy="11.5" r="1.2" fill="#8A7C68" stroke="#5E4A2E"/>
+  <rect x="9.5" y="7" width="4" height="2" fill="#EDE3C8" stroke="var(--ic-ink, #5E4A2E)" stroke-width="var(--ic-sw, 1)"/>
+  <circle cx="11" cy="11.5" r="1.2" fill="#8A7C68" stroke="var(--ic-ink, #5E4A2E)" stroke-width="var(--ic-sw, 1)"/>
 </symbol>
 
 <symbol id="ic-tv" viewBox="0 0 16 16">
   <path d="M8 5L4 1.5M8 5l4-3.5" stroke="#909090" stroke-width="1.2"/>
-  <rect x="1" y="5" width="14" height="9.5" rx="1" fill="#B4B4B4" stroke="#454545"/>
-  <rect x="2.5" y="6.4" width="9" height="6.7" fill="#3F6FA8" stroke="#22354F"/>
+  <rect x="1" y="5" width="14" height="9.5" rx="1" fill="#B4B4B4" stroke="var(--ic-ink, #454545)" stroke-width="var(--ic-sw, 1)"/>
+  <rect x="2.5" y="6.4" width="9" height="6.7" fill="#3F6FA8" stroke="var(--ic-ink, #22354F)" stroke-width="var(--ic-sw, 1)"/>
   <circle cx="13.2" cy="8.4" r="0.9" fill="#5E5E5E"/>
   <circle cx="13.2" cy="11.2" r="0.9" fill="#5E5E5E"/>
 </symbol>
 
 <symbol id="ic-camera" viewBox="0 0 16 16">
-  <rect x="5" y="2.5" width="4.5" height="2" fill="#6E6E6E" stroke="#2E2E2E"/>
-  <rect x="1" y="4.5" width="14" height="9" rx="1" fill="#7A7A7A" stroke="#2E2E2E"/>
-  <circle cx="8" cy="9" r="3" fill="#2B2B2B" stroke="#151515"/>
+  <rect x="5" y="2.5" width="4.5" height="2" fill="#6E6E6E" stroke="var(--ic-ink, #2E2E2E)" stroke-width="var(--ic-sw, 1)"/>
+  <rect x="1" y="4.5" width="14" height="9" rx="1" fill="#7A7A7A" stroke="var(--ic-ink, #2E2E2E)" stroke-width="var(--ic-sw, 1)"/>
+  <circle cx="8" cy="9" r="3" fill="#2B2B2B" stroke="var(--ic-ink, #151515)" stroke-width="var(--ic-sw, 1)"/>
   <circle cx="8" cy="9" r="1.5" fill="#6BA8D8"/>
   <rect x="11.8" y="5.8" width="2" height="1.4" fill="#FFF3B0"/>
 </symbol>
 
 <symbol id="ic-heart" viewBox="0 0 16 16">
   <path d="M8 14S1.5 9.8 1.5 5.9A3.4 3.4 0 0 1 8 4.4a3.4 3.4 0 0 1 6.5 1.5C14.5 9.8 8 14 8 14z"
-        fill="#D8382F" stroke="#7A1A15"/>
+        fill="#D8382F" stroke="var(--ic-ink, #7A1A15)" stroke-width="var(--ic-sw, 1)"/>
   <path d="M4.4 5.6a2 2 0 0 1 2-1.2" fill="none" stroke="#F09A94" stroke-width="1.2"/>
 </symbol>
 
 <symbol id="ic-eye" viewBox="0 0 16 16">
-  <path d="M1 8s2.8-4.2 7-4.2S15 8 15 8s-2.8 4.2-7 4.2S1 8 1 8z" fill="#FFF" stroke="#303030"/>
-  <circle cx="8" cy="8" r="2.6" fill="#1E6FB8" stroke="#123F6B"/>
+  <path d="M1 8s2.8-4.2 7-4.2S15 8 15 8s-2.8 4.2-7 4.2S1 8 1 8z" fill="#FFF" stroke="var(--ic-ink, #303030)" stroke-width="var(--ic-sw, 1)"/>
+  <circle cx="8" cy="8" r="2.6" fill="#1E6FB8" stroke="var(--ic-ink, #123F6B)" stroke-width="var(--ic-sw, 1)"/>
   <circle cx="8" cy="8" r="1.1" fill="#101010"/>
   <circle cx="6.9" cy="6.9" r="0.6" fill="#FFF"/>
 </symbol>
 
 <symbol id="ic-ghost" viewBox="0 0 16 16">
-  <path d="M3 14V7a5 5 0 0 1 10 0v7l-2-1.4-2 1.4-2-1.4-2 1.4L3 14z" fill="#F2F2F2" stroke="#5A5A6E"/>
+  <path d="M3 14V7a5 5 0 0 1 10 0v7l-2-1.4-2 1.4-2-1.4-2 1.4L3 14z" fill="#F2F2F2" stroke="var(--ic-ink, #5A5A6E)" stroke-width="var(--ic-sw, 1)"/>
   <circle cx="6.2" cy="7" r="1.1" fill="#20202E"/>
   <circle cx="9.8" cy="7" r="1.1" fill="#20202E"/>
 </symbol>
 
 <symbol id="ic-clock" viewBox="0 0 16 16">
-  <circle cx="8" cy="8" r="6.3" fill="#F4F1E4" stroke="#3A3A3A"/>
+  <circle cx="8" cy="8" r="6.3" fill="#F4F1E4" stroke="var(--ic-ink, #3A3A3A)" stroke-width="var(--ic-sw, 1)"/>
   <path d="M8 4.2V8l2.7 1.8" fill="none" stroke="#202020" stroke-width="1.3"/>
   <circle cx="8" cy="8" r="0.8" fill="#B03A2E"/>
   <path d="M8 1.7v1M8 13.3v1M1.7 8h1M13.3 8h1" stroke="#7A7A7A"/>
 </symbol>
 
 <symbol id="ic-mail" viewBox="0 0 16 16">
-  <rect x="1" y="3.5" width="14" height="9" fill="#FFF" stroke="#404040"/>
+  <rect x="1" y="3.5" width="14" height="9" fill="#FFF" stroke="var(--ic-ink, #404040)" stroke-width="var(--ic-sw, 1)"/>
   <path d="M1 3.5l7 5 7-5" fill="none" stroke="#404040" stroke-width="1.2"/>
   <path d="M1 12.5l5-4M15 12.5l-5-4" fill="none" stroke="#B0B0B0"/>
 </symbol>
@@ -2813,37 +2888,37 @@ footer{
 </symbol>
 
 <symbol id="ic-book" viewBox="0 0 16 16">
-  <path d="M1.5 3.5C3.5 2.6 6 2.8 7.6 3.9v9.4C6 12.2 3.5 12 1.5 12.9z" fill="#FFF" stroke="#5A5A5A"/>
-  <path d="M14.5 3.5C12.5 2.6 10 2.8 8.4 3.9v9.4c1.6-1.1 4.1-1.3 6.1-.4z" fill="#EDEDED" stroke="#5A5A5A"/>
+  <path d="M1.5 3.5C3.5 2.6 6 2.8 7.6 3.9v9.4C6 12.2 3.5 12 1.5 12.9z" fill="#FFF" stroke="var(--ic-ink, #5A5A5A)" stroke-width="var(--ic-sw, 1)"/>
+  <path d="M14.5 3.5C12.5 2.6 10 2.8 8.4 3.9v9.4c1.6-1.1 4.1-1.3 6.1-.4z" fill="#EDEDED" stroke="var(--ic-ink, #5A5A5A)" stroke-width="var(--ic-sw, 1)"/>
   <path d="M3 6h3.2M3 8h3.2M9.8 6H13M9.8 8H13" stroke="#A8A8A8"/>
 </symbol>
 
 <symbol id="ic-news" viewBox="0 0 16 16">
-  <rect x="1.5" y="3" width="13" height="10.5" fill="#F4F1E4" stroke="#4A4A4A"/>
+  <rect x="1.5" y="3" width="13" height="10.5" fill="#F4F1E4" stroke="var(--ic-ink, #4A4A4A)" stroke-width="var(--ic-sw, 1)"/>
   <rect x="3" y="4.4" width="10" height="2" fill="#3A3A3A"/>
-  <rect x="3" y="7.6" width="4.4" height="4.4" fill="#B9B2A0" stroke="#6E6A5E"/>
+  <rect x="3" y="7.6" width="4.4" height="4.4" fill="#B9B2A0" stroke="var(--ic-ink, #6E6A5E)" stroke-width="var(--ic-sw, 1)"/>
   <path d="M8.6 8.2H13M8.6 9.8H13M8.6 11.4H13" stroke="#8A8A8A" stroke-width="1.1"/>
 </symbol>
 
 <symbol id="ic-chat" viewBox="0 0 16 16">
-  <path d="M5.5 1.5H15v6h-1.8v2.5L10.6 7.5H5.5z" fill="#DCE9F5" stroke="#2E5C8A"/>
-  <path d="M1 5h8.6v6.3H4.7L2.4 13.6V11.3H1z" fill="#FFF" stroke="#404040"/>
+  <path d="M5.5 1.5H15v6h-1.8v2.5L10.6 7.5H5.5z" fill="#DCE9F5" stroke="var(--ic-ink, #2E5C8A)" stroke-width="var(--ic-sw, 1)"/>
+  <path d="M1 5h8.6v6.3H4.7L2.4 13.6V11.3H1z" fill="#FFF" stroke="var(--ic-ink, #404040)" stroke-width="var(--ic-sw, 1)"/>
   <path d="M2.6 7.3h5.4M2.6 9.1h3.4" stroke="#9A9A9A" stroke-width="1.1"/>
 </symbol>
 
 <symbol id="ic-flask" viewBox="0 0 16 16">
-  <rect x="6" y="1" width="4" height="2.2" fill="#E0C36A" stroke="#8A6A10"/>
-  <rect x="6.8" y="3.2" width="2.4" height="1.8" fill="#B8B8B8" stroke="#4A4A4A"/>
-  <rect x="4" y="5" width="8" height="9" fill="#EBD9F2" stroke="#5E3A70"/>
+  <rect x="6" y="1" width="4" height="2.2" fill="#E0C36A" stroke="var(--ic-ink, #8A6A10)" stroke-width="var(--ic-sw, 1)"/>
+  <rect x="6.8" y="3.2" width="2.4" height="1.8" fill="#B8B8B8" stroke="var(--ic-ink, #4A4A4A)" stroke-width="var(--ic-sw, 1)"/>
+  <rect x="4" y="5" width="8" height="9" fill="#EBD9F2" stroke="var(--ic-ink, #5E3A70)" stroke-width="var(--ic-sw, 1)"/>
   <rect x="4.6" y="8.6" width="6.8" height="4.8" fill="#B98AD1"/>
 </symbol>
 
 <symbol id="ic-trophy" viewBox="0 0 16 16">
-  <path d="M4 1.6h8V6a4 4 0 0 1-8 0z" fill="#F0C33C" stroke="#8A6A10"/>
+  <path d="M4 1.6h8V6a4 4 0 0 1-8 0z" fill="#F0C33C" stroke="var(--ic-ink, #8A6A10)" stroke-width="var(--ic-sw, 1)"/>
   <path d="M4 3H2.2v1.4A2.4 2.4 0 0 0 4.6 6.8M12 3h1.8v1.4a2.4 2.4 0 0 1-2.4 2.4"
         fill="none" stroke="#8A6A10" stroke-width="1.2"/>
   <rect x="7" y="10" width="2" height="2.4" fill="#C9A227"/>
-  <rect x="4.5" y="12.4" width="7" height="1.8" fill="#C9A227" stroke="#8A6A10"/>
+  <rect x="4.5" y="12.4" width="7" height="1.8" fill="#C9A227" stroke="var(--ic-ink, #8A6A10)" stroke-width="var(--ic-sw, 1)"/>
 </symbol>
 
 <symbol id="ic-gear" viewBox="0 0 16 16">
@@ -2853,29 +2928,29 @@ footer{
     <rect x="6.8" y="0.9" width="2.4" height="14.2" transform="rotate(90 8 8)"/>
     <rect x="6.8" y="0.9" width="2.4" height="14.2" transform="rotate(135 8 8)"/>
   </g>
-  <circle cx="8" cy="8" r="4.6" fill="#BFC5CB" stroke="#4A4E52"/>
-  <circle cx="8" cy="8" r="1.7" fill="#5E6368" stroke="#33383D"/>
+  <circle cx="8" cy="8" r="4.6" fill="#BFC5CB" stroke="var(--ic-ink, #4A4E52)" stroke-width="var(--ic-sw, 1)"/>
+  <circle cx="8" cy="8" r="1.7" fill="#5E6368" stroke="var(--ic-ink, #33383D)" stroke-width="var(--ic-sw, 1)"/>
 </symbol>
 
 <symbol id="ic-pc" viewBox="0 0 16 16">
-  <rect x="1" y="2" width="14" height="9.6" fill="#D9D4C2" stroke="#4A4A4A"/>
-  <rect x="2.5" y="3.4" width="11" height="6.4" fill="#1E4F7A" stroke="#123A5C"/>
+  <rect x="1" y="2" width="14" height="9.6" fill="#D9D4C2" stroke="var(--ic-ink, #4A4A4A)" stroke-width="var(--ic-sw, 1)"/>
+  <rect x="2.5" y="3.4" width="11" height="6.4" fill="#1E4F7A" stroke="var(--ic-ink, #123A5C)" stroke-width="var(--ic-sw, 1)"/>
   <path d="M3.7 5.1h4M3.7 6.8h6" stroke="#7FC4E8" stroke-width="1.1"/>
-  <rect x="5.5" y="11.6" width="5" height="1.2" fill="#B8B2A0" stroke="#4A4A4A"/>
-  <rect x="1.6" y="12.8" width="12.8" height="1.8" fill="#D9D4C2" stroke="#4A4A4A"/>
+  <rect x="5.5" y="11.6" width="5" height="1.2" fill="#B8B2A0" stroke="var(--ic-ink, #4A4A4A)" stroke-width="var(--ic-sw, 1)"/>
+  <rect x="1.6" y="12.8" width="12.8" height="1.8" fill="#D9D4C2" stroke="var(--ic-ink, #4A4A4A)" stroke-width="var(--ic-sw, 1)"/>
 </symbol>
 
 <symbol id="ic-satellite" viewBox="0 0 16 16">
-  <rect x="0.8" y="6" width="4.6" height="4.2" fill="#2E5C8A" stroke="#123A5C"/>
-  <rect x="10.6" y="6" width="4.6" height="4.2" fill="#2E5C8A" stroke="#123A5C"/>
+  <rect x="0.8" y="6" width="4.6" height="4.2" fill="#2E5C8A" stroke="var(--ic-ink, #123A5C)" stroke-width="var(--ic-sw, 1)"/>
+  <rect x="10.6" y="6" width="4.6" height="4.2" fill="#2E5C8A" stroke="var(--ic-ink, #123A5C)" stroke-width="var(--ic-sw, 1)"/>
   <path d="M2.3 6v4.2M3.9 6v4.2M12.1 6v4.2M13.7 6v4.2" stroke="#7FC4E8"/>
-  <rect x="6" y="5" width="4" height="6.2" fill="#C0C0C0" stroke="#404040"/>
+  <rect x="6" y="5" width="4" height="6.2" fill="#C0C0C0" stroke="var(--ic-ink, #404040)" stroke-width="var(--ic-sw, 1)"/>
   <path d="M8 5V3" stroke="#909090" stroke-width="1.2"/>
-  <circle cx="8" cy="2" r="1.3" fill="#F0C33C" stroke="#8A6A10"/>
+  <circle cx="8" cy="2" r="1.3" fill="#F0C33C" stroke="var(--ic-ink, #8A6A10)" stroke-width="var(--ic-sw, 1)"/>
 </symbol>
 
 <symbol id="ic-ruler" viewBox="0 0 16 16">
-  <rect x="1" y="5.4" width="14" height="5.2" fill="#F0C33C" stroke="#8A6A10"/>
+  <rect x="1" y="5.4" width="14" height="5.2" fill="#F0C33C" stroke="var(--ic-ink, #8A6A10)" stroke-width="var(--ic-sw, 1)"/>
   <path d="M3.2 5.4v2.6M5.4 5.4v1.6M7.6 5.4v2.6M9.8 5.4v1.6M12 5.4v2.6"
         stroke="#8A6A10" stroke-width="1.1"/>
 </symbol>
@@ -2884,46 +2959,46 @@ footer{
   <path d="M6.6 8.4L13.4 14" fill="none" stroke="#8A6A10" stroke-width="3.4"/>
   <path d="M6.6 8.4L13.4 14" fill="none" stroke="#F0C33C" stroke-width="1.6"/>
   <path d="M9.4 10.7l1.7-1.8M11.2 12.2l1.7-1.8" stroke="#8A6A10" stroke-width="1.6"/>
-  <circle cx="5" cy="6" r="3.4" fill="#F0C33C" stroke="#8A6A10"/>
-  <circle cx="5" cy="6" r="1.2" fill="#C0C0C0" stroke="#8A6A10"/>
+  <circle cx="5" cy="6" r="3.4" fill="#F0C33C" stroke="var(--ic-ink, #8A6A10)" stroke-width="var(--ic-sw, 1)"/>
+  <circle cx="5" cy="6" r="1.2" fill="#C0C0C0" stroke="var(--ic-ink, #8A6A10)" stroke-width="var(--ic-sw, 1)"/>
 </symbol>
 
 <symbol id="ic-folder" viewBox="0 0 16 16">
-  <path d="M1 2.8h5.2l1.5 1.8H15v8.6H1z" fill="#D9B44A" stroke="#8A6A10"/>
-  <path d="M1 5.8h14v7.4H1z" fill="#F0D480" stroke="#8A6A10"/>
+  <path d="M1 2.8h5.2l1.5 1.8H15v8.6H1z" fill="#D9B44A" stroke="var(--ic-ink, #8A6A10)" stroke-width="var(--ic-sw, 1)"/>
+  <path d="M1 5.8h14v7.4H1z" fill="#F0D480" stroke="var(--ic-ink, #8A6A10)" stroke-width="var(--ic-sw, 1)"/>
 </symbol>
 
 <symbol id="ic-film" viewBox="0 0 16 16">
-  <path d="M1 2.7l13.2-1.5.4 3.3L1.4 6z" fill="#282828" stroke="#101010"/>
+  <path d="M1 2.7l13.2-1.5.4 3.3L1.4 6z" fill="#282828" stroke="var(--ic-ink, #101010)" stroke-width="var(--ic-sw, 1)"/>
   <path d="M4 2.4l1.1 3.2M7.5 2l1.1 3.2M11 1.6l1.1 3.2" stroke="#F2F2F2" stroke-width="1.2"/>
-  <rect x="1" y="6" width="14" height="8.2" fill="#3E3E3E" stroke="#101010"/>
+  <rect x="1" y="6" width="14" height="8.2" fill="#3E3E3E" stroke="var(--ic-ink, #101010)" stroke-width="var(--ic-sw, 1)"/>
   <path d="M3.2 9h9.6M3.2 11.4h6.6" stroke="#8A8A8A" stroke-width="1.2"/>
 </symbol>
 
 <symbol id="ic-chart" viewBox="0 0 16 16">
-  <rect x="1" y="1.5" width="14" height="13" fill="#FFF" stroke="#4A4A4A"/>
-  <rect x="3" y="8" width="2.6" height="4.6" fill="#2E7BD6" stroke="#123A5C"/>
-  <rect x="6.7" y="5.6" width="2.6" height="7" fill="#5FA83E" stroke="#25551A"/>
-  <rect x="10.4" y="3.2" width="2.6" height="9.4" fill="#D8382F" stroke="#7A1A15"/>
+  <rect x="1" y="1.5" width="14" height="13" fill="#FFF" stroke="var(--ic-ink, #4A4A4A)" stroke-width="var(--ic-sw, 1)"/>
+  <rect x="3" y="8" width="2.6" height="4.6" fill="#2E7BD6" stroke="var(--ic-ink, #123A5C)" stroke-width="var(--ic-sw, 1)"/>
+  <rect x="6.7" y="5.6" width="2.6" height="7" fill="#5FA83E" stroke="var(--ic-ink, #25551A)" stroke-width="var(--ic-sw, 1)"/>
+  <rect x="10.4" y="3.2" width="2.6" height="9.4" fill="#D8382F" stroke="var(--ic-ink, #7A1A15)" stroke-width="var(--ic-sw, 1)"/>
 </symbol>
 
 <symbol id="ic-sword" viewBox="0 0 16 16">
-  <path d="M11 1.2h3.8V5L7.4 12.4 4.6 9.6z" fill="#DDE1E5" stroke="#5A5E62"/>
+  <path d="M11 1.2h3.8V5L7.4 12.4 4.6 9.6z" fill="#DDE1E5" stroke="var(--ic-ink, #5A5E62)" stroke-width="var(--ic-sw, 1)"/>
   <path d="M12.9 3.1L5.5 10.5" fill="none" stroke="#A8AEB4"/>
-  <path d="M2.4 9.9l3.7 3.7-1.3 1.3-3.7-3.7z" fill="#C9A227" stroke="#8A6A10"/>
+  <path d="M2.4 9.9l3.7 3.7-1.3 1.3-3.7-3.7z" fill="#C9A227" stroke="var(--ic-ink, #8A6A10)" stroke-width="var(--ic-sw, 1)"/>
   <path d="M3.6 8.7l3.7 3.7" fill="none" stroke="#8A6A2E" stroke-width="1.8"/>
 </symbol>
 
 <symbol id="ic-clipboard" viewBox="0 0 16 16">
-  <rect x="2.4" y="2" width="11.2" height="12.6" fill="#C9A96E" stroke="#5E4A2E"/>
-  <rect x="3.8" y="3.4" width="8.4" height="9.8" fill="#FFF" stroke="#8A8A8A"/>
-  <rect x="6" y="0.9" width="4" height="2.5" fill="#9A9A9A" stroke="#3A3A3A"/>
+  <rect x="2.4" y="2" width="11.2" height="12.6" fill="#C9A96E" stroke="var(--ic-ink, #5E4A2E)" stroke-width="var(--ic-sw, 1)"/>
+  <rect x="3.8" y="3.4" width="8.4" height="9.8" fill="#FFF" stroke="var(--ic-ink, #8A8A8A)" stroke-width="var(--ic-sw, 1)"/>
+  <rect x="6" y="0.9" width="4" height="2.5" fill="#9A9A9A" stroke="var(--ic-ink, #3A3A3A)" stroke-width="var(--ic-sw, 1)"/>
   <path d="M5.2 6h5.6M5.2 8.2h5.6M5.2 10.4h3.6" stroke="#9A9A9A" stroke-width="1.1"/>
 </symbol>
 
 <symbol id="ic-frame" viewBox="0 0 16 16">
-  <rect x="1.2" y="1.2" width="13.6" height="13.6" fill="#A5813A" stroke="#4A3410"/>
-  <rect x="3.4" y="3.4" width="9.2" height="9.2" fill="#D8CBB0" stroke="#4A3410"/>
+  <rect x="1.2" y="1.2" width="13.6" height="13.6" fill="#A5813A" stroke="var(--ic-ink, #4A3410)" stroke-width="var(--ic-sw, 1)"/>
+  <rect x="3.4" y="3.4" width="9.2" height="9.2" fill="#D8CBB0" stroke="var(--ic-ink, #4A3410)" stroke-width="var(--ic-sw, 1)"/>
   <circle cx="8" cy="6.9" r="2" fill="#7A5238"/>
   <path d="M4.6 12.6c.5-2.1 1.9-3.1 3.4-3.1s2.9 1 3.4 3.1z" fill="#3F5C7A"/>
 </symbol>
@@ -5857,6 +5932,15 @@ footer{
     { id:'normal',   n:'Normal',   min:'88px',  gy:'6px',  gx:'2px', size:'32px', label:'11px' },
     { id:'spacious', n:'Spacious', min:'116px', gy:'20px', gx:'10px',size:'42px', label:'11.5px' }
   ];
+  /* One set of drawings, four treatments — see the CSS for how, and for
+     why only the contour is parameterised. `n` is what the button says. */
+  var ICONSTYLES = [
+    { id:'pixel',   n:'Pixel' },
+    { id:'cartoon', n:'Cartoon' },
+    { id:'flat',    n:'Flat' },
+    { id:'real',    n:'Realistic' }
+  ];
+
   var FONTS = [
     { id:'sans',  n:'MS Sans', v:'"Pixelated MS Sans Serif","MS Sans Serif",Tahoma,Geneva,Verdana,sans-serif' },
     { id:'fixed', n:'Fixed',   v:'ui-monospace,"Cascadia Mono",Consolas,"Courier New",monospace' },
@@ -5871,7 +5955,7 @@ footer{
   var SOUNDS  = [ { id:'off', n:'Off' }, { id:'on', n:'On' } ];
 
   var DEFAULTS = { scheme:0, wall:'teal', layout:'normal', font:'sans',
-                   cursor:'system', task:'bottom', sound:'off' };
+                   cursor:'system', task:'bottom', sound:'off', icons:'pixel' };
   var prefs = {};
 
   function load(){
@@ -5891,6 +5975,7 @@ footer{
     if (!byId(walls(), prefs.wall)) prefs.wall = DEFAULTS.wall;
     if (!byId(LAYOUTS, prefs.layout)) prefs.layout = DEFAULTS.layout;
     if (!byId(FONTS, prefs.font)) prefs.font = DEFAULTS.font;
+    if (!byId(ICONSTYLES, prefs.icons)) prefs.icons = DEFAULTS.icons;
     if (!byId(CURSORS, prefs.cursor)) prefs.cursor = DEFAULTS.cursor;
     if (!byId(TASKPOS, prefs.task)) prefs.task = DEFAULTS.task;
     if (!byId(SOUNDS, prefs.sound)) prefs.sound = DEFAULTS.sound;
@@ -5958,6 +6043,10 @@ footer{
     // standing invitation for someone to write an unprefixed rule later and
     // quietly style the card catalogue with it. Inside #w98 that cannot
     // happen at all.
+    // On the shell, because that is the ancestor every icon shares — the
+    // desktop's and the ones inside an open folder window alike.
+    shell.setAttribute('data-icons', prefs.icons);
+
     shell.classList.toggle('tb-top', prefs.task === 'top');
     shell.classList.toggle('cur-arrow', prefs.cursor === 'arrow');
     shell.classList.toggle('cur-wait', prefs.cursor === 'wait');
@@ -6046,6 +6135,8 @@ footer{
       SCHEMES.map(function(s, i){ return swatch(s, i, i === prefs.scheme); }).join('');
     document.getElementById('w98-walls').innerHTML =
       walls().map(function(o){ return wallChip(o, o.id === prefs.wall); }).join('');
+    document.getElementById('w98-iconstyles').innerHTML =
+      ICONSTYLES.map(function(o){ return chip(o, o.id === prefs.icons); }).join('');
     document.getElementById('w98-layouts').innerHTML =
       LAYOUTS.map(function(o){ return chip(o, o.id === prefs.layout); }).join('');
     document.getElementById('w98-fonts').innerHTML =
@@ -6068,6 +6159,7 @@ footer{
   }
   wire('w98-schemes', 'scheme', true);
   wire('w98-walls', 'wall', false);
+  wire('w98-iconstyles', 'icons', false);
   wire('w98-layouts', 'layout', false);
   wire('w98-fonts', 'font', false);
   wire('w98-cursors', 'cursor', false);
@@ -6133,7 +6225,7 @@ footer{
   paint();
 
   window.__display = {
-    open: open, close: close,
+    open: open, close: close, iconStyles: ICONSTYLES,
     prefs: function(){ var o = {}; for (var k in prefs) o[k] = prefs[k]; return o; },
     schemes: SCHEMES, walls: WALLS,
     set: function(k, v){ prefs[k] = v; apply(); save(); paint(); },
