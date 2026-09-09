@@ -50,8 +50,9 @@ The hub filters them by the tag on each card.
 | 28 | [Civilizations, Ranked](/civilizations/) | scroll story | Up the Kardashev scale — build a Dyson swarm, send a message through a wormhole. |
 | 29 | [The Loot Terminal](/loot-terminal/) | generator | Fantasy item appraisal with a compendium that persists in the browser. |
 
-Still to build: Movie night (needs `TMDB_API_KEY`) and Phase C (needs
-`GROQ_API_KEY`). `/api/keys` reports both as unset.
+Still to build: Movie night (needs `TMDB_API_KEY`). `/api/keys` reports which optional keys are
+configured — `nasa`, `tmdb`, `groq` and `pexels`. Only `pexels` gates a built toy: without it
+`/atmosphere/` says so on the page and everything else is unaffected.
 
 `GROQ_API_KEY` powers `POST /api/generate`, the shared text-generation route used by
 what-beats-this, character-match, universes-colliding, espionage, bureaucracy and
@@ -133,10 +134,17 @@ nothing moves at all until a hand is on the cradle.
     /api/iss/position      Open Notify relay — it has no HTTPS of its own
     /api/iss/tle           Celestrak orbital elements, 2 h cache
     /api/where             coarse location from the caller's IP, 6 h cache
+    /api/photos?mode=      Pexels relay for /atmosphere/, fixed search list, 1 h cache
 
 Keys are read from the environment and never reach the browser. The RSS relay
 takes a short feed name, never a URL — an arbitrary `?url=` would make it an
 open proxy.
+
+`/api/photos` needs `PEXELS_API_KEY` and answers `200 {ok:false, reason:"no_key"}` without one, so
+`/atmosphere/` shows an honest needs-a-key panel instead of failing. `mode` is `nostalgia` or
+`liminal` and the search terms are a fixed list per mode, indexed by number — the browser never
+sends a query string. Same rule as the RSS relay, and the same reason: an arbitrary `?query=` would
+make this a free image search running on somebody else's quota.
 
 `/api/where` is keyless. It exists because the hub's weather widget wants
 somewhere to report on and the front door should not raise a browser

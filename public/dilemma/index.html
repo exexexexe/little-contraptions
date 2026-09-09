@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Philosopher's Dilemma</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23151A1C'/><path d='M16 7v18M8 12h16' stroke='%23A8C3B8' stroke-width='2' stroke-linecap='round'/><circle cx='9' cy='19' r='4' fill='none' stroke='%23D89A5C' stroke-width='1.8'/><circle cx='23' cy='19' r='4' fill='none' stroke='%23D89A5C' stroke-width='1.8'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --slate:#151A1C;
+  --slate-2:#1F272A;
+  --card:#242D31;
+  --edge:rgba(168,195,184,.2);
+  --chalk:#E8EDEA;
+  --sage:#A8C3B8;
+  --ochre:#D89A5C;
+  --dim:#8A9A94;
+  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --disp:"Avenir Next Condensed","Roboto Condensed","Arial Narrow",var(--serif);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:radial-gradient(900px 640px at 50% -8%, var(--slate-2) 0%, var(--slate) 64%);
+  color:var(--chalk);font-family:var(--serif);min-height:100vh;
+  padding:34px 18px 78px;display:flex;flex-direction:column;align-items:center;
+}
+.wrap{ max-width:640px;width:100% }
+header{ text-align:center }
+h1{
+  font-family:var(--disp);font-size:clamp(24px,5.4vw,36px);margin:0;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--sage);font-weight:700;
+}
+.sub{ font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;opacity:.55;margin-top:9px }
+.count{ font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);text-align:center;margin-top:20px }
+
+.case{
+  background:var(--card);border:1px solid var(--edge);border-radius:3px;
+  margin-top:12px;padding:24px 22px 22px;
+  box-shadow:0 18px 44px rgba(0,0,0,.45);
+}
+.case h2{
+  font-family:var(--disp);font-size:23px;letter-spacing:.09em;text-transform:uppercase;
+  margin:0 0 14px;color:var(--ochre);font-weight:700;
+}
+.case .s{ font-size:clamp(16px,3.3vw,18px);line-height:1.68;color:var(--chalk) }
+
+.choices{ display:grid;gap:11px;margin-top:20px }
+.choices button{
+  font-family:var(--serif);font-size:16px;text-align:left;
+  background:rgba(232,237,234,.05);color:var(--chalk);
+  border:1px solid var(--edge);border-radius:2px;
+  padding:14px 16px;cursor:pointer;
+  transition:background .13s, border-color .13s;
+}
+.choices button:hover:not(:disabled){ background:rgba(232,237,234,.11);border-color:var(--sage) }
+.choices button:focus-visible{ outline:2px solid var(--ochre);outline-offset:2px }
+.choices button:disabled{ cursor:default }
+.choices button.chosen{ background:rgba(216,154,92,.17);border-color:var(--ochre) }
+.choices button.faded{ opacity:.4 }
+
+.after{ margin-top:20px }
+.after[hidden]{ display:none }
+.school{
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.17em;text-transform:uppercase;
+  color:var(--ochre);margin-bottom:8px;
+}
+.after p{ margin:0 0 14px;font-size:15.5px;line-height:1.66;color:#D2DBD7 }
+.other{
+  border-left:2px solid var(--sage);padding-left:14px;margin-bottom:14px;
+}
+.other b{
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.15em;text-transform:uppercase;
+  display:block;margin-bottom:6px;color:var(--sage);font-weight:700;
+}
+.other span{ font-size:15px;line-height:1.62;color:#C3CEC9 }
+.note{
+  font-size:14px;line-height:1.62;color:var(--dim);font-style:italic;
+  border-top:1px solid var(--edge);padding-top:13px;
+}
+.next{
+  display:block;width:100%;margin-top:18px;
+  font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  background:var(--sage);color:var(--slate);border:0;border-radius:2px;
+  padding:13px;cursor:pointer;font-weight:700;
+}
+.next:hover{ filter:brightness(1.08) }
+.next:focus-visible{ outline:2px solid var(--ochre);outline-offset:2px }
+
+/* ---------- the tally ---------- */
+.tally{ margin-top:26px }
+.tally[hidden]{ display:none }
+.tally h3{
+  font-family:var(--disp);font-size:15px;letter-spacing:.15em;text-transform:uppercase;
+  margin:0 0 14px;color:var(--sage);font-weight:700;
+}
+.bar{ display:flex;align-items:center;gap:11px;margin-bottom:9px }
+.bar .k{ flex:0 0 92px;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim) }
+.bar .t{ flex:1 1 auto;height:9px;background:rgba(232,237,234,.08);border-radius:1px;overflow:hidden }
+.bar .t i{ display:block;height:100%;background:var(--ochre);transition:width .5s ease }
+.bar .v{ flex:0 0 26px;text-align:right;font-family:var(--mono);font-size:11px;color:var(--chalk) }
+.lean{ margin-top:13px;font-size:14.5px;line-height:1.65;color:#C3CEC9 }
+.lean b{ color:var(--ochre);font-weight:400 }
+
+footer{
+  max-width:640px;margin:26px auto 0;padding-top:14px;border-top:1px solid var(--edge);
+  font-family:var(--mono);font-size:10.5px;line-height:1.8;color:var(--dim);
+}
+footer a{ color:var(--sage) }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media (prefers-reduced-motion: reduce){ #lc-back, .choices button, .bar .t i{ transition:none } }
+</style>
+</head>
+<body>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<div class="wrap">
+  <header>
+    <h1>The Philosopher's Dilemma</h1>
+    <div class="sub">no correct answers &middot; consequences either way</div>
+  </header>
+
+  <div class="count" id="count"></div>
+
+  <div class="case">
+    <h2 id="title"></h2>
+    <div class="s" id="scene"></div>
+
+    <div class="choices" id="choices"></div>
+
+    <div class="after" id="after" hidden>
+      <div class="school" id="school"></div>
+      <p id="why"></p>
+      <div class="other"><b>The case against you</b><span id="other"></span></div>
+      <div class="note" id="note"></div>
+      <button class="next" id="next" type="button">Another</button>
+    </div>
+  </div>
+
+  <div class="tally" id="tally" hidden>
+    <h3>What you keep choosing</h3>
+    <div id="bars"></div>
+    <div class="lean" id="lean"></div>
+  </div>
+</div>
+
+<footer>
+  Eighteen dilemmas, several of them the classical thought experiments in their standard form — the
+  lever and the footbridge, the pond, the machine, the veil. The tally underneath is a record of
+  which kind of reason you reached for, not a verdict: these traditions disagree with each other in
+  print and have done for two centuries, and a page cannot settle that. It resets when you leave.
+  <a href="/">&larr; back to the cabinet</a>
+</footer>
+
+<script src="data.js"></script>
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+
+function shuffle(a){
+  for (let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* A fresh shuffle each visit, worked through without repeats — running
+   out and starting again is better than the same case twice in five. */
+let deck = shuffle(DILEMMAS.slice());
+let at = 0;
+let current = null, answered = false;
+const tally = { con: 0, deo: 0, vir: 0, soc: 0 };
+let total = 0;
+
+function show(){
+  if (at >= deck.length){ deck = shuffle(DILEMMAS.slice()); at = 0; }
+  current = deck[at++];
+  answered = false;
+
+  $('count').textContent = 'Case ' + (total + 1) + ' of eighteen' + (total >= DILEMMAS.length ? ' — and round again' : '');
+  $('title').textContent = current.t;
+  $('scene').textContent = current.s;
+  $('after').hidden = true;
+
+  const order = Math.random() < 0.5 ? ['a', 'b'] : ['b', 'a'];
+  $('choices').innerHTML = order.map(function(k){
+    return '<button type="button" data-k="' + k + '">' + current[k].label + '</button>';
+  }).join('');
+  [...$('choices').children].forEach(function(b){
+    b.addEventListener('click', function(){ choose(b, b.dataset.k); });
+  });
+}
+
+function choose(btn, k){
+  if (answered) return;
+  answered = true;
+  const mine = current[k];
+  const theirs = current[k === 'a' ? 'b' : 'a'];
+
+  tally[mine.tag]++;
+  total++;
+
+  [...$('choices').children].forEach(function(b){
+    b.disabled = true;
+    b.classList.add(b === btn ? 'chosen' : 'faded');
+  });
+
+  $('school').textContent = 'You reached for: ' + SCHOOLS[mine.tag].name.toLowerCase();
+  $('why').textContent = mine.why;
+  $('other').textContent = theirs.why;
+  $('note').textContent = current.note;
+  $('after').hidden = false;
+  paintTally();
+  $('next').focus();
+}
+
+function paintTally(){
+  if (total < 3){ $('tally').hidden = true; return; }
+  $('tally').hidden = false;
+  const keys = Object.keys(SCHOOLS);
+  const max = Math.max.apply(null, keys.map((k) => tally[k])) || 1;
+  $('bars').innerHTML = keys.map(function(k){
+    return '<div class="bar"><span class="k">' + SCHOOLS[k].name + '</span>' +
+           '<span class="t"><i style="width:' + Math.round(tally[k] / max * 100) + '%"></i></span>' +
+           '<span class="v">' + tally[k] + '</span></div>';
+  }).join('');
+
+  const top = keys.slice().sort((a, b) => tally[b] - tally[a]);
+  const tied = tally[top[0]] === tally[top[1]];
+  $('lean').innerHTML = tied
+    ? 'You are splitting your answers evenly, which is either an unusually careful reading of each case or an unwillingness to be pinned down. Both are respectable.'
+    : '<b>' + SCHOOLS[top[0]].name + '.</b> ' + SCHOOLS[top[0]].blurb;
+}
+
+$('next').addEventListener('click', show);
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Enter' && answered){ e.preventDefault(); show(); }
+});
+
+show();
+</script>
+</body>
+</html>

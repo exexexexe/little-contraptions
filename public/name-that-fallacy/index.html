@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Name That Fallacy</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%231C1A24'/><path d='M8 22V10h5l3 6 3-6h5v12' fill='none' stroke='%23C4A6E8' stroke-width='2.4' stroke-linejoin='round'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --ink:#1C1A24;
+  --ink-2:#282434;
+  --paper:#EFE9DC;
+  --paper-2:#E2DACA;
+  --text:#241F2E;
+  --lilac:#C4A6E8;
+  --lilac-dim:#8A72AA;
+  --amber:#E0A548;
+  --good:#4E8C5A;
+  --bad:#B4453C;
+  --dim:#9990AD;
+  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --disp:"Avenir Next Condensed","Roboto Condensed","Arial Narrow",var(--serif);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:radial-gradient(880px 600px at 50% -6%, var(--ink-2) 0%, var(--ink) 62%);
+  color:var(--paper);font-family:var(--serif);min-height:100vh;
+  padding:34px 18px 78px;display:flex;flex-direction:column;align-items:center;
+}
+.wrap{ max-width:660px;width:100% }
+header{ text-align:center }
+h1{
+  font-family:var(--disp);font-size:clamp(25px,5.6vw,38px);margin:0;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--lilac);font-weight:700;
+}
+.sub{ font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;opacity:.55;margin-top:9px }
+
+.modes{ display:flex;gap:8px;justify-content:center;margin:22px 0 0;flex-wrap:wrap }
+.modes button{
+  font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  background:transparent;color:var(--paper);border:1px solid rgba(196,166,232,.3);
+  padding:8px 14px;cursor:pointer;border-radius:2px;
+}
+.modes button:hover{ border-color:var(--lilac);color:var(--lilac) }
+.modes button[aria-pressed="true"]{ background:var(--lilac);border-color:var(--lilac);color:var(--ink);font-weight:700 }
+.modes button:focus-visible{ outline:2px solid var(--amber);outline-offset:2px }
+
+.score{
+  display:flex;justify-content:center;gap:24px;margin:18px 0 0;
+  font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);
+}
+.score b{ display:block;font-size:19px;letter-spacing:.02em;color:var(--paper);margin-top:4px;font-weight:400 }
+
+/* ---------- the quoted example ---------- */
+.quotecard{
+  background:var(--paper);color:var(--text);
+  border-radius:2px;margin-top:22px;padding:26px 24px 24px;
+  box-shadow:0 18px 44px rgba(0,0,0,.45);
+  position:relative;
+}
+.quotecard::before{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--lilac);
+}
+.who{
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.19em;text-transform:uppercase;
+  color:#6C6280;margin-bottom:13px;
+}
+.quote{ font-size:clamp(16px,3.4vw,19px);line-height:1.62 }
+
+.opts{ display:grid;gap:9px;margin-top:20px }
+.opts button{
+  font-family:var(--serif);font-size:15.5px;text-align:left;
+  background:rgba(239,233,220,.05);color:var(--paper);
+  border:1px solid rgba(196,166,232,.26);border-radius:2px;
+  padding:12px 14px;cursor:pointer;
+  display:flex;flex-direction:column;gap:3px;
+  transition:background .13s, border-color .13s;
+}
+.opts button i{
+  font-style:normal;font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--dim);
+}
+.opts button:hover:not(:disabled){ background:rgba(239,233,220,.11);border-color:var(--lilac) }
+.opts button:focus-visible{ outline:2px solid var(--amber);outline-offset:2px }
+.opts button:disabled{ cursor:default }
+.opts button.right{ background:rgba(78,140,90,.22);border-color:var(--good) }
+.opts button.wrong{ background:rgba(180,69,60,.2);border-color:var(--bad) }
+.opts button.faded{ opacity:.4 }
+
+.reveal{ margin-top:18px }
+.reveal[hidden]{ display:none }
+.reveal h2{
+  font-family:var(--disp);font-size:21px;letter-spacing:.07em;text-transform:uppercase;
+  margin:0 0 4px;color:var(--lilac);font-weight:700;
+}
+.reveal .gloss{ font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);margin-bottom:12px }
+.reveal p{ margin:0 0 12px;font-size:15px;line-height:1.65;color:#DCD4E4 }
+.reveal .fix{
+  border-left:2px solid var(--amber);padding-left:13px;
+  font-size:14.5px;line-height:1.6;color:#E8DCC4;
+}
+.reveal .fix b{ font-family:var(--mono);font-size:9.5px;letter-spacing:.15em;text-transform:uppercase;display:block;margin-bottom:5px;color:var(--amber);font-weight:700 }
+.next{
+  display:block;width:100%;margin-top:18px;
+  font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  background:var(--lilac);color:var(--ink);border:0;border-radius:2px;
+  padding:13px;cursor:pointer;font-weight:700;
+}
+.next:hover{ filter:brightness(1.08) }
+.next:focus-visible{ outline:2px solid var(--amber);outline-offset:2px }
+
+/* ---------- the reference list ---------- */
+#list[hidden]{ display:none }
+#quiz[hidden]{ display:none }
+.entry{
+  border-top:1px solid rgba(196,166,232,.18);padding:17px 0;
+}
+.entry:first-child{ border-top:0 }
+.entry h3{
+  font-family:var(--disp);font-size:19px;letter-spacing:.06em;text-transform:uppercase;
+  margin:0 0 3px;color:var(--lilac);font-weight:700;
+}
+.entry .gloss{ font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);margin-bottom:9px }
+.entry p{ margin:0 0 10px;font-size:14.5px;line-height:1.62;color:#DCD4E4 }
+.entry blockquote{
+  margin:0 0 9px;padding-left:13px;border-left:2px solid rgba(196,166,232,.35);
+  font-size:14.5px;line-height:1.6;color:#C9C0D6;font-style:italic;
+}
+.entry .fix{ font-size:14px;line-height:1.55;color:#E8DCC4 }
+.entry .fix b{ font-family:var(--mono);font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--amber);margin-right:7px }
+
+footer{
+  max-width:660px;margin:26px auto 0;padding-top:14px;border-top:1px solid rgba(196,166,232,.18);
+  font-family:var(--mono);font-size:10.5px;line-height:1.8;color:var(--dim);
+}
+footer a{ color:var(--lilac) }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media (prefers-reduced-motion: reduce){ #lc-back, .opts button{ transition:none } }
+</style>
+</head>
+<body>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<div class="wrap">
+  <header>
+    <h1>Name That Fallacy</h1>
+    <div class="sub">twenty-four ways to be wrong on purpose</div>
+  </header>
+
+  <div class="modes" id="modes" role="group" aria-label="Mode">
+    <button type="button" data-m="quiz" aria-pressed="true">Quiz</button>
+    <button type="button" data-m="list" aria-pressed="false">The whole list</button>
+  </div>
+
+  <div id="quiz">
+    <div class="score">
+      <div>Right<b id="s-score">0</b></div>
+      <div>Asked<b id="s-asked">0</b></div>
+      <div>Streak<b id="s-streak">0</b></div>
+      <div>Best<b id="s-best">0</b></div>
+    </div>
+
+    <div class="quotecard">
+      <div class="who" id="who">overheard</div>
+      <div class="quote" id="quote"></div>
+    </div>
+
+    <div class="opts" id="opts"></div>
+
+    <div class="reveal" id="reveal" hidden>
+      <h2 id="r-name"></h2>
+      <div class="gloss" id="r-gloss"></div>
+      <p id="r-def"></p>
+      <div class="fix"><b>What it would take instead</b><span id="r-fix"></span></div>
+      <button class="next" id="next" type="button">Next</button>
+    </div>
+  </div>
+
+  <div id="list" hidden></div>
+</div>
+
+<footer>
+  Twenty-four named fallacies with their standard definitions. Every example on this page was
+  written for it — none is a quotation, and nobody in them is a real person, because an argument is
+  easier to look at when there is no one to defend. Spotting a fallacy does not make a conclusion
+  false, only unsupported by that particular argument; a badly argued claim can still turn out to be
+  true, which is the part these lists usually leave off.
+  <a href="/">&larr; back to the cabinet</a>
+</footer>
+
+<script src="data.js"></script>
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+const pick = (a) => a[Math.floor(Math.random() * a.length)];
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+function shuffle(a){
+  for (let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+const WHO = [
+  'overheard on a bus', 'from a residents’ meeting', 'said at a kitchen table',
+  'from the comments', 'overheard in a queue', 'said in a meeting room',
+  'from a letter to the editor', 'overheard in a corridor', 'said across a fence',
+  'from a group chat', 'overheard at a bus stop', 'said at the school gate'
+];
+
+const KEY = 'lc-fallacy-best';
+let score = 0, asked = 0, streak = 0, best = 0;
+let current = null, answered = false;
+let recent = [];
+try { best = parseInt(localStorage.getItem(KEY), 10) || 0; } catch (e) {}
+
+function paint(){
+  $('s-score').textContent = score;
+  $('s-asked').textContent = asked;
+  $('s-streak').textContent = streak;
+  $('s-best').textContent = best;
+}
+
+function nextFallacy(){
+  for (let i = 0; i < 40; i++){
+    const f = pick(FALLACIES);
+    if (recent.indexOf(f.id) < 0){
+      recent.push(f.id);
+      if (recent.length > 12) recent.shift();
+      return f;
+    }
+  }
+  return pick(FALLACIES);
+}
+
+function newRound(){
+  answered = false;
+  const right = nextFallacy();
+  const pool = FALLACIES.filter((f) => f.id !== right.id);
+  const options = shuffle([right].concat(shuffle(pool).slice(0, 3)));
+  current = { right, options };
+
+  $('who').textContent = pick(WHO);
+  $('quote').textContent = pick(right.eg);
+  $('reveal').hidden = true;
+  $('opts').innerHTML = options.map(function(f){
+    return '<button type="button"><span>' + esc(f.name) + '</span><i>' + esc(f.gloss) + '</i></button>';
+  }).join('');
+  [...$('opts').children].forEach(function(b, i){
+    b.addEventListener('click', function(){ answer(b, options[i]); });
+  });
+}
+
+function answer(btn, chosen){
+  if (answered) return;
+  answered = true;
+  const right = current.right;
+  const correct = chosen.id === right.id;
+
+  asked++;
+  if (correct){
+    score++; streak++;
+    if (streak > best){ best = streak; try { localStorage.setItem(KEY, String(best)); } catch (e) {} }
+  } else streak = 0;
+  paint();
+
+  [...$('opts').children].forEach(function(b, i){
+    b.disabled = true;
+    if (current.options[i].id === right.id) b.classList.add('right');
+    else if (b === btn) b.classList.add('wrong');
+    else b.classList.add('faded');
+  });
+
+  $('r-name').textContent = right.name;
+  $('r-gloss').textContent = right.gloss;
+  $('r-def').textContent = right.def;
+  $('r-fix').textContent = right.fix;
+  $('reveal').hidden = false;
+  $('next').focus();
+}
+
+$('next').addEventListener('click', newRound);
+
+/* ---- the reference list ---- */
+function buildList(){
+  $('list').innerHTML = FALLACIES.slice()
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map(function(f){
+      return '<div class="entry">' +
+        '<h3>' + esc(f.name) + '</h3>' +
+        '<div class="gloss">' + esc(f.gloss) + '</div>' +
+        '<p>' + esc(f.def) + '</p>' +
+        f.eg.map((e) => '<blockquote>' + esc(e) + '</blockquote>').join('') +
+        '<div class="fix"><b>Instead</b>' + esc(f.fix) + '</div>' +
+        '</div>';
+    }).join('');
+}
+
+$('modes').addEventListener('click', function(e){
+  const b = e.target.closest('button');
+  if (!b) return;
+  const m = b.dataset.m;
+  [...$('modes').children].forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+  $('quiz').hidden = m !== 'quiz';
+  $('list').hidden = m !== 'list';
+  if (m === 'list' && !$('list').innerHTML) buildList();
+});
+
+document.addEventListener('keydown', function(e){
+  if ($('quiz').hidden) return;
+  if (e.key === 'Enter' && answered){ e.preventDefault(); newRound(); return; }
+  const n = parseInt(e.key, 10);
+  if (n >= 1 && n <= 4 && !answered){
+    const b = $('opts').children[n - 1];
+    if (b) b.click();
+  }
+});
+
+paint();
+newRound();
+</script>
+</body>
+</html>

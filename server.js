@@ -783,6 +783,86 @@ async function handleApi(req, res, url) {
     }
   }
 
+  // --- photographs for the atmosphere toy ---------------------------
+  // Pexels needs a key, and a key belongs on this side of the wire. The
+  // search terms are a fixed allowlist keyed by mode, exactly like the
+  // RSS relay: taking a query string from the browser would turn this
+  // into a free image-search proxy running on somebody else's quota.
+  //
+  // Only what the page actually shows comes back — the photographer and
+  // their page among it, because the licence asks for credit and the
+  // page gives it whether or not it is strictly required.
+  const PHOTO_MODES = {
+    nostalgia: [
+      'golden hour forest path', 'wheat field clouds', 'summer meadow evening light',
+      'sunlit kitchen window', 'country lane autumn', 'lake at dusk warm light',
+      'orchard afternoon sun', 'wildflowers backlit', 'old porch summer evening',
+      'warm sunlight through trees',
+    ],
+    liminal: [
+      'empty hallway', 'abandoned theater', 'empty swimming pool', 'deserted car park night',
+      'empty office corridor', 'abandoned shopping mall', 'empty stairwell', 'empty waiting room',
+      'fluorescent lit corridor', 'empty parking garage',
+    ],
+  };
+
+  if (path === '/api/photos') {
+    const mode = (url.searchParams.get('mode') || '').toLowerCase();
+    const terms = PHOTO_MODES[mode];
+    if (!terms) return sendJson(res, 400, { error: 'unknown_mode', allowed: Object.keys(PHOTO_MODES) });
+
+    if (!process.env.PEXELS_API_KEY) {
+      // Not an error. The toy has a state for this and says so plainly.
+      return sendJson(res, 200, { ok: false, reason: 'no_key' });
+    }
+
+    const which = Math.max(0, Math.min(terms.length - 1,
+      parseInt(url.searchParams.get('term'), 10) || 0));
+    const page = Math.max(1, Math.min(20, parseInt(url.searchParams.get('page'), 10) || 1));
+    const key = 'photos:' + mode + ':' + which + ':' + page;
+
+    const hit = cacheGet(key);
+    if (hit) return sendJson(res, 200, hit.body, { 'X-Cache': 'hit' });
+
+    const target = 'https://api.pexels.com/v1/search?orientation=landscape&per_page=15' +
+      '&page=' + page + '&query=' + encodeURIComponent(terms[which]);
+    try {
+      const up = await fetchUpstream(target, {
+        Authorization: process.env.PEXELS_API_KEY,
+        Accept: 'application/json',
+      });
+      if (up.status === 401 || up.status === 403) {
+        return sendJson(res, 200, { ok: false, reason: 'bad_key' });
+      }
+      if (up.status === 429) return sendJson(res, 200, { ok: false, reason: 'rate_limited' });
+      if (up.status >= 400) return sendJson(res, 200, { ok: false, reason: 'upstream_' + up.status });
+
+      let j;
+      try { j = JSON.parse(up.body); }
+      catch (e) { return sendJson(res, 200, { ok: false, reason: 'unexpected_payload' }); }
+
+      const photos = (j.photos || [])
+        .filter((p) => p && p.src && p.src.large2x)
+        .map((p) => ({
+          id: p.id,
+          alt: p.alt || '',
+          w: p.width,
+          h: p.height,
+          src: p.src.large2x,
+          thumb: p.src.medium,
+          by: p.photographer || '',
+          byUrl: p.photographer_url || '',
+          page: p.url || '',
+        }));
+
+      const body = { ok: true, mode, term: terms[which], photos };
+      cacheSet(key, 200, body, 60 * 60 * 1000);   // 1 h
+      return sendJson(res, 200, body, { 'X-Cache': 'miss' });
+    } catch (e) {
+      return sendJson(res, 200, { ok: false, reason: 'unreachable' });
+    }
+  }
+
   // --- text generation ---------------------------------------------
   // POST { toy, input } -> { text }. Every failure answers with JSON the
   // frontend can render as a state; none of them throws past this point.
@@ -889,6 +969,7 @@ async function handleApi(req, res, url) {
       nasa: !!process.env.NASA_API_KEY,   // falls back to DEMO_KEY when false
       tmdb: !!process.env.TMDB_API_KEY,
       groq: !!process.env.GROQ_API_KEY,
+      pexels: !!process.env.PEXELS_API_KEY,
     });
   }
 

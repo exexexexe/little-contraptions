@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Design Your Own Country</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23141C26'/><rect x='7' y='9' width='18' height='13' fill='%232E7D4F'/><rect x='7' y='9' width='18' height='4.4' fill='%23E0B252'/><circle cx='16' cy='17' r='2.6' fill='%23F2F2EC'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --night:#141C26;
+  --night-2:#1E2A38;
+  --panel:#243244;
+  --edge:rgba(224,178,82,.22);
+  --paper:#EDE7DA;
+  --gold:#E0B252;
+  --sky:#79A9CE;
+  --dim:#8FA2B5;
+  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --disp:"Avenir Next Condensed","Roboto Condensed","Arial Narrow",var(--serif);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:radial-gradient(900px 640px at 50% -8%, var(--night-2) 0%, var(--night) 64%);
+  color:var(--paper);font-family:var(--serif);min-height:100vh;
+  padding:34px 18px 78px;display:flex;flex-direction:column;align-items:center;
+}
+.wrap{ max-width:660px;width:100% }
+header{ text-align:center }
+h1{
+  font-family:var(--disp);font-size:clamp(24px,5.4vw,36px);margin:0;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:700;
+}
+.sub{ font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;opacity:.55;margin-top:9px }
+
+/* ---------- the flag ---------- */
+.flagwrap{ margin-top:24px;text-align:center }
+#flag{ width:min(340px,86vw);height:auto;display:block;margin:0 auto;
+  box-shadow:0 14px 34px rgba(0,0,0,.5);border:1px solid rgba(0,0,0,.5) }
+.cname{
+  font-family:var(--disp);font-size:clamp(23px,5vw,32px);letter-spacing:.1em;
+  text-transform:uppercase;margin:16px 0 0;color:var(--paper);font-weight:700;
+}
+.cmotto{ font-family:var(--mono);font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--dim);margin-top:7px }
+
+/* ---------- the controls ---------- */
+.controls{ margin-top:22px;display:grid;gap:14px }
+.ctl label{
+  display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--gold);margin-bottom:7px;
+}
+.chips{ display:flex;flex-wrap:wrap;gap:6px }
+.chips button{
+  font-family:var(--mono);font-size:10px;letter-spacing:.08em;
+  background:transparent;color:var(--paper);border:1px solid var(--edge);
+  padding:7px 11px;cursor:pointer;border-radius:2px;
+  display:inline-flex;align-items:center;gap:6px;
+}
+.chips button:hover{ border-color:var(--gold) }
+.chips button[aria-pressed="true"]{ background:var(--gold);border-color:var(--gold);color:var(--night);font-weight:700 }
+.chips button:focus-visible{ outline:2px solid var(--sky);outline-offset:2px }
+.chips button i{ width:11px;height:11px;border:1px solid rgba(0,0,0,.45);display:inline-block }
+.namerow{ display:flex;gap:8px }
+.namerow input{
+  flex:1 1 auto;min-width:0;background:var(--panel);border:1px solid var(--edge);border-radius:2px;
+  color:var(--paper);font-family:var(--serif);font-size:16px;padding:11px 13px;
+}
+.namerow input:focus{ outline:2px solid var(--gold);outline-offset:-1px }
+.namerow button{
+  font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;
+  background:transparent;color:var(--paper);border:1px solid var(--edge);padding:0 14px;cursor:pointer;border-radius:2px;
+}
+.namerow button:hover{ border-color:var(--gold);color:var(--gold) }
+
+/* ---------- the map ---------- */
+.mapwrap{ margin-top:22px;background:#0E1620;border:1px solid var(--edge);border-radius:3px;padding:10px }
+#map{ display:block;width:100%;height:auto }
+
+/* ---------- the dossier ---------- */
+.dossier{ margin-top:20px;background:var(--panel);border:1px solid var(--edge);border-radius:3px;padding:22px 20px }
+.dossier h2{
+  font-family:var(--disp);font-size:15px;letter-spacing:.16em;text-transform:uppercase;
+  margin:0 0 14px;color:var(--gold);font-weight:700;
+}
+.dossier dl{ margin:0 }
+.dossier dt{
+  font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--sky);margin-top:14px;
+}
+.dossier dt:first-child{ margin-top:0 }
+.dossier dd{ margin:5px 0 0;font-size:15.5px;line-height:1.64;color:#DDD5C6 }
+
+.row{ display:flex;gap:9px;margin-top:18px;flex-wrap:wrap }
+.row button{
+  font-family:var(--mono);font-size:10px;letter-spacing:.15em;text-transform:uppercase;
+  border-radius:2px;padding:12px 18px;cursor:pointer;border:1px solid var(--edge);
+  background:transparent;color:var(--paper);flex:1 1 auto;
+}
+.row button.go{ background:var(--gold);border-color:var(--gold);color:#1A1206;font-weight:700 }
+.row button:hover{ filter:brightness(1.08) }
+.row button:not(.go):hover{ border-color:var(--gold);color:var(--gold) }
+.row button:focus-visible{ outline:2px solid var(--sky);outline-offset:2px }
+
+footer{
+  max-width:660px;margin:26px auto 0;padding-top:14px;border-top:1px solid var(--edge);
+  font-family:var(--mono);font-size:10.5px;line-height:1.8;color:var(--dim);
+}
+footer a{ color:var(--gold) }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } }
+</style>
+</head>
+<body>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<div class="wrap">
+  <header>
+    <h1>Design Your Own Country</h1>
+    <div class="sub">the flag decides everything else</div>
+  </header>
+
+  <div class="flagwrap">
+    <svg id="flag" viewBox="0 0 300 200" role="img" aria-labelledby="flagtitle"><title id="flagtitle">The flag you are designing</title></svg>
+    <div class="cname" id="cname">&nbsp;</div>
+    <div class="cmotto" id="cmotto">&nbsp;</div>
+  </div>
+
+  <div class="controls">
+    <div class="ctl">
+      <label>Name</label>
+      <div class="namerow">
+        <input id="name" type="text" autocomplete="off" spellcheck="false" placeholder="name your country">
+        <button id="roll" type="button">Roll one</button>
+      </div>
+    </div>
+    <div class="ctl"><label>Pattern &mdash; sets how it is governed and how it began</label><div class="chips" id="c-pattern"></div></div>
+    <div class="ctl"><label>Field &mdash; sets the land and what grows on it</label><div class="chips" id="c-field"></div></div>
+    <div class="ctl"><label>Second colour &mdash; sets what they argue about</label><div class="chips" id="c-accent"></div></div>
+    <div class="ctl"><label>Charge &mdash; sets what they believe</label><div class="chips" id="c-charge"></div></div>
+  </div>
+
+  <div class="mapwrap">
+    <canvas id="map" width="640" height="360"></canvas>
+  </div>
+
+  <div class="dossier">
+    <h2>The country you have just made</h2>
+    <dl id="dossier"></dl>
+  </div>
+
+  <div class="row">
+    <button class="go" id="random" type="button">Make me one at random</button>
+    <button id="save" type="button">Save the flag</button>
+  </div>
+</div>
+
+<footer>
+  Every part of the description is decided by a part of the flag, so this is a design tool rather
+  than a random generator: change the charge and only the beliefs change, change the field and only
+  the land does. Nothing here describes a real country, and the map is not a map of anywhere &mdash;
+  the coastline is generated from your choices and the sea has no other shore. Names are assembled
+  from invented syllables; if one happens to resemble a real place, that is the alphabet's fault
+  and not a claim about it.
+  <a href="/">&larr; back to the cabinet</a>
+</footer>
+
+<script src="lore.js"></script>
+<script>
+'use strict';
+const $ = (id) => document.getElementById(id);
+const SVGNS = 'http://www.w3.org/2000/svg';
+
+function rng(seed){
+  let a = seed >>> 0;
+  return function(){
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function hash(str){
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+const pick = (a, r) => a[Math.floor(r() * a.length)];
+
+const state = { pattern: PATTERNS[1], field: FIELDS[0], accent: ACCENTS[0], charge: CHARGES[1], name: '' };
+
+/* ---- the chip rows ------------------------------------------------ */
+function chips(hostId, list, key, swatch){
+  const host = $(hostId);
+  host.innerHTML = list.map(function(o){
+    const dot = swatch ? '<i style="background:' + o.hex + '"></i>' : '';
+    return '<button type="button" data-id="' + o.id + '" aria-pressed="' +
+           (state[key].id === o.id) + '">' + dot + o.name + '</button>';
+  }).join('');
+  host.addEventListener('click', function(e){
+    const b = e.target.closest('button');
+    if (!b) return;
+    state[key] = list.find((o) => o.id === b.dataset.id);
+    [...host.children].forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    render();
+  });
+}
+
+/* ---- the flag ----------------------------------------------------- */
+function el(name, attrs){
+  const n = document.createElementNS(SVGNS, name);
+  for (const k in attrs) n.setAttribute(k, attrs[k]);
+  return n;
+}
+
+function drawFlag(){
+  const svg = $('flag');
+  while (svg.lastChild && svg.lastChild.nodeName !== 'title') svg.removeChild(svg.lastChild);
+  const f = state.field.hex, a = state.accent.hex;
+  const add = (n) => svg.appendChild(n);
+
+  add(el('rect', { x: 0, y: 0, width: 300, height: 200, fill: f }));
+  switch (state.pattern.id){
+    case 'bicolour':
+      add(el('rect', { x: 0, y: 100, width: 300, height: 100, fill: a })); break;
+    case 'tricolour':
+      add(el('rect', { x: 0, y: 0, width: 300, height: 66.7, fill: a }));
+      add(el('rect', { x: 0, y: 133.3, width: 300, height: 66.7, fill: a })); break;
+    case 'vertical':
+      add(el('rect', { x: 100, y: 0, width: 100, height: 200, fill: a })); break;
+    case 'cross':
+      add(el('rect', { x: 0, y: 82, width: 300, height: 36, fill: a }));
+      add(el('rect', { x: 92, y: 0, width: 36, height: 200, fill: a })); break;
+    case 'saltire':
+      add(el('path', { d: 'M0 0 L300 200 M300 0 L0 200', stroke: a, 'stroke-width': 34, fill: 'none' })); break;
+    case 'hoist':
+      add(el('path', { d: 'M0 0 L120 100 L0 200 Z', fill: a })); break;
+    case 'canton':
+      add(el('rect', { x: 0, y: 0, width: 130, height: 90, fill: a })); break;
+    case 'quarters':
+      add(el('rect', { x: 0, y: 0, width: 150, height: 100, fill: a }));
+      add(el('rect', { x: 150, y: 100, width: 150, height: 100, fill: a })); break;
+  }
+
+  // The charge sits where the pattern leaves room for it.
+  const off = (state.pattern.id === 'canton' || state.pattern.id === 'hoist') ? 200 : 150;
+  const cx = off, cy = 100;
+  // Enough contrast to be seen against whichever colour it lands on.
+  const under = chargeGround(off);
+  const ink = luminance(under) > 0.45 ? '#1A1C1E' : '#F4F1E6';
+  switch (state.charge.id){
+    case 'star': add(star(cx, cy, 34, 15, 5, ink)); break;
+    case 'sun': {
+      add(el('circle', { cx: cx, cy: cy, r: 26, fill: ink }));
+      for (let i = 0; i < 12; i++){
+        const t = i / 12 * Math.PI * 2;
+        add(el('line', { x1: cx + Math.cos(t) * 32, y1: cy + Math.sin(t) * 32,
+                         x2: cx + Math.cos(t) * 44, y2: cy + Math.sin(t) * 44,
+                         stroke: ink, 'stroke-width': 5, 'stroke-linecap': 'round' }));
+      }
+      break;
+    }
+    case 'crescent':
+      add(el('path', { d: 'M' + cx + ' ' + (cy - 36) +
+        ' a36 36 0 1 0 0 72 a29 29 0 1 1 0 -72 z', fill: ink })); break;
+    case 'tree':
+      add(el('rect', { x: cx - 4, y: cy + 6, width: 8, height: 32, fill: ink }));
+      add(el('path', { d: 'M' + cx + ' ' + (cy - 44) + ' l26 34 h-15 l17 24 h-56 l17 -24 h-15 z', fill: ink }));
+      break;
+    case 'anchor':
+      add(el('path', { d: 'M' + cx + ' ' + (cy - 34) + ' v62 M' + (cx - 20) + ' ' + (cy - 18) + ' h40' +
+        ' M' + (cx - 26) + ' ' + (cy + 12) + ' a26 26 0 0 0 52 0',
+        stroke: ink, 'stroke-width': 7, fill: 'none', 'stroke-linecap': 'round' }));
+      add(el('circle', { cx: cx, cy: cy - 40, r: 8, fill: 'none', stroke: ink, 'stroke-width': 6 }));
+      break;
+    case 'key':
+      add(el('circle', { cx: cx - 22, cy: cy, r: 15, fill: 'none', stroke: ink, 'stroke-width': 8 }));
+      add(el('path', { d: 'M' + (cx - 7) + ' ' + cy + ' h48 M' + (cx + 30) + ' ' + cy + ' v14 M' + (cx + 41) + ' ' + cy + ' v14',
+        stroke: ink, 'stroke-width': 8, fill: 'none', 'stroke-linecap': 'square' }));
+      break;
+    case 'bird':
+      add(el('path', { d: 'M' + (cx - 46) + ' ' + (cy + 6) + ' q23 -34 46 -2 q23 -32 46 2 q-23 -12 -46 10 q-23 -22 -46 -10 z', fill: ink }));
+      break;
+  }
+}
+
+function chargeGround(x){
+  // Which colour the charge is actually sitting on, so it can be inked
+  // dark on a pale field and pale on a dark one.
+  const p = state.pattern.id, f = state.field.hex, a = state.accent.hex;
+  if (p === 'vertical' && x > 100 && x < 200) return a;
+  if (p === 'cross' && x > 92 && x < 128) return a;
+  if (p === 'quarters') return x < 150 ? a : f;
+  if (p === 'saltire') return f;
+  return f;
+}
+function luminance(hex){
+  const n = parseInt(hex.slice(1), 16);
+  const r = (n >> 16 & 255) / 255, g = (n >> 8 & 255) / 255, b = (n & 255) / 255;
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+function star(cx, cy, R, r0, n, fill){
+  let d = '';
+  for (let i = 0; i < n * 2; i++){
+    const rad = i % 2 ? r0 : R;
+    const t = -Math.PI / 2 + i * Math.PI / n;
+    d += (i ? 'L' : 'M') + (cx + Math.cos(t) * rad) + ' ' + (cy + Math.sin(t) * rad) + ' ';
+  }
+  return el('path', { d: d + 'Z', fill: fill });
+}
+
+/* ---- the map ------------------------------------------------------ */
+function drawMap(){
+  const c = $('map'), g = c.getContext('2d');
+  const W = c.width, H = c.height;
+  const r = rng(hash('map|' + state.name + '|' + state.field.id + '|' + state.pattern.id));
+
+  g.fillStyle = '#16222E'; g.fillRect(0, 0, W, H);
+  // a hint of sea texture, so the water is not a flat slab
+  g.strokeStyle = 'rgba(121,169,206,.10)'; g.lineWidth = 1;
+  for (let y = 18; y < H; y += 18){
+    g.beginPath();
+    for (let x = 0; x <= W; x += 8) g.lineTo(x, y + Math.sin((x + y) / 34) * 2.4);
+    g.stroke();
+  }
+
+  // A coastline built from a wobbling radius: enough to read as a country
+  // and never enough to be mistaken for a real one.
+  const cx = W / 2, cy = H / 2;
+  const lobes = 3 + Math.floor(r() * 4);
+  const ph = [], am = [];
+  for (let i = 0; i < lobes; i++){ ph.push(r() * Math.PI * 2); am.push(0.06 + r() * 0.16); }
+  const radius = (t) => {
+    let k = 1;
+    for (let i = 0; i < lobes; i++) k += Math.sin(t * (i + 2) + ph[i]) * am[i];
+    return k * Math.min(W, H) * 0.34;
+  };
+  const path = [];
+  for (let i = 0; i <= 360; i++){
+    const t = i / 360 * Math.PI * 2;
+    const rad = radius(t);
+    path.push([cx + Math.cos(t) * rad * 1.35, cy + Math.sin(t) * rad]);
+  }
+
+  g.beginPath();
+  path.forEach(function(p, i){ i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1]); });
+  g.closePath();
+  g.fillStyle = state.field.hex;
+  g.globalAlpha = 0.9; g.fill(); g.globalAlpha = 1;
+  g.strokeStyle = 'rgba(0,0,0,.5)'; g.lineWidth = 2; g.stroke();
+
+  // Clip everything inland so rivers and hills stop at the coast.
+  g.save(); g.clip();
+  g.fillStyle = 'rgba(0,0,0,.13)';
+  for (let i = 0; i < 60; i++){
+    const x = r() * W, y = r() * H, s = 3 + r() * 9;
+    g.beginPath(); g.moveTo(x, y); g.lineTo(x + s, y - s * 0.7); g.lineTo(x + s * 2, y); g.closePath(); g.fill();
+  }
+  g.strokeStyle = 'rgba(30,90,130,.75)'; g.lineWidth = 2.2;
+  for (let i = 0; i < 3; i++){
+    let x = cx + (r() - 0.5) * W * 0.4, y = cy + (r() - 0.5) * H * 0.4;
+    g.beginPath(); g.moveTo(x, y);
+    for (let k = 0; k < 26; k++){ x += (r() - 0.45) * 16; y += 6 + r() * 8; g.lineTo(x, y); }
+    g.stroke();
+  }
+  g.restore();
+
+  // the capital
+  const capT = r() * Math.PI * 2, capR = radius(capT) * 0.45;
+  const capX = cx + Math.cos(capT) * capR * 1.35, capY = cy + Math.sin(capT) * capR;
+  g.fillStyle = state.accent.hex;
+  g.beginPath(); g.arc(capX, capY, 6, 0, Math.PI * 2); g.fill();
+  g.strokeStyle = 'rgba(0,0,0,.6)'; g.lineWidth = 1.5; g.stroke();
+  g.fillStyle = '#EDE7DA';
+  g.font = '600 13px ui-monospace, Menlo, monospace';
+  g.fillText(state.capital || '', capX + 11, capY + 4);
+}
+
+/* ---- the dossier -------------------------------------------------- */
+function makeName(r){
+  return pick(NAME_A, r) + pick(NAME_B, r) + pick(NAME_C, r);
+}
+
+function render(){
+  const typed = $('name').value.trim();
+  state.name = typed || state.name || 'Velesk';
+  const r = rng(hash(state.name.toLowerCase()));
+  state.capital = pick(NAME_A, r) + pick(NAME_B, r);
+
+  drawFlag();
+  drawMap();
+
+  $('cname').textContent = state.name;
+  $('cmotto').textContent = state.pattern.gov;
+
+  const rows = [
+    ['Government', cap(state.pattern.gov)],
+    ['How it began', 'It ' + state.pattern.hist + '.'],
+    ['The land', cap(state.field.land) + '.'],
+    ['What grows', cap(state.field.crop) + '.'],
+    ['What they believe', cap(state.charge.belief) + '.'],
+    ['What they argue about', cap(state.accent.argue) + '.'],
+    ['Capital', state.capital],
+    ['The one holiday outsiders hear about', cap(pick(HOLIDAYS, r)) + '.'],
+    ['A custom', pick(CUSTOMS, r)],
+    ['A law still on the books', pick(LAWS, r)]
+  ];
+  $('dossier').innerHTML = rows.map(function(kv){
+    return '<dt>' + kv[0] + '</dt><dd>' + kv[1] + '</dd>';
+  }).join('');
+}
+function cap(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
+
+/* ---- wiring -------------------------------------------------------- */
+chips('c-pattern', PATTERNS, 'pattern', false);
+chips('c-field', FIELDS, 'field', true);
+chips('c-accent', ACCENTS, 'accent', true);
+chips('c-charge', CHARGES, 'charge', false);
+
+$('name').addEventListener('input', render);
+$('roll').addEventListener('click', function(){
+  $('name').value = makeName(rng(Date.now() >>> 0));
+  render();
+});
+$('random').addEventListener('click', function(){
+  const r = rng((Date.now() ^ Math.floor(Math.random() * 1e9)) >>> 0);
+  state.pattern = pick(PATTERNS, r);
+  state.field = pick(FIELDS, r);
+  state.accent = pick(ACCENTS, r);
+  state.charge = pick(CHARGES, r);
+  $('name').value = makeName(r);
+  chips('c-pattern', PATTERNS, 'pattern', false);
+  chips('c-field', FIELDS, 'field', true);
+  chips('c-accent', ACCENTS, 'accent', true);
+  chips('c-charge', CHARGES, 'charge', false);
+  render();
+});
+
+$('save').addEventListener('click', function(){
+  // Rasterise the SVG through a canvas so the download is a plain PNG.
+  const svg = new XMLSerializer().serializeToString($('flag'));
+  const img = new Image();
+  const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
+  img.onload = function(){
+    const c = document.createElement('canvas');
+    c.width = 900; c.height = 600;
+    const g = c.getContext('2d');
+    g.drawImage(img, 0, 0, 900, 600);
+    URL.revokeObjectURL(url);
+    const a = document.createElement('a');
+    a.download = (state.name || 'flag').replace(/[^A-Za-z0-9]+/g, '-').toLowerCase() + '-flag.png';
+    a.href = c.toDataURL('image/png');
+    a.click();
+  };
+  img.onerror = function(){ URL.revokeObjectURL(url); };
+  img.src = url;
+});
+
+$('name').value = 'Velesk';
+render();
+</script>
+</body>
+</html>
