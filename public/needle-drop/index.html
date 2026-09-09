@@ -126,6 +126,29 @@ ol.tries .n{ color:var(--dimmer);font-size:10px;min-width:2.5ch }
 .stat .k{ font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--dimmer) }
 .stat .v{ font-size:18px;font-weight:600;margin-top:2px }
 
+/* ---------- the shared boards ---------- */
+.boards{ margin:20px 0 0;background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:14px 15px }
+.boards h3{ font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin:0 0 3px;font-weight:700 }
+.boards .lede{ font-size:11px;color:var(--dimmer);margin:0 0 12px }
+.bcols{ display:grid;grid-template-columns:1fr 1fr;gap:14px }
+@media (max-width:560px){ .bcols{ grid-template-columns:1fr } }
+.bcol h4{ font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin:0 0 7px;font-weight:600 }
+.bcol ol{ margin:0;padding:0;list-style:none }
+.bcol li{ display:flex;gap:8px;font-size:12px;padding:3px 0;border-bottom:1px solid rgba(240,236,246,.05) }
+.bcol li.you{ color:var(--gold) }
+.bcol li .r{ color:var(--dimmer);width:1.4em;flex:0 0 auto }
+.bcol li .h{ flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap }
+.bcol li .s{ font-variant-numeric:tabular-nums }
+.bcol .none{ font-size:11px;color:var(--dimmer) }
+.bhandle{ display:flex;gap:8px;align-items:center;margin-top:13px;flex-wrap:wrap }
+.bhandle input{
+  font-family:var(--mono);font-size:12px;color:var(--ink);background:#171122;
+  border:1px solid var(--line);border-radius:3px;padding:8px 10px;width:150px;
+}
+.bhandle input:focus{ outline:2px solid var(--violet);outline-offset:1px }
+.bhandle .say{ font-size:10.5px;color:var(--dimmer) }
+.boards .off{ font-size:11px;color:var(--dimmer);line-height:1.7 }
+
 .msg{ font-size:11.5px;color:var(--dim);min-height:1.5em;margin:10px 0 0;text-align:center }
 .msg.bad{ color:var(--bad) }
 .note{ background:var(--panel);border:1px solid var(--line);border-radius:3px;
@@ -200,7 +223,27 @@ footer a{ color:var(--dim) }
   <div class="stats">
     <div class="stat"><div class="k">Round</div><div class="v" id="sRound">1</div></div>
     <div class="stat"><div class="k">Got</div><div class="v" id="sGot">0</div></div>
+    <div class="stat"><div class="k">Streak</div><div class="v" id="sStreak">0</div></div>
     <div class="stat"><div class="k">Score</div><div class="v" id="sScore">0</div></div>
+  </div>
+
+  <div class="boards" id="boards">
+    <h3>Everybody&rsquo;s boards</h3>
+    <p class="lede">Two things are worth being good at here, so there are two boards.</p>
+    <div class="bcols">
+      <div class="bcol">
+        <h4>Longest streak</h4>
+        <ol id="bStreak"></ol>
+      </div>
+      <div class="bcol">
+        <h4>Fastest correct guess</h4>
+        <ol id="bFast"></ol>
+      </div>
+    </div>
+    <div class="bhandle">
+      <input id="bName" maxlength="12" placeholder="a name for the board" aria-label="What to appear as on the boards, up to twelve characters">
+      <span class="say" id="bSay">Whatever you type is what a stranger sees. Nothing else about you is stored.</span>
+    </div>
   </div>
 
   <div class="note">
@@ -216,6 +259,7 @@ footer a{ color:var(--dim) }
   <footer><p><a href="/">&#8592; back to the cabinet</a></p></footer>
 </div>
 
+<script src="/shared/lc-id.js"></script>
 <script src="data.js"></script>
 <script>
 (function(){
@@ -232,6 +276,13 @@ footer a{ color:var(--dim) }
 
   var pool = [], track = null, step = 0, tries = [], over = false;
   var round = 1, got = 0, score = 0;
+  /* Two things the shared boards care about, kept separately from the
+     per-session score: the streak (which resets on any miss or skip-out)
+     and the fastest correct guess, measured from the moment the round
+     was dealt to the moment the right name was typed. Wall clock, not
+     the audio window — the audio window is what the score already
+     rewards, and the two are different skills. */
+  var streak = 0, bestStreak = 0, roundStart = 0, fastest = 0;
 
   /* ---- scene filter options ---- */
   (function(){
@@ -276,6 +327,7 @@ footer a{ color:var(--dim) }
     }
     track = pool[(Math.random() * pool.length) | 0];
     step = 0; tries = []; over = false;
+    roundStart = Date.now();
     $('tries').innerHTML = '';
     $('result').hidden = true;
     $('next').hidden = true;
@@ -427,9 +479,66 @@ footer a{ color:var(--dim) }
     if (win) {
       got++;
       score += [100, 80, 60, 45, 30, 15][step] || 10;
+      streak++;
+      var ms = Math.max(1, Date.now() - roundStart);
+      if (!fastest || ms < fastest) fastest = ms;
+      if (streak > bestStreak) { bestStreak = streak; postBoard('needle:streak', streak, STEPS[step] + ' s of audio'); }
+      postBoard('needle:fast', ms, STEPS[step] + ' s of audio');
+      $('rHead').textContent = 'Got it in ' + STEPS[step] + ' seconds \u00b7 ' + (ms / 1000).toFixed(1) + ' s on the clock';
+    } else {
+      streak = 0;
     }
     $('sGot').textContent = got;
+    $('sStreak').textContent = streak;
     $('sScore').textContent = score;
+  }
+
+  /* ---- the shared boards ------------------------------------------ *
+   *  Same store as the arcade cabinet and the guestbook. A submission is
+   *  fire-and-forget: if the shared side is missing the panel says so
+   *  once and the game is completely unaffected.
+   * ----------------------------------------------------------------- */
+  var boardsOff = false;
+
+  function fmtScore(boardId, v){
+    return boardId === 'needle:fast' ? (v / 1000).toFixed(2) + ' s' : String(v);
+  }
+
+  function paintBoard(elId, boardId, d){
+    var el = $(elId);
+    if (!d || !d.ok){
+      boardsOff = true;
+      $('boards').innerHTML = '<h3>Everybody&rsquo;s boards</h3><p class="off">' +
+        (d && d.why === 'no_store'
+          ? 'This server has no shared storage mounted, so there are no shared boards today. ' +
+            'The game itself is unaffected.'
+          : 'Could not reach the boards just now. The game itself is unaffected.') + '</p>';
+      return;
+    }
+    var top = d.top || [];
+    if (!top.length){ el.innerHTML = '<li class="none">nobody yet</li>'; return; }
+    el.innerHTML = top.slice(0, 8).map(function(r){
+      return '<li' + (r.you ? ' class="you"' : '') + '>' +
+        '<span class="r">' + r.rank + '</span>' +
+        '<span class="h">' + esc(r.handle) + '</span>' +
+        '<span class="s">' + esc(fmtScore(boardId, r.score)) + '</span></li>';
+    }).join('');
+  }
+
+  function loadBoards(){
+    if (boardsOff || !window.LCId) return;
+    LCId.get('/api/scores?board=needle%3Astreak').then(function(d){ paintBoard('bStreak', 'needle:streak', d); });
+    LCId.get('/api/scores?board=needle%3Afast').then(function(d){ paintBoard('bFast', 'needle:fast', d); });
+  }
+
+  function postBoard(boardId, value, detail){
+    if (boardsOff || !window.LCId) return;
+    LCId.post('/api/scores', {
+      board: boardId, score: value, handle: LCId.handle(), detail: detail
+    }).then(function(d){
+      if (d && d.ok) paintBoard(boardId === 'needle:fast' ? 'bFast' : 'bStreak', boardId, d);
+      else if (d && d.why === 'no_store') paintBoard('bStreak', boardId, d);
+    });
   }
 
   $('submit').addEventListener('click', function(){
@@ -467,6 +576,17 @@ footer a{ color:var(--dim) }
   document.addEventListener('click', function(e){
     if (!e.target.closest('.guessbox')) $('sugg').hidden = true;
   });
+
+  if (window.LCId){
+    $('bName').value = LCId.handle();
+    $('bName').addEventListener('change', function(){
+      var h = LCId.handle($('bName').value);
+      $('bName').value = h;
+      $('bSay').textContent = h ? 'Saved. New entries go up as "' + h + '".'
+                                : 'Left blank, which shows as "anon".';
+    });
+    loadBoards();
+  }
 
   // expose a little of the state so the reveal can be checked from outside
   window.NeedleDrop = {

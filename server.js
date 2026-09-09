@@ -923,6 +923,15 @@ async function handleApi(req, res, url) {
       'empty office corridor', 'abandoned shopping mall', 'empty stairwell', 'empty waiting room',
       'fluorescent lit corridor', 'empty parking garage',
     ],
+    // Misty forest, empty highway, roadside diner at dusk: the early-2000s
+    // road-trip mood. Same fixed-allowlist rule as the two above — none of
+    // these strings comes from a query parameter.
+    forest: [
+      'misty forest road morning fog', 'empty highway at dusk', 'roadside diner neon evening',
+      'pine forest fog', 'two lane road forest', 'motel sign at night',
+      'gas station at dusk empty', 'foggy woods path', 'rural road rain windshield',
+      'wooden cabin forest overcast',
+    ],
   };
 
   /* ------------------------------------------------------------------ *

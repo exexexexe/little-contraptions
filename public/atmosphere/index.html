@@ -21,6 +21,7 @@
   --accent:var(--warm);
 }
 :root[data-mode="liminal"]{ --accent:var(--cold); --bg:#101215; --bg-2:#171B20 }
+:root[data-mode="forest"]{ --accent:#8FA88A; --bg:#12150F; --bg-2:#1A1F16 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
 body{
@@ -58,6 +59,21 @@ h1{
   opacity:0;transition:opacity .55s ease;
 }
 .stage img.on{ opacity:1 }
+/* the grade sits over the photograph, not baked into it */
+.stage .wash{ position:absolute;inset:0;pointer-events:none;mix-blend-mode:soft-light;opacity:0;transition:opacity .3s ease }
+.stage .wash.on{ opacity:1 }
+
+/* the filter row, styled here, defined once in /shared/lc-filters.js */
+.filters{ display:flex;gap:6px;flex-wrap:wrap;margin-top:14px }
+.filters button{
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;
+  background:transparent;color:var(--dim);border:1px solid var(--edge);
+  padding:8px 12px;cursor:pointer;border-radius:2px;
+}
+.filters button:hover{ border-color:var(--accent);color:var(--accent) }
+.filters button[aria-pressed="true"]{ background:var(--accent);border-color:var(--accent);color:var(--bg);font-weight:700 }
+.filters button:focus-visible{ outline:2px solid var(--pale);outline-offset:2px }
+.filter-note{ font-family:var(--mono);font-size:10px;line-height:1.7;color:var(--dim);margin-top:8px;min-height:2.4em }
 .stage .msg{
   position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
   text-align:center;padding:28px;
@@ -140,6 +156,7 @@ footer a{ color:var(--accent) }
   <div class="tabs" id="tabs" role="group" aria-label="Mode">
     <button type="button" data-m="nostalgia" aria-pressed="true">Nostalgia</button>
     <button type="button" data-m="liminal" aria-pressed="false">Liminal</button>
+    <button type="button" data-m="forest" aria-pressed="false">Forested Americana</button>
   </div>
 
   <div class="stage" id="stage">
@@ -155,6 +172,9 @@ footer a{ color:var(--accent) }
     <span class="count" id="count"></span>
     <button id="b-next" type="button">Next &rarr;</button>
   </div>
+
+  <div class="filters" id="filters" role="group" aria-label="Grade"></div>
+  <p class="filter-note" id="fnote"></p>
 </div>
 
 <footer>
@@ -165,10 +185,13 @@ footer a{ color:var(--accent) }
   search running on someone else's quota. Nothing is pulled from Reddit, Instagram or anyone's
   social upload. The sentence under each photograph was written by this page and is not a caption
   the photographer wrote, a title, or a claim about where the picture was taken &mdash; it is a mood,
-  and it belongs to the page rather than to the place.
+  and it belongs to the page rather than to the place. The grade buttons apply a CSS filter over the
+  photograph in your browser &mdash; the file itself is never modified or re-encoded, and the original
+  is one click away at the photographer's link.
   <a href="/">&larr; back to the cabinet</a>
 </footer>
 
+<script src="/shared/lc-filters.js"></script>
 <script>
 'use strict';
 const $ = (id) => document.getElementById(id);
@@ -217,9 +240,31 @@ const LIMINAL = [
   'Nothing is wrong. Nothing here is right either.'
 ];
 
+/* The third voice. Not nostalgic and not liminal: it is the flat,
+   slightly ominous register of a road-trip film — a place you are passing
+   through, in weather, with somewhere still to get to. Present tense like
+   the liminal lines, but it admits there is a road out. */
+const FOREST = [
+  'Ninety miles to the next thing that sells petrol.',
+  'The fog is not lifting and the map has stopped being specific.',
+  'Somebody has been keeping this place open for a very long time.',
+  'The trees go back further than the light does.',
+  'You have not passed a car since the turning.',
+  'It is the kind of dark that starts at four in the afternoon.',
+  'The sign was hand-painted, and recently.',
+  'There is a diner and it is open and there is nobody in it.',
+  'The radio has three stations and two of them are the same one.',
+  'You could stop here. You are going to keep driving.',
+  'Everything smells like wet pine and cold coffee.',
+  'The road is straight for so long that it stops feeling like a decision.',
+  'Something moved at the treeline and it was probably a deer.',
+  'You will remember this stretch and not be able to say where it was.'
+];
+
 const MODES = {
   nostalgia: { lines: NOSTALGIA, sub: 'warm places, and the twenty minutes they last' },
-  liminal:   { lines: LIMINAL,   sub: 'somewhere between two places, at the wrong hour' }
+  liminal:   { lines: LIMINAL,   sub: 'somewhere between two places, at the wrong hour' },
+  forest:    { lines: FOREST,    sub: 'misty road, roadside diner, ninety miles to anywhere' }
 };
 
 function rng(seed){
@@ -236,13 +281,14 @@ function rng(seed){
    id, so going back does not rewrite what you were just looking at. */
 function captionFor(mode, photo){
   const lines = MODES[mode].lines;
-  const r = rng((photo.id >>> 0) ^ (mode === 'liminal' ? 0x9E3779B9 : 0x85EBCA6B));
+  const salt = mode === 'liminal' ? 0x9E3779B9 : (mode === 'forest' ? 0xC2B2AE35 : 0x85EBCA6B);
+  const r = rng((photo.id >>> 0) ^ salt);
   return lines[Math.floor(r() * lines.length)];
 }
 
 let mode = 'nostalgia';
-const decks = { nostalgia: [], liminal: [] };
-const at = { nostalgia: -1, liminal: -1 };
+const decks = { nostalgia: [], liminal: [], forest: [] };
+const at = { nostalgia: -1, liminal: -1, forest: -1 };
 let loading = false;
 
 /* A photograph whose file will not load makes the page skip to the next
@@ -346,6 +392,8 @@ function paint(){
     esc(p.by || 'unknown') + '</a> / <a href="' + esc(p.page) +
     '" target="_blank" rel="noopener">Pexels</a>';
 
+  applyGrade();
+
   $('cap').textContent = captionFor(mode, p);
   $('count').textContent = (i + 1) + ' of ' + deck.length;
 }
@@ -371,6 +419,8 @@ async function enter(m){
   [...$('tabs').children].forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.m === m)));
   const img = $('stage').querySelector('img');
   if (img) img.remove();
+  const wash = $('stage').querySelector('.wash');
+  if (wash) wash.classList.remove('on');
   const credit = $('stage').querySelector('.credit');
   if (credit) credit.remove();
   $('cap').textContent = '';
@@ -384,6 +434,36 @@ async function enter(m){
   if (at[m] < 0) at[m] = 0;
   paint();
 }
+
+/* ---- the grade -------------------------------------------------- *
+ *  Every number here lives in /shared/lc-filters.js and is used by the
+ *  picture of the day as well. This page owns where the controls sit and
+ *  what they look like; it does not own what "Nostalgia" means.
+ * ------------------------------------------------------------------ */
+let grade = 'none';
+try { grade = localStorage.getItem('lc-atmos-grade') || 'none'; } catch (e) {}
+if (!LCFilters.get(grade) || LCFilters.get(grade).id !== grade) grade = 'none';
+
+function applyGrade(){
+  const img = $('stage').querySelector('img');
+  const overlay = LCFilters.apply(img, grade);
+  let wash = $('stage').querySelector('.wash');
+  if (!wash){
+    wash = document.createElement('div');
+    wash.className = 'wash';
+    $('stage').appendChild(wash);
+  }
+  wash.style.background = overlay;
+  wash.classList.toggle('on', !!overlay);
+  $('fnote').textContent = LCFilters.get(grade).note;
+}
+
+LCFilters.buttons($('filters'), grade, function(id){
+  grade = id;
+  try { localStorage.setItem('lc-atmos-grade', id); } catch (e) {}
+  applyGrade();
+});
+applyGrade();
 
 $('tabs').addEventListener('click', function(e){
   const b = e.target.closest('button');
