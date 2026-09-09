@@ -1530,3 +1530,80 @@ zero differing pixels.
 
 **Not touched, as instructed:** the vanilla hub, the toggle mechanism itself, and device-detected
 retro theming, which is still waiting on the Retro OS toy's per-platform themes.
+
+---
+
+## No. 109 — Movie Night (`/movie-night/`)
+
+The one item that had been on the "still to build" line since before the key existed. The premise
+of the old note was wrong in a useful way: `TMDB_API_KEY` was wired through `/api/keys` and gated
+nothing, because the toy was never written. It is written now.
+
+**What it is.** You set four terms — mood, decade, running time, how far off the map — and it deals
+**one film**. Not a shortlist, not a grid of twenty. That is the whole joke and the whole use: the
+agonising part of movie night is the choosing, so the toy does the choosing and refuses to show its
+workings. You get three vetoes. After the third, the card on the table is the film, and the veto
+button says so. Accept it and it prints a ticket stub with the arithmetic nobody does out loud —
+start at 20:15, out at 22:04.
+
+**The night, not the day.** Vetoes and already-dealt ids persist in `localStorage` keyed to a
+"night" that rolls over at 4am rather than midnight. Someone starting a film at 1am is still having
+Tuesday's movie night and should not be handed a fresh set of vetoes for saying so.
+
+### `/api/movie` — one film, never a list
+
+Moods are a fixed allowlist on the server, the same shape as the RSS and photo relays: the browser
+picks a key, not a query, so this cannot be turned into a free TMDB proxy running on someone else's
+quota. Two upstream calls per deal — `/discover/movie` for the pool, cached six hours so a veto only
+costs the second call, and `/movie/{id}` for runtime, tagline and watch providers, none of which
+discover returns.
+
+**Three things TMDB does not do the way you would assume**, each found by trying it rather than by
+reading about it:
+
+1. **`with_genres` reads `,` as AND, not OR.** Every mood was silently asking for the intersection.
+   Measured on 9 Sep 2026: `28,12` (action *and* adventure) returns 964 rows; `28|12` returns 3,877.
+   The first version of this route shipped the wrong separator through a full round of local testing
+   without looking wrong, because a narrower pool still deals a film.
+2. **The discover index and the detail records disagree about runtime.** `Black Rain` (id 4105) is
+   returned by a query carrying `with_runtime.lte=120` and then reports 125 minutes on `/movie/4105`.
+   The detail record is the number the page prints, so it is the one that has to be true: the route
+   re-checks after fetching details and deals again, up to three times, before handing over a film
+   with `length` admitted as dropped.
+3. **The animation and documentary pools are full of shorts.** Without a floor, "nothing heavy" deals
+   an eight-minute cartoon, which is not what anyone means by a movie night. `with_runtime.gte=60`,
+   enforced against the detail record as well.
+
+**Relaxation, said out loud.** A tight combination can match nothing at all — documentaries, 2020s,
+well-known, under 90 minutes was zero rows before the genre fix. Rather than shrug, the route walks
+a ladder and reports every constraint it had to give up, so the card can say "Nothing matched all of
+that, so I let go of the decade and how well known it is." Two bugs were fixed in that reporting
+alone: it named only the *last* rung's omission while cumulatively dropping more, and then the
+fallback path confessed to dropping the runtime cap even for films that met it. Claiming to have
+given up a constraint that was in fact honoured is its own small lie.
+
+**Where to watch.** Provider data comes back per country, and the country comes from `geoLookup` —
+the same six-hour IP cache the desktop weather widget already fills, so a visitor who has been placed
+once costs nothing extra here. If the country cannot be worked out the page omits the line rather
+than showing another country's answer.
+
+**Attribution.** TMDB's terms are met in the footer, including the required "not endorsed or
+certified by TMDB" wording; watch-provider data is JustWatch's and is credited as such. No images
+are rehosted — posters are loaded from `image.tmdb.org` directly.
+
+### Verified
+
+Real browser, isolated profile, against a local server on :3999.
+
+- Full pass: set terms → deal → three vetoes → accept → ticket. Four vetoes produced four distinct
+  films; the veto button disabled itself at zero and the stubs filled in.
+- Reload mid-evening: the ticket, the terms and the exhausted vetoes all came back. "Change your
+  mind" returns to the card with the vetoes still spent.
+- No-key state, exercised for real by running the server with `TMDB_API_KEY=` blank: the page
+  explains itself instead of failing.
+- Runtime cap held across 20 deals at both 90 and 120 minutes, with no unadmitted overruns and no
+  false confessions. No film under 60 minutes in 10 deals of the pool that used to serve shorts.
+- Poster held at 2:3 rather than stretched to the card's height (190×285 measured); 16:9 crop when
+  stacked. No horizontal overflow at 380px or 390px.
+- Hub: 109 cards, footer and ghost drawer bumped, clapperboard icon on the Windows 98 desktop,
+  vanilla catalogue unaffected. No console errors in any state.
