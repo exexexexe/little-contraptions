@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gaming, On This Day</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='5' fill='%230E1220'/><rect x='4' y='11' width='24' height='11' rx='4' fill='%232E6FB8'/><rect x='8' y='15' width='6' height='2' fill='%23F5D06B'/><rect x='10' y='13' width='2' height='6' fill='%23F5D06B'/><circle cx='22' cy='16' r='2' fill='%23E23B52'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --bg:#0E1220;
+  --panel:#171D31;
+  --panel-2:#1F2740;
+  --edge:#2C3654;
+  --ink:#E4E9F5;
+  --dim:#8E99B8;
+  --gold:#F5D06B;
+  --blue:#4E9BE0;
+  --red:#E2647A;
+  --green:#6FCF97;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --sans:ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);
+  background-image:
+    radial-gradient(80% 50% at 50% 0%, rgba(78,155,224,.12), transparent 62%),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.012) 0 1px, transparent 1px 3px);
+  color:var(--ink);font-family:var(--sans);font-size:15px;
+  min-height:100vh;padding:24px 16px 84px;
+  display:flex;flex-direction:column;align-items:center;
+}
+.wrap{ max-width:760px;width:100% }
+
+header{ text-align:center }
+h1{
+  margin:0;font-family:var(--mono);font-size:clamp(17px,4.2vw,25px);
+  letter-spacing:.24em;text-transform:uppercase;color:var(--gold);font-weight:700;
+}
+.sub{ margin-top:9px;font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim) }
+
+.picker{
+  display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-top:20px;
+  background:var(--panel);border:1px solid var(--edge);padding:13px 15px;
+}
+.picker label{ font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim) }
+input[type=date]{
+  font-family:var(--mono);font-size:13px;color:var(--ink);
+  background:#101526;border:1px solid var(--edge);padding:9px 11px;
+}
+input[type=date]:focus{ outline:2px solid var(--blue);outline-offset:1px }
+button{
+  font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+  background:var(--panel-2);color:var(--ink);border:1px solid var(--edge);
+  padding:10px 15px;cursor:pointer;
+}
+button:hover{ border-color:var(--blue);color:var(--blue) }
+button.go{ background:var(--blue);border-color:var(--blue);color:#08101C;font-weight:700 }
+button.go:hover{ background:#6FB0EA;color:#08101C }
+button:focus-visible{ outline:2px solid var(--gold);outline-offset:2px }
+.picker .n{ margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--dim) }
+
+.day{
+  margin-top:16px;font-family:var(--mono);font-size:11px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--dim);
+}
+
+.ev{
+  background:var(--panel);border:1px solid var(--edge);border-left:5px solid var(--blue);
+  padding:16px 18px;margin-top:11px;
+}
+.ev.release{ border-left-color:var(--green) }
+.ev.hardware{ border-left-color:var(--blue) }
+.ev.company{ border-left-color:var(--gold) }
+.ev.landmark{ border-left-color:var(--red) }
+.ev .yr{
+  font-family:var(--mono);font-size:26px;font-weight:700;color:var(--gold);line-height:1;
+  letter-spacing:.02em;
+}
+.ev.release .yr{ color:var(--green) }
+.ev.hardware .yr{ color:var(--blue) }
+.ev.landmark .yr{ color:var(--red) }
+.ev .top{ display:flex;gap:14px;align-items:baseline;flex-wrap:wrap }
+.ev .ago{ font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-left:auto }
+.ev h2{ margin:9px 0 0;font-size:18.5px;line-height:1.32;font-weight:700 }
+.ev p{ margin:8px 0 0;font-size:15px;line-height:1.66;color:#C6CEE2 }
+.ev .note{
+  margin-top:10px;font-family:var(--mono);font-size:11px;line-height:1.7;color:var(--dim);
+  border-left:2px solid var(--edge);padding-left:10px;
+}
+.ev .kind{
+  font-family:var(--mono);font-size:8.5px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--dim);border:1px solid var(--edge);padding:3px 8px;
+}
+
+.none{
+  background:var(--panel);border:1px dashed var(--edge);padding:20px;margin-top:12px;
+  font-family:var(--mono);font-size:12px;line-height:1.85;color:var(--dim);
+}
+.none b{ display:block;color:var(--gold);margin-bottom:7px;letter-spacing:.06em }
+
+.nearby{ margin-top:18px }
+.nearby h3{
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--dim);margin:0 0 9px;font-weight:400;
+}
+
+footer{
+  max-width:760px;width:100%;margin:26px auto 0;padding-top:14px;border-top:1px solid var(--edge);
+  font-family:var(--mono);font-size:10.5px;line-height:1.85;color:var(--dim);
+}
+footer a{ color:var(--blue) }
+footer b{ color:var(--ink) }
+
+/* ---------- shared: back to the cabinet ---------- */
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 var(--mono);
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } }
+</style>
+</head>
+<body>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<div class="wrap">
+  <header>
+    <h1>Gaming, On This Day</h1>
+    <div class="sub">real dates &middot; nothing invented</div>
+  </header>
+
+  <div class="picker">
+    <label for="d">Date</label>
+    <input type="date" id="d">
+    <button id="today" type="button">Today</button>
+    <button id="prev" type="button">&larr;</button>
+    <button id="next" type="button">&rarr;</button>
+    <button id="rand" class="go" type="button">A day with something on it</button>
+    <span class="n" id="n"></span>
+  </div>
+
+  <div class="day" id="day"></div>
+  <div id="out"></div>
+  <div class="nearby" id="nearby"></div>
+</div>
+
+<footer>
+  <b>Everything on this page is a real, dated event.</b> Nothing here is invented, and no date has been
+  rounded or guessed to make a better anniversary. An entry needs a firm day to be in the list at all,
+  which is why a good deal of important history &mdash; the 1983 crash, the Commodore 64&rsquo;s launch,
+  Spacewar! being finished at MIT &mdash; is not here: those have months and years, not days.
+  Dates are the original-territory release unless an entry says otherwise, because that is the day the
+  thing actually happened; where the better-known date belongs to another region, the entry gives both.
+  Where there is a caveat &mdash; a staggered launch, a disputed day &mdash; it is printed rather than
+  hidden. Every claim is one you can check.
+  <a href="/">&larr; back to the cabinet</a>
+</footer>
+
+<script src="data.js"></script>
+<script>
+'use strict';
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+const H = (window.GAMING_HISTORY || []).slice()
+  .sort((a, b) => a.d === b.d ? a.y - b.y : a.d.localeCompare(b.d));
+
+const MONTHS = ['January','February','March','April','May','June','July',
+                'August','September','October','November','December'];
+
+function key(dateStr){ return dateStr.slice(5); }         // MM-DD
+function label(dateStr){
+  const [Y, M, D] = dateStr.split('-').map(Number);
+  return Number(D) + ' ' + MONTHS[M - 1];
+}
+
+function card(e, shownYear){
+  const ago = shownYear - e.y;
+  return '<div class="ev ' + esc(e.tag || '') + '">' +
+    '<div class="top"><span class="yr">' + e.y + '</span>' +
+    '<span class="kind">' + esc(e.tag || '') + '</span>' +
+    '<span class="ago">' + (ago > 0 ? ago + (ago === 1 ? ' year ago' : ' years ago') : '') + '</span></div>' +
+    '<h2>' + esc(e.t) + '</h2>' +
+    '<p>' + esc(e.b) + '</p>' +
+    (e.note ? '<div class="note">' + esc(e.note) + '</div>' : '') +
+    '</div>';
+}
+
+/* The days on either side that DO have something, so a blank day is a
+   signpost rather than a dead end. */
+function nearest(k, n){
+  const days = [...new Set(H.map((e) => e.d))].sort();
+  const before = days.filter((d) => d < k).slice(-n);
+  const after = days.filter((d) => d > k).slice(0, n);
+  // the list wraps: late December is next to early January
+  const out = before.concat(after);
+  if (out.length < n * 2){
+    if (!before.length) out.unshift(days[days.length - 1]);
+    if (!after.length) out.push(days[0]);
+  }
+  return out;
+}
+
+function show(dateStr){
+  const k = key(dateStr);
+  const year = Number(dateStr.slice(0, 4));
+  const hits = H.filter((e) => e.d === k);
+
+  $('day').textContent = label(dateStr) + (hits.length ? '' : ' — nothing on the list');
+  $('n').textContent = H.length + ' dated events';
+
+  if (hits.length){
+    $('out').innerHTML = hits.map((e) => card(e, year)).join('');
+    $('nearby').innerHTML = '';
+    return;
+  }
+
+  $('out').innerHTML = '<div class="none"><b>Nothing on this date</b>' +
+    'Plenty happened on the ' + label(dateStr) + ' — it just does not have a firmly dated entry in ' +
+    'this list, and a made-up one would defeat the point of the list. The nearest days that do:</div>';
+
+  const near = nearest(k, 3);
+  $('nearby').innerHTML = '<h3>nearby</h3>' + near.map((d) => {
+    const e = H.find((x) => x.d === d);
+    const [M, D] = d.split('-').map(Number);
+    return '<div class="ev ' + esc(e.tag || '') + '" style="cursor:pointer" data-jump="' + d + '">' +
+      '<div class="top"><span class="yr">' + e.y + '</span>' +
+      '<span class="kind">' + Number(D) + ' ' + MONTHS[M - 1] + '</span></div>' +
+      '<h2>' + esc(e.t) + '</h2></div>';
+  }).join('');
+}
+
+$('nearby').addEventListener('click', (e) => {
+  const el = e.target.closest('[data-jump]');
+  if (!el) return;
+  const y = $('d').value.slice(0, 4) || String(new Date().getFullYear());
+  $('d').value = y + '-' + el.dataset.jump;
+  show($('d').value);
+});
+
+function shift(days){
+  const d = new Date($('d').value + 'T12:00:00Z');
+  d.setUTCDate(d.getUTCDate() + days);
+  $('d').value = d.toISOString().slice(0, 10);
+  show($('d').value);
+}
+
+$('d').addEventListener('change', () => show($('d').value));
+$('today').addEventListener('click', () => {
+  $('d').value = new Date().toISOString().slice(0, 10);
+  show($('d').value);
+});
+$('prev').addEventListener('click', () => shift(-1));
+$('next').addEventListener('click', () => shift(1));
+$('rand').addEventListener('click', () => {
+  const days = [...new Set(H.map((e) => e.d))];
+  const d = days[Math.floor(Math.random() * days.length)];
+  $('d').value = new Date().getFullYear() + '-' + d;
+  show($('d').value);
+});
+
+$('d').value = new Date().toISOString().slice(0, 10);
+show($('d').value);
+
+window.__gaming = { all: H, show: show, key: key };
+</script>
+</body>
+</html>
