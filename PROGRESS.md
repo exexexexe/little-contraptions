@@ -527,7 +527,118 @@ Per toy, real requests through the real endpoint:
 
 Add ~1–2 ms of this server's own overhead. So the wired toys answer in **roughly a third of a second
 to a second** — slower than the static generators they replaced, which is why each shows a thinking
-state, but far quicker than I had prepared you for. Every response still carries an `ms` field.
+state, but far quicker than I had prepared you for. Every response carries an `ms` field, and the
+server logs the real token usage of every generation.
+
+**Correction to what I wrote earlier, and the real constraint.** I first reported the ceiling as
+8,000 tokens/minute, from the `x-ratelimit-*` headers. That was wrong in the way that matters. The
+limit that actually bites is **1,000 _output_ tokens per minute**, and it appears nowhere in the
+headers — it is only in the body of a 429:
+
+> Rate limit reached … on output tokens per minute (OTPM): Limit 1000, Used 508, Requested 521.
+
+Two consequences. Output is the scarce resource, so trimming system prompts would have bought
+nothing. And Groq reserves against the budget using the `max_tokens` you *ask for*, not what the
+model uses — so an oversized cap costs throughput even when it goes unused.
+
+So the budgets were re-set from measured output rather than rounded up for comfort. Measured over
+several runs each, then capped at roughly twice the observed maximum:
+
+| toy | output tokens (observed) | cap before | cap now |
+|---|---|---|---|
+| universes-colliding | 298–521 → **365** after | 1000 | 650 |
+| espionage | 212–296 → **193** after | 1100 | 550 |
+| character-match | 271 → **217** after | 420 | 400 |
+| what-beats-this | 273 → **254** after | 420 | 400 |
+| interview-beyond | 94 → **83** after | 320 | 220 |
+| bureaucracy | 61 → **84** after | 300 | 160 |
+
+Reserved budget for one of each dropped from 3,560 to 2,380 tokens — a third less — and actual
+output fell about a quarter, because the two biggest toys were also asked to be brief (one sentence
+a line in the crossover, one sentence a field in the briefing). **That made the writing better, not
+worse**: the puppet now says "grudges are heavy things for a boy made of felt" instead of rambling,
+and the briefings are tighter. Every generation is logged with its real token usage, so this is
+checkable rather than assumed.
+
+Even so, 1,000 output tokens a minute is roughly **three crossover scenes or five briefings a minute
+across all visitors at once**. Fine for one person browsing; a room full of people will see "the
+generator is busy". Groq's own 429 points at their Dev Tier if that ever matters. This hub's 20/IP
+per hour limit is a separate thing, for cost, and is nowhere near as tight.
+
+### What the real key changed
+
+Four things only a live call could have found, all of which would have shipped broken:
+
+**1. The documented model does not exist on this account.** Groq's docs list
+`llama-3.3-70b-versatile` as a current production model; this key gets a 404 for it, and there are no
+Llama chat models on the account at all. The available list is gpt-oss, qwen, compound and whisper.
+
+**2. The obvious replacement returns nothing.** `openai/gpt-oss-120b` and `-20b` are *reasoning*
+models: at my original 300–700 token budgets they spent the entire allowance on a hidden `reasoning`
+field and returned **empty content**. Every wired toy would have silently fallen back to its
+templates, and the cause would have been invisible. `reasoning_effort: "low"` fixes it, but the
+budget still has to absorb the thinking.
+
+**3. So the default is now `qwen/qwen3.8-27b`** — no reasoning preamble, ~0.4 s, and noticeably
+better prose than gpt-oss at low effort. If you override `GROQ_MODEL`, check the model is not a
+reasoning model, or raise the budgets. Two guards were added for that case anyway: `<think>` blocks
+are stripped from the content server-side, and an empty answer from a model that returned reasoning
+is logged with an explanation rather than a generic failure.
+
+**4. Long JSON objects were arriving truncated.** The espionage briefing came back one closing
+bracket short — valid-looking prose, unparseable. Six of the seven toys now use Groq's JSON mode
+(`response_format: json_object`), which was 3/3 and then 4/4 valid where free-form had been failing.
+JSON mode has its own failure — a 400 "failed to generate JSON" when the object outgrows the budget
+— so espionage and universes got bigger budgets (1100 and 1000) and there is a one-shot retry in
+free form, since the client parser tolerates fences and stray prose.
+
+**And one content finding.** Character-match named "Maurice Lavelle" from *The Remains of the Day*;
+the butler in that novel is Stevens. A hallucinated name pinned to a real work is exactly the kind of
+invented claim that reads as fact, so the prompt now tells it to prefer characters it is certain of,
+and the page says plainly that it sometimes misremembers which book someone is from.
+
+### Judgment calls
+
+**The static generators were kept as fallbacks rather than deleted.** For espionage, universes and
+bureaucracy, an outage or an unreadable answer falls back to the original template bank and shows a
+short banner saying which happened. The toy never becomes a dead page. The no-key case still shows a
+plain "needs a key" state, as asked — it is the banner text that changes.
+
+**`explain-to-an-era` was left alone.** The brief made it conditional on it still feeling generic. It
+does not: the era voices are hand-tuned and specific ("Show me where a smartphone grows. If it does
+not grow, somebody made it, and I want to know from what"), they are never anachronistic, and they
+are instant. Routing it through a model would trade a reliable, fast, period-accurate answer for a
+slower one that gets the period subtly wrong. Easy to change your mind — the prompt is already
+written and registered.
+
+**A shared client file, breaking the one-file-per-toy convention.** `/shared/lc-generate.js` is new.
+Seven copies of the same error handling would drift, and consistent behaviour across the no-key, rate
+limit and outage states is the thing that matters most here. These seven toys already could not work
+standalone — they need the server — so the property was already gone for them.
+
+**The interview's framing was rewritten, not just its plumbing.** An open-ended chat with a
+historical figure is the case where invented text is most likely to be read as fact, so: the four
+figures remain *invented* people doing real jobs, the system prompt tells the model it is inspired by
+a persona and has no access to what anyone really said, and the footer now leads with "None of this
+is a historical record" and calls it a conversation with a costume.
+
+### Latency — measured, live
+
+Per toy, real requests through the real endpoint:
+
+| toy | upstream time |
+|---|---|
+| interview-beyond | 295 ms |
+| bureaucracy | 293–406 ms |
+| espionage | 404–674 ms |
+| character-match | 564–569 ms |
+| what-beats-this | 599–865 ms |
+| universes-colliding | 878–1084 ms |
+
+Add ~1–2 ms of this server's own overhead. So the wired toys answer in **roughly a third of a second
+to a second** — slower than the static generators they replaced, which is why each shows a thinking
+state, but far quicker than I had prepared you for. Every response carries an `ms` field, and the
+server logs the real token usage of every generation.
 
 **The account's own limits matter more than the latency does.** Reading the rate-limit headers back:
 **1,000 requests/day and 8,000 tokens/minute**. The tokens-per-minute figure is the binding one — the
@@ -580,9 +691,10 @@ And then, with the real key:
 
 Nothing is unverified any more, but two things are worth an eye over time:
 
-- **The tokens-per-minute ceiling.** Six to eight generations a minute across all visitors before
-  Groq refuses. Fine for one person browsing; not fine for a room. If it becomes a problem the fix is
-  a smaller model for the two big toys, or trimming the espionage and universes budgets back down.
+- **The output-tokens-per-minute ceiling**, 1,000/min — the one real limit, and invisible until you
+  hit it. The budgets have been trimmed to measured need, which bought about a third more headroom,
+  but three crossover scenes in a minute will still trip it. The next lever, if it ever matters, is
+  fewer turns in the crossover or Groq's paid tier.
 - **Attribution in character-match.** It named a real novel's butler by a name he does not have once
   during testing, and got it right on every run since. The prompt now asks for characters it is
   certain of and the page admits it misremembers, but it is the one place invented text could be read

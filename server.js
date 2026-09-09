@@ -136,6 +136,12 @@ const GROQ_URL = process.env.GROQ_URL || 'https://api.groq.com/openai/v1/chat/co
 // This one answers in ~0.4 s with no reasoning preamble.
 const GROQ_MODEL = process.env.GROQ_MODEL || 'qwen/qwen3.8-27b';
 const GENERATE_TIMEOUT = 22000;      // generous: a long briefing is a lot of tokens
+
+// The account's binding limit is 1,000 OUTPUT tokens a minute — it is not in
+// the rate-limit headers, only in the body of a 429, and Groq reserves against
+// it using the max_tokens asked for. So every budget below is set from measured
+// output plus headroom rather than rounded up for comfort: an oversized cap
+// costs throughput even when the model does not use it.
 const MAX_BODY = 8 * 1024;           // nothing here needs more than a few hundred bytes
 
 // Per-IP, in-memory, resets on redeploy. The point is to make it mildly
@@ -220,7 +226,7 @@ const HOUSE_RULES =
 const PROMPTS = {
   'universes-colliding': {
     json: true,
-    max_tokens: 1000,
+    max_tokens: 650,
     temperature: 1.0,
     system:
       HOUSE_RULES + ' ' +
@@ -233,7 +239,7 @@ const PROMPTS = {
       'Return JSON only, shaped exactly: {"where":"one sentence describing the ' +
       'room they are both somehow in","turns":[{"who":"a" or "b","text":"one ' +
       'line of dialogue"}],"stinger":"a short end-card line, lower case"}. ' +
-      'Give 8 turns, alternating a and b, starting with a.',
+      'Give 8 turns, alternating a and b, starting with a. Each line is one sentence, two at the very most — this is a quick exchange, not a speech.',
     user: (i) => {
       const a = clean(i.a, 60), b = clean(i.b, 60);
       if (!a || !b) return '';
@@ -243,7 +249,7 @@ const PROMPTS = {
 
   espionage: {
     json: true,
-    max_tokens: 1100,
+    max_tokens: 550,
     temperature: 1.0,
     system:
       HOUSE_RULES + ' ' +
@@ -256,7 +262,7 @@ const PROMPTS = {
       'HERON","station":"a city","objective":"2-3 sentences","assets":["two ' +
       'items, each one sentence"],"complications":["three items, each one ' +
       'sentence"],"extraction":"one sentence","note":"one dry sentence from ' +
-      'the registry"}.',
+      'the registry"}. Keep every field tight: the objective is two sentences, everything else one.',
     user: (i) => {
       const subject = clean(i.subject, 60);
       return subject ? 'Subject of the briefing: ' + subject + '.' : '';
@@ -265,7 +271,7 @@ const PROMPTS = {
 
   bureaucracy: {
     json: true,
-    max_tokens: 300,
+    max_tokens: 160,
     temperature: 1.0,
     system:
       HOUSE_RULES + ' ' +
@@ -291,7 +297,7 @@ const PROMPTS = {
   },
 
   'interview-beyond': {
-    max_tokens: 320,
+    max_tokens: 220,
     temperature: 0.95,
     system:
       HOUSE_RULES + ' ' +
@@ -322,7 +328,7 @@ const PROMPTS = {
 
   'character-match': {
     json: true,
-    max_tokens: 420,
+    max_tokens: 400,
     temperature: 0.95,
     system:
       HOUSE_RULES + ' ' +
@@ -353,7 +359,7 @@ const PROMPTS = {
 
   'what-beats-this': {
     json: true,
-    max_tokens: 420,
+    max_tokens: 400,
     temperature: 1.0,
     system:
       HOUSE_RULES + ' ' +
@@ -376,7 +382,7 @@ const PROMPTS = {
 
   'explain-to-an-era': {
     json: true,
-    max_tokens: 460,
+    max_tokens: 380,
     temperature: 0.95,
     system:
       HOUSE_RULES + ' ' +
@@ -450,7 +456,7 @@ async function callGroq(entry, userText, noJsonMode) {
         detail: thought ? 'model returned reasoning but no answer (raise max_tokens or lower reasoning effort)'
                         : 'upstream returned no text' };
     }
-    return { ok: true, text: text, model: j.model || GROQ_MODEL };
+    return { ok: true, text: text, model: j.model || GROQ_MODEL, usage: j.usage || null };
   } catch (e) {
     const aborted = e && (e.name === 'AbortError' || /abort/i.test(String(e.message || '')));
     return { ok: false, status: aborted ? 504 : 502, detail: aborted ? 'timed out' : String(e && e.message || e) };
@@ -790,6 +796,9 @@ async function handleApi(req, res, url) {
       });
     }
 
+    const u = out.usage || {};
+    console.log('[generate] %s ok in %dms · %s+%s=%s tokens · %d left this hour for this ip',
+      toy, ms, u.prompt_tokens || '?', u.completion_tokens || '?', u.total_tokens || '?', gate.remaining);
     return sendJson(res, 200, { text: out.text, model: out.model, ms: ms, remaining: gate.remaining });
   }
 
