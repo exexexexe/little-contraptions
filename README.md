@@ -15,8 +15,14 @@ Opens on http://localhost:3000.
 
 ## The toys
 
-29 drawers, each a single self-contained HTML file under `public/<slug>/index.html`.
+**132 drawers**, each a single self-contained HTML file under `public/<slug>/index.html`.
 The hub filters them by the tag on each card.
+
+The table below covers the first 29 and has not been maintained since — the
+card grid in `public/index.html` is the actual index, and `PROGRESS.md` is the
+running log of what was added when. Rather than leave a stale count at the top
+of the file, the number above is kept correct and the table is labelled for
+what it is.
 
 | # | Toy | Tag | What it is |
 |---|-----|-----|------------|
@@ -143,6 +149,11 @@ nothing moves at all until a hand is on the cradle.
     /api/presence          POST: record this visit by city, GET: today's roster
     /api/bottle            GET: a surfaced note at random, POST: cast one
     /api/bottle/found      POST: mark a note as actually read
+    /api/here?t=           how many people are on the hub right now — in memory only
+    /api/scores            GET ?board= a leaderboard, POST a score; GET bare lists the boards
+    /api/guestbook         GET the wall (?before= to page back), POST a signature
+    /api/pixels            GET the shared canvas, POST up to your remaining pixels
+    /api/story             GET the tail of the shared story, POST one sentence
 
 Keys are read from the environment and never reach the browser. The RSS relay
 takes a short feed name, never a URL — an arbitrary `?url=` would make it an
@@ -175,6 +186,24 @@ runtime again after fetching details and deals another card if the cap was broke
 sends a query string. Same rule as the RSS relay, and the same reason: an arbitrary `?query=` would
 make this a free image search running on somebody else's quota.
 
+The five shared routes all sit on the same SQLite file as the bottles and the
+presence map, and all five answer `200 {ok:false, why:"no_store"}` rather than
+a 5xx when the volume is not mounted — every page that uses one has a state
+for "there is no shared storage today", and none of them should read as a
+broken server. Verified by starting the server with every writable directory
+denied: all four data routes report `no_store`, all five pages show the honest
+panel, and the arcade and the song guesser keep working with local scores only.
+
+`/api/here` is the exception and is deliberately **not** in the database. "Right
+now" is a fact about this process in the last ninety seconds; writing it down
+would make the toy claim to know something it does not, and after a restart the
+honest answer really is that nobody has said hello yet.
+
+Identity on all of them is one random string the browser invents for itself
+(`shared/lc-id.js`) — never derived from the address, the user agent or
+anything else about the visitor, stored by the server as an opaque key, and
+never sent back out to anybody.
+
 `/api/where` is keyless. It exists because the hub's weather widget wants
 somewhere to report on and the front door should not raise a browser
 permission prompt to get it, and because ip-api.com serves plain HTTP only —
@@ -185,11 +214,25 @@ because the caller is an ornament with its own fallback.
 
 ## Structure
 
-    server.js            static file server, respects $PORT
+    server.js            static file server and API relays, respects $PORT
+    store.js             SQLite on the Railway volume; degrades to off
     public/index.html    the hub / card grid
     public/404.html      served for any unknown path
     public/weather/      "The Elsewhere Almanac"
     public/inventions/   "The Inventions of Humanity"
+
+    public/shared/       the pieces more than one toy uses
+      lc-generate.js       client for POST /api/generate
+      lc-id.js             the one anonymous visitor id
+      lc-commons.js        Wikimedia Commons: origin=*, the thumb-host rewrite,
+                           and the no-credit-no-display rule
+      lc-filters.js        the eight photograph grades
+      lc-audio.js          the Web Audio bench, out of Room Tone
+      lc-weather-fx.js     the twelve-effect particle field, out of the almanac
+      world-land.js        world coastlines for a 720x360 viewBox
+
+`NO_CACHE=1` serves every static file with `no-store`. An hour of browser cache
+on a `.js` file is right in production and maddening while editing one.
 
 ## Adding a new toy
 

@@ -1,5 +1,258 @@
 # Overnight batch — progress log
 
+## Summary — batches 15 to 20, the credits egg, and fifteen more eggs
+
+**Twenty-two new drawers, 110 to 132.** Plus the arcade's fourteenth game, five new
+TV-voice archetypes, a third mode for Atmosphere, a third handset for the Zone PDA,
+seventeen easter eggs, and four shared modules extracted out of toys that already
+existed. Every new page was loaded in a real browser; nothing below is claimed on
+the strength of having written it.
+
+**Not deployed.** The commits are local.
+
+---
+
+### The thing to read first: the shared storage was already there
+
+The brief said five items were blocked on "the shared SQLite-on-Railway-volume
+infrastructure from the message-in-a-bottle work" and to check whether it exists
+before assuming. **It exists** — `store.js`, SQLite through `node:sqlite`, on the
+volume at `/data` with a gitignored local fallback. So **none of the five were
+skipped**: the shared arcade leaderboards, the song-guesser boards, the guestbook,
+the pixel canvas and the story chain are all built on it.
+
+`store.js` gained four tables. Two decisions in there worth knowing about:
+
+- **Scores are one row per (board, token).** Beating your own score edits the row
+  you already have rather than filling the board with your afternoon.
+- **Which way is "better" is written into the SQL from the board's own direction.**
+  Fifteen boards want the biggest number; the song guesser's speed board wants the
+  smallest. Doing it in the statement rather than in the caller keeps the read and
+  the write from ever disagreeing about which way is up.
+
+And the head-count is deliberately **not** in the database. "X people here right
+now" is a fact about this server process in the last ninety seconds. Writing it
+down would make the hub claim to know something it does not, and after a restart
+the honest answer really is that nobody has said hello yet.
+
+**The degradation was tested, not assumed.** The server was started with every
+writable directory denied. All four data routes answer `200 {ok:false,
+why:"no_store"}`, all five pages show the same honest panel, and the arcade and
+the song guesser keep working on local scores alone.
+
+---
+
+### Bugs the testing found that reading would not have
+
+These are the parts of the session worth the time:
+
+1. **BACKROAD, the new arcade racer, was unplayable and the bot proved it.** The
+   road slid sideways faster than the car could steer: a bot tracking the centre
+   line *perfectly* went off in 3.4 seconds. The three sine amplitudes are now set
+   from that constraint rather than by eye — the road can move at most 0.315 px
+   sideways per px driven, which at the 210 px/s top speed is 66 px/s against the
+   car's 147. A good line now survives 87–150 seconds and doing nothing ends the
+   run in 7.5.
+
+2. **The snow globe threw its entire snowfall out of the globe on the first
+   shake.** Force was being applied without reference to mass; a flake masses
+   about 0.0036, so a flat force of 0.0084 was an acceleration of over two units
+   per step. Measured, not guessed: the average flake ended at y = −3316 in a
+   128-unit world. Forces are scaled by mass now, and separately, anything found
+   outside the glass is put back inside with its speed cut — because a thin ring
+   of static wall segments can still be tunnelled through on one step. Verified
+   with sixty hammer blows in a row: nothing ever leaves.
+
+3. **The snow globe's falling snow stopped permanently if the tab was hidden.**
+   The particle field drops its own loop when the tab goes away and does not
+   restart it. Found by sampling the canvas rather than by looking at it — the
+   pixel count was flatly zero. The main loop now starts it every frame.
+
+4. **The About overlay was invisible in Windows 98 mode.** Its inner element was
+   called `.card`, which the 98 mode also styles, so it rendered on light paper
+   with light text. Caught in a screenshot, not in the code.
+
+5. **The city map's park took its name from the district word list**, so the very
+   first city generated had a park called North Gardens next to a district called
+   North Gardens.
+
+6. **The guestbook read path was broken by `stmt.all.apply(null, …)`**, which
+   loses `this`. Writes worked; reads 500'd.
+
+---
+
+### Judgment calls, and where the brief and the code disagreed
+
+The brief described several things as existing that did not. In each case the
+honest move was to build the shared piece the brief assumed and wire the existing
+toy into it, so the reuse it asked for is real rather than nominal:
+
+- **Atmosphere had no filter engine.** The brief said to reuse "Atmosphere's
+  existing filter engine (Nostalgia, Y2K Camera, etc.)" for the picture of the
+  day. There wasn't one. `shared/lc-filters.js` is now the single definition of
+  eight grades, and **both** toys call into it — verified by comparing the
+  computed `filter` string on both pages, which is character-for-character
+  identical. Atmosphere gained the control row it was assumed to have.
+
+- **Atmosphere had two modes, not three.** "A fourth mode: Forested Americana"
+  lands as the **third**. It is built and it works; it is just not the fourth.
+
+- **The Konami code already had a payload.** The brief said it was an unspecified
+  egg with nothing decided. It reshuffled the cabinet. Rather than delete that,
+  the reshuffle moved to typing `shuffle` and the code now opens the About card.
+  Nothing was lost and the brief's request was honoured.
+
+- **The static channel has no text ticker.** The ticker audit covered the news
+  crawl (42s → 96s), the good-news wire (50s → 112s) and the cryptid log (a report
+  every 6–13s → 13–26s), all three now hover-paused. The static channel's only
+  moving part is the vertical-hold roll, so that was slowed and hover-paused too,
+  and its caption no longer fades out from under you while you are reading it.
+
+- **The Windows 98 wallpaper feature did exist**, so "Set as wallpaper" writes
+  into the preferences Display Properties already reads rather than getting the
+  fallback download button. The photographer's name goes on the desktop with the
+  photograph, not behind a toggle: it is the licence.
+
+- **Six degrees is honest about being too easy.** The tag graph turned out dense —
+  200 random pairs all connect, average 1.38 hops. Rather than fake longer chains
+  and still call it shortest-path, there is a second button that deliberately
+  takes the long way round, and the tally says which one you are looking at.
+
+- **The README's toy table stopped being maintained at 29 drawers.** Updating 103
+  rows was out of scope tonight, so the count at the top is now correct (132) and
+  the table is labelled for what it is, rather than left silently wrong.
+
+---
+
+### Facts, and how they were checked
+
+Three toys are built on real dates and one on real astronomy. None of them was
+written from memory and left there.
+
+- **Gaming, on this day** — 57 events. The rule is in a comment at the top of
+  `data.js` and repeated in the footer: *an entry needs a firm day*. The 1983
+  crash, the Commodore 64's launch and Spacewar! being finished at MIT are
+  therefore **not in the list** rather than given a plausible-looking date. Dates
+  are the original-territory release unless the entry says otherwise; where the
+  better-known date belongs to another region, both are given. Caveats are
+  printed, not hidden. A date with nothing on it says so and points at the
+  nearest days that do.
+
+- **Closer than you'd think** — 22 comparisons. Where a date is genuinely an
+  estimate (a pyramid, an extinction, the first tree) it says so and the
+  arithmetic is done on the estimate. Each card shows both gaps as numbers and
+  the fact you would want to check.
+
+- **What if it had gone differently** — forks from real, dated events, and says
+  plainly that everything after the fork came off a list on the page.
+
+- **The day/night line** — the terminator is computed, not fetched. Checked
+  against known values: declination 23.44° at the June solstice and −23.43° at
+  December (0.04° off), near zero at both equinoxes, and the sub-solar longitude
+  at 12:00 UTC is −0.67°, which is exactly the +2.68-minute equation of time.
+  London is lit at solstice midday and dark at midnight; Sydney is dark at 12:00
+  UTC in June. Twelve real time-zone facts alongside it.
+
+- **Semaphore is generated from the rule, not typed out.** The two-flag alphabet
+  is seven "circles" — one flag holds a position while the other walks round the
+  remaining eight — and that construction produces exactly 26 letters plus the
+  two service signs, which is why J sits where it does rather than after I.
+  Verified: 26 letters, none missing, no two sharing a position. A hand-typed
+  table can contain a typo; this one cannot.
+
+---
+
+### Easter egg #12, which needed care rather than cleverness
+
+Dating a ship's-log entry to **15 April** prints a plain grey note above it:
+the Titanic foundered in the early hours of that morning in 1912 after striking
+ice the previous night, and around 1,500 of the roughly 2,200 people aboard died.
+
+Everything about how it is presented is deliberate. It carries **none** of the
+page's brass, rope or aged paper — it is a different object on the page. The
+foghorn does not play. And the invented log entry printed beneath it **drops its
+ice, its gale and its strange-sighting line**, because a fictional log about
+something following the ship, sitting directly under a note about 1,500 real
+dead, would be exactly the joke the page has just said it is not going to make.
+
+It was read back in full before shipping, as the brief asked.
+
+---
+
+### The seventeen eggs
+
+All seventeen are built and all seventeen were triggered in a browser.
+
+| # | Where | What |
+|---|-------|------|
+| — | the hub | Konami code opens the About card, crediting Maksim and Claude, linking the repo taken from this working copy's actual git remote |
+| 1 | Infinite Archive | searching "the library of babel" stops the pretence and explains what the page really is |
+| 2 | Paradox Machine | the same paradox twice overflows the stack, prints identical frames ending `at you`, and restarts itself |
+| 3 | Story Chain | sentence 1,000 gets a "The End?" marker, drawn from the count so it is still there tomorrow, and the story carries on |
+| 4 | Snow Globe | shake hard *and* keep shaking and somebody is standing in the drift for three seconds |
+| 5 | Encode Anything | "easter egg" lays its own eighteen morse marks out as an egg |
+| 6 | Closer Than You'd Think | twenty comparisons in, it compares your visit to the Anglo-Zanzibar War, computed live |
+| 7 | Dream Decoder | "I dreamed about this website" gets the one reading it is qualified to give |
+| 8 | Declassified Search | left untouched for 75 seconds it adds a line about you, and the Subject field becomes "whoever left this open" |
+| 9 | What If History | "what if the internet was never invented" — no internet, no browser, no page, no machine to answer; it declines |
+| 10 | Guestbook | signing as "Neal" gets the same hat-tip the hub's hidden keystroke gives |
+| 11 | Pixel Canvas | pixels landing in the shape of a heart or a smiley set off a small celebration |
+| 12 | Ship's Log | 15 April. See above. Not a joke. |
+| 13 | Ancient Advisor | push the realm past 900 years and the archivists tell you that you have played too long |
+| 14 | Snarky Weapon | ask it something genuinely large and it drops the voice for exactly one sincere line, then catches itself |
+| 15 | City Builder | naming a street after a real Stockholm one gets a quiet note in the margin |
+| + | Arcade / DESCENT | hold DOWN for two seconds — the one input that game cannot receive by accident — and the ship comes up with an energy shield that breaks and recharges |
+| + | Snow Globe | turn the phone right over and hold it, and gravity inverts (the motion egg, reusing Invisible Ink's availability test) |
+
+The triggers are discriminating, not just present: `lonely` fires the weapon's
+sincere line and `abalone` does not; `no electricity` fires the what-if refusal
+and `invented earlier` does not; `Drottninggatan` and `drottning gatan` both land
+in Stockholm and `Cooper Street` does not.
+
+---
+
+### What was extracted rather than duplicated
+
+Four shared modules, each lifted out of a toy that already had the code, with the
+original refactored to call into it and re-verified afterwards:
+
+- **`shared/lc-audio.js`** — Room Tone's Web Audio bench. Room Tone's six beds
+  still produce distinct spectra after the move, checked on the analyser rather
+  than by ear (library quiet with a 47 Hz hum, rain broadband at 1.5 kHz, the
+  bridge on a 94 Hz drive).
+- **`shared/lc-weather-fx.js`** — the almanac's twelve-effect particle field. The
+  almanac still draws, checked by sampling its canvas.
+- **`shared/lc-commons.js`** — the Commons rules (origin=\*, the thumb-host
+  rewrite, no credit means no display). The San Francisco toy still fills a
+  96-photograph pool with credits intact.
+- **`shared/lc-filters.js`** — the eight photograph grades, new, because there was
+  nothing to extract.
+- **`shared/lc-id.js`** — the one anonymous visitor id, new.
+
+**Nothing in this cabinet is sampled.** Every sound any of these pages makes is an
+oscillator or a noise buffer generated in the browser at the moment you hear it.
+There is still no audio file anywhere in this repository. The snow globe's carol
+is Jingle Bells (1857) or Silent Night (1818), both long out of copyright,
+arranged here for oscillators — verified on the analyser: the first note comes
+out at 328 Hz, which is E4.
+
+---
+
+### Still pending their own sessions — NOT part of this batch
+
+Two items were named in the brief as explicitly out of scope, both in the same
+higher-blast-radius category as the original Windows 98 hub work, and **neither
+was attempted**:
+
+1. **Draggable icons and folders on the Windows 98 desktop.** The desktop is
+   still deliberately not a window manager — icons navigate to `/slug/` exactly
+   as the cards do.
+2. **The icon style selector** (pixel / cartoonish / flat / realistic).
+
+Both still need a dedicated session.
+
+---
+
 ## Summary — batch 15, the arcade and the song guesser
 
 **Two things built: a thirteen-game arcade cabinet, and the Europop guesser widened into
