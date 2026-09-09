@@ -140,6 +140,7 @@ nothing moves at all until a hand is on the cradle.
     /api/iss/tle           Celestrak orbital elements, 2 h cache
     /api/where             coarse location from the caller's IP, 6 h cache
     /api/photos?mode=      Pexels relay for /atmosphere/, fixed search list, 1 h cache
+    /api/preview?title=&artist=  Deezer metadata relay for /europop-guesser/, no key needed
     /api/presence          POST: record this visit by city, GET: today's roster
     /api/bottle            GET: a surfaced note at random, POST: cast one
     /api/bottle/found      POST: mark a note as actually read
@@ -147,6 +148,15 @@ nothing moves at all until a hand is on the cradle.
 Keys are read from the environment and never reach the browser. The RSS relay
 takes a short feed name, never a URL — an arbitrary `?url=` would make it an
 open proxy.
+
+`/api/preview` needs no key at all: Deezer's public search endpoint is open, and it answers with a
+30-second preview MP3 on Deezer's own CDN. The relay exists only because `api.deezer.com` sends no
+`Access-Control-Allow-Origin`, which was confirmed by calling it from a real browser rather than by
+reading the headers. **The audio is never proxied, cached or re-served** — the browser plays it
+straight from Deezer, whose CDN does send `Access-Control-Allow-Origin: *`. Preview URLs are signed
+and expire, so a fresh one is fetched each round. Spotify was considered and rejected: its
+`preview_url` is now marked deprecated and nullable, needs OAuth, and its terms say preview clips
+may not be offered as a standalone product.
 
 `/api/photos` needs `PEXELS_API_KEY` and answers `200 {ok:false, reason:"no_key"}` without one, so
 `/atmosphere/` shows an honest needs-a-key panel instead of failing. `mode` is `nostalgia` or

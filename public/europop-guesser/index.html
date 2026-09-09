@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Name That Europop</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23140B24'/><circle cx='16' cy='16' r='9' fill='none' stroke='%23FF5FD0' stroke-width='2'/><circle cx='16' cy='16' r='2.4' fill='%23FF5FD0'/><path d='M22 9l4-4M6 23l-4 4' stroke='%2360E0FF' stroke-width='2'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --bg:#120A1E;
+  --bg-2:#1D1030;
+  --pink:#FF5FD0;
+  --cyan:#60E0FF;
+  --pale:#F2ECFA;
+  --dim:#9B8CB4;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:radial-gradient(880px 680px at 50% 0%, var(--bg-2) 0%, var(--bg) 66%);
+  color:var(--pale);font-family:var(--serif);min-height:100vh;
+  padding:28px 16px 80px;display:flex;flex-direction:column;align-items:center;
+}
+.wrap{ max-width:560px;width:100% }
+header{ text-align:center;margin-bottom:18px }
+h1{
+  font-family:var(--mono);font-size:clamp(14px,3.4vw,20px);margin:0;
+  letter-spacing:.24em;text-transform:uppercase;font-weight:500;
+  background:linear-gradient(90deg,var(--pink),var(--cyan));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.sub{ font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-top:10px }
+
+.eras{ display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin-bottom:18px }
+.eras button{
+  font-family:var(--mono);font-size:10px;letter-spacing:.1em;
+  background:transparent;color:var(--dim);border:1px solid rgba(242,236,250,.22);
+  padding:8px 11px;cursor:pointer;
+}
+.eras button:hover{ color:var(--pale);border-color:var(--pale) }
+.eras button[aria-pressed=true]{ background:var(--pink);color:#160A22;border-color:var(--pink) }
+
+.score{ display:flex;justify-content:center;gap:24px;margin-bottom:16px;
+  font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim) }
+.score b{ display:block;font-size:18px;color:var(--pale);margin-top:4px;letter-spacing:0 }
+
+.deck{
+  border:1px solid rgba(242,236,250,.16);background:rgba(242,236,250,.04);
+  padding:20px;text-align:center;
+}
+.art{
+  width:112px;height:112px;margin:0 auto 14px;border-radius:3px;
+  background:linear-gradient(140deg,#3A2050,#22143A);
+  display:flex;align-items:center;justify-content:center;overflow:hidden;
+}
+.art img{ width:100%;height:100%;object-fit:cover;display:block }
+.art span{ font-family:var(--mono);font-size:28px;color:var(--dim) }
+.bar{ height:4px;background:rgba(242,236,250,.14);margin:14px 0 4px;overflow:hidden }
+.bar i{ display:block;height:100%;width:0;background:linear-gradient(90deg,var(--pink),var(--cyan)) }
+.time{ font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:.1em }
+button.play{
+  margin-top:14px;width:100%;font-family:var(--mono);font-size:12px;letter-spacing:.18em;
+  text-transform:uppercase;background:transparent;color:var(--cyan);border:1px solid var(--cyan);
+  padding:15px;cursor:pointer;
+}
+button.play:hover{ background:var(--cyan);color:#0E1620 }
+button.play:disabled{ opacity:.4;cursor:default }
+
+.opts{ display:flex;flex-direction:column;gap:7px;margin-top:14px }
+.opts button{
+  text-align:left;font-family:var(--serif);font-size:15.5px;line-height:1.4;
+  background:rgba(242,236,250,.05);color:var(--pale);
+  border:1px solid rgba(242,236,250,.16);padding:13px 14px;cursor:pointer;
+}
+.opts button:hover:not(:disabled){ border-color:var(--pink) }
+.opts button.right{ background:rgba(96,224,160,.18);border-color:#60E0A0 }
+.opts button.wrong{ background:rgba(255,95,120,.16);border-color:#FF5F78 }
+.opts button:disabled{ cursor:default }
+.opts button small{ display:block;font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:3px }
+
+.after{ margin-top:14px;min-height:44px;font-size:14px;line-height:1.6;color:var(--dim) }
+.after a{ color:var(--cyan) }
+button.next{
+  margin-top:10px;width:100%;font-family:var(--mono);font-size:11px;letter-spacing:.18em;
+  text-transform:uppercase;background:var(--pink);color:#160A22;border:0;padding:14px;cursor:pointer;
+}
+button.next[hidden]{ display:none }
+.state{
+  margin-top:14px;border:1px solid rgba(96,224,255,.32);background:rgba(96,224,255,.07);
+  padding:14px 16px;font-size:13.5px;line-height:1.6;color:#BFE4F2;
+}
+.state[hidden]{ display:none }
+.note{ margin-top:26px;font-size:12.5px;line-height:1.75;color:var(--dim) }
+.note a{ color:var(--dim) }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media print{ #lc-back{ display:none } }
+@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Name That Europop</h1>
+    <p class="sub">Thirty seconds, four answers</p>
+  </header>
+
+  <div class="eras" id="eras" role="group" aria-label="Era"></div>
+
+  <div class="score">
+    <div>right<b id="s-right">0</b></div>
+    <div>played<b id="s-total">0</b></div>
+    <div>pool<b id="s-pool">—</b></div>
+  </div>
+
+  <div class="deck">
+    <div class="art" id="art"><span>♪</span></div>
+    <div class="bar"><i id="fill"></i></div>
+    <div class="time" id="time">0:00 / 0:30</div>
+    <button class="play" id="play" type="button">Play the clip</button>
+  </div>
+
+  <div class="opts" id="opts"></div>
+  <p class="after" id="after"></p>
+  <button class="next" id="next" type="button" hidden>Next track</button>
+  <div class="state" id="state" hidden></div>
+
+  <p class="note">
+    Clips are the official thirty-second previews, fetched at play time from Deezer's own API and
+    played straight from Deezer's servers — nothing is hosted, cached or re-served here, and the
+    preview links are signed and expire, which is why a fresh one is fetched each round. Track,
+    artist and year are real. <span id="credit">Audio and artwork:
+    <a href="https://www.deezer.com" target="_blank" rel="noopener">Deezer</a>.</span>
+  </p>
+</div>
+
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<script src="data.js"></script>
+<script>
+(function(){
+  'use strict';
+  var TRACKS = window.TRACKS || [], ERAS = window.ERAS || [];
+  var era = ERAS[0], right = 0, total = 0, current = null, answered = false;
+  var audio = new Audio();
+  audio.preload = 'none';
+
+  function $(id){ return document.getElementById(id); }
+  function esc(t){ return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function pool(){
+    return TRACKS.filter(function(t){ return t[2] >= era.lo && t[2] <= era.hi; });
+  }
+
+  function setState(msg){
+    $('state').hidden = !msg;
+    $('state').textContent = msg || '';
+  }
+
+  function fmt(s){
+    s = Math.max(0, Math.floor(s || 0));
+    return Math.floor(s / 60) + ':' + (s % 60 < 10 ? '0' : '') + (s % 60);
+  }
+
+  audio.addEventListener('timeupdate', function(){
+    var d = audio.duration && isFinite(audio.duration) ? audio.duration : 30;
+    $('fill').style.width = Math.min(100, (audio.currentTime / d) * 100) + '%';
+    $('time').textContent = fmt(audio.currentTime) + ' / ' + fmt(d);
+  });
+  audio.addEventListener('ended', function(){ $('play').textContent = 'Play it again'; });
+
+  var busy = false;
+  function newRound(){
+    if (busy) return;
+    answered = false;
+    current = null;
+    $('opts').innerHTML = '';
+    $('after').innerHTML = '';
+    $('next').hidden = true;
+    $('art').innerHTML = '<span>♪</span>';
+    $('fill').style.width = '0%';
+    $('time').textContent = '0:00 / 0:30';
+    audio.pause();
+    audio.removeAttribute('src');
+
+    var p = pool();
+    $('s-pool').textContent = p.length;
+    if (p.length < 4){
+      setState('That era has fewer than four tracks in it, so there is nothing to choose between.');
+      $('play').disabled = true;
+      return;
+    }
+    setState('');
+    $('play').disabled = false;
+    $('play').textContent = 'Play the clip';
+
+    var pick = p[(Math.random() * p.length) | 0];
+    var opts = [pick];
+    var guard = 0;
+    while (opts.length < 4 && guard++ < 300){
+      var c = p[(Math.random() * p.length) | 0];
+      if (!opts.some(function(o){ return o[0] === c[0] && o[1] === c[1]; })) opts.push(c);
+    }
+    for (var i = opts.length - 1; i > 0; i--){
+      var j = (Math.random() * (i + 1)) | 0;
+      var t = opts[i]; opts[i] = opts[j]; opts[j] = t;
+    }
+    current = { answer: pick, options: opts, loaded: false };
+
+    $('opts').innerHTML = opts.map(function(o, k){
+      return '<button type="button" data-k="' + k + '">' + esc(o[0]) +
+             '<small>' + esc(o[1]) + ' &middot; ' + o[2] + '</small></button>';
+    }).join('');
+  }
+
+  function loadAndPlay(){
+    if (!current || busy) return;
+    if (current.loaded){
+      audio.currentTime = 0;
+      audio.play().catch(function(){ setState('The browser would not start playback.'); });
+      return;
+    }
+    busy = true;
+    $('play').disabled = true;
+    $('play').textContent = 'Fetching…';
+    var a = current.answer;
+    fetch('/api/preview?title=' + encodeURIComponent(a[0]) + '&artist=' + encodeURIComponent(a[1]))
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        busy = false;
+        $('play').disabled = false;
+        if (!j || !j.ok || !j.preview){
+          $('play').textContent = 'Try another track';
+          setState(j && j.error === 'no_preview'
+            ? 'Deezer has no preview for that one just now. Skipping to another.'
+            : 'The preview service did not answer. It may be a moment before it does.');
+          return;
+        }
+        setState('');
+        current.loaded = true;
+        current.meta = j;
+        audio.src = j.preview;
+        $('play').textContent = 'Playing…';
+        audio.play().then(function(){
+          $('play').textContent = 'Play it again';
+        }).catch(function(){
+          $('play').textContent = 'Press to play';
+          setState('The browser blocked autoplay. Press play once more.');
+        });
+      })
+      .catch(function(){
+        busy = false;
+        $('play').disabled = false;
+        $('play').textContent = 'Play the clip';
+        setState('No connection to the preview service.');
+      });
+  }
+
+  $('play').addEventListener('click', loadAndPlay);
+
+  $('opts').addEventListener('click', function(e){
+    var b = e.target.closest ? e.target.closest('button') : null;
+    if (!b || answered || !current) return;
+    answered = true;
+    total++;
+    var k = parseInt(b.dataset.k, 10);
+    var chosen = current.options[k];
+    var a = current.answer;
+    var ok = chosen[0] === a[0] && chosen[1] === a[1];
+    if (ok) right++;
+    [].forEach.call($('opts').children, function(x, i){
+      x.disabled = true;
+      var o = current.options[i];
+      if (o[0] === a[0] && o[1] === a[1]) x.classList.add('right');
+      else if (i === k) x.classList.add('wrong');
+    });
+    $('s-right').textContent = right;
+    $('s-total').textContent = total;
+    var meta = current.meta;
+    if (meta && meta.cover){
+      $('art').innerHTML = '<img alt="" src="' + meta.cover + '">';
+    }
+    $('after').innerHTML = (ok ? 'Correct. ' : 'It was ') + '<strong>' + esc(a[0]) + '</strong> — ' +
+      esc(a[1]) + ', ' + a[2] + '.' +
+      (meta && meta.link ? ' <a href="' + meta.link + '" target="_blank" rel="noopener">On Deezer</a>' : '');
+    $('next').hidden = false;
+  });
+
+  $('next').addEventListener('click', newRound);
+
+  $('eras').innerHTML = ERAS.map(function(e, i){
+    return '<button type="button" data-i="' + i + '" aria-pressed="' + (i === 0) + '">' +
+           e.n + '</button>';
+  }).join('');
+  $('eras').addEventListener('click', function(e){
+    var b = e.target.closest ? e.target.closest('button') : null;
+    if (!b) return;
+    era = ERAS[parseInt(b.dataset.i, 10)];
+    [].forEach.call($('eras').children, function(x){
+      x.setAttribute('aria-pressed', String(x === b));
+    });
+    newRound();
+  });
+
+  newRound();
+
+  window.__pop = {
+    tracks: TRACKS.length,
+    era: function(){ return era.id; },
+    setEra: function(id){
+      var i = ERAS.map(function(e){ return e.id; }).indexOf(id);
+      $('eras').children[i].click();
+      return pool().length;
+    },
+    poolTitles: function(){ return pool().map(function(t){ return t[0]; }); },
+    options: function(){ return current ? current.options.map(function(o){ return o[0]; }) : []; },
+    answer: function(){ return current ? current.answer[0] : null; },
+    play: loadAndPlay,
+    audioState: function(){
+      return { src: audio.currentSrc || audio.src || '', t: audio.currentTime,
+               dur: audio.duration, paused: audio.paused, ready: audio.readyState };
+    },
+    answerCorrect: function(){
+      var i = current.options.findIndex(function(o){ return o[0] === current.answer[0] && o[1] === current.answer[1]; });
+      $('opts').children[i].click();
+      return { right: right, total: total };
+    },
+    next: newRound,
+    state: function(){ return $('state').hidden ? '' : $('state').textContent; }
+  };
+})();
+</script>
+</body>
+</html>

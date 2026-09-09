@@ -875,6 +875,74 @@ async function handleApi(req, res, url) {
     ],
   };
 
+  /* ------------------------------------------------------------------ *
+   *  Deezer preview relay.
+   *
+   *  Verified against the live API on 9 Sep 2026 rather than assumed:
+   *
+   *    - The public search endpoint needs no key and no OAuth.
+   *    - It answers with a `preview` field: a 30-second MP3 on Deezer's
+   *      own CDN. Measured: 479,827 bytes at 128 kbps, so 30.0 seconds.
+   *    - api.deezer.com sends no Access-Control-Allow-Origin, so a
+   *      browser cannot call it directly — confirmed by trying it in a
+   *      real browser, not by reading the headers. Hence this relay.
+   *    - The preview URL itself *does* send Access-Control-Allow-Origin: *
+   *      so the page plays it straight from Deezer.
+   *
+   *  We therefore pass metadata through and never touch the audio: no
+   *  proxying it, no caching it, no storing it. The URL is signed and
+   *  expires, which is another reason to hand back a fresh one each time
+   *  rather than keep any of them.
+   *
+   *  Spotify was considered and rejected: its preview_url is now marked
+   *  deprecated and nullable, needs OAuth, and its terms say preview
+   *  clips may not be offered as a standalone product.
+   * ------------------------------------------------------------------ */
+  if (path === '/api/preview') {
+    const title = clean(url.searchParams.get('title') || '', 90);
+    const artist = clean(url.searchParams.get('artist') || '', 90);
+    if (!title || !artist) {
+      return sendJson(res, 400, { error: 'bad_request', message: 'Give both a title and an artist.' });
+    }
+    // Deezer's field-scoped syntax (track:"..." artist:"...") returns nothing
+    // for most of these; the plain query does. So search plainly and pick the
+    // best row afterwards.
+    const q = title + ' ' + artist;
+    const target = 'https://api.deezer.com/search?limit=12&q=' + encodeURIComponent(q);
+
+    // fetchUpstream answers { status, body } — there is no .ok on it
+    const up = await fetchUpstream(target, { 'User-Agent': 'little-contraptions/1.0' });
+    if (up.status !== 200) {
+      return sendJson(res, 502, { error: 'upstream_failed', message: 'Deezer did not answer.' });
+    }
+    let body;
+    try { body = JSON.parse(up.body); } catch (e) {
+      return sendJson(res, 502, { error: 'upstream_bad', message: 'Deezer sent something unreadable.' });
+    }
+    const rows = Array.isArray(body && body.data) ? body.data : [];
+    const norm = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+    const wantA = norm(artist);
+    const withPreview = rows.filter((t) => t && typeof t.preview === 'string' && t.preview);
+    // prefer a row whose artist actually matches; fall back to the first
+    // playable result rather than refusing outright
+    const hit = withPreview.filter((t) => {
+      const a = norm(t.artist && t.artist.name);
+      return a && (a === wantA || a.indexOf(wantA) >= 0 || wantA.indexOf(a) >= 0);
+    })[0] || withPreview[0];
+    if (!hit) {
+      return sendJson(res, 404, { error: 'no_preview', message: 'No preview for that one.' });
+    }
+    return sendJson(res, 200, {
+      ok: true,
+      title: hit.title,
+      artist: (hit.artist && hit.artist.name) || artist,
+      preview: hit.preview,
+      cover: (hit.album && (hit.album.cover_medium || hit.album.cover)) || '',
+      link: hit.link || '',
+      source: 'Deezer',
+    });
+  }
+
   if (path === '/api/photos') {
     const mode = (url.searchParams.get('mode') || '').toLowerCase();
     const terms = PHOTO_MODES[mode];
