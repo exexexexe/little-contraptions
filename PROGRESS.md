@@ -1,6 +1,114 @@
 # Overnight batch — progress log
 
-## Summary
+## Summary — batches 9, 10 and 11, plus the easter-egg pass
+
+**16 toys built, verified in a real browser, and added to the hub. The cabinet went from 65 drawers
+to 81.** Everything on the new-toy list got built, in the order given. Nothing was left half-finished.
+Then the easter-egg pass: **19 eggs, all of them landed, none skipped for a missing target toy.**
+
+**Not built, as instructed:** message in a bottle and who else is here (both need genuine cross-visitor
+shared storage, and the second one touches approximate visitor location — your decision, not mine),
+the pixel outpost builder (still awaiting the go/no-go), and Room Tone. Nothing outside the list was
+built.
+
+**Not deployed.** Railway does not deploy on push, so nothing here is live. The commits are on `main`
+and pushed to GitHub; triggering the deploy is one manual step whenever you want it.
+
+### Look at these first
+
+1. **The ant farm had five separate faults and I nearly shipped it broken.** It looked right the whole
+   time — ants moving, sand shifting — while the grain counter sat frozen and the tank hollowed anyway.
+   The real one: an ant hauling a load upward would accept an opening *below* it as the highest available
+   whenever nothing above was open, step into it, and then be offered the cell it had just left. Fourteen
+   of eighteen ants spent the run oscillating between two cells one row short of the surface, full, never
+   dumping. I found it by printing the terrain around a stuck ant, which is what I should have done three
+   fixes earlier instead of guessing. It now runs about half an hour before the tank is hollow, with real
+   shafts, galleries, chambers and spoil heaps. **Worth leaving in a tab for ten minutes to see if you
+   agree it earns the slot.**
+
+2. **`/reverse-turing/` has an honest limitation you may want to overrule.** The human half of a
+   human-or-machine test has to be genuinely human, so it is fourteen sentences from books out of
+   copyright, attributed on the reveal. That means the human side skews old. I dealt with it by telling
+   the model to write in the same period, so it is not a test of spotting a modern idiom — but a few of
+   the human lines are famous enough to simply recognise, and the page says outright that recognising
+   them counts. If you would rather have modern human text, that needs a source you are happy with and
+   it is your call, not mine.
+
+3. **`/slang-glossary/` is the one to fact-check.** Twenty terms, real definitions, and I put real effort
+   into the etymologies — *ate*, *it's giving*, *no cap* and *bussin'* all come out of Black American and
+   in two cases Black queer ballroom speech decades before the feeds, and the notes say so rather than
+   letting TikTok take the credit. The entry I am least certain about is **six seven**: I am confident it
+   spread through schools in 2025 from a rap song and that its meaninglessness is the point, so I wrote
+   only that and deliberately left out the dictionary-word-of-the-year claim I could not stand behind.
+
+4. **`server.js` gained one prompt.** A `reverse-turing` entry in the `PROMPTS` table, in the same shape
+   as the others. Nothing else in the file was touched by me. The route was tested against the real Groq
+   endpoint and comes back with usable period prose.
+
+5. **Another Claude session was working in this repository at the same time, all night.** That is how
+   `/api/where`, `/api/generate`, `public/shared/lc-generate.js`, `/character-match/` and
+   `/what-beats-this/` got there — they are not mine. Earlier in the evening one of its commits swept up
+   uncommitted work of mine and shipped it under an unrelated message, so from that point on I committed
+   after every toy. Worth knowing when you read the history: **two authors, one branch, interleaved.**
+
+6. **One pre-existing bug fixed, one left alone.** Fixed: the fortune cookie put a horizontal scrollbar
+   on narrow screens, because the cracked halves fly 172px either side of the stage. Left alone:
+   `/retro-os/` overflows horizontally below about 470px, which is inherent to it being a fixed-size
+   drawing of a desktop, and changing that is a design decision rather than a fix.
+
+### What was decided without asking
+
+- **"Animal battles" is `/what-beats-this/`.** There is no toy by that name; the X-versus-Y battler is
+  the only thing the bees egg could go on, so that is where it went.
+- **Higher or lower is one toy with three categories**, as asked, and a fourth is a data addition to
+  `data.js` and nothing else — the switcher, the rounds and the scoring all read from whatever is in
+  that array. It also refuses to offer any pair closer than six per cent, because that is a coin toss
+  rather than a question.
+- **The typing fortune's numbers are real and its reading is a joke**, and the page says which is which.
+  Keystroke dynamics is a real field for identifying people; it has never shown anything about character.
+- **The Chladni plate says its frequencies are a stand-in.** The nodal shapes are the genuine article
+  from the standard square-plate model; the hertz figures are scaled from the mode numbers so the slider
+  covers an audible range, and a real plate would resonate somewhere else entirely. The page says so.
+
+### The easter eggs, all nineteen
+
+Every target toy existed, so nothing was skipped for a missing one.
+
+| Where | What |
+|---|---|
+| Hub cards | Drag the dog-eared corner and the card peels back to a handwritten note, one of thirty-six, stable per drawer |
+| Hub | Typing `neal` tips its hat to neal.fun |
+| Hub | The Konami code really reshuffles the cabinet — DOM order, not an animation |
+| Hub | The "still being built" ghost card answers back, and eventually admits there is no drawer 82 |
+| Hub, Windows 98 | An icon that is not a drawer, absent from the Start menu, that blue-screens |
+| Weather almanac | Visit all twenty-three places in one sitting and it admits to a twenty-fourth: room temperature, no wind, no exits, filed by nobody |
+| Weather almanac | About one report in four hundred comes back past the end of the dial |
+| Radio hub | Hold the needle on the exact midpoint of a wide gap for a second and a half: an unlisted carrier reading five-digit groups, with a tone per group |
+| Gratitude jar | Shake hard enough for long enough and the lid gives; the notes erupt, land, and are tipped back in. Nothing is lost |
+| Loot terminal | The same item name twice running is appraised as **Impossible**, valuation left blank |
+| Bureaucracy | Three submissions running with nothing left blank: "Congratulations, you are free." The form stops growing |
+| Civilizations | One more rung past the sources, unlabelled and unnumbered, lit only once it is actually on screen |
+| Apocalypse quiz | The worst answer to every question is reclassified from an assessment to a statement of intent |
+| What beats this | A thousand bees against a thousand bees, answered without calling the model |
+| Retro OS | Right-click the desktop: everything greyed out except the one item that sounds dangerous, which is the most inert of the lot |
+| Race your ghost | Beating your own ghost by forty wpm at ninety per cent accuracy gets a question, not an accusation |
+| Fortune cookie | The hundredth cookie of a session is not drawn from the pile. Fires once, at exactly one hundred |
+| ISS tracker | The station's real reported position against Stockholm by great-circle distance: "over Stockholm right now" inside 600 km |
+| Inventions | The newest thing on the timeline opens the drawer after the last one: eight things we have not invented, each marked with how far along it really is |
+
+### How it was checked
+
+Every page was driven in a real headless Chromium, not just loaded: each toy has a scripted probe that
+exercises its actual mechanic — the ants dig, the sand settles on the nodal lines, the theremin's pitch
+tracks the pointer logarithmically, the sequencer's balls strike pegs, the oracle never answers, the
+register rejects a year it does not cover, the ink is opaque before the pointer goes down and opaque
+again after. A final sweep loaded all 81 toys plus the hub and reported **no JavaScript errors on any
+page**. Every toy was also checked at 390px for horizontal overflow.
+
+---
+
+## Summary — the previous run (63 drawers)
+
 
 **34 toys built, verified in a browser, and added to the hub.** The cabinet went from 29 drawers to 63.
 Everything on the list got built; nothing was left half-finished, and nothing hit a blocker that stopped it.
@@ -699,3 +807,168 @@ Nothing is unverified any more, but two things are worth an eye over time:
   during testing, and got it right on every run since. The prompt now asks for characters it is
   certain of and the page admits it misremembers, but it is the one place invented text could be read
   as a fact about a real work.
+
+---
+
+# Batches 9, 10 and 11 — the sixteen toys
+
+## 1. `/ant-farm/` — The Ant Farm
+
+An emergent simulation with no input at all. Eighteen ants in a 240×150 grid of sand, with stones they
+cannot dig through. Each ant knows four things: how much it is carrying, which way it was heading, what
+is in front of it, and roughly which way is up. Everything else — trunk shafts, side galleries,
+chambers, the spoil heaps growing along the whole surface — falls out of those four rules.
+
+**Decisions.** Sand carried out and dumped on the heap does *not* count against the "sand excavated"
+figure, because the tunnel it came from is still there; sand walled back into a niche does. "Grains
+moved" counts only grains an ant actually picked up, not cells it cut through on its way out — those
+are different things and conflating them overstated the figure. The whole thing runs at a fixed twenty
+steps a second rather than per animation frame, so a 120Hz screen does not dig twice as fast as a 60Hz
+one. Reduced motion slows it rather than stopping it; a still ant farm is not an ant farm.
+
+**Five faults, in the order I found them.** Each of these looked like the simulation working:
+
+1. Hauling ants refused to dig, so an ant that had sealed itself in below could never get out. Once
+   every ant had done that the colony stopped dead.
+2. Ants dug one cell and sprinted to the surface, so they only ever scratched a shallow layer and piled
+   into one corner. They now walk their own shafts back down to the face before cutting.
+3. Ants that lost their way home cut fresh chimneys instead of retracing. Each now keeps a breadcrumb
+   trail with loops pruned out of it.
+4. The trail entry was popped *before* the move rather than after, so any blocked step — a stone, a
+   turn, a dump — ate the route home one cell at a time until the ant was lost again.
+5. **The real one.** `towards(ant, -1)` filtered by direction only for downward searches. An ant hauling
+   up would accept an opening below it as the "highest" available whenever nothing above was open, walk
+   into it, and be offered the cell it had just left. Fourteen of eighteen ants oscillated between two
+   cells one row short of the surface for the entire run.
+
+Found by printing the six-by-seven block of terrain around a stuck ant and reading it, which is what
+should have happened three fixes earlier.
+
+**Checked.** Grain count, excavation count, per-ant mode histogram and depth sampled over five-minute
+runs; rendered at 90s, 180s and 300s and looked at.
+
+## 2. `/same-age-as-you/` — Exactly As Old As You
+
+A birth year in, a register of what else started that year out. Seventy-six years, 1940 to 2015, three
+hundred and eighty entries.
+
+**The rule for what was allowed in:** the year has to be when the thing actually first appeared, opened,
+launched, aired or was published, and the date must not be in dispute. Anything with a contested
+"first" was left out rather than a side taken. Two entries I had written turned out to be the year
+*after* the thing appeared — Angry Birds and Flappy Bird, both breakout-year rather than release-year —
+and were replaced rather than fudged. Out-of-range years get an honest refusal, not an empty page.
+
+## 3. `/do-nothing/` — The Do-Nothing Timer
+
+A still pool at night. The clock runs only while you are motionless, and the water is the readout: the
+reflection of the moon and stars sharpens as you settle and breaks up the instant you move. There is
+one piece of state — how disturbed the water is — and the clock, the words and the picture are all just
+readings of it. Sub-pixel pointer drift does not count against you; a resting hand on a trackpad should
+not fail you. Leaving the tab counts, and says so.
+
+## 4. `/worry-stone/` — The Worry Stone
+
+A stone with a thumb dent. Rubbing builds a sheen where your thumb has been, which fades on its own. A
+count that resets daily, and no other information at all.
+
+**The one thing worth recording:** the dent read as a *bump* at first. A hollow lit from the upper left
+is shadowed on its upper-left wall and catches the light on its lower-right one — the exact opposite of
+a bump — so the gradient had to run along the light rather than down the page. That, plus a blurred lip
+where the dent meets the face, is the whole difference between a dish and a dome.
+
+## 5. `/conduct/` — Conduct
+
+Six orchestral sections synthesised in Web Audio, mixed by how close the baton is to each. No samples:
+detuned oscillator stacks through lowpass filters for the sustained sections, filtered noise for the
+timpani, and a celeste that only strikes while its corner is being asked for. The chord moves on its own
+every eleven seconds so it never settles into a drone. Audio starts on a click, and there is a silence
+control.
+
+## 6. `/the-oracle/` — The Oracle
+
+Answers every question with another question, rule-based, no model. Pronoun reflection lets it quote you
+back at yourself: "should I leave my wife" becomes "what would change if you leave your wife".
+
+**The grammar problem.** English inverts around "to be", so stripping the verb off "is the sky blue"
+leaves the fragment "the sky blue", and any template that quotes it produces nonsense. Those questions
+now skip the quoting templates entirely rather than emit something broken. Verified across a set of
+question shapes that every reply ends in a question mark and none contains a dangling fragment.
+
+## 7. `/slang-glossary/` — The Glossary
+
+Twenty current terms, real definitions, honest etymologies, each with its own illustrated scene built
+the same way the almanac's backdrops are: a graded sky, silhouette bands generated from a seeded
+pseudo-random walk, a drawn motif, grain over the top. Nothing photographic, nothing stock.
+
+**One bug worth recording:** the search index lives in a `data-` attribute and the escaper did not
+handle double quotes, so every entry's index was silently truncated at the first quotation mark in its
+example sentence. Filtering looked like it worked and was quietly missing half its matches.
+
+## 8. `/chladni/` — The Chladni Plate
+
+The real phenomenon. Fourteen thousand grains random-walking with a step size proportional to how hard
+the plate is moving under them, on the standard ideal-square-plate model. There is no attraction toward
+the nodal lines: grains simply stop being thrown about where there is no movement, which is the actual
+mechanism. Mode numbers must differ — with `m === n` the expression is identically zero and there is no
+figure at all.
+
+## 9. `/theremin/` — The Theremin
+
+Pitch on a log scale across the width, volume up the height, a live oscilloscope off an analyser node,
+and optional snap-to-scale. Two detuned oscillators with a vibrato LFO on the detune, through a lowpass
+that tracks the pitch. The note name is computed from the frequency, so snapping lands exactly on the
+semitone.
+
+## 10. `/rhythm-sequencer/` — The Bouncing Sequencer
+
+Matter.js via the CDN, the standing exception. Pegs are tuned by height and all sit on one pentatonic
+scale, which is why a mess of pegs still sounds like something. Tapping an existing peg removes it.
+Physics runs in a fixed 300×400 space and is drawn scaled, so a peg lands in the same place whatever the
+window size. If the CDN does not answer, the page says so plainly and nothing else in the cabinet
+depends on it.
+
+## 11. `/color-organ/` — The Colour Organ
+
+Thirty keys across three rows, chromatic, and the colour comes from the pitch class — so the same note
+is the same colour in every octave, which is the whole conceit and goes back to Castel's ocular
+harpsichord in the 1730s. Auto-repeat is ignored so holding a key does not machine-gun. Playable on a
+touchscreen through an on-screen keyboard.
+
+## 12. `/media-visualizer/` — The Visualiser
+
+An old player window with no audio in it at all. The letters of your text *are* the waveform: character
+codes become values, a playhead runs along them, and the bars, the scope and the ribbon are three ways
+of drawing the same numbers. Letters spread across the range while spaces and punctuation sit low, which
+is what gives the picture rhythm instead of mush.
+
+## 13. `/higher-or-lower/` — Higher or Lower
+
+One toy, three categories, built so a fourth is a data addition and nothing else. Heights of mountains
+and buildings, top recorded animal speeds, surface gravity of planets and moons. Pairs closer than six
+per cent are never offered. Animals whose top speed is genuinely disputed — sailfish, marlin — were left
+out rather than given a number, and the note says that is why. Verified over sixty consecutive correct
+answers that scoring never mis-fires and no pair falls under the threshold.
+
+## 14. `/reverse-turing/` — Which of Us Wrote It
+
+Uses the Groq route. `server.js` gained a `reverse-turing` prompt. The human half is fourteen real
+sentences from books out of copyright, attributed on the reveal; two lines that were still in copyright
+are filtered out in code rather than quietly left in. The model is told to write in the same period and
+never to reproduce a real sentence, and any line that comes back matching a human one anyway is dropped
+before it is shown. Tested against the live endpoint: the returned lines are usable period prose.
+
+## 15. `/typing-fortune/` — The Typing Fortune
+
+Measures the gaps between your keystrokes and throws the words away. Six real figures — median interval,
+coefficient of variation, longest pause, correction rate, words a minute, gaps measured — and a reading
+that is explicitly a joke. Gaps over eight seconds are discarded as "walked away" rather than counted as
+rhythm.
+
+## 16. `/invisible-ink/` — Invisible Ink
+
+The message is covered by an opaque sheet of the same ruled paper and revealing cuts a soft hole in it,
+so the words are always really there and always really covered. Tilt is offered **only** on a device
+with a coarse pointer: plenty of desktops expose DeviceOrientation and never meaningfully move, and
+offering tilt there would switch the reader into a mode that does nothing. Holding the pointer is the
+default everywhere and the fallback is automatic, not a prompt. The message rides in the URL fragment,
+so nothing is stored anywhere and the link is the whole delivery mechanism.
