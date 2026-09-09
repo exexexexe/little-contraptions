@@ -498,6 +498,57 @@
   #transition-overlay.active .label { opacity: 1; }
 
   /* ============ SOVIET TIMELINE PAGE ============ */
+  /* ---- the tab that is not on the timeline ---- */
+  #future-tab {
+    position: fixed; inset: 0; z-index: 9997;
+    background: #07070C; color: #D8D8E4;
+    overflow-y: auto; opacity: 0; visibility: hidden;
+    transition: opacity .5s ease, visibility .5s;
+    font-family: ui-serif, Georgia, serif;
+  }
+  #future-tab.active { opacity: 1; visibility: visible }
+  #future-tab .ft-header {
+    position: sticky; top: 0; background: rgba(7,7,12,.94);
+    border-bottom: 1px solid rgba(216,216,228,.16);
+    padding: 14px 20px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    backdrop-filter: blur(6px);
+  }
+  #future-tab .ft-back {
+    background: transparent; border: 1px solid rgba(216,216,228,.4); color: inherit;
+    font-family: ui-monospace, Menlo, monospace; font-size: 11px; letter-spacing: .12em;
+    text-transform: uppercase; padding: 9px 14px; cursor: pointer;
+  }
+  #future-tab .ft-back:hover { background: rgba(216,216,228,.12) }
+  #future-tab .ft-title {
+    font-family: ui-monospace, Menlo, monospace; font-size: 11px;
+    letter-spacing: .24em; text-transform: uppercase; opacity: .72;
+  }
+  #future-tab .ft-body { max-width: 760px; margin: 0 auto; padding: 44px 22px 90px }
+  #future-tab h2 { font-size: clamp(26px,5vw,44px); margin: 0 0 18px; line-height: 1.15 }
+  #future-tab .ft-warn {
+    border-left: 3px solid #C8903C; background: rgba(200,144,60,.09);
+    padding: 15px 18px; margin: 0 0 38px; font-size: 15px; line-height: 1.7; color: #E0CFA8;
+  }
+  #future-tab .ft-item { padding: 24px 0; border-bottom: 1px solid rgba(216,216,228,.12) }
+  #future-tab .ft-item .yr {
+    font-family: ui-monospace, Menlo, monospace; font-size: 11px;
+    letter-spacing: .18em; opacity: .55; text-transform: uppercase;
+  }
+  #future-tab .ft-item h3 { margin: 8px 0 8px; font-size: 22px; line-height: 1.25 }
+  #future-tab .ft-item p { margin: 0; font-size: 15.5px; line-height: 1.7; opacity: .82 }
+  #future-tab .ft-item .st {
+    display: inline-block; margin-top: 12px;
+    font-family: ui-monospace, Menlo, monospace; font-size: 10px;
+    letter-spacing: .14em; text-transform: uppercase;
+    border: 1px solid currentColor; padding: 3px 8px;
+  }
+  #future-tab .st.a { color: #7FC8A0 } #future-tab .st.b { color: #C8B060 }
+  #future-tab .st.c { color: #C88060 }
+  #future-tab .ft-end {
+    margin-top: 46px; font-family: ui-monospace, Menlo, monospace;
+    font-size: 11px; line-height: 2; opacity: .5;
+  }
+
   #soviet-timeline {
     position: fixed;
     inset: 0;
@@ -894,6 +945,28 @@ h1{ font-family:var(--display) }
 <div id="transition-overlay">
   <div class="star">★</div>
   <div class="label">ENTERING ARCHIVE</div>
+</div>
+
+<div id="future-tab" aria-hidden="true">
+  <div class="ft-header">
+    <button class="ft-back" onclick="closeFutureTab()">&larr; Back to inventions</button>
+    <div class="ft-title">Not yet &middot; the drawer after the last one</div>
+  </div>
+  <div class="ft-body">
+    <h2>Things we have not invented</h2>
+    <p class="ft-warn">
+      Everything on the timeline behind you happened. Nothing on this page has. These are not
+      predictions and they are not a roadmap &mdash; they are the problems that are actually open,
+      described as what is missing rather than as what is coming. Each one is marked with how far
+      along it really is. Where a thing has been demonstrated but not made to work at scale, it says
+      so. Where nobody knows whether it is possible at all, it says that instead.
+    </p>
+    <div id="ft-list"></div>
+    <p class="ft-end">
+      The timeline stops at the present because that is where the record stops.<br>
+      This page stops here because that is where the knowing stops.
+    </p>
+  </div>
 </div>
 
 <div id="soviet-timeline">
@@ -1562,5 +1635,114 @@ document.addEventListener('keydown', (e) => {
   }
 });
 </script>
+<script>
+/* ==================================================================== *
+ *  The drawer after the last one.
+ *
+ *  Opened from the newest thing on the timeline, because the end of the
+ *  list is the only honest door to it. Nothing here is presented as
+ *  fact or as forecast: every entry says how far along it actually is.
+ * ==================================================================== */
+const FUTURE = [
+  { n: 'A room-temperature superconductor',
+    d: 'Superconductors already exist and already carry current with no resistance at all — they ' +
+       'just need to be kept extremely cold, which is most of what makes them impractical. One that ' +
+       'worked at ordinary temperature and pressure would change how electricity is moved and stored. ' +
+       'Several claims have been made and none has survived replication.',
+    s: 'b', st: 'demonstrated only when very cold' },
+  { n: 'Fusion that gives back more than it takes',
+    d: 'Fusion reactions have been achieved many times. In 2022 the National Ignition Facility got ' +
+       'more energy out of the reaction than the lasers put into the fuel — which is not the same as ' +
+       'more than the building drew from the grid. The gap between those two sentences is the whole ' +
+       'remaining problem.',
+    s: 'b', st: 'reaction yes, power station no' },
+  { n: 'A general anaesthetic we understand',
+    d: 'Anaesthesia has been in routine use since the 1840s and works reliably millions of times a ' +
+       'year. What it does to consciousness is still not settled. We can switch awareness off and ' +
+       'back on without being able to say what we are switching.',
+    s: 'c', st: 'works; unexplained' },
+  { n: 'An antibiotic that resistance cannot outrun',
+    d: 'This is the one on the timeline going backwards. Penicillin is on the list behind you; the ' +
+       'organisms it beat have been beating it back since the 1940s, and the pipeline of genuinely ' +
+       'new classes has been close to empty for decades.',
+    s: 'c', st: 'losing ground' },
+  { n: 'Storage that lasts as long as the things it holds',
+    d: 'Clay tablets from 2000 BCE are still readable. A hard drive is not expected to last thirty ' +
+       'years, and the format it is written in rarely lasts twenty. We have never been better at ' +
+       'recording and never worse at keeping.',
+    s: 'b', st: 'a materials problem and an institutional one' },
+  { n: 'A way to fix carbon at the scale we release it',
+    d: 'Plants do this. Machines that do it exist and run today. The difficulty is arithmetic: ' +
+       'current direct-air capture removes a rounding error against annual emissions, and scaling it ' +
+       'costs more energy than anyone has spare.',
+    s: 'b', st: 'exists; nowhere near the required scale' },
+  { n: 'Knowing whether anyone else is out there',
+    d: 'Not a technology. Thousands of planets outside our solar system have been confirmed since ' +
+       '1992, several of them in the range where liquid water is possible. Nobody has found ' +
+       'anything living on one, and nobody has established that the question is answerable.',
+    s: 'c', st: 'unknown, possibly unanswerable' },
+  { n: 'A cure for the thing that is going to get you',
+    d: 'Left deliberately vague, because the honest version of this entry is that it is different ' +
+       'for everybody reading it, and for most of human history the answer to all of them was the ' +
+       'same, and that answer was no.',
+    s: 'a', st: 'in progress, unevenly' }
+];
+
+function renderFuture(){
+  const list = document.getElementById('ft-list');
+  if (!list || list.dataset.done) return;
+  list.dataset.done = '1';
+  list.innerHTML = FUTURE.map(function(f){
+    return '<div class="ft-item">' +
+      '<div class="yr">not yet</div><h3>' + f.n + '</h3><p>' + f.d + '</p>' +
+      '<span class="st ' + f.s + '">' + f.st + '</span></div>';
+  }).join('');
+}
+
+function openFutureTab(){
+  renderFuture();
+  const el = document.getElementById('future-tab');
+  el.classList.add('active');
+  el.removeAttribute('aria-hidden');
+  document.body.style.overflow = 'hidden';
+}
+function closeFutureTab(){
+  const el = document.getElementById('future-tab');
+  el.classList.remove('active');
+  el.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+}
+
+/* The trigger is the newest thing on the timeline: the end of the record is
+   the only door to the part that is not record. */
+function attachFutureHandler(){
+  const items = document.querySelectorAll('.invention');
+  if (!items.length) return;
+  const last = items[items.length - 1];
+  const vis = last.querySelector('.invention-visual') || last;
+  if (vis.dataset.futureWired) return;
+  vis.dataset.futureWired = 'true';
+  vis.style.cursor = 'pointer';
+  vis.title = 'The list stops here. Something else does not.';
+  vis.addEventListener('click', openFutureTab);
+}
+attachFutureHandler();
+setTimeout(attachFutureHandler, 500);
+setTimeout(attachFutureHandler, 2000);
+
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape' && document.getElementById('future-tab').classList.contains('active')){
+    closeFutureTab();
+  }
+});
+
+window.__future = {
+  open: openFutureTab, close: closeFutureTab,
+  isOpen: () => document.getElementById('future-tab').classList.contains('active'),
+  items: () => document.querySelectorAll('#ft-list .ft-item').length,
+  wired: () => !!document.querySelector('.invention:last-of-type .invention-visual[data-future-wired], .invention:last-of-type[data-future-wired]')
+};
+</script>
+
 </body>
 </html>
