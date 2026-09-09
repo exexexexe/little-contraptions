@@ -400,12 +400,21 @@ footer{
 }
 
 /* ---- desktop ornaments ---- *
- * Decoration, not furniture. The rail is aria-hidden and takes no pointer
- * events, so it never reaches a screen reader, never joins the icon list,
- * and can never eat a click meant for the desktop. It is a flex sibling of
- * the icon grid rather than something floated on top, so it cannot land on
- * an icon at any width. Bevels are drawn here rather than borrowed from
- * 98.css, so the widgets still look like widgets if the CDN is unreachable.
+ * Decoration you can pick up. The widgets start in a tidy rail down the
+ * right — a flex sibling of the icon grid rather than something floated
+ * over it, so in that state they cannot land on an icon at any width.
+ * Drag one by its title bar, or pull its corner grip, and the whole rail
+ * goes into "free" mode: the container becomes a fixed overlay and every
+ * widget is placed by hand from then on, remembered across visits.
+ *
+ * They stay out of the accessibility tree. Dragging, resizing and the
+ * double-click that makes one bigger are pointer gestures on decoration,
+ * and there is not a single focusable control among them — so a keyboard
+ * or screen-reader visitor loses nothing they were being offered. That
+ * is the same bargain the cradle already struck.
+ *
+ * Bevels are drawn here rather than borrowed from 98.css, so the widgets
+ * still look like widgets if the CDN is unreachable.
  */
 #w98-widgets{
   position:sticky;top:0;
@@ -413,7 +422,30 @@ footer{
   display:flex;flex-direction:column;gap:13px;
   pointer-events:none;
 }
+/* Free mode. The rail leaves the flex row entirely, which lets the icon
+   grid spread into the space it used to hold, and becomes an overlay that
+   stops short of the taskbar so a widget can never be dropped underneath
+   it. The overlay itself stays transparent to the pointer; only the
+   widgets on it are solid. */
+#w98-widgets.free{
+  position:fixed;inset:0 0 30px 0;
+  flex:none;width:auto;
+  display:block;
+}
+#w98-widgets.free > *{ position:absolute;margin:0 }
+
+/* Every widget takes the pointer. In rail mode that is safe because the
+   rail is its own column and overlaps nothing; in free mode the visitor
+   put it where it is. */
+.w98-widget, .w98-note{ pointer-events:auto }
+
 .w98-widget{
+  /* One number drives the whole widget's scale. The pictures are canvases
+     at their drawn size blown up by CSS, so they sharpen into bigger
+     pixels rather than blurring; the text has to be told separately, which
+     is what this is for. */
+  --wg-s:1;
+  position:relative;
   background:#C0C0C0;
   padding:3px;
   box-shadow:
@@ -423,10 +455,34 @@ footer{
 .w98-widget .bar{
   display:flex;align-items:center;justify-content:space-between;gap:6px;
   background:linear-gradient(90deg,#000080,#1084D0);
-  color:#FFF;font-weight:700;font-size:11px;
-  padding:2px 4px;margin-bottom:3px;
+  color:#FFF;font-weight:700;font-size:calc(11px * var(--wg-s));
+  padding:calc(2px * var(--wg-s)) calc(4px * var(--wg-s));
+  margin-bottom:3px;
+  cursor:move;
+  /* A drag must not scroll the desktop under it, or select the caption. */
+  touch-action:none;
 }
-.w98-widget .body{ padding:4px 5px 5px }
+.w98-widget .body{
+  padding:calc(4px * var(--wg-s)) calc(5px * var(--wg-s)) calc(5px * var(--wg-s));
+  font-size:calc(11px * var(--wg-s));
+}
+
+/* the corner grip */
+/* Three stepped rules in the bottom-right corner, the way every resizable
+   window in this era ended. It sits over the widget's own bevel, so it
+   costs no layout and cannot push the body around at any size. */
+.wg-grip{
+  position:absolute;right:0;bottom:0;
+  width:14px;height:14px;
+  cursor:nwse-resize;
+  touch-action:none;
+  background:
+    linear-gradient(135deg,transparent 0 44%,#FFFFFF 44% 56%,transparent 56%) no-repeat 3px 3px / 8px 8px,
+    linear-gradient(135deg,transparent 0 44%,#808080 44% 56%,transparent 56%) no-repeat 4px 4px / 8px 8px,
+    linear-gradient(135deg,transparent 0 44%,#FFFFFF 44% 56%,transparent 56%) no-repeat 6px 6px / 5px 5px,
+    linear-gradient(135deg,transparent 0 44%,#808080 44% 56%,transparent 56%) no-repeat 7px 7px / 5px 5px;
+}
+.w98-widget.dragging, .w98-widget.sizing{ cursor:grabbing }
 .w98-sunk{
   background:#000;padding:2px;
   box-shadow:
@@ -444,31 +500,31 @@ footer{
   background:repeating-linear-gradient(180deg,rgba(0,0,0,.24) 0 1px,transparent 1px 3px);
 }
 .cam-scan{
-  position:absolute;left:0;right:0;top:0;height:15px;
+  position:absolute;left:0;right:0;top:0;height:calc(15px * var(--wg-s));
   background:linear-gradient(180deg,rgba(255,255,255,0),rgba(255,255,255,.14),rgba(255,255,255,0));
   animation:w98scan 6s linear infinite;
 }
 @keyframes w98scan{ from{ transform:translateY(-15px) } to{ transform:translateY(125px) } }
 .cam-stamp{
   position:absolute;right:3px;bottom:2px;
-  font:9px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  font:calc(9px * var(--wg-s))/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
   color:#DCE8DC;text-shadow:1px 1px 0 #000;letter-spacing:.02em;
 }
-.cam-cap{ font-size:10px;color:#2E2E2E;margin-top:4px }
-.w98-widget .rec{ font-size:9px;letter-spacing:.05em;color:#FFC4C4;font-weight:400 }
+.cam-cap{ font-size:calc(10px * var(--wg-s));color:#2E2E2E;margin-top:4px }
+.w98-widget .rec{ font-size:calc(9px * var(--wg-s));letter-spacing:.05em;color:#FFC4C4;font-weight:400 }
 .w98-widget .rec b{ color:#FF5B5B;animation:w98blink 1.7s steps(1,end) infinite }
 @keyframes w98blink{ 0%,58%{ opacity:1 } 59%,100%{ opacity:0 } }
 
 /* the meter */
 .res-row{ display:flex;align-items:center;gap:5px;margin-bottom:4px }
-.res-row .k{ flex:0 0 40px;font-size:10px }
+.res-row .k{ flex:0 0 calc(40px * var(--wg-s));font-size:calc(10px * var(--wg-s)) }
 .res-row .w98-sunk{ flex:1 1 auto;background:#C0C0C0;padding:1px }
 .res-row i{
-  display:block;height:8px;
+  display:block;height:calc(8px * var(--wg-s));
   background:repeating-linear-gradient(90deg,#00A800 0 4px,#C0C0C0 4px 6px);
   transition:width 1.8s linear;
 }
-.res-note{ font-size:10px;color:#5A5A5A;margin-top:2px }
+.res-note{ font-size:calc(10px * var(--wg-s));color:#5A5A5A;margin-top:2px }
 
 /* the weather monitor */
 /* Both canvases carry their art at the size it was drawn — 84 logical
@@ -484,21 +540,21 @@ footer{
   margin-top:4px;
 }
 .wx-temp{
-  font-size:19px;line-height:1;font-weight:700;color:#0A0A0A;
+  font-size:calc(19px * var(--wg-s));line-height:1;font-weight:700;color:#0A0A0A;
   font-variant-numeric:tabular-nums;
 }
 .wx-side{ min-width:0;flex:1 1 0 }
 .wx-desc{
-  display:block;font-size:10px;line-height:1.15;color:#2E2E2E;
+  display:block;font-size:calc(10px * var(--wg-s));line-height:1.15;color:#2E2E2E;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
-.wx-wind{ display:block;font-size:9px;line-height:1.3;color:#5A5A5A }
+.wx-wind{ display:block;font-size:calc(9px * var(--wg-s));line-height:1.3;color:#5A5A5A }
 .wx-place{
-  font-size:10px;color:#404040;margin-top:3px;
+  font-size:calc(10px * var(--wg-s));color:#404040;margin-top:3px;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
 .wx-place b{ font-weight:700 }
-.w98-widget .bar .wx-clock{ font-size:9px;font-weight:400;opacity:.85;font-variant-numeric:tabular-nums }
+.w98-widget .bar .wx-clock{ font-size:calc(9px * var(--wg-s));font-weight:400;opacity:.85;font-variant-numeric:tabular-nums }
 
 /* the cradle */
 /* The one ornament that takes the pointer. It is a bare canvas with no
@@ -514,7 +570,7 @@ footer{
   touch-action:none;
 }
 .cradle-view.pulling{ cursor:grabbing }
-.cradle-cap{ font-size:9px;color:#5A5A5A;margin-top:3px;text-align:center }
+.cradle-cap{ font-size:calc(9px * var(--wg-s));color:#5A5A5A;margin-top:3px;text-align:center }
 
 /* the defragmenter */
 .dfg-map{
@@ -524,16 +580,19 @@ footer{
 }
 .dfg-status{
   display:flex;justify-content:space-between;gap:6px;
-  font-size:9px;color:#2E2E2E;margin-top:4px;
+  font-size:calc(9px * var(--wg-s));color:#2E2E2E;margin-top:4px;
 }
 .dfg-status b{ font-weight:400;color:#5A5A5A;overflow:hidden;text-overflow:ellipsis;white-space:nowrap }
 .dfg-status span{ flex:0 0 auto;font-variant-numeric:tabular-nums }
 
 /* the note */
 .w98-note{
+  --wg-s:1;
+  position:relative;
   background:#F1EC97;color:#3B3B2C;
-  padding:11px 10px 13px;
-  font-size:11px;line-height:1.5;
+  padding:calc(11px * var(--wg-s)) calc(10px * var(--wg-s)) calc(13px * var(--wg-s));
+  font-size:calc(11px * var(--wg-s));line-height:1.5;
+  cursor:move;touch-action:none;
   border:1px solid #D9D183;
   box-shadow:2px 2px 0 rgba(0,0,0,.22);
   transform:rotate(-1.5deg);
@@ -1542,7 +1601,7 @@ footer{
            the server so the front door never raises a permission prompt.
            Everything below the sky panel is filled in by script; the markup
            holds the shape it will have. -->
-      <div class="w98-widget wg-weather">
+      <div class="w98-widget wg-weather" data-wg="weather">
         <div class="bar"><span>Weather Monitor</span><span class="wx-clock" id="wx-clock"></span></div>
         <div class="body">
           <div class="w98-sunk">
@@ -1557,12 +1616,13 @@ footer{
           </div>
           <div class="wx-place" id="wx-place">locating&hellip;</div>
         </div>
+        <div class="wg-grip"></div>
       </div>
 
       <!-- Newton's cradle. Five pendulums integrated for real — gravity,
            elastic collisions between equal masses, a little air — and drawn
            at 84 pixels across so it comes out chunky. Drag a ball. -->
-      <div class="w98-widget wg-cradle">
+      <div class="w98-widget wg-cradle" data-wg="cradle">
         <div class="bar"><span>Desk Toy</span></div>
         <div class="body">
           <div class="w98-sunk">
@@ -1570,9 +1630,10 @@ footer{
           </div>
           <div class="cradle-cap">drag a ball</div>
         </div>
+        <div class="wg-grip"></div>
       </div>
 
-      <div class="w98-widget p1">
+      <div class="w98-widget p1" data-wg="camera">
         <div class="bar"><span>camera_01</span><span class="rec"><b>&#9679;</b> REC</span></div>
         <div class="body">
           <div class="w98-sunk">
@@ -1621,10 +1682,11 @@ footer{
           </div>
           <div class="cam-cap">no motion</div>
         </div>
+        <div class="wg-grip"></div>
       </div>
 
 
-      <div class="w98-widget wg-defrag">
+      <div class="w98-widget wg-defrag" data-wg="defrag">
         <div class="bar"><span>Defragmenting C:</span></div>
         <div class="body">
           <div class="w98-sunk">
@@ -1632,9 +1694,10 @@ footer{
           </div>
           <div class="dfg-status"><b id="dfg-act">Reading drive</b><span id="dfg-pct">0%</span></div>
         </div>
+        <div class="wg-grip"></div>
       </div>
 
-      <div class="w98-widget p2">
+      <div class="w98-widget p2" data-wg="meter">
         <div class="bar"><span>Resource Meter</span></div>
         <div class="body">
           <div class="res-row"><span class="k">System</span><div class="w98-sunk"><i style="width:64%"></i></div></div>
@@ -1642,9 +1705,10 @@ footer{
           <div class="res-row"><span class="k">GDI</span><div class="w98-sunk"><i style="width:71%"></i></div></div>
           <div class="res-note">nothing is running</div>
         </div>
+        <div class="wg-grip"></div>
       </div>
 
-      <div class="w98-note p3">back in five minutes</div>
+      <div class="w98-note p3" data-wg="note"><span class="note-text">back in five minutes</span><div class="wg-grip"></div></div>
 
     </div>
   </div>
@@ -2390,7 +2454,7 @@ footer{
   var stampEl = document.querySelector('.cam-stamp');
   var capEl = document.querySelector('.cam-cap');
   var bars = [].slice.call(document.querySelectorAll('.res-row i'));
-  var noteEl = document.querySelector('.w98-note');
+  var noteEl = document.querySelector('.w98-note .note-text');
   var wgTimer = null, wgCount = 0, scene = 0;
 
   if (noteEl) noteEl.textContent = NOTES[Math.floor(Math.random() * NOTES.length)];
@@ -2398,9 +2462,10 @@ footer{
   function pad2(n){ return n < 10 ? '0' + n : '' + n; }
 
   function widgetTick(){
-    // offsetParent is null exactly when the rail is display:none, which is
-    // every width and height where it has been dropped.
-    if (!wgWrap || wgWrap.offsetParent === null) return;
+    // Empty only when the rail is display:none, which is every width and
+    // height where it has been dropped. offsetParent would not do: it is
+    // null for a fixed element, which is what free mode makes the rail.
+    if (!wgWrap || !wgWrap.getClientRects().length) return;
     var d = new Date();
     if (stampEl){
       stampEl.textContent = pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ':' + pad2(d.getSeconds());
@@ -3147,9 +3212,9 @@ footer{
   }
 
   function onScreen(){
-    // offsetParent is null exactly when the rail is display:none, which is
-    // every width and height where it has been dropped.
-    return !!(wgWrap && wgWrap.offsetParent !== null);
+    // See widgetTick: fixed positioning has no offsetParent, so the probe
+    // has to be one that only display:none can fail.
+    return !!(wgWrap && wgWrap.getClientRects().length);
   }
 
   function frame(now){
@@ -3200,6 +3265,247 @@ footer{
     if (document.hidden) return;
     if (liveOn){ if (wxPlace) loadWeather(); wake(); }
   });
+
+  /* ---- picking the widgets up ------------------------------------- *
+   * They start in the tidy rail. Drag one by its title bar, or pull its
+   * corner grip, and the whole set goes into free mode at once: every
+   * widget is measured where it currently sits and pinned there, so
+   * nothing jumps at the moment of the first grab, and from then on each
+   * one is placed and sized by hand.
+   *
+   * The rail leaves the flex row when that happens, which lets the icon
+   * grid spread into the column it used to hold — the right answer, since
+   * the widgets are no longer in it.
+   *
+   * Positions are remembered per widget. Nothing here is focusable and
+   * nothing is announced: these are pointer gestures on decoration, which
+   * is the same bargain the cradle already struck.
+   * ------------------------------------------------------------------ */
+
+  var WG_KEY = 'lc-w98-widgets';
+  var WG_MIN = 132, WG_MAX = 520, WG_BASE = 190;
+  var WG_BIG = 320;                  // what a double-click on the bar gets
+  var TASKBAR = 30;
+
+  var wgItems = [].slice.call(wgWrap ? wgWrap.children : []);
+  var wgFree = false, wgTop = 10;
+
+  function wgName(el){ return el.getAttribute('data-wg') || ''; }
+
+  function wgLoad(){
+    try {
+      var raw = localStorage.getItem(WG_KEY);
+      if (!raw) return null;
+      var j = JSON.parse(raw);
+      return (j && j.free && j.items) ? j : null;
+    } catch (e) { return null; }
+  }
+  function wgSave(){
+    if (!wgFree) return;
+    var items = {};
+    for (var i = 0; i < wgItems.length; i++){
+      var el = wgItems[i], n = wgName(el);
+      if (!n) continue;
+      items[n] = { x: parseFloat(el.style.left) || 0,
+                   y: parseFloat(el.style.top) || 0,
+                   w: parseFloat(el.style.width) || WG_BASE };
+    }
+    try { localStorage.setItem(WG_KEY, JSON.stringify({ free: true, items: items })); } catch (e) {}
+  }
+  function wgForget(){
+    try { localStorage.removeItem(WG_KEY); } catch (e) {}
+  }
+
+  // Width is the only handle on size. The pictures are canvases with a
+  // fixed aspect blown up to fill, so height follows from the content and
+  // nothing can ever be stretched out of shape.
+  function wgSetWidth(el, w){
+    w = Math.max(WG_MIN, Math.min(WG_MAX, w));
+    el.style.width = w + 'px';
+    el.style.setProperty('--wg-s', (w / WG_BASE).toFixed(3));
+  }
+
+  // Keep the handle reachable. A widget may hang off the right or the
+  // bottom, but never so far that there is no title bar left to grab, and
+  // never underneath the taskbar.
+  function wgClamp(el){
+    var w = el.offsetWidth || WG_BASE, h = el.offsetHeight || 40;
+    var maxX = Math.max(0, window.innerWidth - 34);
+    var maxY = Math.max(0, window.innerHeight - TASKBAR - 22);
+    var x = Math.max(34 - w, Math.min(maxX, parseFloat(el.style.left) || 0));
+    var y = Math.max(0, Math.min(maxY, parseFloat(el.style.top) || 0));
+    el.style.left = Math.round(x) + 'px';
+    el.style.top = Math.round(y) + 'px';
+  }
+
+  // Where a widget goes when there is nothing to measure and nothing
+  // remembered: back down the column it came from.
+  function wgFallback(el, i){
+    el.style.left = Math.round(Math.max(0, window.innerWidth - WG_BASE - 10)) + 'px';
+    el.style.top = Math.round(14 + i * 42) + 'px';
+    wgSetWidth(el, WG_BASE);
+  }
+
+  function wgEnterFree(){
+    if (wgFree || !wgWrap) return;
+    // Measure first, then change the layout, then write the numbers back —
+    // so every widget lands exactly where it already was.
+    var boxes = wgItems.map(function(el){
+      var r = el.getBoundingClientRect();
+      return { x: r.left, y: r.top, w: el.offsetWidth };
+    });
+    wgWrap.classList.add('free');
+    wgFree = true;
+    for (var i = 0; i < wgItems.length; i++){
+      var el = wgItems[i], b = boxes[i];
+      if (!b.w){ wgFallback(el, i); continue; }   // dropped at this height
+      el.style.left = Math.round(b.x) + 'px';
+      el.style.top = Math.round(b.y) + 'px';
+      wgSetWidth(el, b.w);
+      wgClamp(el);
+    }
+    wgSave();
+  }
+
+  function wgTidy(){
+    if (!wgFree || !wgWrap) return;
+    wgWrap.classList.remove('free');
+    wgFree = false;
+    for (var i = 0; i < wgItems.length; i++){
+      var el = wgItems[i];
+      el.style.left = el.style.top = el.style.width = el.style.zIndex = '';
+      el.style.removeProperty('--wg-s');
+    }
+    wgForget();
+  }
+
+  function wgRaise(el){
+    if (!wgFree) return;
+    el.style.zIndex = ++wgTop;
+  }
+
+  // Restore a remembered desktop before the first paint of this mode.
+  (function wgRestore(){
+    var saved = wgLoad();
+    if (!saved || !wgWrap) return;
+    wgWrap.classList.add('free');
+    wgFree = true;
+    for (var i = 0; i < wgItems.length; i++){
+      var el = wgItems[i], it = saved.items[wgName(el)];
+      if (!it){ wgFallback(el, i); continue; }
+      el.style.left = Math.round(it.x) + 'px';
+      el.style.top = Math.round(it.y) + 'px';
+      wgSetWidth(el, it.w);
+      wgClamp(el);
+    }
+  })();
+
+  /* ---- the gestures ------------------------------------------------ */
+  var wgHold = null;        // { el, mode, dx, dy, w0, x0 }
+  var wgTap = { at: 0, el: null };
+
+  function wgSwell(el){
+    wgEnterFree();
+    wgRaise(el);
+    var now = parseFloat(el.style.width) || WG_BASE;
+    // Swells it, and swells it back. Not to the whole screen — these are
+    // gadgets, and a full-screen resource meter is a joke that stops being
+    // funny on the second viewing.
+    wgSetWidth(el, now > (WG_BASE + WG_BIG) / 2 ? WG_BASE : WG_BIG);
+    wgClamp(el);
+    wgSave();
+  }
+
+  function wgDown(e){
+    if (!wgWrap || e.button > 0) return;
+    var grip = e.target.closest ? e.target.closest('.wg-grip') : null;
+    var bar = e.target.closest ? e.target.closest('.bar') : null;
+    var el = e.target.closest ? e.target.closest('.w98-widget, .w98-note') : null;
+    if (!el || (!grip && !bar && !el.classList.contains('w98-note'))) return;
+    // The note has no title bar, so its own face is the handle — but its
+    // grip still has to win over it.
+    if (!grip && el.classList.contains('w98-note') &&
+        e.target.closest('.wg-grip')) return;
+
+    // Two presses on the same title bar, close together, is the old
+    // gesture for making a window bigger.
+    var now = e.timeStamp || Date.now();
+    if (!grip){
+      if (wgTap.el === el && now - wgTap.at < 420){
+        wgTap.el = null;
+        e.preventDefault();
+        wgSwell(el);
+        return;
+      }
+      wgTap = { at: now, el: el };
+    }
+
+    wgEnterFree();
+    wgRaise(el);
+    var r = el.getBoundingClientRect();
+    wgHold = {
+      el: el,
+      mode: grip ? 'size' : 'move',
+      dx: e.clientX - r.left,
+      dy: e.clientY - r.top,
+      w0: el.offsetWidth,
+      px: e.clientX,
+      py: e.clientY
+    };
+    el.classList.add(grip ? 'sizing' : 'dragging');
+    e.preventDefault();
+    try { el.setPointerCapture(e.pointerId); } catch (err) {}
+  }
+
+  function wgMove(e){
+    if (!wgHold) return;
+    e.preventDefault();
+    var h = wgHold;
+    if (h.mode === 'move'){
+      h.el.style.left = Math.round(e.clientX - h.dx) + 'px';
+      h.el.style.top = Math.round(e.clientY - h.dy) + 'px';
+    } else {
+      // Right or down both make it bigger; whichever the hand meant more.
+      var grow = Math.max(e.clientX - h.px, e.clientY - h.py);
+      wgSetWidth(h.el, h.w0 + grow);
+    }
+    wgClamp(h.el);
+  }
+
+  function wgUp(e){
+    if (!wgHold) return;
+    wgHold.el.classList.remove('dragging', 'sizing');
+    try { wgHold.el.releasePointerCapture(e.pointerId); } catch (err) {}
+    wgHold = null;
+    wgSave();
+  }
+
+  if (wgWrap){
+    wgWrap.addEventListener('pointerdown', wgDown);
+    wgWrap.addEventListener('pointermove', wgMove);
+    wgWrap.addEventListener('pointerup', wgUp);
+    wgWrap.addEventListener('pointercancel', wgUp);
+
+    // A window that has scrolled or shrunk must not strand a widget off
+    // the edge with no bar left to take hold of.
+    window.addEventListener('resize', function(){
+      if (!wgFree) return;
+      for (var i = 0; i < wgItems.length; i++) wgClamp(wgItems[i]);
+      wgSave();
+    });
+  }
+
+  // Double-clicking the bare desktop puts them back in the rail. It is the
+  // only way out of a mess the visitor made, so it has to exist; it is on
+  // the background rather than on a button because a button would be a
+  // focusable control inside an aria-hidden rail.
+  var deskEl = document.getElementById('w98-desktop');
+  if (deskEl){
+    deskEl.addEventListener('dblclick', function(e){
+      if (e.target.closest && e.target.closest('.w98-icon, .w98-widget, .w98-note')) return;
+      wgTidy();
+    });
+  }
 
   /* ---- the toggle -------------------------------------------------- */
   var cssLink = document.getElementById('w98-css');

@@ -85,15 +85,44 @@ do real work:
 The other three are the older ornaments: a camera watching nothing, a meter
 measuring nothing, and a note from whoever left.
 
-The rail is decoration, so it is hidden from the accessibility tree and takes
-no pointer events — the one exception being the cradle's canvas, which has no
-tabindex and nothing behind it, so it can never swallow a click meant for a
-desktop icon. Everything is drawn on canvases 84 pixels across and blown up
-by CSS with smoothing off. Short viewports shed widgets from the bottom up at
-measured thresholds rather than letting the rail crowd the taskbar, and
-narrow ones drop it entirely. Nothing animates while the desktop is down, the
-tab is in the background, or the rail is off screen; under `prefers-reduced-
-motion` nothing moves at all until a hand is on the cradle.
+### Moving them about
+
+They start in the tidy rail on the right and can be picked up:
+
+- **Drag** one by its title bar — the note by its face — to put it anywhere.
+- **Resize** by the corner grip. Width is the only handle; the pictures are
+  canvases with a fixed aspect blown up to fill, so height follows from the
+  content and nothing can be stretched out of shape. Everything scales
+  together: a widget pulled to twice the width reads as one object twice the
+  size rather than a big picture with small print under it.
+- **Double-click a title bar** to swell it and again to put it back. Not to
+  the whole screen — these are gadgets.
+- **Double-click the bare desktop** to tidy them all back into the rail.
+
+The first drag or pull takes the whole set into free mode at once: every
+widget is measured where it sits and pinned there, so nothing jumps at the
+moment of the first grab, and the rail leaves the flex row — which lets the
+icon grid spread into the column it used to hold. Positions and sizes are
+remembered in `localStorage` under `lc-w98-widgets`, clamped back into view
+on load and on resize so a widget can never be stranded off an edge or
+dropped under the taskbar.
+
+### What they still are
+
+Decoration. The rail stays out of the accessibility tree, and dragging,
+resizing and the double-press are pointer gestures with no focusable control
+among them — so a keyboard or screen-reader visitor loses nothing they were
+being offered. That is the same bargain the cradle struck. In rail mode the
+widgets are their own column and overlap nothing; in free mode they sit over
+the icons, because that is where they were put.
+
+Everything is drawn on canvases 84 pixels across and blown up by CSS with
+smoothing off, so making one bigger sharpens it into bigger pixels rather
+than blurring it. Short viewports shed widgets from the bottom up at measured
+thresholds rather than letting the rail crowd the taskbar, and narrow ones
+drop it entirely. Nothing animates while the desktop is down, the tab is in
+the background, or the rail is off screen; under `prefers-reduced-motion`
+nothing moves at all until a hand is on the cradle.
 
 ## Server routes
 
@@ -136,7 +165,7 @@ because the caller is an ornament with its own fallback.
 
 ## Live
 
-https://hub-production-c107.up.railway.app
+https://contraptions.up.railway.app
 
 Railway project `little-contraptions`, service `hub`, deploying from `main`.
 
