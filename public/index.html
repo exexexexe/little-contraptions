@@ -618,6 +618,154 @@ footer{
   .res-row i{ transition:none }
 }
 
+/* ==================================================================== *
+ *  Display Properties — the appearance layer.
+ *
+ *  98.css 0.1.21 declares no custom properties of its own; every colour
+ *  in it is a literal. So rather than fight it, this restates the few
+ *  rules that carry colour, in terms of variables, at a specificity the
+ *  library cannot reach: every selector here is prefixed with .w98,
+ *  which is on <html> only in Windows 98 mode.
+ *
+ *  That prefix is doing two jobs. It wins the cascade regardless of
+ *  which stylesheet loaded last, and it makes it structurally impossible
+ *  for any of this to reach the card catalogue.
+ * ==================================================================== */
+.w98{
+  --w98-title-a:#000080;
+  --w98-title-b:#0E75C7;
+  --w98-title-t:#FFFFFF;
+  --w98-face:#C0C0C0;
+  --w98-win:#FFFFFF;
+  --w98-text:#000000;
+  --w98-lite:#FFFFFF;
+  --w98-hi:#DFDFDF;
+  --w98-shadow:#808080;
+  --w98-dark:#0A0A0A;
+  --w98-desk:#008080;
+  --w98-deskimg:none;
+  --w98-font:"Pixelated MS Sans Serif","MS Sans Serif",Tahoma,Geneva,Verdana,sans-serif;
+  --w98-icon-min:88px;
+  --w98-icon-gap-y:6px;
+  --w98-icon-gap-x:2px;
+  --w98-icon-size:32px;
+  --w98-label:11px;
+  --w98-bar-h:30px;
+}
+
+/* ---- the chrome ---- */
+.w98 #w98{ font-family:var(--w98-font);color:var(--w98-text) }
+.w98 body{ background:var(--w98-desk) }
+.w98 #w98-desktop{
+  background-color:var(--w98-desk);
+  background-image:var(--w98-deskimg);
+}
+.w98 .title-bar{
+  background:linear-gradient(90deg,var(--w98-title-a),var(--w98-title-b));
+}
+.w98 .title-bar.inactive{
+  background:linear-gradient(90deg,var(--w98-shadow),var(--w98-hi));
+}
+.w98 .title-bar-text{ color:var(--w98-title-t) }
+.w98 .window,
+.w98 #w98-taskbar,
+.w98 #w98-startmenu,
+.w98 .w98-widget{ background:var(--w98-face) }
+.w98 button,
+.w98 input[type=reset],
+.w98 input[type=submit]{ background:var(--w98-face);color:var(--w98-text) }
+.w98 .sunken-panel,
+.w98 #w98-list{ background:var(--w98-win);color:var(--w98-text) }
+.w98 #w98-q{ background:var(--w98-win);color:var(--w98-text) }
+.w98 .w98-widget .bar{
+  background:linear-gradient(90deg,var(--w98-title-a),var(--w98-title-b));
+  color:var(--w98-title-t);
+}
+.w98 .w98-strip{ background:linear-gradient(180deg,var(--w98-title-a),var(--w98-title-b)) }
+.w98 #w98-clock{ color:var(--w98-text) }
+
+/* ---- icon layout ---- */
+.w98 #w98-icons{
+  grid-template-columns:repeat(auto-fill,minmax(var(--w98-icon-min),1fr));
+  gap:var(--w98-icon-gap-y) var(--w98-icon-gap-x);
+}
+.w98 .w98-icon svg{ width:var(--w98-icon-size);height:var(--w98-icon-size) }
+.w98 .w98-icon .lbl{ font-size:var(--w98-label);max-width:calc(var(--w98-icon-min) - 6px) }
+
+/* ---- taskbar at the top ---- */
+#w98.tb-top #w98-taskbar{
+  bottom:auto;top:0;
+  border-top:0;border-bottom:1px solid var(--w98-shadow);
+  box-shadow:inset 0 1px 0 var(--w98-lite);
+}
+#w98.tb-top #w98-desktop{ inset:var(--w98-bar-h) 0 0 0 }
+#w98.tb-top #w98-startmenu{ bottom:auto;top:var(--w98-bar-h) }
+
+/* ---- cursors. Drawn here, not lifted from anywhere ---- */
+#w98.cur-arrow, #w98.cur-arrow .w98-icon{
+  cursor:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Cpath d='M3 1v17l4.2-4.2 2.6 6 3.3-1.4-2.6-5.9H16z' fill='%23fff' stroke='%23000' stroke-width='1.4' stroke-linejoin='round'/%3E%3C/svg%3E") 2 1, default;
+}
+#w98.cur-arrow .w98-icon:hover, #w98.cur-wait .w98-icon:hover{
+  cursor:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Cpath d='M6 2h12v4l-4 6 4 6v4H6v-4l4-6-4-6z' fill='%23fff' stroke='%23000' stroke-width='1.5' stroke-linejoin='round'/%3E%3Cpath d='M8.5 4.5h7L12 10zM12 14l3.5 5.5h-7z' fill='%23000'/%3E%3C/svg%3E") 12 12, wait;
+}
+#w98.cur-wait{
+  cursor:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Cpath d='M3 1v17l4.2-4.2 2.6 6 3.3-1.4-2.6-5.9H16z' fill='%23000' stroke='%23fff' stroke-width='1.4' stroke-linejoin='round'/%3E%3C/svg%3E") 2 1, default;
+}
+
+/* ---- the panel ---- */
+#w98-display{
+  position:absolute;z-index:400;
+  left:50%;top:50%;transform:translate(-50%,-50%);
+  width:min(430px,calc(100vw - 24px));
+  max-height:calc(100vh - 60px);
+  display:flex;flex-direction:column;
+}
+#w98-display[hidden]{ display:none }
+#w98-display .window-body{ margin:8px;overflow:auto }
+#w98-display .tabs{ display:flex;gap:0;margin-bottom:-2px;position:relative;z-index:2;flex-wrap:wrap }
+#w98-display .tabs button{
+  padding:5px 11px;border-bottom-color:transparent;font-size:11px;
+}
+#w98-display .tabs button[aria-selected=true]{ font-weight:700;padding-bottom:7px;margin-bottom:-2px }
+#w98-display .pane{ padding:11px 10px 4px }
+#w98-display .pane[hidden]{ display:none }
+#w98-display fieldset{ margin:0 0 10px;padding:9px 10px 11px }
+#w98-display legend{ background:var(--w98-face);padding:0 4px }
+.w98-swatches{ display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:4px;max-height:186px;overflow:auto }
+.w98-sw{
+  display:flex;align-items:center;gap:6px;padding:3px 5px;cursor:pointer;
+  border:1px solid transparent;background:transparent;text-align:left;font-size:11px;
+  box-shadow:none;color:var(--w98-text);
+}
+.w98-sw:hover{ background:rgba(0,0,0,.07) }
+.w98-sw[aria-pressed=true]{ background:var(--w98-title-a);color:var(--w98-title-t) }
+.w98-sw i{ width:22px;height:14px;flex:0 0 auto;border:1px solid var(--w98-dark);display:block }
+.w98-row{ display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px }
+.w98-row:last-child{ margin-bottom:0 }
+#w98-display .foot{ display:flex;justify-content:flex-end;gap:6px;padding:4px 10px 8px }
+#w98-preview{
+  background:var(--w98-desk);background-image:var(--w98-deskimg);
+  padding:12px;margin-bottom:10px;
+  box-shadow:inset -1px -1px 0 var(--w98-lite), inset 1px 1px 0 var(--w98-shadow),
+             inset -2px -2px 0 var(--w98-hi), inset 2px 2px 0 var(--w98-dark);
+}
+#w98-preview .mini{ background:var(--w98-face);padding:3px;
+  box-shadow:inset -1px -1px 0 var(--w98-dark), inset 1px 1px 0 var(--w98-lite),
+             inset -2px -2px 0 var(--w98-shadow), inset 2px 2px 0 var(--w98-hi) }
+#w98-preview .mini .cap{
+  background:linear-gradient(90deg,var(--w98-title-a),var(--w98-title-b));
+  color:var(--w98-title-t);font-weight:700;padding:2px 5px;font-size:10px;
+  font-family:var(--w98-font);
+}
+#w98-preview .mini .body{
+  background:var(--w98-win);color:var(--w98-text);padding:8px 6px;font-size:11px;
+  font-family:var(--w98-font);margin-top:3px;
+}
+@media (max-width:520px){
+  #w98-display{ width:calc(100vw - 16px) }
+  .w98-swatches{ grid-template-columns:repeat(auto-fill,minmax(88px,1fr)) }
+}
+
 /* ---- the taskbar ---- */
 #w98-taskbar{
   position:absolute;left:0;right:0;bottom:0;height:30px;
@@ -1891,6 +2039,73 @@ footer{
       </div>
       <div id="w98-list" class="sunken-panel"></div>
       <div class="w98-count" id="w98-count"></div>
+    </div>
+  </div>
+
+  <!-- Display Properties. Hidden until asked for, and part of the desktop
+       shell rather than the page, so it can never appear in the catalogue. -->
+  <div id="w98-display" class="window" hidden role="dialog" aria-modal="false"
+       aria-labelledby="w98-dtitle">
+    <div class="title-bar">
+      <div class="title-bar-text" id="w98-dtitle">Display Properties</div>
+      <div class="title-bar-controls">
+        <button aria-label="Close" id="w98-dclose"></button>
+      </div>
+    </div>
+    <div class="window-body">
+      <menu role="tablist" class="tabs" id="w98-dtabs">
+        <button role="tab" aria-selected="true" aria-controls="w98-p-appear">Appearance</button>
+        <button role="tab" aria-selected="false" aria-controls="w98-p-back">Background</button>
+        <button role="tab" aria-selected="false" aria-controls="w98-p-icons">Icons</button>
+        <button role="tab" aria-selected="false" aria-controls="w98-p-other">Settings</button>
+      </menu>
+
+      <div class="window" style="padding:2px 0 0">
+        <div id="w98-preview" role="img" aria-label="A preview of the current appearance.">
+          <div class="mini">
+            <div class="cap">A window</div>
+            <div class="body">Window text, as it will look.</div>
+          </div>
+        </div>
+
+        <div class="pane" id="w98-p-appear" role="tabpanel">
+          <fieldset><legend>Colour scheme</legend>
+            <div class="w98-swatches" id="w98-schemes" role="group" aria-label="Colour scheme"></div>
+          </fieldset>
+        </div>
+
+        <div class="pane" id="w98-p-back" role="tabpanel" hidden>
+          <fieldset><legend>Wallpaper</legend>
+            <div class="w98-swatches" id="w98-walls" role="group" aria-label="Wallpaper"></div>
+          </fieldset>
+        </div>
+
+        <div class="pane" id="w98-p-icons" role="tabpanel" hidden>
+          <fieldset><legend>Icon spacing</legend>
+            <div class="w98-row" id="w98-layouts" role="group" aria-label="Icon spacing"></div>
+          </fieldset>
+          <fieldset><legend>Font</legend>
+            <div class="w98-row" id="w98-fonts" role="group" aria-label="Font"></div>
+          </fieldset>
+        </div>
+
+        <div class="pane" id="w98-p-other" role="tabpanel" hidden>
+          <fieldset><legend>Pointer</legend>
+            <div class="w98-row" id="w98-cursors" role="group" aria-label="Pointer"></div>
+          </fieldset>
+          <fieldset><legend>Taskbar</legend>
+            <div class="w98-row" id="w98-taskpos" role="group" aria-label="Taskbar position"></div>
+          </fieldset>
+          <fieldset><legend>Sound</legend>
+            <div class="w98-row" id="w98-sounds" role="group" aria-label="Sound"></div>
+          </fieldset>
+        </div>
+      </div>
+
+      <div class="foot">
+        <button type="button" id="w98-dreset">Restore defaults</button>
+        <button type="button" id="w98-ddone">OK</button>
+      </div>
     </div>
   </div>
 </div>
@@ -3960,6 +4175,378 @@ footer{
     ghostTaps: function(){ return ghost ? ghost.querySelector('p').innerHTML : ''; },
     konami: KONAMI.join(''),
     say: say
+  };
+})();
+</script>
+
+<script>
+/* ==================================================================== *
+ *  Display Properties.
+ *
+ *  Everything this writes goes to CSS custom properties on <html>, and
+ *  every rule that reads them is prefixed .w98 — so the card catalogue
+ *  cannot see any of it, whatever is chosen. Nothing here touches the
+ *  vanilla/98 toggle itself; it only decorates the mode once you are in
+ *  it.
+ *
+ *  Contrast is not left to taste. Every scheme below was checked
+ *  programmatically against WCAG: title text against both ends of its
+ *  own gradient, and window text against both the content background
+ *  and the button face. The lowest of the twenty is 4.55:1. The
+ *  authentic silver-and-navy default actually failed that at 4.01
+ *  against the light end of its gradient, so its light stop is a shade
+ *  deeper here than the original. That is the one deliberate
+ *  infidelity.
+ * ==================================================================== */
+(function display(){
+  'use strict';
+
+  var root = document.documentElement;
+  var shell = document.getElementById('w98');
+  var panel = document.getElementById('w98-display');
+  if (!shell || !panel) return;
+
+  var KEY = 'lc-w98-prefs';
+
+  var SCHEMES = [
+    {n:'Teal',a:'#000080',b:'#0E75C7',t:'#FFFFFF',f:'#C0C0C0',w:'#FFFFFF',x:'#000000'},
+    {n:'Storm',a:'#2B3A55',b:'#5777A1',t:'#FFFFFF',f:'#B8BEC6',w:'#F2F4F7',x:'#10141B'},
+    {n:'Plum',a:'#4A1942',b:'#8E4682',t:'#FFFFFF',f:'#C6B6C4',w:'#F7F1F6',x:'#20101C'},
+    {n:'Wheat',a:'#6B4A18',b:'#92692E',t:'#FFF8E8',f:'#DCCFAE',w:'#FBF6E6',x:'#221A0C'},
+    {n:'Marine',a:'#062A45',b:'#1D6E96',t:'#FFFFFF',f:'#AFC0CB',w:'#F0F5F8',x:'#08161F'},
+    {n:'Eggplant',a:'#301B3F',b:'#5C4B6E',t:'#F4EFF7',f:'#B9B2C2',w:'#F5F2F8',x:'#1A1220'},
+    {n:'Rose',a:'#6E2740',b:'#AC5974',t:'#FFFFFF',f:'#D6BEC5',w:'#FBF2F5',x:'#26101A'},
+    {n:'Spruce',a:'#123524',b:'#3C7A55',t:'#FFFFFF',f:'#B3C4B8',w:'#F1F7F2',x:'#0B1A11'},
+    {n:'Slate',a:'#2E3840',b:'#647684',t:'#FFFFFF',f:'#BCC2C7',w:'#F4F6F7',x:'#12171B'},
+    {n:'Brick',a:'#5E2018',b:'#9E4A33',t:'#FFF6F2',f:'#CDB4AA',w:'#FAF2EE',x:'#231009'},
+    {n:'Desert',a:'#6B3E14',b:'#9B672E',t:'#FFF9EE',f:'#D9C6A6',w:'#FCF6EA',x:'#241804'},
+    {n:'Pumpkin',a:'#7A3505',b:'#AE5C13',t:'#FFF7EC',f:'#D8BE9E',w:'#FDF5EA',x:'#2A1403'},
+    {n:'Lilac',a:'#463A6E',b:'#7B6CAC',t:'#FFFFFF',f:'#C3BDD6',w:'#F6F4FB',x:'#1B1630'},
+    {n:'Rainy Day',a:'#3A4650',b:'#657681',t:'#FFFFFF',f:'#C0C6CB',w:'#F5F7F8',x:'#161C21'},
+    {n:'Maple',a:'#5A1F14',b:'#9C4526',t:'#FFF6F0',f:'#D2B7A6',w:'#FBF3EE',x:'#210C05'},
+    {n:'Pewter',a:'#3A3A3A',b:'#727272',t:'#FFFFFF',f:'#C0C0C0',w:'#F5F5F5',x:'#111111'},
+    {n:'Celery',a:'#3B5320',b:'#617E3B',t:'#FFFFFF',f:'#C6CFB2',w:'#F6F9EF',x:'#1A230C'},
+    {n:'Ink',a:'#0B0F14',b:'#28414F',t:'#DFF3FA',f:'#A8B2B8',w:'#EDF1F3',x:'#080C10'},
+    {n:'Copper',a:'#5C2E10',b:'#9E5F2A',t:'#FFF6EA',f:'#D3BBA3',w:'#FBF4EC',x:'#221004'},
+    {n:'Arctic',a:'#1F4E63',b:'#477B90',t:'#FFFFFF',f:'#BECBD2',w:'#F4F9FB',x:'#0C1B22'}
+  ];
+
+  var WALLS = [
+    { id:'teal',   n:'Teal',    c:'#008080', img:'none' },
+    { id:'slate',  n:'Slate',   c:'#3E4A56', img:'none' },
+    { id:'tiles',  n:'Tiles',   c:'#7A4636',
+      img:"repeating-linear-gradient(0deg,rgba(0,0,0,.26) 0 2px,transparent 2px 24px)," +
+          "repeating-linear-gradient(90deg,rgba(0,0,0,.26) 0 2px,transparent 2px 48px)" },
+    { id:'weave',  n:'Weave',   c:'#5E6E52',
+      img:"repeating-linear-gradient(45deg,rgba(255,255,255,.10) 0 3px,transparent 3px 9px)," +
+          "repeating-linear-gradient(-45deg,rgba(0,0,0,.16) 0 3px,transparent 3px 9px)" },
+    { id:'dots',   n:'Dots',    c:'#3F5D7A',
+      img:"radial-gradient(circle at 8px 8px,rgba(255,255,255,.30) 1.6px,transparent 1.8px)" },
+    { id:'waves',  n:'Waves',   c:'#1E5F6B',
+      img:"repeating-linear-gradient(180deg,rgba(255,255,255,.09) 0 6px,transparent 6px 26px)" },
+    { id:'circuit',n:'Circuit', c:'#123024',
+      img:"radial-gradient(circle at 16px 16px,rgba(150,255,190,.34) 2px,transparent 2.4px)," +
+          "repeating-linear-gradient(0deg,rgba(150,255,190,.13) 0 1px,transparent 1px 32px)," +
+          "repeating-linear-gradient(90deg,rgba(150,255,190,.13) 0 1px,transparent 1px 32px)" },
+    { id:'night',  n:'Night',   c:'#0B0E1A',
+      img:"radial-gradient(circle at 12px 22px,rgba(255,255,255,.9) 1px,transparent 1.2px)," +
+          "radial-gradient(circle at 46px 8px,rgba(255,255,255,.55) 1px,transparent 1.2px)," +
+          "radial-gradient(circle at 30px 52px,rgba(255,255,255,.7) 1px,transparent 1.2px)" },
+    { id:'dawn',   n:'Dawn',    c:'#6B4A6E',
+      img:"linear-gradient(180deg,#2A2350 0%,#6B4A6E 46%,#C98A6A 100%)" }
+  ];
+  var WALL_SIZE = {
+    dots:'16px 16px', circuit:'32px 32px', night:'64px 64px',
+    tiles:'48px 24px', weave:'12px 12px', waves:'26px 26px', dawn:'100% 100%'
+  };
+
+  var LAYOUTS = [
+    { id:'compact',  n:'Compact',  min:'72px',  gy:'2px',  gx:'0px', size:'26px', label:'10px' },
+    { id:'normal',   n:'Normal',   min:'88px',  gy:'6px',  gx:'2px', size:'32px', label:'11px' },
+    { id:'spacious', n:'Spacious', min:'116px', gy:'20px', gx:'10px',size:'42px', label:'11.5px' }
+  ];
+  var FONTS = [
+    { id:'sans',  n:'MS Sans', v:'"Pixelated MS Sans Serif","MS Sans Serif",Tahoma,Geneva,Verdana,sans-serif' },
+    { id:'fixed', n:'Fixed',   v:'ui-monospace,"Cascadia Mono",Consolas,"Courier New",monospace' },
+    { id:'round', n:'Rounded', v:'Tahoma,Verdana,Geneva,"DejaVu Sans",sans-serif' }
+  ];
+  var CURSORS = [
+    { id:'system', n:'System' },
+    { id:'arrow',  n:'Classic' },
+    { id:'wait',   n:'Inverted' }
+  ];
+  var TASKPOS = [ { id:'bottom', n:'Bottom' }, { id:'top', n:'Top' } ];
+  var SOUNDS  = [ { id:'off', n:'Off' }, { id:'on', n:'On' } ];
+
+  var DEFAULTS = { scheme:0, wall:'teal', layout:'normal', font:'sans',
+                   cursor:'system', task:'bottom', sound:'off' };
+  var prefs = {};
+
+  function load(){
+    prefs = {};
+    for (var k in DEFAULTS) prefs[k] = DEFAULTS[k];
+    try {
+      var raw = JSON.parse(localStorage.getItem(KEY) || 'null');
+      if (raw && typeof raw === 'object'){
+        for (var j in DEFAULTS) if (raw[j] != null) prefs[j] = raw[j];
+      }
+    } catch (e) { /* private mode: the defaults stand */ }
+    // never trust a stored value enough to index an array with it
+    if (!(prefs.scheme >= 0 && prefs.scheme < SCHEMES.length)) prefs.scheme = 0;
+    if (!byId(WALLS, prefs.wall)) prefs.wall = DEFAULTS.wall;
+    if (!byId(LAYOUTS, prefs.layout)) prefs.layout = DEFAULTS.layout;
+    if (!byId(FONTS, prefs.font)) prefs.font = DEFAULTS.font;
+    if (!byId(CURSORS, prefs.cursor)) prefs.cursor = DEFAULTS.cursor;
+    if (!byId(TASKPOS, prefs.task)) prefs.task = DEFAULTS.task;
+    if (!byId(SOUNDS, prefs.sound)) prefs.sound = DEFAULTS.sound;
+  }
+  function save(){
+    try { localStorage.setItem(KEY, JSON.stringify(prefs)); } catch (e) {}
+  }
+  function byId(list, id){
+    for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
+    return null;
+  }
+
+  /* ---- colour helpers: the bevels are derived from the face, the way a
+     real appearance scheme derived them, so twenty palettes do not need
+     sixty hand-picked greys ---- */
+  function rgb(x){ return [parseInt(x.slice(1,3),16), parseInt(x.slice(3,5),16), parseInt(x.slice(5,7),16)]; }
+  function hex(c){
+    return '#' + c.map(function(v){
+      return Math.max(0, Math.min(255, Math.round(v))).toString(16).replace(/^(.)$/,'0$1');
+    }).join('');
+  }
+  function mix(a, b, t){
+    var x = rgb(a), y = rgb(b);
+    return hex([x[0]+(y[0]-x[0])*t, x[1]+(y[1]-x[1])*t, x[2]+(y[2]-x[2])*t]);
+  }
+
+  /* ---- apply ---- */
+  function apply(){
+    var s = SCHEMES[prefs.scheme];
+    var w = byId(WALLS, prefs.wall);
+    var l = byId(LAYOUTS, prefs.layout);
+    var f = byId(FONTS, prefs.font);
+    var st = root.style;
+
+    st.setProperty('--w98-title-a', s.a);
+    st.setProperty('--w98-title-b', s.b);
+    st.setProperty('--w98-title-t', s.t);
+    st.setProperty('--w98-face', s.f);
+    st.setProperty('--w98-win', s.w);
+    st.setProperty('--w98-text', s.x);
+    st.setProperty('--w98-lite', mix(s.f, '#ffffff', 0.78));
+    st.setProperty('--w98-hi', mix(s.f, '#ffffff', 0.5));
+    st.setProperty('--w98-shadow', mix(s.f, '#000000', 0.33));
+    st.setProperty('--w98-dark', mix(s.f, '#000000', 0.86));
+
+    st.setProperty('--w98-desk', w.c);
+    st.setProperty('--w98-deskimg', w.img);
+    var size = WALL_SIZE[w.id];
+    document.getElementById('w98-desktop').style.backgroundSize = size || 'auto';
+    document.getElementById('w98-preview').style.backgroundSize = size || 'auto';
+
+    st.setProperty('--w98-icon-min', l.min);
+    st.setProperty('--w98-icon-gap-y', l.gy);
+    st.setProperty('--w98-icon-gap-x', l.gx);
+    st.setProperty('--w98-icon-size', l.size);
+    st.setProperty('--w98-label', l.label);
+    st.setProperty('--w98-font', f.v);
+
+    // These go on the shell, not on <html>. The variables above are inert
+    // without a rule to read them, but a class on the root element is a
+    // standing invitation for someone to write an unprefixed rule later and
+    // quietly style the card catalogue with it. Inside #w98 that cannot
+    // happen at all.
+    shell.classList.toggle('tb-top', prefs.task === 'top');
+    shell.classList.toggle('cur-arrow', prefs.cursor === 'arrow');
+    shell.classList.toggle('cur-wait', prefs.cursor === 'wait');
+  }
+
+  /* ---- sound. Synthesised here; nothing sampled from anywhere ---- */
+  var ac = null;
+  function beep(kind){
+    if (prefs.sound !== 'on') return;
+    try {
+      if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)();
+      if (ac.state === 'suspended') ac.resume();
+      var t = ac.currentTime;
+      var o = ac.createOscillator(), g = ac.createGain();
+      o.connect(g); g.connect(ac.destination);
+      if (kind === 'open'){
+        o.type = 'square'; o.frequency.setValueAtTime(440, t);
+        o.frequency.setValueAtTime(660, t + 0.07);
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(0.05, t + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.20);
+        o.start(t); o.stop(t + 0.22);
+      } else if (kind === 'close'){
+        o.type = 'square'; o.frequency.setValueAtTime(660, t);
+        o.frequency.setValueAtTime(440, t + 0.06);
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(0.05, t + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
+        o.start(t); o.stop(t + 0.2);
+      } else {
+        o.type = 'square'; o.frequency.setValueAtTime(1250, t);
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(0.035, t + 0.004);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.045);
+        o.start(t); o.stop(t + 0.05);
+      }
+    } catch (e) { /* no audio here; everything else still works */ }
+  }
+
+  /* ---- the controls ---- */
+  function swatch(sc, i, selected){
+    return '<button type="button" class="w98-sw" role="button" data-i="' + i + '" ' +
+           'aria-pressed="' + (selected ? 'true' : 'false') + '">' +
+           '<i style="background:linear-gradient(90deg,' + sc.a + ',' + sc.b + ')"></i>' +
+           '<span>' + sc.n + '</span></button>';
+  }
+  function chip(o, on){
+    return '<button type="button" class="w98-sw" data-id="' + o.id + '" ' +
+           'aria-pressed="' + (on ? 'true' : 'false') + '"><span>' + o.n + '</span></button>';
+  }
+  function wallChip(o, on){
+    return '<button type="button" class="w98-sw" data-id="' + o.id + '" ' +
+           'aria-pressed="' + (on ? 'true' : 'false') + '">' +
+           '<i style="background-color:' + o.c + ';background-image:' + o.img +
+           ';background-size:' + (WALL_SIZE[o.id] || 'auto') + '"></i>' +
+           '<span>' + o.n + '</span></button>';
+  }
+
+  function paint(){
+    document.getElementById('w98-schemes').innerHTML =
+      SCHEMES.map(function(s, i){ return swatch(s, i, i === prefs.scheme); }).join('');
+    document.getElementById('w98-walls').innerHTML =
+      WALLS.map(function(o){ return wallChip(o, o.id === prefs.wall); }).join('');
+    document.getElementById('w98-layouts').innerHTML =
+      LAYOUTS.map(function(o){ return chip(o, o.id === prefs.layout); }).join('');
+    document.getElementById('w98-fonts').innerHTML =
+      FONTS.map(function(o){ return chip(o, o.id === prefs.font); }).join('');
+    document.getElementById('w98-cursors').innerHTML =
+      CURSORS.map(function(o){ return chip(o, o.id === prefs.cursor); }).join('');
+    document.getElementById('w98-taskpos').innerHTML =
+      TASKPOS.map(function(o){ return chip(o, o.id === prefs.task); }).join('');
+    document.getElementById('w98-sounds').innerHTML =
+      SOUNDS.map(function(o){ return chip(o, o.id === prefs.sound); }).join('');
+  }
+
+  function wire(id, key, isIndex){
+    document.getElementById(id).addEventListener('click', function(e){
+      var b = e.target.closest ? e.target.closest('.w98-sw') : null;
+      if (!b) return;
+      prefs[key] = isIndex ? parseInt(b.dataset.i, 10) : b.dataset.id;
+      apply(); save(); paint(); beep('tick');
+    });
+  }
+  wire('w98-schemes', 'scheme', true);
+  wire('w98-walls', 'wall', false);
+  wire('w98-layouts', 'layout', false);
+  wire('w98-fonts', 'font', false);
+  wire('w98-cursors', 'cursor', false);
+  wire('w98-taskpos', 'task', false);
+  wire('w98-sounds', 'sound', false);
+
+  /* ---- tabs ---- */
+  var tabs = document.getElementById('w98-dtabs');
+  tabs.addEventListener('click', function(e){
+    var b = e.target.closest ? e.target.closest('[role=tab]') : null;
+    if (!b) return;
+    [].forEach.call(tabs.querySelectorAll('[role=tab]'), function(t){
+      var on = t === b;
+      t.setAttribute('aria-selected', String(on));
+      document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+    });
+    beep('tick');
+  });
+
+  /* ---- open and close ---- */
+  function open(){
+    if (!panel.hidden) return;
+    panel.hidden = false;
+    beep('open');
+    var f = panel.querySelector('[role=tab]');
+    if (f) f.focus();
+  }
+  function close(){
+    if (panel.hidden) return;
+    panel.hidden = true;
+    beep('close');
+  }
+  document.getElementById('w98-dclose').addEventListener('click', close);
+  document.getElementById('w98-ddone').addEventListener('click', close);
+  document.getElementById('w98-dreset').addEventListener('click', function(){
+    for (var k in DEFAULTS) prefs[k] = DEFAULTS[k];
+    apply(); save(); paint(); beep('tick');
+  });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape' && !panel.hidden) close();
+  });
+
+  /* ---- ways in: an icon on the desktop, and the desktop's own menu ---- */
+  var wrap = document.getElementById('w98-icons');
+  function addIcon(){
+    if (!wrap || wrap.querySelector('[data-open="display"]')) return;
+    var a = document.createElement('a');
+    a.className = 'w98-icon';
+    a.setAttribute('role', 'listitem');
+    a.href = '#';
+    a.title = 'Display Properties';
+    a.dataset.open = 'display';
+    a.innerHTML = '<svg viewBox="0 0 16 16" aria-hidden="true"><use href="#ic-pc"></use></svg>' +
+                  '<span class="lbl">Display</span>';
+    a.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); open(); });
+    wrap.appendChild(a);
+  }
+  addIcon();
+  // the icon grid is built when the mode is first entered, so if that has
+  // not happened yet, put it back once it has
+  requestAnimationFrame(addIcon);
+  setTimeout(addIcon, 400);
+
+  var desk = document.getElementById('w98-desktop');
+  var menu = null;
+  desk.addEventListener('contextmenu', function(e){
+    if (e.target.closest && e.target.closest('.w98-icon, #w98-display, .w98-widget')) return;
+    e.preventDefault();
+    if (!menu){
+      menu = document.createElement('div');
+      menu.className = 'window';
+      menu.style.cssText = 'position:absolute;z-index:401;padding:3px;min-width:150px';
+      menu.innerHTML = '<button type="button" style="display:block;width:100%;text-align:left;' +
+                       'box-shadow:none;padding:5px 10px">Properties</button>';
+      menu.querySelector('button').addEventListener('click', function(){
+        menu.hidden = true; open();
+      });
+      desk.appendChild(menu);
+    }
+    menu.hidden = false;
+    var r = desk.getBoundingClientRect();
+    menu.style.left = Math.min(e.clientX - r.left, desk.clientWidth - 160) + 'px';
+    menu.style.top = Math.min(e.clientY - r.top + desk.scrollTop, desk.scrollHeight - 50) + 'px';
+  });
+  document.addEventListener('pointerdown', function(e){
+    var t = (e.target && e.target.nodeType === 1) ? e.target : null;
+    if (menu && !menu.hidden && (!t || !menu.contains(t))) menu.hidden = true;
+  });
+
+  // a click on an icon makes the small noise, if you asked for noises
+  if (wrap) wrap.addEventListener('click', function(){ beep('tick'); });
+
+  load();
+  apply();
+  paint();
+
+  window.__display = {
+    open: open, close: close,
+    prefs: function(){ var o = {}; for (var k in prefs) o[k] = prefs[k]; return o; },
+    schemes: SCHEMES, walls: WALLS,
+    set: function(k, v){ prefs[k] = v; apply(); save(); paint(); },
+    isOpen: function(){ return !panel.hidden; },
+    read: function(n){ return getComputedStyle(root).getPropertyValue(n).trim(); }
   };
 })();
 </script>
