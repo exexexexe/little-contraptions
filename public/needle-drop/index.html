@@ -43,20 +43,58 @@ header{ padding:38px 0 10px;text-align:center }
 h1{ font-size:12px;letter-spacing:.3em;text-transform:uppercase;font-weight:600;margin:0 0 6px;color:var(--violet) }
 .tag{ font-size:11.5px;color:var(--dim);margin:0 }
 
-/* ---------- the record ---------- */
-.deck{ display:flex;justify-content:center;padding:20px 0 6px }
-.disc{ position:relative;width:150px;height:150px;border-radius:50%;
-  background:radial-gradient(circle at 50% 50%, #2B2338 0 17%, #17121F 17.5% 100%);
+/* ---------- the speaker ---------- */
+.deck{ display:flex;justify-content:center;padding:20px 0 8px }
+.spk{
+  position:relative;width:168px;height:168px;border-radius:10px;
+  background:linear-gradient(160deg,#251E33,#171220);
   border:1px solid rgba(240,236,246,.14);
-  box-shadow:0 10px 30px rgba(0,0,0,.5), inset 0 0 30px rgba(0,0,0,.6);
+  box-shadow:0 12px 34px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.05);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;
 }
-.disc::before{ content:"";position:absolute;inset:14px;border-radius:50%;
-  background:repeating-radial-gradient(circle, rgba(240,236,246,.05) 0 1px, transparent 1px 4px) }
-.disc::after{ content:"";position:absolute;left:50%;top:50%;width:9px;height:9px;margin:-4.5px;
-  border-radius:50%;background:var(--gold) }
-.disc.spin{ animation:rot 2.6s linear infinite }
-@keyframes rot{ to{ transform:rotate(360deg) } }
-@media (prefers-reduced-motion: reduce){ .disc.spin{ animation:none } }
+/* the grille cloth */
+.spk::before{
+  content:"";position:absolute;inset:6px;border-radius:7px;pointer-events:none;
+  background:repeating-linear-gradient(90deg, rgba(240,236,246,.045) 0 1px, transparent 1px 3px),
+             repeating-linear-gradient(0deg, rgba(240,236,246,.035) 0 1px, transparent 1px 3px);
+}
+.woofer{
+  position:relative;width:96px;height:96px;border-radius:50%;
+  background:radial-gradient(circle at 50% 44%, #4A3C63 0 6%, #2E2540 6% 62%, #221B31 62% 100%);
+  box-shadow:inset 0 0 18px rgba(0,0,0,.75), 0 2px 6px rgba(0,0,0,.5);
+  transform-origin:50% 50%;
+}
+/* the surround, and the dust cap in the middle */
+.woofer::before{ content:"";position:absolute;inset:9px;border-radius:50%;
+  border:2px solid rgba(240,236,246,.07) }
+.woofer::after{ content:"";position:absolute;left:50%;top:50%;width:30px;height:30px;margin:-15px;
+  border-radius:50%;background:radial-gradient(circle at 42% 38%, var(--violet), #6E4E96 70%);
+  box-shadow:0 0 12px rgba(201,166,240,.35) }
+.tweeter{
+  width:30px;height:30px;border-radius:50%;
+  background:radial-gradient(circle at 44% 40%, #3A2F4E 0 40%, #241D33 100%);
+  box-shadow:inset 0 0 8px rgba(0,0,0,.7);
+}
+.tweeter i{ display:block;width:11px;height:11px;margin:9px auto 0;border-radius:50%;
+  background:var(--gold);opacity:.8 }
+/* the rings that leave the cone while it is playing */
+.ring{ position:absolute;left:50%;top:50%;width:96px;height:96px;margin:-48px 0 0 -48px;
+  border-radius:50%;border:1px solid var(--violet);opacity:0;pointer-events:none }
+
+.spk.playing .woofer{ animation:cone .42s ease-in-out infinite }
+.spk.playing .tweeter i{ animation:tw .21s ease-in-out infinite }
+.spk.playing .ring{ animation:ping 1.15s ease-out infinite }
+.spk.playing .ring.b{ animation-delay:.38s }
+.spk.playing .ring.c{ animation-delay:.76s }
+@keyframes cone{ 0%,100%{ transform:scale(1) } 42%{ transform:scale(1.055) } 70%{ transform:scale(.985) } }
+@keyframes tw{ 0%,100%{ transform:scale(1);opacity:.75 } 50%{ transform:scale(1.35);opacity:1 } }
+@keyframes ping{ 0%{ transform:scale(1);opacity:.5 } 100%{ transform:scale(1.7);opacity:0 } }
+/* paused: hold still, but stay lit so it reads as loaded rather than dead */
+.spk.held .woofer{ animation:none;transform:scale(1.02) }
+@media (prefers-reduced-motion: reduce){
+  .spk.playing .woofer, .spk.playing .tweeter i, .spk.playing .ring{ animation:none }
+  .spk.playing .woofer{ transform:scale(1.04) }
+}
 
 /* ---------- the reveal bar ---------- */
 .bar{ position:relative;height:12px;background:var(--panel);border:1px solid var(--line);
@@ -167,7 +205,14 @@ footer a{ color:var(--dim) }
     <p class="tag">One second of it. Ask for more if you have to.</p>
   </header>
 
-  <div class="deck"><div class="disc" id="disc"></div></div>
+  <div class="deck">
+    <div class="spk" id="spk" aria-hidden="true">
+      <div class="woofer">
+        <span class="ring"></span><span class="ring b"></span><span class="ring c"></span>
+      </div>
+      <div class="tweeter"><i></i></div>
+    </div>
+  </div>
 
   <div class="bar">
     <div class="win" id="win"></div>
@@ -276,6 +321,13 @@ footer a{ color:var(--dim) }
 
   var pool = [], track = null, step = 0, tries = [], over = false;
   var round = 1, got = 0, score = 0;
+  var bag = [], lastTrack = null;
+
+  function setPlaying(state){
+    var el = $('spk');
+    el.classList.toggle('playing', state === 'play');
+    el.classList.toggle('held', state === 'hold');
+  }
   /* Two things the shared boards care about, kept separately from the
      per-session score: the streak (which resets on any miss or skip-out)
      and the fastest correct guess, measured from the moment the round
@@ -300,11 +352,14 @@ footer a{ color:var(--dim) }
     var era = $('era').value, sc = $('scene').value;
     var lo = 0, hi = 9999;
     if (era !== 'all') { var p = era.split('-'); lo = +p[0]; hi = +p[1]; }
+    var before = pool;
     pool = TRACKS.filter(function(t){
       if (t[2] < lo || t[2] > hi) return false;
       if (sc !== 'all' && t[3] !== sc) return false;
       return true;
     });
+    // the filters changed the pool, so the old deal is void
+    if (before.length !== pool.length) bag = [];
     $('poolCount').textContent = pool.length + ' in the pool';
     return pool;
   }
@@ -325,7 +380,7 @@ footer a{ color:var(--dim) }
       $('msg').textContent = 'Nothing in the pool with those filters.';
       return;
     }
-    track = pool[(Math.random() * pool.length) | 0];
+    track = deal();
     step = 0; tries = []; over = false;
     roundStart = Date.now();
     $('tries').innerHTML = '';
@@ -340,6 +395,26 @@ footer a{ color:var(--dim) }
     stop();
     paintTicks();
     prefetch();
+  }
+
+  /* Deal from a shuffled bag rather than picking at random each round.
+     Random picking repeats constantly — with 56 tracks there was a better
+     than even chance of a repeat within ten rounds. A bag guarantees you
+     see every track once before any of them comes back, and the reshuffle
+     never hands you the same one twice across the seam. */
+  function deal(){
+    if (!bag.length) {
+      bag = pool.slice();
+      for (var i = bag.length - 1; i > 0; i--) {
+        var j = (Math.random() * (i + 1)) | 0, t = bag[i];
+        bag[i] = bag[j]; bag[j] = t;
+      }
+      if (bag.length > 1 && bag[bag.length - 1] === lastTrack) {
+        var swap = bag.pop(); bag.splice((Math.random() * (bag.length - 1)) | 0, 0, swap);
+      }
+    }
+    lastTrack = bag.pop();
+    return lastTrack;
   }
 
   var srcUrl = null, fetching = false;
@@ -372,7 +447,7 @@ footer a{ color:var(--dim) }
     $('playhead').style.width = (w * 100) + '%';
     if (!audio.paused && audio.currentTime >= stopAt) {
       audio.pause();
-      $('disc').classList.remove('spin');
+      setPlaying('hold');
       $('pause').disabled = true;
       $('playhead').style.width = (stopAt / MAXW * 100) + '%';
     }
@@ -388,7 +463,7 @@ footer a{ color:var(--dim) }
     stopAt = STEPS[step];
     audio.currentTime = 0;
     audio.play().then(function(){
-      $('disc').classList.add('spin');
+      setPlaying('play');
       $('pause').disabled = false;
       $('pause').textContent = 'Pause';
       if (raf) cancelAnimationFrame(raf);
@@ -402,7 +477,7 @@ footer a{ color:var(--dim) }
   function stop(){
     try { audio.pause(); } catch (e) {}
     if (raf) { cancelAnimationFrame(raf); raf = null; }
-    $('disc').classList.remove('spin');
+    setPlaying('off');
     $('pause').disabled = true;
     $('playhead').style.width = '0';
   }
@@ -410,10 +485,10 @@ footer a{ color:var(--dim) }
   $('play').addEventListener('click', play);
   $('pause').addEventListener('click', function(){
     if (audio.paused) {
-      audio.play(); $('disc').classList.add('spin'); $('pause').textContent = 'Pause';
+      audio.play(); setPlaying('play'); $('pause').textContent = 'Pause';
       if (!raf) tick();
     } else {
-      audio.pause(); $('disc').classList.remove('spin'); $('pause').textContent = 'Resume';
+      audio.pause(); setPlaying('hold'); $('pause').textContent = 'Resume';
     }
   });
   $('vol').addEventListener('input', function(){ audio.volume = $('vol').value / 100; });
@@ -594,6 +669,7 @@ footer a{ color:var(--dim) }
     get step(){ return step; },
     get window(){ return STEPS[step]; },
     get pool(){ return pool; },
+    get bagLeft(){ return bag.length; },
     get track(){ return track; },
     STEPS: STEPS
   };
