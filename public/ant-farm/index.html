@@ -287,6 +287,12 @@ canvas{
   // out, which keeps the trail about as long as the tunnel is deep however
   // long the ant has been wandering.
   function remember(ant, x, y){
+    // The move is happening, so a hauling ant has now used up the trail
+    // entry it was walking towards.
+    if (ant.mode === 2 && ant.trail.length &&
+        ant.trail[ant.trail.length - 1] === idx(x, y)){
+      ant.trail.pop();
+    }
     if (ant.mode !== 2 && ant.trail.length < TRAIL_MAX){
       var id = idx(ant.x, ant.y);
       var at = ant.seen.get(id);
@@ -309,7 +315,14 @@ canvas{
     for (var k = 0; k < 8; k++){
       var nx = ant.x + DIRS[k][0], ny = ant.y + DIRS[k][1];
       if (!inside(nx, ny) || cell[idx(nx, ny)] !== AIR) continue;
+      // Only ever look the way we were asked to. Without the second test an
+      // ant hauling up would accept an opening *below* it as the "highest"
+      // one available whenever nothing above was open, walk into it, then
+      // be offered the cell it just left — and oscillate between two cells
+      // one row short of the surface for the rest of the run, load full,
+      // never dumping. That is what stalled the colony every time.
       if (sign > 0 && ny <= ant.y) continue;
+      if (sign < 0 && ny >= ant.y) continue;
       var better = sign > 0 ? ny > bestY : ny < bestY;
       if (better || (ny === bestY && Math.random() < 0.5)){ bestY = ny; best = k; }
     }
@@ -346,6 +359,11 @@ canvas{
       // — which wastes the whole trip and fills the tank with shafts. It
       // walks its own trail back out instead, which is both cheaper and
       // what actually happens.
+      // Peek, never pop. Popping the target here spent one trail entry per
+      // attempt whether or not the ant actually got anywhere, so a single
+      // blocked step — a stone, a dump, a turn — unravelled the route home
+      // a cell at a time until the ant was lost and started cutting again.
+      // The entry is consumed further down, once the move has happened.
       var stepped = false;
       while (ant.trail.length){
         var cellId = ant.trail[ant.trail.length - 1];
@@ -355,7 +373,7 @@ canvas{
         if (Math.abs(ddx) > 1 || Math.abs(ddy) > 1){ ant.trail.pop(); continue; }
         var di = DIR_OF[(ddx + 1) * 3 + (ddy + 1)];
         if (di < 0){ ant.trail.pop(); continue; }
-        ant.d = di; ant.trail.pop(); stepped = true;
+        ant.d = di; stepped = true;
         break;
       }
       if (!stepped){
@@ -376,7 +394,10 @@ canvas{
         if (Math.random() < 0.06){
           var cx = ant.x + DIRS[k2][0], cy = ant.y + DIRS[k2][1];
           if (inside(cx, cy) && cy > SKY && dig(cx, cy)){
-            if (ant.load < CAP){ ant.load++; grains++; }
+            if (ant.load < CAP){
+              ant.load++; grains++;
+              if (ant.load >= CAP) ant.mode = 2;   // full: stop widening, start hauling
+            }
             break;
           }
         }
@@ -414,8 +435,17 @@ canvas{
       // Sand does not come away in one bite. An ant stands at the face and
       // works at it, which is what keeps the whole tank from being hollowed
       // out inside a couple of minutes.
-      if (++ant.effort < EFFORT) return;
-      ant.effort = 0;
+      //
+      // A loaded ant is exempt. It is not quarrying, it is shoving its way
+      // back out through loose spoil, and making it pay the full thirty
+      // steps a cell meant an ant that lost its trail at depth was
+      // effectively gone for the rest of the run — which is why the colony
+      // kept drifting into a state where almost every ant was hauling and
+      // the grain count sat still.
+      if (ant.mode !== 2){
+        if (++ant.effort < EFFORT)return;
+        ant.effort = 0;
+      }
       // A full ant must still be allowed to dig. Refusing meant an ant that
       // had sealed itself in below could never get back up, and once every
       // ant had done that the colony stopped for good.
@@ -506,7 +536,10 @@ canvas{
       grains: grains, excavated: excavated, ants: ants.length,
       descend: modes[0], dig: modes[1], haul: modes[2],
       minY: Math.min.apply(null, ys), maxY: Math.max.apply(null, ys),
-      loads: ants.map(function(a){ return a.load; })
+      loads: ants.map(function(a){ return a.load; }),
+      detail: ants.map(function(a){
+        return { m: a.mode, x: a.x, y: a.y, load: a.load, trail: a.trail.length, eff: a.effort, d: a.d };
+      })
     };
   };
 })();
