@@ -1,5 +1,103 @@
 # Overnight batch — progress log
 
+## Summary — batch 14
+
+**11 toys built, verified in a real browser, and added to the hub.** The cabinet went from 97 drawers
+to 108. Everything on the list got built, in the order given, and nothing was left half-finished.
+
+**Nothing from the blocked list was touched** — no globe/planet editor, no device-detected retro
+theming, no message in a bottle, no who-else-is-here, no outpost builder, no Room Tone.
+
+**Not deployed.** The commits are on `main`; Railway still needs its manual trigger.
+
+### Look at these first
+
+1. **The Europop guesser needed an API decision, and the brief was right to insist on checking.**
+   Both providers were verified against live behaviour rather than memory:
+
+   - **Spotify: rejected.** Its `preview_url` is now marked **deprecated and nullable** in the
+     current reference, needs OAuth, and its terms state that "Audio Preview Clips may not be
+     offered as a standalone service or product" — which is close to describing this toy.
+   - **Deezer: chosen.** Its public search needs **no key and no OAuth**, and returns a `preview`
+     field: a real MP3 on Deezer's CDN, measured at 479,827 bytes / 128 kbps = **exactly 30.0
+     seconds**.
+   - `api.deezer.com` sends **no** `Access-Control-Allow-Origin`. I confirmed that by calling it
+     from a real browser rather than by reading headers — the headers are misleading, carrying
+     `allow-methods` and `allow-credentials` but not the one that matters. Hence the metadata relay
+     at `/api/preview`.
+   - The **preview URL itself does** send `Access-Control-Allow-Origin: *`, so the page plays the
+     file straight from Deezer. **No audio is proxied, cached or re-served here**, which is both the
+     instruction and what Deezer's terms require. The URLs are signed and expire, so a fresh one is
+     fetched each round rather than any being kept.
+
+   All **53** curated tracks were resolved against the live relay: 53 of 53 return a playable
+   preview. No key is needed, so there is no needs-a-key state to show.
+
+2. **The museum's twelve buttons were verified one at a time, not as a group.** The note when it was
+   expanded was that they must not be one joke repeated, so a shared "did anything change" check
+   would have been the wrong test — it passes trivially. Each exhibit got its own assertion: it
+   dodges the pointer, counts its own uselessness, springs, rotates the page hue, synthesises a note
+   that is never the same twice running, spawns working copies, falls through its own floor,
+   escalates its refusals, fills over three seconds, turns its case upside down, shatters into
+   falling fragments that reassemble, and — exactly once — really does copy the time to the
+   clipboard. Fifteen assertions, all true.
+
+3. **One real arithmetic error, caught by checking rather than by re-reading.** The estimator's
+   rice-on-a-chessboard sum was out by a factor of a thousand: grams to tonnes is 1e6, not 1e3.
+   Worse, its note claimed the last square was "five hundred thousand years" of world rice
+   production when the correct figure is about **five centuries**. Both fixed, and the note now says
+   so out loud. This is precisely what the never-fabricate-a-statistic rule exists for, and I nearly
+   shipped past it.
+
+4. **The decade matcher was rebalanced after simulation.** On the first pass, over 20,000 random
+   answer sets, the 2000s won only **3.9%** of the time while the 1970s took **27%** — one decade
+   nearly unreachable, another dominant. After reweighting, over 40,000 sets, the spread runs
+   **7.8% to 18.6%** and all seven decades are reachable.
+
+### What was decided without asking
+
+- **The estimator tags every figure `m` or `a`** — measured or assumed. A silly premise is stated as
+  a premise and never dressed as a known quantity, and the assumptions are editable so you can
+  disagree and watch the answer move.
+- **The decade matcher never touches song titles.** It matches on production and arrangement — how
+  it was recorded, what the low end is doing, where the voice sits — because those are what date a
+  record, and because that was the explicit note.
+- **The banknote portrait is nobody.** A coin-style profile assembled from landmarks in a unit space
+  with seeded variation. The first attempt collapsed into a purple blob and was redrawn.
+- **The pet rock's photograph never leaves the tab.** That toy has no server side at all, and the
+  page says so.
+- **The redundancy department separates invention from fact.** The memoranda are made up; the
+  appendix of genuinely doubled phrases beneath them — PIN number, La Brea Tar Pits, chai tea, RSVP
+  — is real, and each says which word got repeated and where it was hiding.
+
+### The eleven
+
+| Toy | What it is |
+|---|---|
+| `/groupchat-namer/` | Four tones that genuinely change the output, never repeating twice running |
+| `/redundancy-dept/` | Invented memoranda, with eighteen real doubled phrases underneath |
+| `/absurd-estimator/` | Daft questions, real arithmetic, every figure tagged measured or assumed |
+| `/decade-matcher/` | Eight questions on production and arrangement, seven reachable decades |
+| `/vintage-stamp/` | Canvas engraving, perforated and postmarked, deterministic from the subject |
+| `/design-currency/` | Real guilloché — parametric curves — and a portrait of nobody |
+| `/paint-namer/` | The right name is derived from the swatch; the decoys belong to other colours |
+| `/pet-rock/` | Six drawn rocks or your own photo, and a certificate that never shifts under you |
+| `/useless-buttons/` | Twelve exhibits, twelve mechanics, one of which is not useless |
+| `/reverse-alarm/` | Counts backwards from where you must be to the last moment you can get up |
+| `/europop-guesser/` | Real 30-second Deezer previews, four answers, five era filters |
+
+### How it was checked
+
+Every toy was driven in a real headless browser, not loaded and eyeballed. Each has a scripted probe
+exercising its actual mechanic: the swatch names are stable and hue-derived, the certificate is
+identical for the same rock and name, the alarm's chain always ascends and 09:00 less 87 minutes
+really is 07:33, the era pools are disjoint and sum to the whole, and the Europop audio element is
+confirmed playing a `dzcdn.net` file of duration 30.0 with `currentTime` past zero. A final sweep
+loaded all 108 toys plus the hub: **no JavaScript errors on any page**. Every toy checked at 390px
+for horizontal overflow.
+
+---
+
 ## Summary — batch 12, the cleanup batch
 
 **Six toys built, verified in a real browser, and added to the hub. The cabinet went from 91
