@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Oracle</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23120C1A'/><ellipse cx='16' cy='16' rx='11' ry='7' fill='none' stroke='%23B98FD8' stroke-width='1.8'/><circle cx='16' cy='16' r='3.4' fill='%23E4D2F2'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --dark:#0C0812;
+  --dark-2:#160F20;
+  --violet:#B98FD8;
+  --pale:#E9E1F2;
+  --dim:#7E7290;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:radial-gradient(760px 620px at 50% 20%, var(--dark-2) 0%, var(--dark) 68%);
+  color:var(--pale);font-family:var(--serif);min-height:100vh;
+  padding:34px 16px 90px;display:flex;flex-direction:column;align-items:center;
+}
+.wrap{ max-width:600px;width:100% }
+header{ text-align:center;margin-bottom:8px }
+h1{
+  font-family:var(--mono);font-size:clamp(16px,3.8vw,21px);margin:0;
+  letter-spacing:.32em;text-transform:uppercase;color:var(--violet);font-weight:500;
+}
+.sub{ font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin-top:11px }
+
+/* ---------- the veil ---------- */
+.veil{
+  position:relative;height:110px;margin:22px 0 6px;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+}
+.veil canvas{ position:absolute;inset:0;width:100%;height:100% }
+
+/* ---------- the exchange ---------- */
+.thread{ margin:8px 0 0 }
+.turn{ margin:0 0 26px;opacity:0;animation:rise .55s ease forwards }
+@keyframes rise{ from{ opacity:0;transform:translateY(7px) } to{ opacity:1;transform:none } }
+.you{
+  font-family:var(--mono);font-size:11px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--dim);margin:0 0 9px;
+}
+.you span{ color:#A99BBC;text-transform:none;letter-spacing:.02em;font-size:12.5px }
+.said{
+  font-size:clamp(17px,3.8vw,21px);line-height:1.5;margin:0;font-style:italic;
+  color:var(--pale);text-shadow:0 0 26px rgba(185,143,216,.2);
+}
+
+form{ display:flex;gap:9px;margin-top:26px;align-items:stretch }
+input[type=text]{
+  flex:1 1 auto;min-width:0;
+  font-family:var(--serif);font-size:16px;
+  background:rgba(233,225,242,.05);color:var(--pale);
+  border:1px solid rgba(185,143,216,.3);padding:14px 15px;border-radius:2px;
+}
+input[type=text]::placeholder{ color:#6A6078 }
+input[type=text]:focus{ outline:none;border-color:var(--violet);background:rgba(233,225,242,.08) }
+button.ask{
+  font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  background:transparent;color:var(--violet);border:1px solid var(--violet);
+  padding:0 20px;cursor:pointer;flex:0 0 auto;
+}
+button.ask:hover{ background:var(--violet);color:#150E1C }
+button.ask:focus-visible{ outline:2px solid var(--pale);outline-offset:3px }
+
+.note{
+  margin-top:34px;font-family:var(--mono);font-size:10px;line-height:1.9;
+  letter-spacing:.1em;color:#5E566C;text-align:center;
+}
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media print{ #lc-back{ display:none } }
+@media (prefers-reduced-motion: reduce){
+  #lc-back{ transition:none }
+  .turn{ animation:none;opacity:1 }
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>The Oracle</h1>
+    <p class="sub">It knows. It will not say.</p>
+  </header>
+
+  <div class="veil"><canvas id="veil" aria-hidden="true"></canvas></div>
+
+  <div class="thread" id="thread" aria-live="polite"></div>
+
+  <form id="ask">
+    <input id="q" type="text" autocomplete="off" spellcheck="false"
+           placeholder="Ask it anything" aria-label="Ask the oracle anything" maxlength="180">
+    <button class="ask" type="submit">Ask</button>
+  </form>
+
+  <p class="note">No language model was consulted. It could not answer you if it wanted to.</p>
+</div>
+
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<script>
+(function(){
+  'use strict';
+
+  /* ---- turning what you said back at you -------------------------- *
+   * Straight pronoun reflection, done in one pass over the words so
+   * "my" cannot be swapped to "your" and then back again.            */
+  var FLIP = {
+    'i':'you', "i'm":'you are', 'im':'you are', 'me':'you', 'my':'your', 'mine':'yours',
+    'myself':'yourself', 'am':'are', "i've":'you have', 'ive':'you have',
+    "i'll":'you will', "i'd":'you would',
+    'you':'I', 'your':'my', 'yours':'mine', 'yourself':'myself',
+    "you're":'I am', 'youre':'I am', "you've":'I have', "you'll":'I will',
+    'we':'you', 'our':'your', 'ours':'yours', 'us':'you', 'ourselves':'yourselves'
+  };
+  function reflect(s){
+    return s.split(/\b/).map(function(tok){
+      var low = tok.toLowerCase();
+      return Object.prototype.hasOwnProperty.call(FLIP, low) ? FLIP[low] : tok;
+    }).join('');
+  }
+
+  function tidy(s){
+    return s.trim().replace(/\s+/g, ' ').replace(/[?!.]+$/, '');
+  }
+
+  // Strip the interrogative and any auxiliary off the front, so what is left
+  // is the thing actually being asked about.
+  var LEADERS = /^(what|why|how|when|where|who|whom|whose|which|should|shall|will|would|can|could|do|does|did|is|are|was|were|am|have|has|had|may|might|must)\b\s*/i;
+  var BE = /^(is|are|was|were|am|be)$/i;
+  function core(s){
+    var t = tidy(s), kind = 'plain', be = false;
+    var m = t.match(LEADERS);
+    if (m){
+      kind = m[1].toLowerCase();
+      if (BE.test(kind)) be = true;
+      t = t.slice(m[0].length);
+      var m2 = t.match(/^(do|does|did|is|are|was|were|am|will|would|can|could|should|have|has|had)\b\s*/i);
+      if (m2){
+        if (BE.test(m2[1])) be = true;
+        t = t.slice(m2[0].length);
+      }
+    }
+    // English inverts around "to be", so pulling the verb off the front of
+    // "is the sky blue" leaves "the sky blue" — a fragment that reads as
+    // broken in any template that quotes it back. Those get skipped.
+    return { kind: kind, rest: tidy(t), fragment: be };
+  }
+
+  var GENERIC = [
+    'Why do you need to know?',
+    'What would you do with the answer?',
+    'Who decided that was a question worth asking?',
+    'And if nobody ever answered, what then?',
+    'Is that the question, or is it standing in for another one?',
+    'What were you hoping I would say?',
+    'How long has that been sitting there?',
+    'Would an answer actually settle it?'
+  ];
+  var WITH_REST = [
+    'What would change if {r}?',
+    'Is {r} really what this is about?',
+    'How long have you wanted to know whether {r}?',
+    'Would you still ask if you already knew {r}?',
+    'And who benefits from you not knowing whether {r}?',
+    'What have you already decided about {r}?',
+    'If {r} turned out to be true, what would you do first?'
+  ];
+  var BY_KIND = {
+    why:    ['Does a reason help?', 'Would knowing why make it any easier?',
+             'Do you want the reason, or the permission?'],
+    what:   ['What do you think it is?', 'Would having a name for it change anything?'],
+    how:    ['Does the method matter, or only the result?', 'What have you tried?'],
+    when:   ['Would a date help you, or only give you something to wait for?',
+             'What are you doing until then?'],
+    where:  ['Would you go, if I told you?'],
+    who:    ['Does it matter who, or only that somebody?'],
+    should: ['What happens if you do not?', 'Whose permission are you waiting for?',
+             'You already know, do you not?'],
+    will:   ['Would yes be better than no?', 'Which one were you hoping for?'],
+    is:     ['Would yes be better than no?', 'What would it mean if it were?'],
+    are:    ['What would it mean if they were?'],
+    do:     ['Do you?', 'What makes you ask that of me?'],
+    can:    ['Could you?', 'Is it ability you are short of?']
+  };
+  var LATE = [
+    'Have you noticed that I have not answered anything?',
+    'How many of these before you stop?',
+    'What would an answer even look like, coming from a thing like me?',
+    'You keep asking. What is that about?',
+    'Do you want an oracle, or do you want company?'
+  ];
+
+  var asked = 0, lastLine = '';
+  function pick(list){
+    for (var i = 0; i < 8; i++){
+      var c = list[(Math.random() * list.length) | 0];
+      if (c !== lastLine) return c;
+    }
+    return list[0];
+  }
+
+  function answer(text){
+    var c = core(text);
+    var pool = [];
+    if (asked >= 8 && Math.random() < 0.4) pool = LATE;
+    else {
+      pool = pool.concat(GENERIC);
+      if (BY_KIND[c.kind]) pool = pool.concat(BY_KIND[c.kind], BY_KIND[c.kind]);
+      // Only offer the templates that quote you back if there is something
+      // left to quote — otherwise they collapse into "What would change if ?"
+      if (!c.fragment && c.rest && c.rest.split(' ').length >= 2 && c.rest.length < 90){
+        var r = reflect(c.rest);
+        pool = pool.concat(WITH_REST.map(function(t){ return t.replace('{r}', r); }));
+      }
+    }
+    var out = pick(pool);
+    lastLine = out;
+    return out;
+  }
+
+  /* ---- the page ---------------------------------------------------- */
+  var form = document.getElementById('ask');
+  var input = document.getElementById('q');
+  var thread = document.getElementById('thread');
+
+  function esc(t){
+    return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function add(question, reply){
+    var d = document.createElement('div');
+    d.className = 'turn';
+    d.innerHTML = '<p class="you">you asked &middot; <span>' + esc(question) + '</span></p>' +
+                  '<p class="said">' + esc(reply) + '</p>';
+    thread.insertBefore(d, thread.firstChild);
+    while (thread.children.length > 12) thread.removeChild(thread.lastChild);
+  }
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    var v = tidy(input.value);
+    if (!v){
+      add('', 'Are you going to say something?');
+      return;
+    }
+    asked++;
+    add(v, answer(v));
+    input.value = '';
+    input.focus();
+  });
+
+  /* ---- the veil: a slow shimmer, drawn not animated with CSS ------- */
+  var cv = document.getElementById('veil');
+  var ctx = cv.getContext('2d');
+  var calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var VW = 0, VH = 0, DPR = 1;
+  function vresize(){
+    DPR = Math.min(2, window.devicePixelRatio || 1);
+    VW = cv.clientWidth; VH = cv.clientHeight;
+    cv.width = Math.round(VW * DPR); cv.height = Math.round(VH * DPR);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  window.addEventListener('resize', vresize);
+  vresize();
+
+  function veil(t){
+    ctx.clearRect(0, 0, VW, VH);
+    for (var i = 0; i < 40; i++){
+      var p = i / 40;
+      var y = VH * 0.5 + Math.sin(t * 0.0006 + p * 7) * VH * 0.22 * Math.sin(p * Math.PI);
+      var r = 2 + Math.sin(t * 0.0012 + p * 11) * 1.4;
+      var a = 0.05 + 0.28 * Math.sin(p * Math.PI) * (0.6 + 0.4 * Math.sin(t * 0.001 + p * 5));
+      ctx.fillStyle = 'rgba(185,143,216,' + Math.max(0, a).toFixed(3) + ')';
+      ctx.beginPath();
+      ctx.ellipse(VW * p, y, Math.abs(r), Math.abs(r) * 3.4, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  if (calm) veil(0);
+  else (function loop(now){ veil(now); requestAnimationFrame(loop); })(0);
+
+  window.__oracle = function(q){ return answer(q); };
+  window.__ask = function(q){ input.value = q; form.dispatchEvent(new Event('submit', { cancelable: true })); };
+})();
+</script>
+</body>
+</html>
