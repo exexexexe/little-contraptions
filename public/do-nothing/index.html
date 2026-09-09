@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Do-Nothing Timer</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230A1020'/><circle cx='22' cy='10' r='4' fill='%23E8E2C8'/><path d='M3 20q4-3 8 0t8 0 8 0M3 25q4-3 8 0t8 0 8 0' stroke='%234E7C9E' stroke-width='1.6' fill='none'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --deep:#070B14;
+  --water:#0E1826;
+  --moon:#E9E3CA;
+  --pale:#CFE0EC;
+  --dim:#6B7C8C;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%}
+body{
+  background:var(--deep);color:var(--pale);font-family:var(--serif);
+  min-height:100%;overflow:hidden;
+}
+#pool{ position:fixed;inset:0;display:block;width:100%;height:100% }
+
+.hud{
+  position:fixed;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;
+  pointer-events:none;padding:20px;
+}
+.clock{
+  font-family:var(--mono);font-size:clamp(46px,13vw,104px);font-weight:200;
+  letter-spacing:.06em;line-height:1;
+  color:var(--moon);text-shadow:0 0 40px rgba(233,227,202,.28);
+  font-variant-numeric:tabular-nums;
+}
+.state{
+  font-family:var(--mono);font-size:11px;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--dim);margin-top:18px;min-height:16px;
+  transition:color .5s;
+}
+.state.disturbed{ color:#C77A6A }
+.milestone{
+  font-size:clamp(15px,3.4vw,19px);line-height:1.55;margin-top:26px;
+  max-width:30ch;color:var(--pale);opacity:0;transition:opacity .9s ease;
+  font-style:italic;
+}
+.milestone.on{ opacity:.92 }
+.best{
+  position:fixed;left:0;right:0;bottom:22px;text-align:center;
+  font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--dim);pointer-events:none;
+}
+.intro{
+  position:fixed;left:0;right:0;top:26px;text-align:center;
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--dim);pointer-events:none;transition:opacity .8s;padding:0 16px;
+}
+.intro.gone{ opacity:0 }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease, opacity .5s;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+/* It fades while you are being still, so it is not a bright button in the
+   corner of a page whose whole point is that nothing moves. */
+#lc-back.resting{ opacity:.18 }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media print{ #lc-back{ display:none } }
+@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } }
+</style>
+</head>
+<body>
+
+<canvas id="pool" aria-hidden="true"></canvas>
+
+<p class="intro" id="intro">Do not move. Do not touch anything. That is the whole game.</p>
+
+<div class="hud">
+  <div class="clock" id="clock" role="timer" aria-live="off">0.0</div>
+  <div class="state" id="state">still</div>
+  <p class="milestone" id="milestone"></p>
+</div>
+
+<div class="best" id="best"></div>
+
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<script>
+(function(){
+  'use strict';
+
+  var KEY = 'lc-donothing-best';
+  var cv = document.getElementById('pool');
+  var ctx = cv.getContext('2d');
+  var clockEl = document.getElementById('clock');
+  var stateEl = document.getElementById('state');
+  var msEl = document.getElementById('milestone');
+  var bestEl = document.getElementById('best');
+  var introEl = document.getElementById('intro');
+  var backEl = document.getElementById('lc-back');
+
+  var calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---- the sky, drawn once ---------------------------------------- */
+  var sky = document.createElement('canvas');
+  var skyCtx = sky.getContext('2d');
+  var stars = [];
+  var W = 0, H = 0, HORIZON = 0, DPR = 1;
+
+  function buildSky(){
+    skyCtx.setTransform(1, 0, 0, 1, 0, 0);
+    sky.width = Math.max(1, Math.round(W * DPR));
+    sky.height = Math.max(1, Math.round(HORIZON * DPR));
+    skyCtx.scale(DPR, DPR);
+
+    var g = skyCtx.createLinearGradient(0, 0, 0, HORIZON);
+    g.addColorStop(0, '#050810');
+    g.addColorStop(0.72, '#0B1524');
+    g.addColorStop(1, '#16273A');
+    skyCtx.fillStyle = g;
+    skyCtx.fillRect(0, 0, W, HORIZON);
+
+    // the moon, low and to one side
+    var mx = W * 0.72, my = HORIZON * 0.3, mr = Math.max(16, Math.min(W, HORIZON) * 0.07);
+    var glow = skyCtx.createRadialGradient(mx, my, mr * 0.6, mx, my, mr * 6);
+    glow.addColorStop(0, 'rgba(233,227,202,.30)');
+    glow.addColorStop(1, 'rgba(233,227,202,0)');
+    skyCtx.fillStyle = glow;
+    skyCtx.fillRect(0, 0, W, HORIZON);
+    skyCtx.fillStyle = '#E9E3CA';
+    skyCtx.beginPath(); skyCtx.arc(mx, my, mr, 0, Math.PI * 2); skyCtx.fill();
+    skyCtx.fillStyle = 'rgba(200,193,168,.5)';
+    skyCtx.beginPath(); skyCtx.arc(mx - mr * 0.28, my - mr * 0.2, mr * 0.17, 0, Math.PI * 2); skyCtx.fill();
+    skyCtx.beginPath(); skyCtx.arc(mx + mr * 0.3, my + mr * 0.26, mr * 0.12, 0, Math.PI * 2); skyCtx.fill();
+
+    for (var i = 0; i < stars.length; i++){
+      var s = stars[i];
+      skyCtx.globalAlpha = s.a;
+      skyCtx.fillStyle = '#EAF1F8';
+      skyCtx.fillRect(s.x * W, s.y * HORIZON, s.r, s.r);
+    }
+    skyCtx.globalAlpha = 1;
+  }
+
+  function resize(){
+    DPR = Math.min(2, window.devicePixelRatio || 1);
+    W = cv.clientWidth; H = cv.clientHeight;
+    HORIZON = Math.round(H * 0.46);
+    cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    buildSky();
+  }
+
+  for (var i = 0; i < 150; i++){
+    stars.push({ x: Math.random(), y: Math.random(), r: Math.random() < 0.14 ? 2 : 1,
+                 a: 0.25 + Math.random() * 0.7 });
+  }
+
+  /* ---- stillness --------------------------------------------------- *
+   * disturb is the only real state: input pushes it up, time pulls it
+   * down, and everything on screen — the water, the words, the clock —
+   * is just a reading of it.                                          */
+  var disturb = 1;                 // start disturbed; settling is the first thing you do
+  var elapsed = 0;                 // seconds of continuous stillness
+  var best = 0;
+  try { best = parseFloat(localStorage.getItem(KEY)) || 0; } catch (e) {}
+
+  var MILESTONES = [
+    [8,    'Good. The water is going flat.'],
+    [20,   'Twenty seconds. Most people have reached for something by now.'],
+    [45,   'You are doing nothing, competently.'],
+    [90,   'A minute and a half. This is longer than most adverts.'],
+    [180,  'Three minutes. Nothing has happened and nothing is going to.'],
+    [300,  'Five minutes of deliberate uselessness. Genuinely quite hard.'],
+    [600,  'Ten minutes. At this point the page is more still than you are.'],
+    [1200, 'Twenty minutes. You have out-waited the thing that was measuring you.']
+  ];
+  var msIndex = 0;
+
+  function fmt(t){
+    if (t < 60) return t.toFixed(1);
+    var m = Math.floor(t / 60), s = t - m * 60;
+    return m + ':' + (s < 10 ? '0' : '') + s.toFixed(1);
+  }
+
+  function showBest(){
+    bestEl.textContent = best >= 1 ? 'longest stillness &middot; ' + fmt(best) : '';
+    bestEl.innerHTML = best >= 1 ? 'longest stillness &middot; ' + fmt(best) : '';
+  }
+  showBest();
+
+  function bump(reason){
+    if (elapsed > best){
+      best = elapsed;
+      try { localStorage.setItem(KEY, String(best)); } catch (e) {}
+      showBest();
+    }
+    if (elapsed > 2) msIndex = 0;
+    elapsed = 0;
+    disturb = Math.min(1, disturb + 0.55);
+    stateEl.textContent = reason;
+    stateEl.classList.add('disturbed');
+    msEl.classList.remove('on');
+  }
+
+  /* Sub-pixel drift from a resting hand or a trackpad should not count as
+     moving, so a pointer has to actually travel before it resets you. */
+  var lastX = null, lastY = null;
+  function onPointer(e){
+    if (lastX === null){ lastX = e.clientX; lastY = e.clientY; return; }
+    var d = Math.abs(e.clientX - lastX) + Math.abs(e.clientY - lastY);
+    lastX = e.clientX; lastY = e.clientY;
+    if (d > 3) bump('you moved');
+  }
+
+  window.addEventListener('pointermove', onPointer, { passive: true });
+  window.addEventListener('pointerdown', function(){ bump('you touched it'); }, { passive: true });
+  window.addEventListener('wheel', function(){ bump('you scrolled'); }, { passive: true });
+  window.addEventListener('keydown', function(e){
+    if (e.key === 'Tab') return;                 // let a keyboard user reach the way out
+    bump('you typed');
+  });
+  window.addEventListener('blur', function(){ bump('you left'); });
+  window.addEventListener('resize', function(){ resize(); bump('you resized the window'); });
+
+  /* ---- the loop ---------------------------------------------------- */
+  var last = performance.now();
+
+  function frame(now){
+    var dt = Math.min(0.1, (now - last) / 1000);
+    last = now;
+
+    // stillness decays the disturbance; nothing else does
+    disturb *= Math.exp(-dt * 0.62);
+    if (disturb < 0.0006) disturb = 0.0006;
+
+    if (disturb < 0.16){
+      elapsed += dt;
+      stateEl.classList.remove('disturbed');
+      stateEl.textContent = 'still';
+      introEl.classList.add('gone');
+      backEl.classList.add('resting');
+    } else if (elapsed === 0){
+      backEl.classList.remove('resting');
+    }
+
+    clockEl.textContent = fmt(elapsed);
+
+    while (msIndex < MILESTONES.length && elapsed >= MILESTONES[msIndex][0]){
+      msEl.textContent = MILESTONES[msIndex][1];
+      msEl.classList.add('on');
+      msIndex++;
+    }
+
+    draw(now / 1000);
+    requestAnimationFrame(frame);
+  }
+
+  function draw(t){
+    ctx.clearRect(0, 0, W, H);
+    ctx.drawImage(sky, 0, 0, W, HORIZON);
+
+    // The reflection is the sky again, row by row, each row slid sideways by
+    // how disturbed the water is. Flat water gives it back almost exactly.
+    var amp = disturb * Math.min(26, W * 0.035);
+    var reflectH = H - HORIZON;
+    var step = calm ? 3 : 2;
+    for (var y = 0; y < reflectH; y += step){
+      var srcY = HORIZON - 1 - (y / reflectH) * HORIZON * 0.92;
+      if (srcY < 0) srcY = 0;
+      var depth = y / reflectH;
+      var off = amp * (1 - depth * 0.45) *
+                (Math.sin(y * 0.13 + t * 2.1) * 0.6 + Math.sin(y * 0.052 - t * 1.35) * 0.4);
+      ctx.globalAlpha = 0.5 - depth * 0.32;
+      ctx.drawImage(sky, 0, Math.round(srcY * DPR), sky.width, Math.max(1, Math.round(step * DPR)),
+                    off, HORIZON + y, W, step);
+    }
+    ctx.globalAlpha = 1;
+
+    // the waterline
+    ctx.fillStyle = 'rgba(150,190,220,' + (0.05 + disturb * 0.16).toFixed(3) + ')';
+    ctx.fillRect(0, HORIZON - 1, W, 1.5);
+  }
+
+  resize();
+  requestAnimationFrame(frame);
+
+  window.__still = function(){
+    return { elapsed: elapsed, disturb: disturb, best: best, state: stateEl.textContent };
+  };
+})();
+</script>
+</body>
+</html>
