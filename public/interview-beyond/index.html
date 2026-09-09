@@ -60,6 +60,33 @@ h1{ font-family:var(--display);font-size:clamp(25px,5.4vw,38px);margin:0;letter-
   font-family:var(--mono);font-size:11.5px;color:var(--dim);letter-spacing:.1em;line-height:1.8;
   border-top:1px solid var(--rule);padding-top:16px;
 }
+.turn{ margin-bottom:18px }
+.turn.opening{ margin-bottom:20px }
+.turn .asked{
+  font-family:var(--mono);font-size:12px;line-height:1.6;color:var(--brass);
+  border-left:3px solid var(--brass);padding-left:11px;margin-bottom:9px;
+}
+.answer.problem{ font-family:var(--mono);font-size:12.5px;color:#C99;line-height:1.7 }
+.ask{ display:flex;gap:8px;margin-top:20px;padding-top:18px;border-top:1px solid var(--rule) }
+.ask input{
+  flex:1;min-width:0;font-family:var(--sans);font-size:15px;padding:12px 14px;
+  background:rgba(0,0,0,.22);color:var(--paper);border:1px solid var(--rule);border-radius:3px;
+}
+.ask input:focus{ outline:2px solid var(--brass);outline-offset:-1px }
+.ask input:disabled{ opacity:.6 }
+.btn.go{ border-color:var(--brass);color:var(--brass);font-weight:700 }
+.seeds{ display:flex;gap:7px;flex-wrap:wrap;margin-top:12px;align-items:center }
+.seedlabel{ font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim) }
+.seed{
+  font-family:var(--sans);font-size:13px;background:transparent;color:#C9C1B0;
+  border:1px solid var(--rule);border-radius:999px;padding:7px 12px;cursor:pointer;
+}
+.seed:hover{ border-color:var(--brass);color:var(--brass) }
+.seed:focus-visible{ outline:2px solid var(--brass);outline-offset:2px }
+.visually-hidden{ position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap }
+.dots:after{ content:'';animation:dots 1.2s steps(4,end) infinite }
+@keyframes dots{ 0%{content:''} 25%{content:'.'} 50%{content:'..'} 75%{content:'...'} }
+@media (prefers-reduced-motion: reduce){ .dots:after{ animation:none;content:'…' } }
 .deck{ display:flex;gap:9px;flex-wrap:wrap;margin-top:16px }
 .btn{
   font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;
@@ -109,7 +136,7 @@ body{ padding-bottom:64px }
 
 <div class="wrap">
   <h1>The Interview Room</h1>
-  <div class="sub">four people who did not live to be asked</div>
+  <div class="sub">four invented people · ask them anything · none of it is a record</div>
 
   <div class="pick" id="pick"></div>
   <div class="stage" id="stage"></div>
@@ -121,12 +148,15 @@ body{ padding-bottom:64px }
 </div>
 
 <footer>
-  These four are invented people doing real historical jobs — a Roman water engineer, a plague
-  physician, a lighthouse keeper, a computer operator in 1968. Nobody real is being ventriloquised
-  and no quotation here is genuine. The working details are as accurate as I could make them;
-  the people are not. <a href="/">← back to the cabinet</a>
+  <b>None of this is a historical record.</b> These four are invented people doing real historical
+  jobs — a Roman water overseer, a plague physician, a lighthouse keeper, a computer operator in
+  1968 — and their answers are written on the spot by a language model playing the part. Nobody real
+  is being ventriloquised, no quotation here is genuine, and nothing they say should be taken as a
+  fact about the period, however confidently it is said. It is a conversation with a costume, not a
+  source. <a href="/">← back to the cabinet</a>
 </footer>
 
+<script src="/shared/lc-generate.js"></script>
 <script>
 'use strict';
 
@@ -149,36 +179,10 @@ const FIGURES = [
     portrait:(c) => '<circle cx="32" cy="22" r="11" fill="none" stroke="' + c + '" stroke-width="2.4"/>' +
       '<path d="M12 56c0-11 9-18 20-18s20 7 20 18" fill="none" stroke="' + c + '" stroke-width="2.4"/>' +
       '<path d="M8 34h8M48 34h8" stroke="' + c + '" stroke-width="2"/>',
-    start:'aq1',
-    nodes:{
-      aq1:{ a:'You want to know about the arches. Everyone wants to know about the arches. The arches are the least interesting part — they are simply how you get across a valley without going down into it.',
-        d:'She does not sit down.',
-        q:[['So what is the interesting part?','aq2'],['How much water are we talking about?','aq3'],['Who do you actually work for?','aq4']] },
-      aq2:{ a:'The slope. The whole thing lives or dies on the fall of the channel — too steep and it scours the lining away, too shallow and it silts up and stops. You are aiming for a drop of a few feet in a mile and holding it for thirty miles.',
-        d:'She draws a line in the air, almost level.',
-        q:[['How do you measure something that shallow?','aq5'],['What happens when you get it wrong?','aq6'],['How much water are we talking about?','aq3']] },
-      aq3:{ a:'More than the city can use, which is the point. It runs day and night and never stops — there is no tap at the far end. What is not drunk goes to the baths, and what leaves the baths flushes the sewers. Nothing is wasted because nothing can be stopped.',
-        d:'',
-        q:[['That seems wasteful.','aq7'],['So what is the interesting part?','aq2'],['Who do you actually work for?','aq4']] },
-      aq4:{ a:'On paper, a commissioner of some standing. In practice, a gang of men who know the channel better than he knows his own house, and a slave called Priscus who can hear a blockage from two hundred feet away. I have met the commissioner once.',
-        d:'',
-        q:[['What is the job like day to day?','aq8'],['Does anyone steal the water?','aq9'],['So what is the interesting part?','aq2']] },
-      aq5:{ a:'A chorobates. A long wooden bench with a water channel cut into the top and plumb lines down the sides. You level it, you sight along it, you move it, and you do that all day for a year. It is unbelievably boring and it is why the water arrives.',
-        d:'She says this with something close to affection.',
-        q:[['What happens when you get it wrong?','aq6'],['Does anyone steal the water?','aq9']] },
-      aq6:{ a:'Then you have built a very long stone trough full of standing water and mud, and everyone downstream of it knows your name. There is a stretch near the ninth mile where somebody before me got it wrong. We clean it twice a year. I have never met him and I think about him constantly.',
-        d:'',
-        q:[['Does anyone steal the water?','aq9'],['What is the job like day to day?','aq8']] },
-      aq7:{ a:'You are thinking of water as a thing you buy. Here it is a thing that arrives. There is no valve at the source — the spring does not know about us. The only question is where it goes on the way through.',
-        d:'',
-        q:[['Does anyone steal the water?','aq9'],['What is the job like day to day?','aq8']] },
-      aq8:{ a:'Walking. Mostly walking. You follow the channel and you look at it. You look for damp on the outside of the wall, for a change in the sound, for plants growing where plants have no business. Then you write it down and somebody else fixes it, badly, and you come back.',
-        d:'',
-        q:[['Does anyone steal the water?','aq9'],['What happens when you get it wrong?','aq6']] },
-      aq9:{ a:'Constantly. There are men who make a living tapping the channel and selling into private houses, and there are inspectors who make a living not noticing. I have pulled out pipes that were better made than the ones we install. I do admire the workmanship. I still pull them out.',
-        d:'A short pause.',
-        q:[['What is the job like day to day?','aq8'],['So what is the interesting part?','aq2']] },
-    },
+    note:'An invented Roman water overseer, around 120 AD, responsible for the upkeep of an aqueduct channel. Practical, unsentimental, proud of unglamorous work. Talks about gradient, silt, lining, the chorobates, the gangs who do the actual repairs, and water theft. Slightly impatient with people who only want to hear about the arches. Has never met the commissioner she reports to.',
+    open:'You want to know about the arches. Everyone wants to know about the arches. They are the least interesting part - they are simply how you get water across a valley without taking it down into one.',
+    dir:'She does not sit down.',
+    seeds:['So what is the interesting part?','How much water are we talking about?','Does anyone steal it?','Who do you actually work for?'],
   },
   {
     id:'plague',
@@ -186,33 +190,10 @@ const FIGURES = [
     role:'a European port city · 1348',
     blurb:'treated the sick during a plague year · did not know what it was',
     portrait:(c) => '<path d="M20 26c0-7 5-12 12-12s12 5 12 12v6l10 10-14 4-8 10-8-10-14-4 10-10z" fill="none" stroke="' + c + '" stroke-width="2.2"/>',
-    start:'p1',
-    nodes:{
-      p1:{ a:'You have come to ask what caused it. I will tell you what I believed, and you may laugh, but understand that I was not being stupid — I was being wrong, which is a different thing and much more common.',
-        d:'He sets down a bundle of dried herbs.',
-        q:[['What did you believe?','p2'],['What did you actually do for people?','p3'],['Did you think you would survive?','p4']] },
-      p2:{ a:'Bad air. A corruption of the air itself, from swamps, from unburied things, from a conjunction of planets that year. It explained a great deal — why it moved along roads, why it was worse in crowded quarters, why the poor died first. It explained everything except the truth.',
-        d:'',
-        q:[['So what did you do about the air?','p5'],['What did you actually do for people?','p3'],['Did anyone disagree with you?','p6']] },
-      p3:{ a:'Less than you would like. I lanced the swellings, which sometimes helped and sometimes killed faster. I told them to leave the city, which was good advice and impossible for most. I sat with people. I wrote down who died and when, which turned out to be the most useful thing I did and I did not know it at the time.',
-        d:'',
-        q:[['Why was writing it down useful?','p7'],['Did you think you would survive?','p4'],['What did you believe?','p2']] },
-      p4:{ a:'No. I made arrangements. I gave my books to a nephew who could not read them. Then I did survive, and I have never entirely understood why, and neither has anybody else. That is the part that stays with you — not the dying. The arbitrariness.',
-        d:'',
-        q:[['What did the city do?','p8'],['What did you actually do for people?','p3']] },
-      p5:{ a:'Burned aromatics on every corner. Carried a posy at the nose. Sealed the windows, which was precisely the wrong thing. There is a certain grim comedy in a profession working very hard, at considerable expense, to make a room worse.',
-        d:'',
-        q:[['Did anyone disagree with you?','p6'],['What did the city do?','p8']] },
-      p6:{ a:'A few. There was a surgeon who insisted it passed person to person, from the pattern of households, and he was closer to right than any of us. He could not say how, and a mechanism you cannot name is not an argument anyone will accept. He was thought difficult.',
-        d:'A long pause.',
-        q:[['Why was writing it down useful?','p7'],['What did the city do?','p8']] },
-      p7:{ a:'Because a list of dates and streets is a shape, and the shape was the answer. Not to me — I had no way to read it. But somebody, centuries after, with better questions, could look at those parish books and see the thing move. I kept a record without knowing what I was recording.',
-        d:'',
-        q:[['Did you think you would survive?','p4'],['Did anyone disagree with you?','p6']] },
-      p8:{ a:'Closed the gates, which came too late. Appointed watchmen at the wells, which was pointless. Forbade gatherings, which worked, though not for the reason anyone gave. And buried people in pits outside the walls, quickly, without the rites, which the living minded far more than you would think.',
-        d:'',
-        q:[['What did you actually do for people?','p3'],['What did you believe?','p2']] },
-    },
+    note:'An invented physician in a European port city in 1348, during a plague year. Educated in humoral medicine and completely wrong about the cause, in the specific way his training makes him wrong: bad air, imbalance, the influence of the stars. Careful, exhausted, not a fool - he keeps records, notices patterns he cannot explain, and is honest about what he cannot do. Would not know the word bacterium.',
+    open:'I have been at three houses since dawn and I will be honest with you: I do not know what this is. I know what I was taught it is, and I have stopped believing that on the walk between houses.',
+    dir:'He is still wearing his outdoor coat.',
+    seeds:['What were you taught it is?','What do you actually do for them?','What have you noticed?','Are you afraid?'],
   },
   {
     id:'light',
@@ -221,33 +202,10 @@ const FIGURES = [
     blurb:'kept a light burning on a rock in the Atlantic · four weeks on, two off',
     portrait:(c) => '<path d="M26 54V30l6-14 6 14v24z" fill="none" stroke="' + c + '" stroke-width="2.2"/>' +
       '<path d="M20 30h24" stroke="' + c + '" stroke-width="2.2"/><path d="M10 24l8 4M54 24l-8 4" stroke="' + c + '" stroke-width="2"/>',
-    start:'l1',
-    nodes:{
-      l1:{ a:'People imagine it is lonely. It is not lonely, it is small. Loneliness is a thing you feel about other people. This is more that the world has been reduced to about forty feet across and you must find a way to be a reasonable person inside that.',
-        d:'',
-        q:[['What did you actually do all day?','l2'],['Were you ever frightened?','l3'],['Who else was out there?','l4']] },
-      l2:{ a:'Wound the clockwork that turns the lens, every two hours, all night. Trimmed the wick. Cleaned the glass, inside and out, because salt films it over in a day. Filled the oil. Wrote the log. Then again. The light must not falter, and the only thing standing between it and faltering is somebody being awake and slightly bored.',
-        d:'',
-        q:[['Every two hours, all night?','l5'],['What was in the log?','l6'],['Who else was out there?','l4']] },
-      l3:{ a:'In a bad gale, the tower moves. Not much. Enough that a cup will walk across a table. You get used to it, and then one night you do not, and you sit on the stairs until it stops. Nobody writes that in the log.',
-        d:'She does not elaborate.',
-        q:[['What was in the log, then?','l6'],['Did anything ever go wrong?','l7'],['Who else was out there?','l4']] },
-      l4:{ a:'Two others. You are civil, relentlessly, for four weeks — because the alternative on a rock is unthinkable. The rule is you never discuss anything that matters. I knew one man for eleven years and could not tell you his politics or his wife\'s name.',
-        d:'',
-        q:[['That sounds like a strange friendship.','l8'],['Did anything ever go wrong?','l7'],['What did you actually do all day?','l2']] },
-      l5:{ a:'Every two hours. You sleep in pieces, for years. It changes how you think — you stop expecting to finish a thought. When I came ashore I could not sleep through a night for a month, and I kept waking at the hour to wind something that was not there.',
-        d:'',
-        q:[['Did anything ever go wrong?','l7'],['What was in the log?','l6']] },
-      l6:{ a:'Weather. Visibility. Passing vessels and their heading. Consumption of oil to the ounce. The state of the apparatus. What it is not for is what you thought about, and that is deliberate — the log is evidence, and evidence has no business containing a person.',
-        d:'',
-        q:[['That sounds like a strange friendship.','l8'],['Were you ever frightened?','l3']] },
-      l7:{ a:'A relief boat that could not land for nineteen days once. We had the oil, which is what matters, and we ate very badly. The light did not falter. That is the whole measure of the job — not whether it was hard, but whether the light was on, and it was.',
-        d:'',
-        q:[['Were you ever frightened?','l3'],['Who else was out there?','l4']] },
-      l8:{ a:'It is the opposite of a friendship and it works better. You share the only thing that matters, which is the light, and you leave everything else on the mainland. I have never been so reliably understood by people who knew nothing about me.',
-        d:'',
-        q:[['Did anything ever go wrong?','l7'],['What did you actually do all day?','l2']] },
-    },
+    note:'An invented lighthouse keeper on a rock station, 19th century. Long shifts, small crew, obsessive routine: the clockwork that turns the lens, the oil, the wick trimming, the log. Dry, self-contained, finds the question about loneliness faintly annoying because loneliness is not the same as solitude. Weather and supply boats matter enormously.',
+    open:'The light does not care whether anyone is watching it, which is the thing people never quite understand about the job. It has to turn. That is all. Everything else I do is in service of it turning.',
+    dir:'She keeps one eye on the window.',
+    seeds:['What does a night actually involve?','Were you ever lonely?','What happens if it stops?','What is the worst weather you saw?'],
   },
   {
     id:'comp',
@@ -256,90 +214,151 @@ const FIGURES = [
     blurb:'ran the machine that checked the machine · her name is on nothing',
     portrait:(c) => '<rect x="16" y="18" width="32" height="24" rx="2" fill="none" stroke="' + c + '" stroke-width="2.2"/>' +
       '<path d="M22 48h20M28 42v6M36 42v6" stroke="' + c + '" stroke-width="2.2"/><path d="M22 26h20M22 32h12" stroke="' + c + '" stroke-width="2"/>',
-    start:'c1',
-    nodes:{
-      c1:{ a:'I ran verification. Somebody wrote the routine, and then somebody had to prove it did what they said, and that was us. It is the half of the work nobody photographs.',
-        d:'',
-        q:[['How do you prove a program is right?','c2'],['What was the machine actually like?','c3'],['Did you feel part of it?','c4']] },
-      c2:{ a:'You do not, entirely. You hunt for the case that breaks it. You run the numbers by hand — actual hand, paper and a machine — and compare. When they agree you have learned very little. When they disagree you have found either a fault in the code or a fault in yourself, and it is roughly even odds.',
-        d:'',
-        q:[['Did you ever find something serious?','c5'],['What was the machine actually like?','c3'],['Did you feel part of it?','c4']] },
-      c3:{ a:'Slow, loud, and honest. It did exactly what you told it, immediately, including the stupid thing. There was no ambiguity anywhere in the building, which I have missed ever since. You could not argue with the output. You could only be wrong earlier.',
-        d:'',
-        q:[['How do you prove a program is right?','c2'],['Did you ever find something serious?','c5'],['What happened afterwards?','c6']] },
-      c4:{ a:'At the time, no. At the time it was a job with a bus ride. I understood exactly one link of a chain a thousand links long, and nobody ever showed me the chain. Afterwards, watching it on a television in somebody\'s front room — yes. Rather badly, in fact.',
-        d:'',
-        q:[['What happened afterwards?','c6'],['Did you ever find something serious?','c5']] },
-      c5:{ a:'Once. A sign that flipped in a case nobody expected to reach, which would have mattered in one specific and unlikely situation. It was corrected in a morning. There is no record of it and there should not be — the system worked. That is what a system working looks like: nothing happens and nobody hears about it.',
-        d:'',
-        q:[['Did you feel part of it?','c4'],['What happened afterwards?','c6']] },
-      c6:{ a:'The section was wound down and most of us went into insurance and banking, which wanted the same skills and paid better. I was very good at something for eleven years and then that thing stopped existing. I do not think anyone thought to write our names down. I am not bitter about it. I would simply like the record to say we were there.',
-        d:'She looks up.',
-        q:[['How do you prove a program is right?','c2'],['What was the machine actually like?','c3']] },
-    },
+    note:'An invented computer operator in 1968, working a mainframe with punched cards and tape drives. Knows the machine physically - card jams, tape alignment, the smell of the room, the noise. Not a programmer; she runs the jobs the programmers submit and cleans up after them. Wry about the men who write the code and never come to the machine room. Would not know the word internet.',
+    open:'The programmers think the machine is the code. The machine is a room, and the room is mine, and at two in the morning the room is the only thing in this building making any noise.',
+    dir:'She is holding a tray of cards and does not put it down.',
+    seeds:['What actually goes wrong most?','What is the room like?','Do the programmers ever come in?','What happens when a job fails?'],
   },
 ];
 
-let fig = FIGURES[0], node = null, transcript = [], asked = new Set();
+let fig = FIGURES[0];
+let turns = [];          // {q, a} pairs, oldest first
+let busy = false;
 
-function renderPick(){
-  $('pick').innerHTML = FIGURES.map((f, i) =>
-    '<button class="who" data-i="' + i + '" aria-pressed="' + (f === fig) + '">' +
-      '<b>' + esc(f.name) + '</b><span>' + esc(f.role) + '</span>' +
-      '<span style="margin-top:5px">' + esc(f.blurb) + '</span></button>').join('');
+/* ---- the picker ---------------------------------------------------- */
+
+function drawPick(){
+  $('pick').innerHTML = FIGURES.map(f =>
+    '<button class="who" data-id="' + f.id + '" aria-pressed="' + (f.id === fig.id) + '">' +
+      '<b>' + esc(f.name) + '</b>' +
+      '<span>' + esc(f.role) + '</span>' +
+      '<span>' + esc(f.blurb) + '</span>' +
+    '</button>').join('');
+}
+$('pick').addEventListener('click', (e) => {
+  const b = e.target.closest('.who');
+  if (!b || busy) return;
+  const next = FIGURES.find(f => f.id === b.dataset.id);
+  if (!next || next === fig) return;
+  fig = next;
+  turns = [];
+  drawPick();
+  drawStage();
+  drawTranscript();
+});
+
+/* ---- the room ------------------------------------------------------ */
+
+function portraitSvg(f){
+  return '<svg class="portrait" viewBox="0 0 64 64" aria-hidden="true">' + f.portrait('#D8C08A') + '</svg>';
 }
 
-function renderStage(first){
-  const n = fig.nodes[node];
+function drawStage(){
   $('stage').innerHTML =
-    '<div class="head">' +
-      '<svg class="portrait" viewBox="0 0 64 64" aria-hidden="true">' + fig.portrait('#D8C08A') + '</svg>' +
-      '<div><div class="n">' + esc(fig.name) + '</div><div class="r">' + esc(fig.role) + '</div></div>' +
+    '<div class="head">' + portraitSvg(fig) +
+      '<div><div class="n">' + esc(fig.name) + '</div>' +
+      '<div class="r">' + esc(fig.role) + '</div></div>' +
     '</div>' +
-    '<p class="answer' + (first ? ' first' : '') + '">' + esc(n.a) + '</p>' +
-    (n.d ? '<div class="stagedir">' + esc(n.d) + '</div>' : '') +
-    '<div class="qs">' + n.q.map(([q, to]) =>
-      '<button class="q' + (asked.has(fig.id + ':' + to) ? ' asked' : '') + '" data-to="' + to + '">' +
-      esc(q) + '</button>').join('') + '</div>' +
-    '<div class="deck"><button class="btn" id="restart">Start this interview again</button></div>';
+    '<div id="thread"></div>' +
+    '<div class="ask">' +
+      '<label class="visually-hidden" for="q">Ask a question</label>' +
+      '<input id="q" maxlength="240" autocomplete="off" placeholder="Ask them anything…">' +
+      '<button class="btn go" id="send">Ask</button>' +
+    '</div>' +
+    '<div class="seeds" id="seeds"></div>';
+
+  const t = $('thread');
+  t.innerHTML =
+    '<div class="turn them opening">' +
+      '<p class="answer first">' + esc(fig.open) + '</p>' +
+      (fig.dir ? '<div class="stagedir">' + esc(fig.dir) + '</div>' : '') +
+    '</div>';
+
+  drawSeeds();
+  $('send').addEventListener('click', send);
+  $('q').addEventListener('keydown', (e) => { if (e.key === 'Enter') send(); });
 }
 
-function renderTx(){
-  if (!transcript.length){ $('tx').innerHTML = '<div class="empty">nothing asked yet</div>'; return; }
-  $('tx').innerHTML = transcript.map(t =>
+function drawSeeds(){
+  const el = $('seeds');
+  if (!el) return;
+  // only offered until the conversation gets going; free text is the point
+  if (turns.length >= 2){ el.innerHTML = ''; return; }
+  el.innerHTML = '<span class="seedlabel">or ask</span>' +
+    fig.seeds.map(q => '<button class="seed">' + esc(q) + '</button>').join('');
+  el.querySelectorAll('.seed').forEach(b => b.addEventListener('click', () => {
+    if (busy) return;
+    $('q').value = b.textContent;
+    send();
+  }));
+}
+
+function addTurn(q, a, opts){
+  opts = opts || {};
+  const t = $('thread');
+  const wrap = document.createElement('div');
+  wrap.className = 'turn';
+  wrap.innerHTML =
+    '<div class="asked">' + esc(q) + '</div>' +
+    '<p class="answer' + (opts.problem ? ' problem' : '') + '">' + esc(a) + '</p>';
+  t.appendChild(wrap);
+  wrap.scrollIntoView({ block: 'nearest',
+    behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  return wrap;
+}
+
+async function send(){
+  if (busy) return;
+  const q = ($('q').value || '').trim();
+  if (!q) return;
+  busy = true;
+  $('q').value = '';
+  $('send').disabled = true;
+  $('q').disabled = true;
+
+  const wrap = addTurn(q, '', {});
+  const p = wrap.querySelector('.answer');
+  p.innerHTML = '<span class="dots">thinking</span>';
+
+  const out = await LCGenerate.run('interview-beyond', {
+    persona: fig.name + ' — ' + fig.role,
+    note: fig.note,
+    question: q,
+    history: turns.slice(-4),
+  });
+
+  busy = false;
+  $('send').disabled = false;
+  $('q').disabled = false;
+  $('q').focus();
+
+  if (!out.ok){
+    p.classList.add('problem');
+    p.textContent = out.kind === 'no_key'
+      ? 'The room is empty. This interview needs a language model behind it and no key is set on the server — everything else in the cabinet still works.'
+      : out.message;
+    return;
+  }
+
+  const answer = String(out.text).trim();
+  p.textContent = answer;
+  turns.push({ q: q, a: answer });
+  drawSeeds();
+  drawTranscript();
+}
+
+/* ---- transcript ----------------------------------------------------- */
+
+function drawTranscript(){
+  if (!turns.length){ $('tx').innerHTML = '<div class="empty">nothing asked yet</div>'; return; }
+  $('tx').innerHTML = turns.map(t =>
     '<div class="line"><span class="qq">' + esc(t.q) + '</span>' +
     '<span class="aa">' + esc(t.a) + '</span></div>').join('');
 }
 
-function choose(i){
-  fig = FIGURES[i];
-  node = fig.start;
-  transcript = [];
-  asked = new Set();
-  renderPick(); renderStage(true); renderTx();
-}
-
-$('pick').addEventListener('click', (e) => {
-  const b = e.target.closest('.who[data-i]');
-  if (b) choose(Number(b.dataset.i));
-});
-$('stage').addEventListener('click', (e) => {
-  if (e.target.id === 'restart'){
-    node = fig.start; transcript = []; asked = new Set();
-    renderStage(true); renderTx();
-    return;
-  }
-  const b = e.target.closest('.q[data-to]');
-  if (!b) return;
-  const to = b.dataset.to;
-  transcript.push({ q: b.textContent, a: fig.nodes[to].a });
-  asked.add(fig.id + ':' + to);
-  node = to;
-  renderStage(false);
-  renderTx();
-});
-
-choose(0);
+drawPick();
+drawStage();
+drawTranscript();
 </script>
 </body>
 </html>

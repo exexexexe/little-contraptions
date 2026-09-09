@@ -70,6 +70,19 @@ input:focus{ outline:2px solid var(--stamp);outline-offset:-1px }
   font-family:var(--display);font-size:clamp(21px,4.4vw,30px);letter-spacing:.08em;text-transform:uppercase;
   margin:0 0 16px;font-weight:700;
 }
+.fallback{
+  margin-bottom:16px;padding:12px 15px;border-radius:4px;
+  background:rgba(0,0,0,.05);border-left:3px solid var(--dim, #8B8171);
+  font-size:13px;line-height:1.65;
+}
+.fallback b{ display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;
+  text-transform:uppercase;margin-bottom:4px;font-weight:700 }
+.fallback.key{ border-left-color:#B8863C }
+.fallback.pending{ border-left-color:#8B8171 }
+.fallback .quiet{ opacity:.75 }
+.dots:after{ content:'';animation:dots 1.2s steps(4,end) infinite }
+@keyframes dots{ 0%{content:''} 25%{content:'.'} 50%{content:'..'} 75%{content:'...'} }
+@media (prefers-reduced-motion: reduce){ .dots:after{ animation:none;content:'…' } }
 .docsec{ margin-bottom:19px }
 .docsec h3{
   font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;
@@ -143,6 +156,7 @@ body{ padding-bottom:64px }
   <a href="/">← back to the cabinet</a>
 </footer>
 
+<script src="/shared/lc-generate.js"></script>
 <script>
 'use strict';
 
@@ -222,38 +236,101 @@ function redact(n){
   return '<span class="red" title="redacted">' + '█'.repeat(n) + '</span>';
 }
 
-function render(){
+/* The document is rendered from one shape, whoever supplies the contents:
+   the language model when it is reachable, the original template bank when
+   it is not. Same chrome either way. */
+function renderDoc(d, note){
+  $('out').innerHTML =
+    (note || '') +
+    '<div class="doc">' +
+      '<div class="class">' + esc(d.classification) + '</div>' +
+      '<div class="meta">' +
+        '<span>operation<b>' + esc(d.operation) + '</b></span>' +
+        '<span>station<b>' + esc(d.station) + '</b></span>' +
+        '<span>officer<b>' + redact(ri(6, 11)) + '</b></span>' +
+        '<span>authorised by<b>' + redact(ri(5, 9)) + '</b></span>' +
+      '</div>' +
+      '<h2>Objective</h2>' +
+      '<div class="docsec"><p>' + esc(d.objective) + '</p></div>' +
+      '<div class="docsec"><h3>assets available to you</h3><ul>' +
+        d.assets.map(a => '<li>' + esc(a) + '</li>').join('') + '</ul></div>' +
+      '<div class="docsec"><h3>anticipated complications</h3><ul>' +
+        d.complications.map(c => '<li>' + esc(c) + '</li>').join('') + '</ul></div>' +
+      '<div class="docsec"><h3>extraction</h3><p>' + esc(d.extraction) + '</p></div>' +
+      '<div class="docsec"><h3>note from registry</h3><p>' + esc(d.note) + '</p></div>' +
+      '<div class="foot"><span>handling: ' + esc(pick(HANDLING)) + '</span>' +
+        '<span>ref ' + redact(4) + '/' + ri(100, 999) + '</span></div>' +
+      '<div class="stamp">' + esc(pick(['read','burned','unactioned','pending','lost'])) + '</div>' +
+    '</div>';
+}
+
+/* The original template bank, kept as the fallback. */
+function staticDoc(){
   const raw = $('in').value.trim() || 'the umbrella';
   const x = raw.toLowerCase();
   const city = pick(CITIES);
   const f = (s) => s.replace(/\{x\}/g, x).replace(/\{city\}/g, city)
     .replace(/\{place\}/g, pick(PLACES)).replace(/\{n\}/g, String(ri(3, 19)));
-
-  const comps = [];
   const cp = COMPLICATIONS.slice();
+  const comps = [];
   for (let i = 0; i < 3; i++) comps.push(cp.splice(Math.floor(Math.random() * cp.length), 1)[0]);
+  return {
+    classification: pick(CLASS),
+    operation: pick(ADJ) + ' ' + pick(NOUN),
+    station: city,
+    objective: f(pick(OBJECTIVES)),
+    assets: [pick(ASSETS), pick(ASSETS)],
+    complications: comps,
+    extraction: pick(EXTRACT),
+    note: f(pick(NOTES)),
+  };
+}
 
-  $('out').innerHTML =
-    '<div class="doc">' +
-      '<div class="class">' + esc(pick(CLASS)) + '</div>' +
-      '<div class="meta">' +
-        '<span>operation<b>' + esc(pick(ADJ) + ' ' + pick(NOUN)) + '</b></span>' +
-        '<span>station<b>' + esc(city) + '</b></span>' +
-        '<span>officer<b>' + redact(ri(6, 11)) + '</b></span>' +
-        '<span>authorised by<b>' + redact(ri(5, 9)) + '</b></span>' +
-      '</div>' +
-      '<h2>Objective</h2>' +
-      '<div class="docsec"><p>' + esc(f(pick(OBJECTIVES))) + '</p></div>' +
-      '<div class="docsec"><h3>assets available to you</h3><ul>' +
-        '<li>' + esc(pick(ASSETS)) + '</li><li>' + esc(pick(ASSETS)) + '</li></ul></div>' +
-      '<div class="docsec"><h3>anticipated complications</h3><ul>' +
-        comps.map(c => '<li>' + esc(c) + '</li>').join('') + '</ul></div>' +
-      '<div class="docsec"><h3>extraction</h3><p>' + esc(pick(EXTRACT)) + '</p></div>' +
-      '<div class="docsec"><h3>note from registry</h3><p>' + esc(f(pick(NOTES))) + '</p></div>' +
-      '<div class="foot"><span>handling: ' + esc(pick(HANDLING)) + '</span>' +
-        '<span>ref ' + redact(4) + '/' + ri(100, 999) + '</span></div>' +
-      '<div class="stamp">' + esc(pick(['read','burned','unactioned','pending','lost'])) + '</div>' +
+function banner(kind, message){
+  return '<div class="fallback' + (kind === 'no_key' ? ' key' : '') + '">' +
+    '<b>' + (kind === 'no_key' ? 'Registry offline' : 'Registry unreachable') + '</b>' +
+    esc(message) +
+    ' <span class="quiet">Briefing below assembled from the standing template bank instead.</span>' +
     '</div>';
+}
+
+let busy = false;
+
+async function render(){
+  if (busy) return;
+  const subject = $('in').value.trim() || 'the umbrella';
+  busy = true;
+  $('go').disabled = true;
+  $('out').innerHTML = '<div class="fallback pending"><b>Drafting</b>' +
+    '<span class="dots">the registry is writing it up</span></div>';
+
+  const out = await LCGenerate.run('espionage', { subject: subject });
+  busy = false;
+  $('go').disabled = false;
+
+  if (out.ok){
+    const parsed = LCGenerate.parseJSON(out.text);
+    const v = LCGenerate.need(parsed, {
+      operation: 'string', station: 'string', objective: 'string',
+      extraction: 'string', note: 'string'
+    });
+    const assets = Array.isArray(parsed && parsed.assets)
+      ? parsed.assets.filter(a => typeof a === 'string' && a.trim()) : [];
+    const comps = Array.isArray(parsed && parsed.complications)
+      ? parsed.complications.filter(a => typeof a === 'string' && a.trim()) : [];
+    if (v && assets.length && comps.length){
+      v.classification = pick(CLASS);
+      v.assets = assets.slice(0, 3);
+      v.complications = comps.slice(0, 4);
+      renderDoc(v);
+      return;
+    }
+    // answered, but not in the shape asked for — fall through to the bank
+    renderDoc(staticDoc(), banner('failed', 'The registry sent back something unreadable.'));
+    return;
+  }
+
+  renderDoc(staticDoc(), banner(out.kind, out.message));
 }
 
 $('go').addEventListener('click', render);

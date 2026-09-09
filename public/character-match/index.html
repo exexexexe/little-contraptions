@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Which One Are You</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23181B26'/><circle cx='16' cy='12' r='5' fill='%23C8A24E'/><path d='M6 27c0-5.5 4.5-9 10-9s10 3.5 10 9z' fill='%23C8A24E'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --bg:#141722;
+  --panel:#1D2130;
+  --ink:#ECEAF2;
+  --ink-2:#ABA9BD;
+  --dim:#7C7A93;
+  --rule:#2A2F42;
+  --gold:#C8A24E;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --sans:ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif;
+  --serif:"Iowan Old Style","Palatino Linotype",Georgia,serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{ background:var(--bg);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:26px 18px 72px }
+.wrap{ max-width:660px;margin:0 auto }
+h1{ font-family:var(--serif);font-size:clamp(26px,5.4vw,38px);margin:0;font-weight:600 }
+.sub{ font-family:var(--mono);font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--dim);margin-top:8px }
+
+.prog{ display:flex;gap:4px;margin-top:20px }
+.prog i{ flex:1;height:3px;background:var(--rule);border-radius:2px;transition:background .3s }
+.prog i.on{ background:var(--gold) }
+
+.q{ margin-top:22px;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:22px 22px 20px }
+.q .n{ font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim) }
+.q h2{ font-family:var(--serif);font-size:clamp(19px,4vw,25px);margin:9px 0 18px;line-height:1.35;font-weight:600 }
+.opts{ display:grid;gap:8px }
+.opt{
+  text-align:left;font-family:var(--sans);font-size:15px;line-height:1.5;
+  background:#171B27;color:var(--ink);border:1px solid var(--rule);
+  padding:13px 15px;border-radius:5px;cursor:pointer;
+}
+.opt:hover{ border-color:var(--gold);background:#1F2433 }
+.opt:focus-visible{ outline:2px solid var(--gold);outline-offset:2px }
+.own{ margin-top:10px;display:flex;gap:8px }
+.own input{
+  flex:1;min-width:0;font-family:var(--sans);font-size:15px;padding:12px 14px;border-radius:5px;
+  border:1px solid var(--rule);background:#12151F;color:var(--ink);
+}
+.own input:focus{ outline:2px solid var(--gold);outline-offset:-1px }
+.btn{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
+  background:var(--panel);color:var(--ink);border:1px solid var(--rule);padding:12px 16px;border-radius:5px;cursor:pointer;
+}
+.btn:hover{ background:#262B3C }
+.btn.go{ background:var(--gold);border-color:var(--gold);color:#1A1508;font-weight:700 }
+.btn[disabled]{ opacity:.5;cursor:default }
+.btn:focus-visible{ outline:2px solid var(--gold);outline-offset:2px }
+
+.said{ margin-top:16px }
+.said .row{ display:flex;gap:10px;padding:7px 0;border-top:1px solid var(--rule);font-size:13px;line-height:1.55 }
+.said .row b{ color:var(--dim);font-weight:400;flex:0 0 46%;font-family:var(--mono);font-size:10.5px;letter-spacing:.03em }
+.said .row span{ color:var(--ink-2) }
+
+.result{ margin-top:22px;background:var(--panel);border:1px solid var(--rule);border-radius:8px;overflow:hidden }
+.result .top{ padding:24px 24px 20px;background:linear-gradient(180deg,rgba(200,162,78,.12),transparent);border-bottom:1px solid var(--rule) }
+.result .k{ font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim) }
+.result h2{ font-family:var(--serif);font-size:clamp(26px,6vw,38px);margin:9px 0 4px;line-height:1.12;color:var(--gold) }
+.result .from{ font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--ink-2) }
+.result .mid{ padding:20px 24px 22px }
+.result .verdict{ font-family:var(--serif);font-size:17px;line-height:1.72;margin:0 0 18px;color:#E4E1EC }
+.result h3{ font-family:var(--mono);font-size:9.5px;letter-spacing:.19em;text-transform:uppercase;color:var(--dim);font-weight:400;margin:0 0 10px }
+.result ul{ margin:0 0 18px;padding-left:18px }
+.result li{ font-size:14.5px;line-height:1.68;color:var(--ink-2);margin-bottom:7px }
+.result .runner{ border-top:1px solid var(--rule);padding-top:15px;font-size:14px;line-height:1.68;color:var(--ink-2) }
+.result .runner b{ display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--dim);margin-bottom:5px;font-weight:400 }
+
+.state{ margin-top:22px;background:var(--panel);border:1px solid var(--rule);border-left:3px solid var(--gold);border-radius:6px;padding:17px 19px }
+.state p{ margin:0;font-size:14.5px;line-height:1.7;color:var(--ink-2) }
+.state.thinking{ border-left-color:var(--dim) }
+.dots:after{ content:'';animation:dots 1.2s steps(4,end) infinite }
+@keyframes dots{ 0%{content:''} 25%{content:'.'} 50%{content:'..'} 75%{content:'...'} }
+
+.note{ margin-top:22px;border-top:1px solid var(--rule);padding-top:14px;font-size:12.5px;line-height:1.8;color:#8A879C }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } .dots:after{ animation:none;content:'…' } }
+</style>
+</head>
+<body>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<div class="wrap">
+  <h1>Which One Are You</h1>
+  <div class="sub">six questions · one character · no flattery promised</div>
+
+  <div class="prog" id="prog"></div>
+  <div id="stage"></div>
+
+  <div class="note">
+    The match is written fresh each time by a language model reading your six answers, so two people
+    answering the same way will not get the same character. It is a party trick, not an assessment of
+    anything. Where it names a real person rather than a character, it is going on their public
+    persona — nothing here is a claim about what anyone is actually like.
+  </div>
+</div>
+
+<script src="/shared/lc-generate.js"></script>
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+/* Questions about behaviour, not about which colour you like — the model
+   has more to go on if the answers describe something a person did. */
+const QUESTIONS = [
+  { q: 'A party you did not want to go to. Where are you at eleven o\'clock?',
+    opts: ['In the kitchen, deep in one conversation',
+           'Left an hour ago without saying goodbye',
+           'Doing the washing up nobody asked me to do',
+           'Still here, holding court, regretting it tomorrow'] },
+  { q: 'Something has gone badly wrong and it is partly your fault. First move?',
+    opts: ['Say so immediately, loudly, before anyone else does',
+           'Fix it quietly and hope the question never comes up',
+           'Work out who else it is also partly the fault of',
+           'Go very still and think for a long time'] },
+  { q: 'What do you own that you would be embarrassed to explain?',
+    opts: ['A large collection of something with no resale value',
+           'Equipment for a hobby I did twice',
+           'Something broken I keep meaning to mend',
+           'Nothing — I throw everything away, possibly too much'] },
+  { q: 'How do you behave when you know more than the person talking?',
+    opts: ['Let them finish, then say nothing',
+           'Cannot help myself. Sorry. Could not help myself',
+           'Ask a question that lets them get there alone',
+           'Depends entirely on whether I like them'] },
+  { q: 'The best thing anyone has ever said about you, and you did not quite believe it.',
+    opts: ['That I am kind, which I think was about my manners',
+           'That I am reliable, which is not the same as good',
+           'That I am funny, which I have been trading on since',
+           'That I am difficult, and they meant it warmly'] },
+  { q: 'What would you be doing if none of it counted for anything?',
+    opts: ['Exactly this, but slower',
+           'Something with my hands, outdoors, badly paid',
+           'Reading, and talking to about four people',
+           'Something I would be embarrassed to admit to'] },
+];
+
+let step = 0;
+const answers = [];
+
+function drawProgress(){
+  $('prog').innerHTML = QUESTIONS.map((_, i) =>
+    '<i class="' + (i < step ? 'on' : '') + '"></i>').join('');
+}
+
+function said(){
+  if (!answers.length) return '';
+  return '<div class="said">' + answers.map(a =>
+    '<div class="row"><b>' + esc(a.q.replace(/\?.*$/, '?')) + '</b><span>' + esc(a.a) + '</span></div>'
+  ).join('') + '</div>';
+}
+
+function ask(){
+  drawProgress();
+  if (step >= QUESTIONS.length) return finish();
+  const cur = QUESTIONS[step];
+  $('stage').innerHTML =
+    '<div class="q">' +
+      '<div class="n">question ' + (step + 1) + ' of ' + QUESTIONS.length + '</div>' +
+      '<h2>' + esc(cur.q) + '</h2>' +
+      '<div class="opts">' +
+        cur.opts.map((o, i) => '<button class="opt" data-i="' + i + '">' + esc(o) + '</button>').join('') +
+      '</div>' +
+      '<div class="own">' +
+        '<input id="own" maxlength="140" placeholder="or say it in your own words" autocomplete="off">' +
+        '<button class="btn" id="ownGo">Use this</button>' +
+      '</div>' +
+    '</div>' + said();
+
+  $('stage').querySelectorAll('.opt').forEach(b => b.addEventListener('click', () => {
+    answer(cur.q, cur.opts[+b.dataset.i]);
+  }));
+  const go = () => {
+    const v = $('own').value.trim();
+    if (v) answer(cur.q, v);
+  };
+  $('ownGo').addEventListener('click', go);
+  $('own').addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); });
+}
+
+function answer(q, a){
+  answers.push({ q: q, a: a });
+  step++;
+  ask();
+}
+
+function state(cls, html){
+  $('stage').innerHTML = '<div class="state ' + cls + '">' + html + '</div>' + said();
+}
+
+function again(){
+  const b = document.getElementById('again');
+  if (b) b.addEventListener('click', () => { step = 0; answers.length = 0; ask(); });
+}
+
+async function finish(){
+  state('thinking', '<p><span class="dots">reading your answers back</span></p>');
+
+  const out = await LCGenerate.run('character-match', { answers: answers });
+
+  if (!out.ok){
+    state('', '<p>' + esc(out.message) + '</p>' +
+      '<p style="margin-top:12px"><button class="btn" id="again">Start again</button></p>');
+    again();
+    return;
+  }
+
+  const parsed = LCGenerate.parseJSON(out.text);
+  const v = LCGenerate.need(parsed, { name: 'string', from: 'string?', verdict: 'string', runnerUp: 'string?' });
+  if (!v){
+    state('', '<p style="font-family:var(--serif);font-size:16px;color:#E4E1EC">' +
+      esc(String(out.text).slice(0, 700)) + '</p>' +
+      '<p style="margin-top:14px"><button class="btn" id="again">Start again</button></p>');
+    again();
+    return;
+  }
+
+  const evidence = Array.isArray(parsed.evidence)
+    ? parsed.evidence.filter(e => typeof e === 'string' && e.trim()).slice(0, 4) : [];
+
+  $('stage').innerHTML =
+    '<div class="result">' +
+      '<div class="top">' +
+        '<div class="k">you are</div>' +
+        '<h2>' + esc(v.name) + '</h2>' +
+        (v.from ? '<div class="from">' + esc(v.from) + '</div>' : '') +
+      '</div>' +
+      '<div class="mid">' +
+        '<p class="verdict">' + esc(v.verdict) + '</p>' +
+        (evidence.length
+          ? '<h3>what gave you away</h3><ul>' +
+            evidence.map(e => '<li>' + esc(e) + '</li>').join('') + '</ul>'
+          : '') +
+        (v.runnerUp ? '<div class="runner"><b>nearly</b>' + esc(v.runnerUp) + '</div>' : '') +
+      '</div>' +
+    '</div>' +
+    '<p style="margin-top:14px"><button class="btn" id="again">Answer differently</button></p>' +
+    said();
+  again();
+  drawProgress();
+}
+
+ask();
+</script>
+</body>
+</html>

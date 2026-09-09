@@ -53,6 +53,13 @@ The hub filters them by the tag on each card.
 Still to build: Movie night (needs `TMDB_API_KEY`) and Phase C (needs
 `GROQ_API_KEY`). `/api/keys` reports both as unset.
 
+`GROQ_API_KEY` powers `POST /api/generate`, the shared text-generation route used by
+what-beats-this, character-match, universes-colliding, espionage, bureaucracy and
+interview-beyond. Without it those six show a "needs a key" state and everything else is
+unaffected. `GROQ_MODEL` optionally overrides the model (default `llama-3.3-70b-versatile`);
+`GROQ_URL` overrides the endpoint, which is only useful for testing. Rate limited to 20
+requests per IP per hour, in memory.
+
 Every toy carries the same back-to-the-hub control in the bottom-left corner,
 and the hub shows a live preview of a toy when you hover its card.
 

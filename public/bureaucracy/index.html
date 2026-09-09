@@ -108,6 +108,9 @@ body{ padding-bottom:64px }
 @media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
 @media print{ #lc-back{ display:none } }
 @media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } .field.new{ animation:none } .progress .track i{ transition:none } }
+.dots:after{ content:'';animation:dots 1.2s steps(4,end) infinite }
+@keyframes dots{ 0%{content:''} 25%{content:'.'} 50%{content:'..'} 75%{content:'...'} }
+@media (prefers-reduced-motion: reduce){ .dots:after{ animation:none;content:'…' } }
 </style>
 </head>
 <body>
@@ -149,6 +152,7 @@ body{ padding-bottom:64px }
   <a href="/">← back to the cabinet</a>
 </footer>
 
+<script src="/shared/lc-generate.js"></script>
 <script>
 'use strict';
 
@@ -212,9 +216,16 @@ function newRef(){
          String.fromCharCode(65 + ri(0, 25)) + ri(1000, 9999);
 }
 
-function addField(){
-  if (!pool.length) pool = REQS.slice().sort(() => Math.random() - 0.5);
-  const [label, hint] = pool.pop();
+function addField(supplied){
+  let label, hint;
+  if (supplied && supplied.label){
+    label = supplied.label;
+    hint = supplied.hint || '';
+  } else {
+    if (!pool.length) pool = REQS.slice().sort(() => Math.random() - 0.5);
+    const drawn = pool.pop();
+    label = drawn[0]; hint = drawn[1];
+  }
   fields.push({ label, hint, kind: pick(KINDS), done: false, id: 'f' + fields.length });
 }
 
@@ -263,7 +274,20 @@ function capture(){
   });
 }
 
-function submit(){
+/* What the applicant has actually written, most recent last. This is what
+   the next requirement is built from — the whole point of the upgrade is
+   that the form reads your answers and holds them against you. */
+function history(){
+  return fields
+    .filter(f => f.value && String(f.value).trim())
+    .slice(-6)
+    .map(f => ({ q: f.label, a: String(f.value) }));
+}
+
+let busy = false;
+
+async function submit(){
+  if (busy) return;
   capture();
   const filled = fields.filter(f => f.value && String(f.value).trim()).length;
   if (filled === 0){
@@ -272,16 +296,49 @@ function submit(){
     stats();
     return;
   }
+
+  busy = true;
+  $('submit').disabled = true;
+  $('notice').innerHTML = '<div class="notice"><b>under review</b>' +
+    '<span class="dots">a colleague is looking at this</span></div>';
+
+  const out = await LCGenerate.run('bureaucracy', { history: history() });
+
+  busy = false;
+  $('submit').disabled = false;
   submissions++;
-  // every submission adds more than it resolves; that is the whole machine
-  const add = ri(1, 3);
-  for (let i = 0; i < add; i++) addField();
+
+  let add = 0, extra = '';
+  if (out.ok){
+    const parsed = LCGenerate.parseJSON(out.text);
+    const v = LCGenerate.need(parsed, { question: 'string', code: 'string?', note: 'string?' });
+    if (v){
+      addField({
+        label: (v.code ? v.code + ' — ' : '') + v.question,
+        hint: v.note || 'No guidance is available for this field.'
+      });
+      add = 1;
+    }
+  }
+
+  if (!add){
+    // no key, an outage, or an unreadable answer: the standing list still
+    // works, and the notice says which happened rather than pretending.
+    add = ri(1, 3);
+    for (let i = 0; i < add; i++) addField();
+    extra = out.ok
+      ? ' (Review produced an unreadable memorandum; standing requirements applied instead.)'
+      : (out.kind === 'no_key'
+          ? ' (The reviewing officer is unavailable — no key is configured — so standing requirements have been applied.)'
+          : ' (The reviewing officer could not be reached, so standing requirements have been applied.)');
+  }
+
   const t = pick(NOTICES)
     .replace(/\{n\}/g, String(add)).replace(/\{N\}/g, String(add))
     .replace(/\{s\}/g, add === 1 ? '' : 's')
     .replace(/\{y\}/g, add === 1 ? 'y' : 'ies');
   renderFields(add);
-  $('notice').innerHTML = '<div class="notice"><b>notice of receipt</b>' + esc(t) + '</div>';
+  $('notice').innerHTML = '<div class="notice"><b>notice of receipt</b>' + esc(t) + esc(extra) + '</div>';
   stats();
   const first = document.querySelector('.field.new');
   if (first) first.scrollIntoView({ block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });

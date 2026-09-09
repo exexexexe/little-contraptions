@@ -1,2 +1,8 @@
 node_modules/
 .DS_Store
+
+# Secrets. Never commit these — the hub reads keys from the environment
+# only, and Railway holds the production copies.
+.env
+.env.*
+!.env.example
