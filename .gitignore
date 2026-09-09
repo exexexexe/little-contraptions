@@ -6,3 +6,7 @@ node_modules/
 .env
 .env.*
 !.env.example
+
+# Local SQLite for the shared-storage toys. Production lives on the
+# Railway volume at /data, never in the repo.
+.data/
