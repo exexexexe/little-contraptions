@@ -1,5 +1,153 @@
 # Overnight batch — progress log
 
+## Summary — batch 12, the cleanup batch
+
+**Six toys built, verified in a real browser, and added to the hub. The cabinet went from 91
+drawers to 97.** Every item on the list is resolved: the two new toys are built, and all four
+previously-blocked items — the outpost builder, the shared-storage pair, Room Tone, and the
+nostalgia sound that folded into it — are now done rather than deferred.
+
+**One item could not be done as written, because its premise is wrong: Movie night was never
+built.** Details below; it is the only thing on this list needing your decision.
+
+**Server changes.** One new module (`store.js`), three new routes, one new field on `/api/keys`,
+and a coarse-geolocation helper shared with `/api/where`. `package.json` now asks for Node 24+.
+
+**Not deployed, but infrastructure did change:** a Railway volume now exists. See item 6.
+
+### Look at these first
+
+1. **Movie night does not exist, and never did.** Item 6 said it was built and waiting on a key.
+   It is not built. There is no `/movie-night/` directory, no route, no markup, and nothing in the
+   git history that was ever added and later removed — I checked the working tree, every commit on
+   every branch, and every deleted path. The only traces are one line in `/api/keys` reporting
+   `tmdb`, and a line in the README that already said **"Still to build: Movie night"**. So
+   setting `TMDB_API_KEY` today would change nothing you could see. The key plumbing itself does
+   work — I ran the server with and without the variable and `/api/keys` correctly reports
+   `tmdb:false` then `tmdb:true`. **I did not build the toy**: item 6 asked me to confirm a
+   needs-a-key state and leave a note, not to design a toy from scratch, and there is no spec for
+   what Movie night should actually do. Tell me what it is and it is a short job. TMDB is still a
+   free signup, same as Groq was. I corrected the README so it no longer implies the key gates
+   anything.
+
+2. **The bottle is a public, unmoderated text box, and you should decide if you want that.**
+   `/message-in-a-bottle/` stores whatever a stranger types and shows it to other strangers. I put
+   real guards on it — 280 characters, control characters stripped, **any link refused outright**
+   (a link is what spam actually wants), and its own rate limiter at six casts an hour per address
+   rather than sharing the generate one. But there is no moderator and no way to attribute a note
+   to anyone, which is the point of the toy and also its risk. The page says so in those words.
+   **If you would rather it not be open to the public, the honest options are a holding queue you
+   approve, or not shipping this one.** Everything else in the batch is safe to deploy as is.
+
+3. **Room Tone's scenes were nearly identical, and measuring them is what caught it.** The brief
+   said to confirm the scenes are audibly distinct rather than one pad with six labels. I cannot
+   listen, so I profiled the real audio output through an AnalyserNode instead. Three pairs came
+   back almost the same sound: library and underwater sat **0.008 apart** in normalised band
+   profile, campfire and train 0.008, rain and bridge 0.018. The library was also *louder than the
+   train*, which is not what a late library is. I regraphed four of the six. The closest pair is
+   now 0.038 — five times the old minimum — and those two still differ 1.6x in loudness and 2.2x
+   in event density. **This is measurement, not listening: please put headphones on and tell me if
+   your ears agree with the numbers.**
+
+4. **Nothing in the starship chart is anybody's actual silhouette, by construction.** The brief was
+   right that stripping detail off a Star Destroyer still leaves a Star Destroyer, so I did not try
+   to draw ships at all. There are six abstract hull forms and **the only input to which one a ship
+   gets is how many metres long it is**. That makes it structurally impossible for a shape to encode
+   a specific design: the Executor comes out a banded slab, an Imperial Star Destroyer a symmetric
+   spindle, and both Death Stars plain ellipses rather than spheres with a dish. I looked at every
+   size bracket on screen to confirm none of them reads as a real design. The page also says the
+   drawn heights are invented, because they are — only length is data.
+
+5. **Five ship lengths were wrong and five ships were dropped.** I checked the marquee figures
+   rather than trusting my memory, and it was worth doing: the EVE Erebus is **14,764 m, not
+   14,000**; the Avatar titan's length I could not source at all, so it is gone and two titans whose
+   lengths are published took its place. Babylon 5's production figures disagree with each other, so
+   it is now marked an estimate at 8,046.7 m, and Galactica has two competing official numbers so it
+   is an estimate too. Five more ships — the Bengal carrier, Event Horizon, Icarus II, the Axiom and
+   Interstellar's Endurance — **were dropped rather than given a plausible-looking number**, because
+   I could not source them. Every remaining row is coloured by whether it is a published figure or a
+   fan estimate.
+
+6. **A Railway volume now exists, and this is the one thing I changed outside the repo.**
+   `railway volume list` was empty, as the brief anticipated, so I created `hub-volume`, 5 GB,
+   attached to the `hub` service at `/data`, status Ready. **`package.json` now requires Node 24+**,
+   because that is what `node:sqlite` needs without a flag — worth knowing before the next deploy,
+   since it is the only breaking constraint added this batch. No dependency was added: SQLite is
+   built into Node now.
+
+7. **The production database starts empty.** Everything I wrote while testing is in `./.data`,
+   which is gitignored and local. The first person to load the bottle toy in production will
+   correctly see empty water.
+
+### What was verified, and how
+
+Every toy was opened in a real browser and driven, not checked for a 200 and left. All 97 drawers
+return 200, the six new ones carry the standard back-to-the-cabinet control, appear as both a card
+and a desktop icon with a hand-picked icon rather than a tag fallback, are findable in the Start
+menu, and produce no console or page errors. None overflows horizontally at 390 px.
+
+Beyond that, the specific things the brief asked to be checked:
+
+- **The wiki at full scale, not on a test set.** All 500 entries load. Search runs over name,
+  source and description together — "seabed" finds two entries by description alone; "gun" plus the
+  weapons chip plus a source filter narrows correctly to zero. Ten category chips, 131 sources,
+  four sort orders. A full 500-row render measures **17 ms**; rows are drawn 120 at a time so the
+  first paint stays quick. The random draw pages forward far enough to actually show you what it
+  picked, which it did on six consecutive tries.
+- **The starship chart's shapes and its zoom.** Screenshotted at four brackets and looked at.
+  Real mouse drag, real wheel zoom and a real click all work; at fit-all, with all 68 loaded, a
+  frame costs **0.16 ms**.
+- **The Mercury → Neptune progression, not just one planet.** I played all eight through to their
+  targets with real click events on the canvas. Each unlocked the next, the final card correctly
+  says there is nothing further out, and the rail ends with all eight marked done. The
+  collector-to-reactor crossover falls at Mars, which is exactly where the arithmetic says it
+  should: a collector is 10 ore for 3x solar and a reactor 32 for a flat 9, so they cross at
+  solar 0.937, and Mars is 0.431.
+- **That the shared data actually survives a restart.** This is the whole point of the volume, so
+  I tested it properly rather than assuming — and my first attempt was invalid, because two node
+  processes were bound to the port and the kill failed. Second attempt: killed every listener,
+  **confirmed the port had gone dead** (curl got no answer at all), started a new process with a
+  new PID, and all three bottles came back with their found count intact, along with both places
+  and all three visitors.
+- **That losing the database does not take the site down.** Ran the server from a read-only
+  directory with `DATA_DIR` pointing somewhere unwritable. `/api/keys` reports `store:false`, both
+  routes answer `no_store`, both pages show an honest panel with writing switched off, and the hub
+  still serves 200.
+- **Room Tone's six scenes.** Profiled as described in item 3, plus a leak found while testing and
+  fixed: tearing down a scene disconnected its output but left its oscillators and looping buffers
+  running for the life of the page. Instrumented start/stop counts across twelve scene switches now
+  come back **82 started, 82 stopped, none left live**, and the time-domain peak after stopping is
+  exactly zero.
+
+### What was decided without asking
+
+- **The starship comparison is its own toy, not a category in Higher or Lower.** The brief allowed
+  either. It needs zoom, pan, a log index rail and a projection, none of which fits a two-card
+  guessing game.
+- **Visitors are counted by a random token their own browser invents**, not by anything derived
+  from the address. The brief said to derive coarse location and discard the IP, which leaves no
+  way to tell a reload from a new person; a browser-generated id solves that without the server
+  ever holding an identifier that means anything. It is disclosed on the page.
+- **Stored coordinates are rounded to one decimal place**, about eleven kilometres — deliberately
+  blunter than the city they came from. The address is used once, in memory, to ask a geocoder for
+  a city and is then dropped: it is never a column and never a log line. Rows are deleted after
+  24 hours.
+- **The outpost builder's difficulty curve is real physics.** Sunlight per planet is 1/r² with r in
+  AU, so Mercury gets 6.68x Earth and Neptune 0.00111x. That single real number is what makes the
+  outer half of the solar system need reactors. Ore, costs and targets are balance, and the page
+  says which is which.
+- **The world map came from the ISS tracker.** `/who-else-is-here/` needed coastlines and that toy
+  has carried an equirectangular outline since it was built, on the same 720x360 projection. I
+  copied it to `public/shared/world-land.js` rather than editing a working toy to share it out —
+  **so that 35 kB outline now exists twice.** Worth collapsing if either page is touched again.
+
+### Still not built
+
+Nothing from this list, and nothing outside it. The full custom globe/planet editor and
+device-detected retro hub theming remain unbuilt from earlier batches, as before.
+
+---
+
 ## Summary — batch 8, the ten that were still undone
 
 **Ten toys built, verified in a real browser, and added to the hub. The cabinet went from 81 drawers
