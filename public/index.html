@@ -4672,5 +4672,146 @@ footer{
 })();
 </script>
 
+<script>
+/* ==================================================================== *
+ *  The corners of the defragmenter.
+ *
+ *  Top left, top right, bottom right, bottom left — clockwise, one tap
+ *  each. Nothing marks them and nothing hints at them.
+ *
+ *  This watches; it never intercepts. No preventDefault, no
+ *  stopPropagation, no handler bound above the widget's own. Dragging
+ *  from the title bar and resizing from the grip both go on working
+ *  exactly as they did, because a press only counts as a corner tap if
+ *  the pointer comes up again close to where it went down — a drag or a
+ *  resize moves too far and is ignored. The two gestures cannot collide.
+ *
+ *  Zones are proportional, so they follow the widget when it is resized.
+ * ==================================================================== */
+(function corners(){
+  'use strict';
+
+  var W = document.querySelector('[data-wg="defrag"]');
+  if (!W) return;
+
+  var ORDER = ['tl', 'tr', 'br', 'bl'];      // clockwise from the top left
+  var DEST = 'https://scopejpt.up.railway.app/';
+  var TAP_MOVE = 14;                          // px: beyond this it was a drag
+  var TAP_MS = 700;                           // ms: beyond this it was a hold
+  var STEP_MS = 4000;                         // ms: the sequence goes cold
+  var at = 0, lastAt = 0, down = null, armed = true;
+
+  /* The corners are the corners of the widget's face, not of its outer
+     box: the title bar is excluded. That is not cosmetic. The bar is the
+     drag handle, and two quick taps on it are the widget's own gesture
+     for making itself bigger — which resized the thing mid-sequence and
+     moved the remaining corners out from under the pointer. Starting the
+     top band below the bar means a corner tap can never be a drag or a
+     swell, and the two gestures stop competing. */
+  function zone(e){
+    var r = W.getBoundingClientRect();
+    var bar = W.querySelector('.bar');
+    var top = r.top + (bar ? bar.getBoundingClientRect().height : 0);
+    var hgt = r.bottom - top;
+    if (!r.width || hgt <= 0) return null;
+    var x = (e.clientX - r.left) / r.width;
+    var y = (e.clientY - top) / hgt;
+    if (x < 0 || x > 1 || y < 0 || y > 1) return null;
+    var hz = x < 0.34 ? 'l' : x > 0.66 ? 'r' : null;
+    var vz = y < 0.36 ? 't' : y > 0.64 ? 'b' : null;
+    return (hz && vz) ? vz + hz : null;
+  }
+
+  W.addEventListener('pointerdown', function(e){
+    if (e.button > 0) return;
+    down = { x: e.clientX, y: e.clientY, t: e.timeStamp || Date.now(), z: zone(e) };
+  }, true);
+
+  W.addEventListener('pointerup', function(e){
+    if (!down) { down = null; return; }
+    var moved = Math.hypot(e.clientX - down.x, e.clientY - down.y);
+    var held = (e.timeStamp || Date.now()) - down.t;
+    var z = down.z;
+    down = null;
+    // a drag or a resize travels; a corner tap does not
+    if (moved > TAP_MOVE || held > TAP_MS) { at = 0; return; }
+    // A tap that is not in any corner is ignored rather than treated as a
+    // mistake. Two quick taps on the title bar are the widget's own gesture
+    // for making itself bigger, and when it grows the next corner is
+    // somewhere else — resetting on the resulting stray tap made the
+    // sequence impossible to finish at speed.
+    if (!z) return;
+
+    var now = Date.now();
+    if (at > 0 && now - lastAt > STEP_MS) at = 0;
+
+    if (z === ORDER[at]) {
+      at++;
+      lastAt = now;
+      if (at === ORDER.length) { at = 0; open(); }
+    } else {
+      // a wrong corner starts the sequence over — and counts as a first
+      // tap if it happens to be the top left
+      at = (z === ORDER[0]) ? 1 : 0;
+      lastAt = now;
+    }
+  }, true);
+
+  var fired = 0;
+  function open(){
+    fired++;
+    // `armed` gates the jump, not the watching, so the sequence can be
+    // exercised without being sent anywhere
+    if (!armed) return;
+    armed = false;
+    var act = document.getElementById('dfg-act');
+    var pct = document.getElementById('dfg-pct');
+    var was = act ? act.textContent : '';
+    if (act) act.textContent = 'Defragmentation complete';
+    if (pct) pct.textContent = '100%';
+    W.style.transition = 'filter .5s ease';
+    W.style.filter = 'brightness(1.6)';
+    // a beat, so it reads as the widget answering rather than a misclick
+    setTimeout(function(){
+      try { window.location.href = DEST; }
+      catch (e){
+        armed = true;
+        W.style.filter = '';
+        if (act) act.textContent = was;
+      }
+    }, 700);
+  }
+
+  window.__corners = {
+    progress: function(){ return at; },
+    order: ORDER.slice(),
+    dest: DEST,
+    faceRect: function(){
+      var r = W.getBoundingClientRect();
+      var bar = W.querySelector('.bar');
+      var top = r.top + (bar ? bar.getBoundingClientRect().height : 0);
+      return { left: r.left, top: top, width: r.width, height: r.bottom - top };
+    },
+    zoneAt: function(fx, fy){
+      var f = window.__corners.faceRect();
+      return zone({ clientX: f.left + f.width * fx, clientY: f.top + f.height * fy });
+    },
+    tap: function(fx, fy, drag){
+      var f = window.__corners.faceRect();
+      var x = f.left + f.width * fx, y = f.top + f.height * fy;
+      W.dispatchEvent(new PointerEvent('pointerdown', { clientX: x, clientY: y, button: 0, bubbles: true }));
+      var dx = drag ? 40 : 0;
+      W.dispatchEvent(new PointerEvent('pointerup', { clientX: x + dx, clientY: y, button: 0, bubbles: true }));
+      return at;
+    },
+    armed: function(){ return armed; },
+    fired: function(){ return fired; },
+    disarm: function(){ armed = false; },
+    rearm: function(){ armed = true; at = 0; },
+    reset: function(){ at = 0; fired = 0; }
+  };
+})();
+</script>
+
 </body>
 </html>
