@@ -127,13 +127,18 @@ body{
 .crawl-track{
   display:inline-flex;align-items:center;height:34px;
   padding-left:100%;
-  animation:crawl 42s linear infinite;
+  /* 42s was a headline every couple of seconds, which is a stock ticker
+     rather than a news crawl. Slowed to roughly half that pace, which
+     is what a real lower-third crawl reads at, and paused on hover so
+     an item you want to finish reading will wait for you. */
+  animation:crawl 96s linear infinite;
 }
 .crawl-track span{
   font-family:var(--sans);font-size:12.5px;color:#FFE9EA;padding-right:38px;
 }
 .crawl-track span::before{ content:"◆";color:var(--amber);margin-right:12px;font-size:8px;vertical-align:middle }
 @keyframes crawl{ from{transform:translateX(0)} to{transform:translateX(-100%)} }
+.crawl:hover .crawl-track, .crawl:focus-within .crawl-track{ animation-play-state:paused }
 
 /* ---------- controls ---------- */
 .deck{

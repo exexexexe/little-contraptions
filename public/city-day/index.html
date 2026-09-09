@@ -71,13 +71,31 @@ h1 em{ font-style:normal;color:var(--peach) }
   font-family:var(--mono);font-size:12px;color:var(--ink-2);background:var(--sun-2);
 }
 
-/* ---------- the HUD ---------- */
+/* ---------- the HUD ----------
+   Hover-only, and fully gone otherwise: no collapsed chip, no corner
+   stub, nothing sitting on top of the photograph when you are looking
+   at the photograph. The joke is better as something you find than as
+   something permanently in the way, and the picture is the point.
+
+   `visibility` rather than `display` so the panel keeps its size and
+   does not reflow as it appears, and pointer-events are off while it is
+   hidden so it cannot catch a click it is not showing. Keyboard focus
+   inside the frame reveals it too — otherwise it would be unreachable
+   without a pointer. */
 .hud{
   position:absolute;left:16px;top:16px;max-width:min(330px,72%);
   background:rgba(255,248,238,.92);
   border:2px solid var(--teal);
   backdrop-filter:blur(2px);
   padding:12px 14px 11px;
+  opacity:0;visibility:hidden;pointer-events:none;
+  transform:translateY(-4px);
+  transition:opacity .16s ease, transform .16s ease, visibility 0s linear .16s;
+}
+.frame:hover .hud,
+.frame:focus-within .hud{
+  opacity:1;visibility:visible;pointer-events:auto;transform:none;
+  transition:opacity .16s ease, transform .16s ease, visibility 0s;
 }
 .hud::before{
   content:"";position:absolute;left:-2px;top:-2px;width:12px;height:12px;
@@ -101,6 +119,12 @@ h1 em{ font-style:normal;color:var(--peach) }
   text-transform:uppercase;color:var(--peach);
 }
 @media (max-width:620px){ .hud{ position:static;max-width:none;margin:0;border-top:0 } }
+/* No pointer means no hover, and a panel nobody can ever reveal is just a
+   panel that is gone. On a touch screen it is simply shown. */
+@media (hover: none){
+  .hud{ opacity:1;visibility:visible;pointer-events:auto;transform:none;transition:none }
+  .recticle{ opacity:1 }
+}
 
 /* ---------- credit ---------- */
 .credit{
@@ -147,7 +171,11 @@ footer a{ color:var(--ink-2) }
   background:#0A9E86;margin-right:6px;vertical-align:middle;animation:ctpulse 1.9s ease-in-out infinite }
 @keyframes ctpulse{ 0%,100%{opacity:.3} 50%{opacity:1} }
 .hud-rail .fab{ margin-left:auto;color:#9A5A05;border:1px solid rgba(154,90,5,.55);padding:2px 7px;font-weight:700 }
-.recticle{ position:absolute;inset:14px;pointer-events:none;z-index:3 }
+.recticle{
+  position:absolute;inset:14px;pointer-events:none;z-index:3;
+  opacity:0;transition:opacity .16s ease;
+}
+.frame:hover .recticle, .frame:focus-within .recticle{ opacity:1 }
 .recticle .c{ position:absolute;width:22px;height:22px;border:2px solid rgba(95,227,214,.85) }
 .recticle .tl{ left:0;top:0;border-right:0;border-bottom:0 }
 .recticle .tr{ right:0;top:0;border-left:0;border-bottom:0 }
@@ -255,9 +283,11 @@ h1{ font-family:var(--display) }
   Commons</a> and belong to the people who took them — each is credited above with its licence, and every
   image here is shown with a warm colour grade applied in the browser, which the licences count as a change.
   The teal-and-orange overlay is a joke and says so; nothing in it is a real measurement, and it describes
-  the place, never anybody in the picture. <a href="/">← back to the cabinet</a>
+  the place, never anybody in the picture. It stays out of the way until you hover the photograph &mdash;
+  on a touch screen, which has no hover, it is simply shown. <a href="/">← back to the cabinet</a>
 </footer>
 
+<script src="/shared/lc-commons.js"></script>
 <script>
 'use strict';
 
@@ -266,8 +296,6 @@ const pick = (a) => a[Math.floor(Math.random()*a.length)];
 const ri = (a,b) => a + Math.floor(Math.random()*(b-a+1));
 const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-const strip = (h) => { const d = document.createElement('div'); d.innerHTML = h || '';
-  return (d.textContent || '').replace(/\s+/g,' ').trim(); };
 
 /* Landmarks the game's version of this city is built around, each mapped to
    a Wikimedia Commons category that was checked for usable landscape files
@@ -337,42 +365,18 @@ const DESIGNATIONS = ['scene','location','afternoon','block','corner','vantage']
 
 let pool = [], idx = 0, seen = 0, placeholderTimer = 0, showToken = 0;
 
-function normaliseHost(u){
-  // thumb.wikimedia.org is blocked cross-origin in browsers; upload is not
-  return (u || '').replace('//thumb.wikimedia.org/', '//upload.wikimedia.org/');
-}
-
+/* Commons itself — the origin=* rule, the thumb-host rewrite, and the
+   no-credit-no-display rule — lives in /shared/lc-commons.js, because the
+   picture-of-the-day widget needs exactly the same three things and there
+   should not be two versions of them. What stays here is what is specific
+   to this toy: which categories, and how wide a frame it can crop to. */
 async function fetchCategory(lm){
-  const cat = lm.cat;
-  const u = 'https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*' +
-    '&generator=categorymembers&gcmtype=file&gcmlimit=100' +
-    '&gcmtitle=' + encodeURIComponent('Category:' + cat) +
-    '&prop=imageinfo&iiprop=url|extmetadata|size&iiurlwidth=1600';
-  const r = await fetch(u);
-  if (!r.ok) throw new Error('HTTP ' + r.status);
-  const j = await r.json();
-  const pages = (j.query && j.query.pages) || {};
-  return Object.values(pages).map(p => {
-    const ii = (p.imageinfo || [])[0]; if (!ii) return null;
-    const em = ii.extmetadata || {};
-    const val = (k) => em[k] ? strip(em[k].value) : null;
-    const artist = val('Artist');
-    const licence = val('LicenseShortName');
-    // no attribution, no display — the licence is the point
-    if (!artist || !licence) return null;
-    // a 16:10 frame crops portrait shots to pieces, so keep landscape only
-    if (!ii.thumburl || ii.width < 900 || ii.height > ii.width) return null;
-    return {
-      title: p.title.replace(/^File:/,'').replace(/\.(jpe?g|png|webp|tiff?)$/i,'').replace(/_/g,' '),
-      src: normaliseHost(ii.thumburl),
-      page: 'https://commons.wikimedia.org/wiki/' + encodeURIComponent(p.title),
-      artist, licence,
-      licenceUrl: val('LicenseUrl'),
-      desc: val('ImageDescription'),
-      w: ii.width, h: ii.height,
-      landmark: lm.name,
-    };
-  }).filter(Boolean);
+  const photos = await LCCommons.category(lm.cat, {
+    width: 1600,
+    minWidth: 900,
+    landscapeOnly: true,      // a 16:10 frame crops a portrait shot to pieces
+  });
+  return photos.map((p) => Object.assign(p, { landmark: lm.name }));
 }
 
 function shuffle(a){

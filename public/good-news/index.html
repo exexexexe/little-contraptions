@@ -43,7 +43,11 @@ body{
   letter-spacing:.16em;text-transform:uppercase;padding:0 12px;height:38px;
   display:flex;align-items:center;flex:none;z-index:2;font-weight:700;
 }
-.wire-track{ display:inline-flex;align-items:center;padding-left:100%;animation:wire 50s linear infinite }
+/* Slower than it was: 50s pushed a headline past faster than the eye
+   settles on one, and there is no way to go back for it. Hovering the
+   wire holds it still. */
+.wire-track{ display:inline-flex;align-items:center;padding-left:100%;animation:wire 112s linear infinite }
+.wire:hover .wire-track, .wire:focus-within .wire-track{ animation-play-state:paused }
 .wire-track span{ font-size:12.5px;padding-right:44px;opacity:.95 }
 .wire-track span::before{ content:"✓";color:var(--sun);margin-right:9px;font-weight:700 }
 @keyframes wire{ from{transform:translateX(0)} to{transform:translateX(-100%)} }

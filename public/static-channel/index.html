@@ -60,12 +60,18 @@ h1{ font-size:14px;letter-spacing:.24em;text-transform:uppercase;margin:0;font-w
     radial-gradient(120% 100% at 50% 45%, rgba(255,255,255,.06) 0%, rgba(0,0,0,0) 55%, rgba(0,0,0,.62) 100%);
   mix-blend-mode:normal;
 }
+/* This one has no text ticker — the only thing crossing the screen is the
+   vertical-hold roll. It gets the same treatment as the crawls next door
+   anyway: slower, and held while you are hovering the set, because a bar
+   sweeping over a caption you are reading is exactly the annoyance the
+   audit was about. */
 .roll{
   position:absolute;left:9px;right:9px;height:70px;pointer-events:none;
   background:linear-gradient(180deg,rgba(255,255,255,0),rgba(255,255,255,.045),rgba(255,255,255,0));
-  animation:roll 7.5s linear infinite;
+  animation:roll 17s linear infinite;
 }
 @keyframes roll{ from{ top:-70px } to{ top:100% } }
+.screenwrap:hover .roll, .screenwrap:focus-within .roll{ animation-play-state:paused }
 
 .osd{
   position:absolute;top:22px;left:24px;font-family:var(--mono);font-weight:700;
@@ -79,6 +85,7 @@ h1{ font-size:14px;letter-spacing:.24em;text-transform:uppercase;margin:0;font-w
   padding:9px 12px;opacity:0;transition:opacity .4s ease;backdrop-filter:blur(2px);
 }
 .caption.show{ opacity:1 }
+.caption:hover, .caption:focus-within{ opacity:1 !important }
 .caption .t{ font-size:14.5px;font-weight:600;line-height:1.35 }
 .caption .m{ font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:#B6AF9E;margin-top:4px }
 .caption a{ color:var(--amber) }
@@ -416,6 +423,15 @@ $('mute').addEventListener('click', () => {
 vid.volume = .65;
 // the caption fades out after a few seconds; a tap on the picture brings it back
 let capTimer = null;
+/* ...unless you are hovering it, in which case the fade timer is cancelled
+   outright rather than restarted, so a caption you are reading stays. */
+$('cap').addEventListener('pointerenter', () => clearTimeout(capTimer));
+$('cap').addEventListener('pointerleave', () => {
+  if ($('cap').classList.contains('show')){
+    clearTimeout(capTimer);
+    capTimer = setTimeout(() => $('cap').classList.remove('show'), 9000);
+  }
+});
 screen.addEventListener('click', (e) => {
   if (e.target.closest('a')) return;
   const c = $('cap');

@@ -363,6 +363,21 @@ footer{
   background:#008080;
   display:flex;align-items:flex-start;gap:18px;
 }
+/* the wallpaper credit, when the desktop is somebody's photograph */
+#w98-wallcredit{
+  /* on the shell rather than inside the scrolling desktop, so it sits
+     above the taskbar and does not scroll away with the icons */
+  position:absolute;right:8px;bottom:38px;z-index:6;
+  font:10px/1.5 ui-monospace,"Cascadia Mono",Consolas,"Courier New",monospace;
+  color:rgba(255,255,255,.9);background:rgba(0,0,0,.55);
+  padding:4px 8px;max-width:min(520px,72vw);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  pointer-events:auto;
+}
+#w98-wallcredit a{ color:#BFE4FF }
+#w98-wallcredit[hidden]{ display:none }
+@media (max-width:640px){ #w98-wallcredit{ max-width:88vw;white-space:normal } }
+
 #w98-icons{
   flex:1 1 auto;min-width:0;
   display:grid;
@@ -4397,6 +4412,29 @@ footer{
     { id:'dawn',   n:'Dawn',    c:'#6B4A6E',
       img:"linear-gradient(180deg,#2A2350 0%,#6B4A6E 46%,#C98A6A 100%)" }
   ];
+
+  /* ---- the photograph wall -------------------------------------- *
+   *  The picture-of-the-day widget writes one entry here: a Commons URL
+   *  plus the credit it came with. It appears in the picker only when
+   *  something has actually been sent over, so the list is not carrying
+   *  a permanently empty slot. Nothing is copied or re-hosted — the
+   *  desktop points at the same file the widget displayed, and the
+   *  photographer's name goes on screen with it, because that is the
+   *  condition the picture is being used under.
+   * -------------------------------------------------------------- */
+  var PHOTO_KEY = 'lc-w98-photo';
+  function photoWall(){
+    try {
+      var p = JSON.parse(localStorage.getItem(PHOTO_KEY) || 'null');
+      return (p && typeof p.src === 'string' && /^https:\/\//.test(p.src)) ? p : null;
+    } catch (e) { return null; }
+  }
+  function walls(){
+    var p = photoWall();
+    return p ? WALLS.concat([{ id:'photo', n:'Photograph', c:'#101216',
+                               img:'url("' + p.src.replace(/"/g, '%22') + '")' }])
+             : WALLS;
+  }
   var WALL_SIZE = {
     dots:'16px 16px', circuit:'32px 32px', night:'64px 64px',
     tiles:'48px 24px', weave:'12px 12px', waves:'26px 26px', dawn:'100% 100%'
@@ -4435,7 +4473,10 @@ footer{
     } catch (e) { /* private mode: the defaults stand */ }
     // never trust a stored value enough to index an array with it
     if (!(prefs.scheme >= 0 && prefs.scheme < SCHEMES.length)) prefs.scheme = 0;
-    if (!byId(WALLS, prefs.wall)) prefs.wall = DEFAULTS.wall;
+    // walls() rather than WALLS: the photograph wall exists only when the
+    // picture-of-the-day widget has sent one over, and checking the base
+    // list would quietly reset the choice back to teal every load
+    if (!byId(walls(), prefs.wall)) prefs.wall = DEFAULTS.wall;
     if (!byId(LAYOUTS, prefs.layout)) prefs.layout = DEFAULTS.layout;
     if (!byId(FONTS, prefs.font)) prefs.font = DEFAULTS.font;
     if (!byId(CURSORS, prefs.cursor)) prefs.cursor = DEFAULTS.cursor;
@@ -4467,7 +4508,7 @@ footer{
   /* ---- apply ---- */
   function apply(){
     var s = SCHEMES[prefs.scheme];
-    var w = byId(WALLS, prefs.wall);
+    var w = byId(walls(), prefs.wall) || WALLS[0];
     var l = byId(LAYOUTS, prefs.layout);
     var f = byId(FONTS, prefs.font);
     var st = root.style;
@@ -4485,9 +4526,13 @@ footer{
 
     st.setProperty('--w98-desk', w.c);
     st.setProperty('--w98-deskimg', w.img);
-    var size = WALL_SIZE[w.id];
+    // a photograph is stretched to cover; a pattern is tiled at its own size
+    var size = w.id === 'photo' ? 'cover' : WALL_SIZE[w.id];
     document.getElementById('w98-desktop').style.backgroundSize = size || 'auto';
+    document.getElementById('w98-desktop').style.backgroundPosition = w.id === 'photo' ? 'center' : '';
     document.getElementById('w98-preview').style.backgroundSize = size || 'auto';
+    document.getElementById('w98-preview').style.backgroundPosition = w.id === 'photo' ? 'center' : '';
+    paintWallCredit(w.id === 'photo' ? photoWall() : null);
 
     st.setProperty('--w98-icon-min', l.min);
     st.setProperty('--w98-icon-gap-y', l.gy);
@@ -4552,18 +4597,43 @@ footer{
            'aria-pressed="' + (on ? 'true' : 'false') + '"><span>' + o.n + '</span></button>';
   }
   function wallChip(o, on){
+    var size = o.id === 'photo' ? 'cover' : (WALL_SIZE[o.id] || 'auto');
     return '<button type="button" class="w98-sw" data-id="' + o.id + '" ' +
            'aria-pressed="' + (on ? 'true' : 'false') + '">' +
            '<i style="background-color:' + o.c + ';background-image:' + o.img +
-           ';background-size:' + (WALL_SIZE[o.id] || 'auto') + '"></i>' +
+           ';background-size:' + size + ';background-position:center"></i>' +
            '<span>' + o.n + '</span></button>';
+  }
+
+  /* The photographer's name, on screen whenever their photograph is the
+     desktop. Not optional and not behind a toggle: it is the licence.
+     Its own escaper: this is a separate closure from the desktop's, and
+     borrowing a helper across two IIFEs is how a page ends up with an
+     undefined function only on the branch nobody tested. */
+  function esc(t){
+    return String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function paintWallCredit(p){
+    var el = document.getElementById('w98-wallcredit');
+    if (!el){
+      if (!p) return;
+      el = document.createElement('div');
+      el.id = 'w98-wallcredit';
+      shell.appendChild(el);
+    }
+    if (!p){ el.hidden = true; return; }
+    el.hidden = false;
+    el.innerHTML = 'Wallpaper: ' + esc(p.title || 'a photograph') + ' &middot; ' +
+                   esc(p.artist || 'unknown') + ' &middot; ' + esc(p.licence || '') +
+                   ' &middot; <a href="' + esc(p.page || '#') + '" target="_blank" rel="noopener">Wikimedia Commons</a>';
   }
 
   function paint(){
     document.getElementById('w98-schemes').innerHTML =
       SCHEMES.map(function(s, i){ return swatch(s, i, i === prefs.scheme); }).join('');
     document.getElementById('w98-walls').innerHTML =
-      WALLS.map(function(o){ return wallChip(o, o.id === prefs.wall); }).join('');
+      walls().map(function(o){ return wallChip(o, o.id === prefs.wall); }).join('');
     document.getElementById('w98-layouts').innerHTML =
       LAYOUTS.map(function(o){ return chip(o, o.id === prefs.layout); }).join('');
     document.getElementById('w98-fonts').innerHTML =
