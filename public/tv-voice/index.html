@@ -55,28 +55,43 @@ input[type=text]:focus{ outline:2px solid var(--hot);outline-offset:-1px }
 .btn[disabled]{ opacity:.45;cursor:default }
 .btn:focus-visible{ outline:2px solid var(--hot);outline-offset:2px }
 
+/* ---------- the page, and its eleven dressings ----------
+   Every archetype writes on different paper. The page reads four custom
+   properties — the stock, the ink, the header rule, and the strip along
+   the top — set from the voice's own `look`, so a new archetype declares
+   its treatment beside its grammar rather than needing a rule here.
+
+   This is not decoration for its own sake: a defence brief, a coroner's
+   pad and a legal-pad-yellow retainer letter are physically different
+   objects, and the toy is about the difference between voices. */
 .page{
-  margin-top:20px;background:var(--paper);color:#1B1815;border-radius:3px;
-  padding:34px clamp(20px,5vw,54px) 30px;font-family:var(--script);
+  margin-top:20px;
+  background:var(--stock,var(--paper));
+  color:var(--pen,#1B1815);
+  border-radius:3px;
+  padding:34px clamp(20px,5vw,54px) 30px;
+  font-family:var(--face,var(--script));
   box-shadow:0 16px 44px rgba(0,0,0,.45);position:relative;min-height:200px;
+  transition:background .3s ease, color .3s ease;
+  background-image:var(--grain,none);
 }
 .page:before{
   content:'';position:absolute;left:0;right:0;top:0;height:6px;
-  background:repeating-linear-gradient(90deg,#D9D2C0 0 8px,transparent 8px 22px);
+  background:var(--strip,repeating-linear-gradient(90deg,#D9D2C0 0 8px,transparent 8px 22px));
 }
 .page .slug{
-  font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#6B655A;margin-bottom:22px;
+  font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint,#6B655A);margin-bottom:22px;
   display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
 }
 .page .cue{
   text-align:center;font-size:13.5px;letter-spacing:.2em;text-transform:uppercase;margin:0 0 4px;font-weight:700;
 }
-.page .paren{ text-align:center;font-size:12.5px;color:#5E584E;margin:0 0 14px;font-style:italic }
+.page .paren{ text-align:center;font-size:12.5px;color:var(--faint,#5E584E);margin:0 0 14px;font-style:italic }
 .page p.line{ font-size:15px;line-height:1.85;margin:0 auto 14px;max-width:46ch }
 .page .end{
-  margin-top:26px;text-align:center;font-size:11.5px;letter-spacing:.22em;text-transform:uppercase;color:#6B655A;
+  margin-top:26px;text-align:center;font-size:11.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--faint,#6B655A);
 }
-.page.speaking p.line.now{ background:#F6E6B8 }
+.page.speaking p.line.now{ background:var(--marker,#F6E6B8) }
 
 .note{
   margin-top:20px;border-top:1px solid var(--rule);padding-top:14px;
@@ -109,7 +124,7 @@ input[type=text]:focus{ outline:2px solid var(--hot);outline-offset:-1px }
 
 <div class="wrap">
   <h1>The TV Voice</h1>
-  <div class="sub">six people who have all seen this before</div>
+  <div class="sub">eleven people who have all seen this before</div>
 
   <div class="voices" id="voices"></div>
 
@@ -139,8 +154,15 @@ const pick = (a) => a[Math.floor(Math.random() * a.length)];
 const chance = (p) => Math.random() < p;
 
 /* ------------------------------------------------------------------ *
- * Six archetypes, each with its own grammar. Every fragment below was *
- * written for this page; none is quoted or adapted from any script.   *
+ * Eleven archetypes. Each has its own grammar AND its own page: the    *
+ * stock, the ink, the header rule and the typeface come from the       *
+ * voice's `look`, because a defence brief, a coroner's pad and a set   *
+ * of blueprints are physically different objects and this toy is about *
+ * the difference between voices.                                       *
+ *                                                                      *
+ * Every fragment below was written for this page. None is quoted,      *
+ * adapted or paraphrased from any script, and no character, case,      *
+ * firm or town is named.                                               *
  * ------------------------------------------------------------------ */
 
 // shared pools
@@ -187,6 +209,10 @@ const VOICES = [
     end:['Get the tape up. And somebody find me a decent cup of tea.',
          'Right. Door to door. Both sides of {PLACE}.',
          'Nobody goes home. Not yet.'],
+    look:{ stock:'#EFEADD', pen:'#1B1815', faint:'#6B655A', marker:'#F6E6B8',
+           strip:'repeating-linear-gradient(90deg,#D9D2C0 0 8px,transparent 8px 22px)',
+           grain:'none',
+           face:'"Courier New",Courier,ui-monospace,monospace' },
   },
   {
     id:'me', name:'The Medical Examiner', tag:'precise · unbothered · funny about it',
@@ -210,6 +236,10 @@ const VOICES = [
     end:['Full report Thursday. Do not touch anything with your hands.',
          'Come back when you have a name and I will tell you if it fits.',
          'And take that with you. It is upsetting the students.'],
+    look:{ stock:'#EAF0F0', pen:'#14201F', faint:'#647878', marker:'#CBE6E2',
+           strip:'linear-gradient(90deg,#7FA9A5,#CFE2E0)',
+           grain:'repeating-linear-gradient(0deg,rgba(0,50,50,.03) 0 1px,transparent 1px 22px)',
+           face:'ui-monospace,"SF Mono",Menlo,Consolas,monospace' },
   },
   {
     id:'captain', name:'The Captain', tag:'has a phone that will not stop',
@@ -231,6 +261,10 @@ const VOICES = [
             'You have until Friday. You do not have Friday.']),
     ],
     end:['Close the door on your way out.', 'That was not a question.', 'Go on. Go.'],
+    look:{ stock:'#E8E4DC', pen:'#1F1B16', faint:'#6E6558', marker:'#E9C9A8',
+           strip:'linear-gradient(90deg,#8A2E1E,#C2603F)',
+           grain:'none',
+           face:'ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif' },
   },
   {
     id:'profiler', name:'The Profiler', tag:'flew in this morning · will not eat',
@@ -254,6 +288,10 @@ const VOICES = [
     end:['Start with who had a reason to be at {PLACE} and no reason to mention it.',
          'Find the version of this from three years ago. It exists.',
          'I would like the file on whoever reported it. All of it.'],
+    look:{ stock:'#EDE9F2', pen:'#1A1622', faint:'#6B6478', marker:'#D9CDEC',
+           strip:'linear-gradient(90deg,#5A4780,#A695C7)',
+           grain:'radial-gradient(120% 70% at 20% 0%,rgba(90,71,128,.06),transparent 60%)',
+           face:'ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif' },
   },
   {
     id:'lawyer', name:'The Defence', tag:'a very good suit · a very calm voice',
@@ -277,6 +315,10 @@ const VOICES = [
     end:['That is all I have. Thank you for your patience.',
          'The rest is yours.',
          'I will sit down now.'],
+    look:{ stock:'#F2EFE6', pen:'#181614', faint:'#6A6357', marker:'#E6DCC0',
+           strip:'linear-gradient(90deg,#1F2A44,#4A5C82)',
+           grain:'none',
+           face:'"Iowan Old Style","Palatino Linotype",Georgia,serif' },
   },
   {
     id:'narrator', name:'The True-Crime Narrator', tag:'episode one of six · sponsored',
@@ -300,6 +342,171 @@ const VOICES = [
     end:['Next time: the phone call that was never traced.',
          'This is episode one of six.',
          'Some names have been changed. Nothing else has.'],
+    look:{ stock:'#141414', pen:'#E8E4DA', faint:'#7C766A', marker:'#3A3222',
+           strip:'linear-gradient(90deg,#000,#2A2A2A)',
+           grain:'repeating-linear-gradient(0deg,rgba(255,255,255,.02) 0 1px,transparent 1px 4px)',
+           face:'"Iowan Old Style",Georgia,"Times New Roman",serif' },
+  },
+
+  /* ---- the five added in this batch ------------------------------ *
+   *  Each is a register, not a character: an approach to persuading,
+   *  confessing, justifying, observing or planning. Nothing below is
+   *  quoted, adapted or paraphrased from any script, and no character,
+   *  case, firm or town is named.
+   * --------------------------------------------------------------- */
+  {
+    id:'fixer', name:'The Fixer', tag:'a strip-mall office · a very flexible reading',
+    rate:1.14, pitch:1.1,
+    cue:'{NAME}, ESQ.',
+    paren:['already halfway to a solution','one hand on the door','sitting on the edge of the desk',
+           'with the warmth of a man selling a car'],
+    lines: () => [
+      pick(['Now. Before you say anything, let me say something.',
+            'Here is what I am hearing. And here is what a jury hears.',
+            'You have a problem. What you do not have is a problem I have not had before.']),
+      pick(['Nobody is going to ask you about {OBJ}. Nobody. Unless you bring it up, in which case, everybody.',
+            'The word we are going to use for {PLACE} is "nearby". Not "at". Nearby.',
+            'They have {OBJ}. Fine. They have a thing. A thing is not a story.']),
+      pick(['Is it true? That is a beautiful question and it is not this week’s question.',
+            'The truth is a very expensive product and you have come in with a coupon.',
+            'What actually happened and what can be shown to have happened are two different animals in two different cages.']),
+      pick(['{SMALL_CAP}. That is our whole case and I want you to fall in love with it.',
+            'You give me {SMALL} and I will give you a Tuesday afternoon and everyone goes home.',
+            'I have won on less. I have won on nothing. I have won on a parking receipt.']),
+      pick(['So we are going to be very sorry, very early, to somebody who does not matter.',
+            'Say nothing to anyone. Not your brother. Especially not your brother.',
+            'And if anybody asks, you were with me, and I was here, and this office has no windows for a reason.']),
+    ],
+    end:['Sign here, here, and — do not read that part — here.',
+         'Do not call the office. Call the other number.',
+         'You are going to be fine. I am almost certain you are going to be fine.'],
+    look:{ stock:'#F6E8B8', pen:'#221D0E', faint:'#7A6A32', marker:'#FFD34D',
+           strip:'repeating-linear-gradient(90deg,#C9A227 0 14px,#E8C65A 14px 28px)',
+           grain:'repeating-linear-gradient(0deg,rgba(0,0,0,.045) 0 1px,transparent 1px 26px)',
+           face:'"Courier New",Courier,monospace' },
+  },
+  {
+    id:'reluctant', name:'The Reluctant Professional', tag:'wants to be doing literally anything else',
+    rate:.94, pitch:.96,
+    cue:'{NAME}',
+    paren:['to himself','not to anyone','into the middle distance','after a very long pause'],
+    lines: () => [
+      pick(['I want to be clear that I did not want to be here.',
+            'This was supposed to be one thing. It is now a different thing.',
+            'I said no. I said no in the car and I said no at {PLACE} and here we are.']),
+      pick(['The class I go to on Thursdays — you are supposed to bring something true to it.',
+            'They tell you to use what you have. That is genuinely the advice. Use what you have.',
+            'I am better at this than at anything else and that is the worst sentence I know.']),
+      pick(['I keep thinking about {SMALL}. Not the rest of it. Just that.',
+            '{SMALL_CAP}. I noticed it and then I could not stop noticing it.',
+            'You do not think about {PLACE} afterwards. You think about {SMALL}.']),
+      pick(['Everybody keeps saying I am starting over. Nobody has said what from.',
+            'I am not a bad guy. I am aware of how that sounds. I am aware.',
+            'I could stop. I could genuinely stop, is the thing.']),
+      pick(['Anyway. I have a scene to learn.',
+            'So. That is where I am with it.',
+            'It is fine. It is fine, it is going to be fine.']),
+    ],
+    end:['I have to go. I have a thing.',
+         'Do not — do not tell them I said any of that.',
+         'Right. Yeah. Okay.'],
+    look:{ stock:'#E6E9EA', pen:'#1C2124', faint:'#6E7A80', marker:'#C9DDE4',
+           strip:'linear-gradient(90deg,#A7B6BC,#DCE4E7)',
+           grain:'none',
+           face:'ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif' },
+  },
+  {
+    id:'code', name:'The One With A Code', tag:'polite · punctual · keeps a list',
+    rate:.9, pitch:1.0,
+    cue:'{NAME} (V.O.)',
+    paren:['pleasantly','while doing something else entirely','without any particular emphasis','smiling at nobody'],
+    lines: () => [
+      pick(['People are very reassured by a man who remembers their birthday.',
+            'I am extremely good at the part of my job that everyone can see.',
+            'There is a version of me that goes to {PLACE} on a Sunday and that version is not a lie exactly.']),
+      pick(['I have rules. The rules are the only thing between me and a much worse Tuesday.',
+            'The rules are not a moral position. They are a maintenance schedule.',
+            'Rule one has never been broken. Rule four is renegotiated constantly.']),
+      pick(['{SMALL_CAP}. That is not a detail, that is a confession, and he does not know he made it.',
+            'Everyone leaves something like {SMALL}. Everyone. Including me, which is a separate problem.',
+            'You learn to read a person by {SMALL} and then you cannot stop reading anyone.']),
+      pick(['I have been to the barbecue. I have brought a salad to the barbecue.',
+            'The hardest part is the small talk. Genuinely. The rest is logistics.',
+            'They think I am quiet. I am not quiet. I am busy.']),
+      pick(['{TIME_CAP}, then. That works.',
+            'Which brings us to {PLACE}, and to a conversation he is not expecting.',
+            'It has to be tonight. It is always going to have to be tonight.']),
+    ],
+    end:['Anyway. Lovely to see you. Give my best to everyone.',
+         'I will bring something. I always bring something.',
+         'Tomorrow I will be very normal indeed.'],
+    look:{ stock:'#E9F2EF', pen:'#12211D', faint:'#5F7A72', marker:'#BFE3D6',
+           strip:'linear-gradient(90deg,#8FBFAE,#D6EBE3)',
+           grain:'repeating-linear-gradient(90deg,rgba(0,60,40,.035) 0 1px,transparent 1px 30px)',
+           face:'"Iowan Old Style","Palatino Linotype",Georgia,serif' },
+  },
+  {
+    id:'consultant', name:'The Consultant', tag:'not police · not psychic · insufferable',
+    rate:1.1, pitch:1.14,
+    cue:'THE CONSULTANT',
+    paren:['delighted','lying down on somebody else’s sofa','pouring himself tea nobody offered',
+           'to the one person who has not spoken'],
+    lines: () => [
+      pick(['Oh, this is going to be fun. You are all going to be so annoyed.',
+            'Right — hello — sorry — I have solved it, but I will do the speech, because you have all been very patient.',
+            'Everyone in this room has already told me everything. Some of you used words.']),
+      pick(['You have not slept. You have changed your shoes. And you have been at {PLACE} this morning.',
+            'Your left cuff is wet and it has not rained since Thursday, so: {PLACE}, and recently.',
+            'You said "we" twice and "I" once, and the once was about {OBJ}.']),
+      pick(['{SMALL_CAP}. Nobody has mentioned it. Everybody has looked at it.',
+            'It is {SMALL}, and it has been {SMALL} since the first five minutes.',
+            'The whole thing turns on {SMALL}, which is why nobody has looked at it properly.']),
+      pick(['No, no, do not arrest anyone yet, that is the boring part.',
+            'I am not psychic. I am rude and I pay attention, which is much rarer.',
+            'You are going to say this is a guess. It is not a guess. It is barely even clever.']),
+      pick(['So. Shall I tell you, or would somebody like to try?',
+            'It was, of course, the person who has been the most helpful all day.',
+            'And now the interesting question, which is why they wanted us to find {OBJ} at all.']),
+    ],
+    end:['Wonderful. Is there any more tea?',
+         'You are all very good at this. You are just not quick.',
+         'I will be on the sofa. Come and get me when somebody confesses.'],
+    look:{ stock:'#FBF3E2', pen:'#2A1E12', faint:'#8A7452', marker:'#F2D79A',
+           strip:'repeating-linear-gradient(90deg,#B03A2E 0 10px,#E8C65A 10px 20px)',
+           grain:'radial-gradient(120% 60% at 80% 0%,rgba(200,60,40,.05),transparent 60%)',
+           face:'"Iowan Old Style",Georgia,"Times New Roman",serif' },
+  },
+  {
+    id:'planner', name:'The Planner', tag:'has drawn it · has memorised it · has burnt it',
+    rate:1.0, pitch:.86,
+    cue:'{NAME}',
+    paren:['quietly, and only once','counting something under his breath','with his back to the room',
+           'without looking at the drawing'],
+    lines: () => [
+      pick(['Listen carefully, because I am only going to say this the once.',
+            'There are four ways out of a place like {PLACE}. Three of them are wrong.',
+            'It works. It works because of the part you are going to think is a mistake.']),
+      pick(['We move {TIME}. Not before, and there is no after.',
+            'You have ninety seconds in the corridor. Ninety. Not a hundred.',
+            'The count starts when the light goes, not when the door does.']),
+      pick(['Everything hangs on {OBJ}, and {OBJ} has to be exactly where I said it would be.',
+            'If {OBJ} is not there, we stop, we go back, and we do it Thursday instead.',
+            'One of you is going to want to improvise. Do not.']),
+      pick(['{SMALL_CAP}. That is the whole plan. That is not a detail, that is the plan.',
+            'I have accounted for the guard, the weather, and the fact that one of you will panic.',
+            'The part nobody plans for is the part where somebody decides to be a hero.']),
+      pick(['Say it back to me. All of it.',
+            'If we are separated, nobody waits. Nobody.',
+            'You will not see me again until it is done. That is deliberate.']),
+    ],
+    end:['Burn that. Now, in front of me.',
+         'Ninety seconds. Go.',
+         'And whatever happens — you do not know my name.'],
+    look:{ stock:'#1B3A5C', pen:'#DDE9F4', faint:'#7FA3C4', marker:'#2E5C8A',
+           strip:'repeating-linear-gradient(90deg,#DDE9F4 0 2px,transparent 2px 12px)',
+           grain:'repeating-linear-gradient(0deg,rgba(221,233,244,.07) 0 1px,transparent 1px 18px),' +
+                 'repeating-linear-gradient(90deg,rgba(221,233,244,.07) 0 1px,transparent 1px 18px)',
+           face:'ui-monospace,"SF Mono",Menlo,Consolas,monospace' },
   },
 ];
 
@@ -361,6 +568,14 @@ function write(){
   }
   const endLine = fill(pick(voice.end), scene);
   current = { scene, lines: out.concat([endLine]), spoken: lines.concat([endLine]) };
+
+  // the page takes on this archetype's stock, ink and typeface
+  const look = voice.look || {};
+  const st = $('page').style;
+  ['stock','pen','faint','marker','strip','grain','face'].forEach((k) => {
+    if (look[k]) st.setProperty('--' + k, look[k]);
+    else st.removeProperty('--' + k);
+  });
 
   $('page').innerHTML =
     '<div class="slug"><span>' + esc(fill('INT. {PLACE_CAP} — CONTINUOUS', scene).toUpperCase()) + '</span>' +
