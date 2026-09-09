@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Typing Fortune</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23161219'/><rect x='4' y='12' width='24' height='13' rx='2' fill='%233E3348'/><path d='M8 17h3M13 17h3M18 17h3M23 17h1M10 21h12' stroke='%23E0C878' stroke-width='2'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --bg:#141019;
+  --bg-2:#1E1826;
+  --gold:#E0C878;
+  --pale:#EFE9E0;
+  --dim:#8C8296;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:radial-gradient(820px 640px at 50% 4%, var(--bg-2) 0%, var(--bg) 68%);
+  color:var(--pale);font-family:var(--serif);min-height:100vh;
+  padding:30px 18px 80px;display:flex;flex-direction:column;align-items:center;
+}
+.wrap{ max-width:620px;width:100% }
+header{ text-align:center;margin-bottom:20px }
+h1{
+  font-family:var(--mono);font-size:clamp(15px,3.6vw,21px);margin:0;
+  letter-spacing:.26em;text-transform:uppercase;color:var(--gold);font-weight:500;
+}
+.sub{ font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-top:10px }
+
+.prompt{
+  font-size:15px;line-height:1.7;color:var(--dim);margin:0 0 12px;
+  border-left:2px solid rgba(224,200,120,.4);padding-left:13px;
+}
+.prompt b{ color:var(--pale);font-weight:600 }
+textarea{
+  width:100%;min-height:130px;resize:vertical;
+  font-family:var(--serif);font-size:16px;line-height:1.65;
+  background:rgba(239,233,224,.05);color:var(--pale);
+  border:1px solid rgba(224,200,120,.3);padding:15px;border-radius:2px;
+}
+textarea:focus{ outline:none;border-color:var(--gold) }
+
+.meter{ margin-top:14px;height:4px;background:rgba(239,233,224,.09);overflow:hidden }
+.meter i{ display:block;height:100%;width:0;background:var(--gold);transition:width .2s }
+.hint{ font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-top:10px }
+
+.trace{ margin-top:20px;background:#100D15;border:1px solid rgba(239,233,224,.1) }
+.trace canvas{ display:block;width:100%;height:88px }
+
+button.read{
+  margin-top:18px;width:100%;
+  font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  background:transparent;color:var(--gold);border:1px solid var(--gold);
+  padding:15px;cursor:pointer;
+}
+button.read:hover:not(:disabled){ background:var(--gold);color:#1A1410 }
+button.read:disabled{ opacity:.35;cursor:default }
+button.read:focus-visible{ outline:2px solid var(--pale);outline-offset:3px }
+
+.result{ margin-top:26px }
+.result[hidden]{ display:none }
+.verdict{
+  font-size:clamp(19px,4.4vw,25px);line-height:1.45;margin:0 0 8px;color:var(--gold);
+}
+.blurb{ font-size:15.5px;line-height:1.72;margin:0 }
+.numbers{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:1px;
+  margin-top:22px;background:rgba(239,233,224,.13);border:1px solid rgba(239,233,224,.13);
+}
+.num{ background:#171320;padding:12px 13px }
+.num b{ display:block;font-family:var(--mono);font-size:16px;color:var(--pale);font-variant-numeric:tabular-nums }
+.num span{ display:block;font-family:var(--mono);font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin-top:5px }
+
+.note{ margin-top:28px;font-size:13px;line-height:1.75;color:var(--dim) }
+.note b{ color:var(--pale);font-weight:600 }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media print{ #lc-back{ display:none } }
+@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>The Typing Fortune</h1>
+    <p class="sub">It is not reading what you write</p>
+  </header>
+
+  <p class="prompt">Type anything at all — <b>the words are thrown away.</b> What gets measured is the
+    gaps between your keystrokes: how fast, how even, how long you stop, how often you go back.</p>
+
+  <textarea id="pad" spellcheck="false" placeholder="Start typing. Forty characters is plenty."
+            aria-label="Type anything"></textarea>
+  <div class="meter"><i id="fill"></i></div>
+  <p class="hint" id="hint">0 keystrokes — 40 needed</p>
+
+  <div class="trace"><canvas id="trace" aria-label="A trace of the gaps between your keystrokes." role="img"></canvas></div>
+
+  <button class="read" id="go" type="button" disabled>Read it</button>
+
+  <div class="result" id="result" hidden>
+    <p class="verdict" id="verdict"></p>
+    <p class="blurb" id="blurb"></p>
+    <div class="numbers" id="numbers"></div>
+  </div>
+
+  <p class="note">
+    The numbers are real — they are your actual keystroke intervals, measured in this page and sent
+    nowhere. <b>The reading is a joke.</b> Typing rhythm genuinely is distinctive enough to identify
+    people by, which is a real field called keystroke dynamics, but nobody has ever shown it says
+    anything about your character, and this page is not the first to manage it.
+  </p>
+</div>
+
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<script>
+(function(){
+  'use strict';
+
+  var pad = document.getElementById('pad');
+  var fill = document.getElementById('fill');
+  var hint = document.getElementById('hint');
+  var go = document.getElementById('go');
+  var result = document.getElementById('result');
+  var cv = document.getElementById('trace');
+  var ctx = cv.getContext('2d');
+
+  var NEED = 40;
+  var gaps = [], last = 0, backspaces = 0, keys = 0;
+
+  pad.addEventListener('keydown', function(e){
+    if (e.key === 'Backspace' || e.key === 'Delete'){ backspaces++; }
+    if (e.key.length !== 1 && e.key !== 'Backspace' && e.key !== 'Enter') return;
+    var now = performance.now();
+    if (last){
+      var d = now - last;
+      // a gap over eight seconds is a person who walked off, not a rhythm
+      if (d < 8000) gaps.push(d);
+    }
+    last = now;
+    keys++;
+    fill.style.width = Math.min(100, keys / NEED * 100) + '%';
+    hint.textContent = keys < NEED
+      ? keys + ' keystrokes — ' + (NEED - keys) + ' to go'
+      : keys + ' keystrokes — enough whenever you are';
+    go.disabled = keys < NEED;
+    draw();
+  });
+
+  /* ---- the trace ------------------------------------------------------ */
+  var W = 0, H = 0, DPR = 1;
+  function resize(){
+    DPR = Math.min(2, window.devicePixelRatio || 1);
+    W = cv.clientWidth; H = cv.clientHeight;
+    cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    draw();
+  }
+  window.addEventListener('resize', resize);
+
+  function draw(){
+    ctx.clearRect(0, 0, W, H);
+    if (!gaps.length){
+      ctx.fillStyle = 'rgba(140,130,150,.5)';
+      ctx.font = '10px ui-monospace, Menlo, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('nothing yet', W / 2, H / 2 + 3);
+      return;
+    }
+    var show = gaps.slice(-120);
+    var max = Math.max(140, Math.max.apply(null, show));
+    var bw = W / show.length;
+    for (var i = 0; i < show.length; i++){
+      var v = Math.min(1, show[i] / max);
+      var h = Math.max(2, v * (H - 12));
+      // quick keys glow, long pauses go dark and tall
+      var hue = 44 - v * 34;
+      ctx.fillStyle = 'hsl(' + hue + ',' + (68 - v * 26) + '%,' + (64 - v * 26) + '%)';
+      ctx.fillRect(i * bw, H - h - 4, Math.max(1, bw - 1), h);
+    }
+  }
+  resize();
+
+  /* ---- the measurements ------------------------------------------------ */
+  function stats(){
+    var n = gaps.length;
+    var sum = 0, i;
+    for (i = 0; i < n; i++) sum += gaps[i];
+    var mean = sum / n;
+    var vs = 0;
+    for (i = 0; i < n; i++) vs += (gaps[i] - mean) * (gaps[i] - mean);
+    var sd = Math.sqrt(vs / n);
+    var sorted = gaps.slice().sort(function(a, b){ return a - b; });
+    var median = sorted[(n / 2) | 0];
+    var longest = sorted[n - 1];
+    // how much of the typing happened in bursts of quick keys
+    var quick = 0;
+    for (i = 0; i < n; i++) if (gaps[i] < median * 0.8) quick++;
+    return {
+      n: n, mean: mean, sd: sd, median: median, longest: longest,
+      cv: sd / mean,                             // evenness: lower is metronomic
+      wpm: 60000 / (mean * 5),                   // five keystrokes to a word, by convention
+      burst: quick / n,
+      backRate: backspaces / Math.max(1, keys)
+    };
+  }
+
+  /* ---- the reading (which is a joke) ----------------------------------- */
+  function read(s){
+    var pace = s.wpm > 65 ? 'fast' : s.wpm > 38 ? 'middling' : 'slow';
+    var even = s.cv < 0.55 ? 'even' : s.cv < 1.0 ? 'uneven' : 'wild';
+    var back = s.backRate > 0.09 ? 'corrector' : 'committer';
+    var pausy = s.longest > 1800;
+
+    var TITLES = {
+      'fast even':      'The metronome',
+      'fast uneven':    'The sprinter with opinions',
+      'fast wild':      'The one who types like a struck match',
+      'middling even':  'The steady hand',
+      'middling uneven':'The reconsiderer',
+      'middling wild':  'The one who types in weather',
+      'slow even':      'The careful one',
+      'slow uneven':    'The one who is thinking about something else',
+      'slow wild':      'The archivist'
+    };
+    var BLURBS = {
+      'fast even': 'You do not appear to be thinking, which is either mastery or the opposite. ' +
+                   'Your gaps are almost identical to each other, which is rarer than you would guess.',
+      'fast uneven': 'You go in bursts and then stop dead, which suggests you are typing ahead of ' +
+                     'yourself and having to wait for the rest of you to catch up.',
+      'fast wild': 'Nothing about your rhythm agrees with anything else about your rhythm. ' +
+                   'Whatever you were doing, you were doing it quickly and with feeling.',
+      'middling even': 'A very reasonable pace, held steadily, which is the least interesting ' +
+                       'result this page can produce and it means you are probably fine.',
+      'middling uneven': 'You stop in the middle of words rather than at the ends of them, ' +
+                         'which is the shape of somebody changing their mind mid-sentence.',
+      'middling wild': 'Your intervals have no centre at all. You type the way people drive in a ' +
+                       'town they do not know.',
+      'slow even': 'Deliberate and consistent. You are either a careful person or using an ' +
+                   'unfamiliar keyboard, and this page cannot tell those apart.',
+      'slow uneven': 'Long gaps in odd places. The rhythm of somebody doing something else at ' +
+                     'the same time, and this page has no way of knowing what.',
+      'slow wild': 'Enormous pauses, then a flurry. You are composing rather than transcribing.'
+    };
+    var k = pace + ' ' + even;
+    var out = { title: TITLES[k], blurb: BLURBS[k] };
+    out.blurb += back === 'corrector'
+      ? ' You went back and fixed things ' + Math.round(s.backRate * 100) + ' per cent of the time, ' +
+        'which is more than most people bother with.'
+      : ' You barely corrected anything, which this page has decided to read as confidence.';
+    if (pausy) out.blurb += ' Your longest pause was ' + (s.longest / 1000).toFixed(1) +
+      ' seconds. Something happened there.';
+    return out;
+  }
+
+  go.addEventListener('click', function(){
+    var s = stats();
+    var r = read(s);
+    document.getElementById('verdict').textContent = r.title;
+    document.getElementById('blurb').textContent = r.blurb;
+    document.getElementById('numbers').innerHTML = [
+      ['<b>' + Math.round(s.wpm) + '</b><span>words a minute</span>'],
+      ['<b>' + Math.round(s.median) + ' ms</b><span>typical gap</span>'],
+      ['<b>' + s.cv.toFixed(2) + '</b><span>unevenness</span>'],
+      ['<b>' + (s.longest / 1000).toFixed(1) + ' s</b><span>longest pause</span>'],
+      ['<b>' + Math.round(s.backRate * 100) + '%</b><span>went back</span>'],
+      ['<b>' + s.n + '</b><span>gaps measured</span>']
+    ].map(function(x){ return '<div class="num">' + x[0] + '</div>'; }).join('');
+    result.hidden = false;
+    result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+
+  window.__fortune = function(){
+    return { keys: keys, gaps: gaps.length, ready: !go.disabled,
+             stats: gaps.length ? stats() : null,
+             shown: !result.hidden,
+             title: document.getElementById('verdict').textContent };
+  };
+  window.__type = function(intervals, backs){
+    gaps = intervals.slice(); keys = intervals.length + 1; backspaces = backs || 0;
+    go.disabled = keys < NEED; draw();
+    return stats();
+  };
+})();
+</script>
+</body>
+</html>

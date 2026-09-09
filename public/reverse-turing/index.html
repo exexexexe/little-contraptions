@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Which of Us Wrote It</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23111318'/><circle cx='11' cy='13' r='4.5' fill='%23E8D8B0'/><rect x='18' y='9' width='9' height='9' rx='1.5' fill='%236FC8E0'/><path d='M6 25h20' stroke='%23585C68' stroke-width='2'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --bg:#101218;
+  --bg-2:#171A22;
+  --paper:#E8D8B0;
+  --chip:#6FC8E0;
+  --pale:#EDEAE2;
+  --dim:#8A8E9A;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:radial-gradient(820px 640px at 50% 4%, var(--bg-2) 0%, var(--bg) 66%);
+  color:var(--pale);font-family:var(--serif);min-height:100vh;
+  padding:30px 18px 80px;display:flex;flex-direction:column;align-items:center;
+}
+.wrap{ max-width:620px;width:100% }
+header{ text-align:center;margin-bottom:22px }
+h1{
+  font-family:var(--mono);font-size:clamp(15px,3.6vw,21px);margin:0;
+  letter-spacing:.26em;text-transform:uppercase;color:var(--pale);font-weight:500;
+}
+.sub{ font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-top:10px }
+
+.score{
+  display:flex;justify-content:center;gap:26px;margin-bottom:22px;
+  font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);
+}
+.score b{ display:block;font-size:19px;color:var(--pale);margin-top:5px;letter-spacing:.02em }
+
+.card{
+  background:rgba(237,234,226,.05);border:1px solid rgba(237,234,226,.13);
+  padding:32px 28px;min-height:170px;display:flex;align-items:center;justify-content:center;
+}
+.line{ font-size:clamp(17px,3.8vw,21px);line-height:1.62;margin:0;text-align:center;max-width:44ch }
+.waiting{ font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);text-align:center }
+
+.choices{ display:flex;gap:10px;margin-top:16px }
+.choices button{
+  flex:1 1 0;font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  background:transparent;border:1px solid rgba(237,234,226,.4);color:var(--pale);
+  padding:16px 10px;cursor:pointer;
+}
+.choices button:hover{ background:rgba(237,234,226,.1) }
+.choices button:focus-visible{ outline:2px solid var(--chip);outline-offset:3px }
+.choices[hidden]{ display:none }
+
+.reveal{ margin-top:16px;min-height:96px }
+.reveal[hidden]{ display:none }
+.verdict{ font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;margin:0 0 10px }
+.verdict.right{ color:#7ED8A0 } .verdict.wrong{ color:#E8879A }
+.source{ margin:0;font-size:14px;line-height:1.65;color:var(--dim) }
+.source b{ color:var(--paper);font-weight:600 }
+.next{
+  margin-top:16px;font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  background:var(--pale);color:#14161C;border:0;padding:14px 22px;cursor:pointer;
+}
+.next:focus-visible{ outline:2px solid var(--chip);outline-offset:3px }
+
+.state{
+  border:1px solid rgba(111,200,224,.3);background:rgba(111,200,224,.07);
+  padding:18px 20px;margin-top:18px;font-size:14px;line-height:1.65;color:#BFD8E2;
+}
+.state[hidden]{ display:none }
+
+.note{ margin-top:30px;font-size:13px;line-height:1.75;color:var(--dim) }
+.note b{ color:var(--pale);font-weight:600 }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media print{ #lc-back{ display:none } }
+@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Which of Us Wrote It</h1>
+    <p class="sub">One sentence. A person, or a machine.</p>
+  </header>
+
+  <div class="score">
+    <div>right<b id="s-right">0</b></div>
+    <div>asked<b id="s-total">0</b></div>
+    <div>your rate<b id="s-rate">—</b></div>
+  </div>
+
+  <div class="card"><p class="line" id="line">—</p></div>
+
+  <div class="choices" id="choices" hidden>
+    <button id="human" type="button">A person</button>
+    <button id="machine" type="button">A machine</button>
+  </div>
+
+  <div class="reveal" id="reveal" hidden>
+    <p class="verdict" id="verdict"></p>
+    <p class="source" id="source"></p>
+    <button class="next" id="next" type="button">Next</button>
+  </div>
+
+  <div class="state" id="state" hidden></div>
+
+  <p class="note">
+    The human sentences are real, and every one is from a book old enough to be out of copyright —
+    which is the honest limitation of this game, because a machine can be asked to write like 1870
+    but a person from 1870 cannot be asked to write like anything else. So the model is told to
+    write in the same register, and told not to reproduce or paraphrase any real sentence. A few of
+    the human lines are famous enough that you may simply recognise them. <b>That counts as a clue,
+    not as cheating.</b>
+  </p>
+</div>
+
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<script src="/shared/lc-generate.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  /* ---- the human half ------------------------------------------------ *
+   * Real sentences from real books, all out of copyright, all attributed
+   * on the reveal. Nothing here was written for this page.              */
+  var HUMAN = [
+    ['It is a truth universally acknowledged, that a single man in possession of a good fortune, must be in want of a wife.', 'Jane Austen', 'Pride and Prejudice', 1813],
+    ['Call me Ishmael.', 'Herman Melville', 'Moby-Dick', 1851],
+    ['It was the best of times, it was the worst of times.', 'Charles Dickens', 'A Tale of Two Cities', 1859],
+    ['All happy families are alike; each unhappy family is unhappy in its own way.', 'Leo Tolstoy', 'Anna Karenina', 1878],
+    ['There was no possibility of taking a walk that day.', 'Charlotte Brontë', 'Jane Eyre', 1847],
+    ['Marley was dead, to begin with.', 'Charles Dickens', 'A Christmas Carol', 1843],
+    ['It was a dark and stormy night.', 'Edward Bulwer-Lytton', 'Paul Clifford', 1830],
+    ['Whether I shall turn out to be the hero of my own life, or whether that station will be held by anybody else, these pages must show.', 'Charles Dickens', 'David Copperfield', 1850],
+    ['Mrs. Dalloway said she would buy the flowers herself.', 'Virginia Woolf', 'Mrs Dalloway', 1925],
+    ['Stately, plump Buck Mulligan came from the stairhead, bearing a bowl of lather on which a mirror and a razor lay crossed.', 'James Joyce', 'Ulysses', 1922],
+    ['In my younger and more vulnerable years my father gave me some advice that I have been turning over in my mind ever since.', 'F. Scott Fitzgerald', 'The Great Gatsby', 1925],
+    ['You don’t know about me without you have read a book by the name of The Adventures of Tom Sawyer; but that ain’t no matter.', 'Mark Twain', 'Adventures of Huckleberry Finn', 1884],
+    ['Happy the man, and happy he alone, he who can call today his own.', 'John Dryden', 'from Horace, Odes III', 1685],
+    ['I had this story from one who had no business to tell it to me, or to any other.', 'Edgar Rice Burroughs', 'Tarzan of the Apes', 1912],
+    ['The past is never dead.', 'William Faulkner', 'Requiem for a Nun', 1951],
+    ['All this happened, more or less.', 'Kurt Vonnegut', 'Slaughterhouse-Five', 1969]
+  ];
+  // Two of those are still in copyright in most places, so they come out:
+  HUMAN = HUMAN.filter(function(h){ return h[3] <= 1929; });
+
+  var SUBJECTS = [
+    'a kitchen before anyone is awake', 'a horse that will not move',
+    'a letter left unopened on a hall table', 'the noise a mill makes at night',
+    'a coat that no longer fits', 'a road the day after heavy rain',
+    'a clock that has always been wrong', 'a visitor nobody was expecting',
+    'a shop that never seems to have customers', 'the smell of a church in winter',
+    'a dog waiting at a gate', 'a window that will not shut properly'
+  ];
+
+  var $ = function(id){ return document.getElementById(id); };
+  var lineEl = $('line'), choices = $('choices'), reveal = $('reveal'),
+      verdictEl = $('verdict'), sourceEl = $('source'), stateEl = $('state');
+
+  var aiPool = [], humanLeft = HUMAN.slice(), current = null;
+  var right = 0, total = 0, fetching = false, backendOk = null;
+
+  function shuffle(a){
+    for (var i = a.length - 1; i > 0; i--){
+      var j = (Math.random() * (i + 1)) | 0;
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+  shuffle(humanLeft);
+
+  function esc(t){
+    return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function showState(msg){
+    stateEl.hidden = !msg;
+    stateEl.textContent = msg || '';
+  }
+
+  /* ---- the machine half ---------------------------------------------- */
+  function fetchLines(){
+    if (fetching) return Promise.resolve();
+    fetching = true;
+    var subs = shuffle(SUBJECTS.slice()).slice(0, 8).join('; ');
+    return LCGenerate.run('reverse-turing', { subjects: subs }).then(function(out){
+      fetching = false;
+      if (!out.ok){
+        backendOk = false;
+        showState(out.message);
+        return;
+      }
+      var parsed = LCGenerate.parseJSON(out.text);
+      var v = LCGenerate.need(parsed, { lines: 'array' });
+      if (!v){
+        backendOk = false;
+        showState('The generator answered, but not with anything this page could read. ' +
+                  'Try again in a moment.');
+        return;
+      }
+      var got = v.lines.filter(function(s){ return typeof s === 'string' && s.trim().length > 12; });
+      // Never show a "machine" line that is really a human one it has copied
+      var humanText = HUMAN.map(function(h){ return h[0].toLowerCase().slice(0, 40); });
+      got = got.filter(function(s){
+        var low = s.toLowerCase();
+        return !humanText.some(function(h){ return low.indexOf(h) >= 0; });
+      });
+      if (!got.length){
+        backendOk = false;
+        showState('The generator returned nothing usable this time. Try again in a moment.');
+        return;
+      }
+      backendOk = true;
+      showState('');
+      aiPool = aiPool.concat(got.map(function(s){ return s.trim(); }));
+    });
+  }
+
+  /* ---- rounds --------------------------------------------------------- */
+  function ready(){ return aiPool.length > 0 && humanLeft.length > 0; }
+
+  function nextRound(){
+    reveal.hidden = true;
+    if (aiPool.length < 2 && !fetching) fetchLines();
+    if (!humanLeft.length) humanLeft = shuffle(HUMAN.slice());
+
+    if (!ready()){
+      choices.hidden = true;
+      lineEl.className = 'waiting';
+      lineEl.textContent = backendOk === false
+        ? 'waiting on the generator'
+        : 'asking the generator for its half';
+      if (backendOk === false){
+        showState(stateEl.textContent || 'This one needs the language model behind the cabinet, ' +
+          'and it is not answering just now. The human half is all still here — it is the machine ' +
+          'half that is missing, and without it there is nothing to tell apart.');
+      }
+      setTimeout(function(){ if (!ready()) return; nextRound(); }, 900);
+      return;
+    }
+
+    lineEl.className = 'line';
+    var useHuman = Math.random() < 0.5;
+    if (useHuman){
+      var h = humanLeft.pop();
+      current = { human: true, text: h[0], who: h[1], work: h[2], year: h[3] };
+    } else {
+      current = { human: false, text: aiPool.shift() };
+    }
+    lineEl.textContent = current.text;
+    choices.hidden = false;
+  }
+
+  function answer(saidHuman){
+    if (!current || !choices.hidden === false && reveal.hidden === false) return;
+    choices.hidden = true;
+    total++;
+    var ok = saidHuman === current.human;
+    if (ok) right++;
+    $('s-right').textContent = right;
+    $('s-total').textContent = total;
+    $('s-rate').textContent = Math.round(right / total * 100) + '%';
+
+    verdictEl.className = 'verdict ' + (ok ? 'right' : 'wrong');
+    verdictEl.textContent = ok ? 'you were right' : 'you were wrong';
+    sourceEl.innerHTML = current.human
+      ? 'A person wrote it. <b>' + esc(current.who) + '</b>, <em>' + esc(current.work) +
+        '</em>, ' + current.year + '.'
+      : 'A machine wrote it, a moment ago, for you. It was told to write in the same period as ' +
+        'the human half so that the comparison would be a fair one.';
+    reveal.hidden = false;
+  }
+
+  $('human').addEventListener('click', function(){ answer(true); });
+  $('machine').addEventListener('click', function(){ answer(false); });
+  $('next').addEventListener('click', nextRound);
+
+  fetchLines().then(nextRound);
+
+  window.__rt = function(){
+    return { right: right, total: total, ai: aiPool.length, human: humanLeft.length,
+             backendOk: backendOk, current: current && { human: current.human, text: current.text.slice(0, 50) },
+             state: stateEl.hidden ? '' : stateEl.textContent.slice(0, 60),
+             choicesShown: !choices.hidden };
+  };
+  window.__answer = function(h){ answer(h); };
+  window.__next = nextRound;
+})();
+</script>
+</body>
+</html>
