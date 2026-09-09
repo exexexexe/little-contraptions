@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Six Degrees of Anything</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23151420'/><circle cx='7' cy='9' r='3.4' fill='%23E8B04B'/><circle cx='25' cy='23' r='3.4' fill='%2378C8E0'/><path d='M9 11l6 4 4-2 4 8' stroke='%236E6890' stroke-width='2' fill='none'/><circle cx='15' cy='15' r='2' fill='%236E6890'/><circle cx='19' cy='13' r='2' fill='%236E6890'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --bg:#151420;
+  --panel:#1E1C2C;
+  --edge:#312E44;
+  --ink:#E6E2F0;
+  --dim:#8C86A8;
+  --a:#E8B04B;
+  --b:#78C8E0;
+  --mid:#A79CD4;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --serif:"Iowan Old Style","Palatino Linotype",Georgia,serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);
+  background-image:
+    radial-gradient(60% 40% at 8% 2%, rgba(232,176,75,.10), transparent 62%),
+    radial-gradient(60% 40% at 92% 96%, rgba(120,200,224,.10), transparent 62%);
+  background-attachment:fixed;
+  color:var(--ink);font-family:var(--serif);font-size:16px;
+  min-height:100vh;padding:24px 16px 84px;
+  display:flex;flex-direction:column;align-items:center;
+}
+.wrap{ max-width:720px;width:100% }
+
+header{ text-align:center }
+h1{ margin:0;font-family:var(--mono);font-size:clamp(16px,4vw,23px);letter-spacing:.24em;text-transform:uppercase;color:var(--mid);font-weight:700 }
+.sub{ margin-top:9px;font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim) }
+
+.ends{
+  display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;
+  margin-top:20px;background:var(--panel);border:1px solid var(--edge);padding:15px 16px;
+}
+@media (max-width:600px){ .ends{ grid-template-columns:1fr } }
+.ends .to{ font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);text-align:center }
+input[type=text]{
+  width:100%;font-family:var(--serif);font-size:17px;
+  background:#141320;border:1px solid var(--edge);color:var(--ink);padding:11px 13px;
+}
+#a:focus{ outline:2px solid var(--a);outline-offset:1px }
+#b:focus{ outline:2px solid var(--b);outline-offset:1px }
+input::placeholder{ color:#5F5A78 }
+
+.row{ display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center }
+button{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;
+  background:var(--mid);color:#171525;border:1px solid var(--mid);
+  padding:12px 20px;cursor:pointer;font-weight:700;
+}
+button:hover{ background:#BDB4E4 }
+button.sec{ background:transparent;color:var(--ink);border-color:var(--edge);font-weight:400 }
+button.sec:hover{ border-color:var(--mid);color:var(--mid) }
+button:focus-visible{ outline:2px solid var(--a);outline-offset:2px }
+
+/* ---------- the chain ---------- */
+.chain{ margin-top:18px }
+.node{
+  display:flex;gap:14px;align-items:flex-start;
+  background:var(--panel);border:1px solid var(--edge);padding:14px 16px;margin-bottom:0;
+}
+.node .dot{
+  flex:0 0 auto;width:13px;height:13px;border-radius:50%;background:var(--mid);margin-top:5px;
+}
+.node.start .dot{ background:var(--a) } .node.end .dot{ background:var(--b) }
+.node .t{ font-size:19px;line-height:1.3 }
+.node.start .t{ color:var(--a) } .node.end .t{ color:var(--b) }
+.node .m{ font-family:var(--mono);font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin-top:4px }
+.hop{
+  margin:0 0 0 22px;border-left:2px dashed var(--edge);padding:12px 0 12px 20px;
+  font-size:15.5px;line-height:1.65;color:#C3BDD8;
+}
+.hop .tag{
+  display:inline-block;font-family:var(--mono);font-size:8.5px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--dim);border:1px solid var(--edge);
+  padding:2px 7px;margin-bottom:6px;
+}
+
+.state{
+  background:var(--panel);border:1px dashed var(--edge);padding:20px;margin-top:16px;
+  font-family:var(--mono);font-size:12px;line-height:1.85;color:var(--dim);
+}
+.state b{ display:block;color:var(--mid);margin-bottom:7px;letter-spacing:.06em }
+
+.tally{
+  margin-top:12px;font-family:var(--mono);font-size:10px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--dim);text-align:center;
+}
+
+footer{
+  max-width:720px;width:100%;margin:24px auto 0;padding-top:14px;border-top:1px solid var(--edge);
+  font-family:var(--mono);font-size:10.5px;line-height:1.85;color:var(--dim);
+}
+footer a{ color:var(--mid) }
+
+/* ---------- shared: back to the cabinet ---------- */
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 var(--mono);
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } }
+</style>
+</head>
+<body>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<div class="wrap">
+  <header>
+    <h1>Six Degrees of Anything</h1>
+    <div class="sub">two things &middot; and the shortest loose excuse between them</div>
+  </header>
+
+  <div class="ends">
+    <input type="text" id="a" maxlength="40" placeholder="something" autocomplete="off" aria-label="The first thing">
+    <div class="to">to</div>
+    <input type="text" id="b" maxlength="40" placeholder="something else" autocomplete="off" aria-label="The second thing">
+  </div>
+  <div class="row">
+    <button id="go" type="button">Connect them</button>
+    <button id="scenic" class="sec" type="button">The long way round</button>
+    <button id="rand" class="sec" type="button">Two at random</button>
+    <span class="tally" id="tally" style="margin-left:auto;text-align:right"></span>
+  </div>
+
+  <div class="chain" id="out"></div>
+</div>
+
+<footer>
+  The links are real in one narrow sense: everything in the lexicon carries a handful of loose tags
+  &mdash; round, kept in a pocket, makes a noise &mdash; and the chain is the genuinely shortest path
+  through that graph, found by breadth-first search rather than written in advance. The graph turned out
+  to be dense &mdash; almost any two things in it are one or two hops apart &mdash; so there is a second
+  button that deliberately takes the long way round instead, and the tally says which one you are
+  looking at. What the links are
+  not is an argument. A tag like &ldquo;older than it looks&rdquo; connects a whale to a cathedral bell
+  and proves nothing at all, which is the entire point. Nothing is fetched and nothing you type is sent
+  anywhere; the whole world this toy knows about is one file.
+  <a href="/">&larr; back to the cabinet</a>
+</footer>
+
+<script src="data.js"></script>
+<script>
+'use strict';
+const $ = (id) => document.getElementById(id);
+const pick = (a) => a[Math.floor(Math.random() * a.length)];
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+const SIX = window.SIX;
+const WORDS = Object.keys(SIX.words);
+
+/* tag -> every word carrying it, built once */
+const BY_TAG = {};
+for (const w of WORDS) for (const t of SIX.words[w]) (BY_TAG[t] = BY_TAG[t] || []).push(w);
+
+/* ---- matching what somebody typed ---------------------------------- *
+ *  Exact first, then ignoring the article, then a substring both ways.
+ *  A word the lexicon has never heard of gets tags GUESSED from a small
+ *  keyword table, and the page says so rather than pretending.
+ * ------------------------------------------------------------------ */
+const strip = (s) => s.toLowerCase().replace(/^(a|an|the)\s+/, '').replace(/[^a-z0-9 ]/g, '').trim();
+
+const GUESS = [
+  [/\b(bird|owl|crow|cat|dog|fish|whale|horse|bee|mouse|fox|wolf|bear)\b/, ['animal','story']],
+  [/\b(sea|river|rain|water|ocean|lake|ice|snow)\b/, ['water','weather']],
+  [/\b(clock|watch|calendar|hour|minute|year)\b/, ['time','counting']],
+  [/\b(book|paper|letter|note|page|map|card)\b/, ['paper','story']],
+  [/\b(lamp|light|candle|torch|star|sun)\b/, ['lightsource','night']],
+  [/\b(money|coin|bank|price|cost|tax)\b/, ['money','counting']],
+  [/\b(music|song|drum|guitar|piano|bell)\b/, ['music','noise']],
+  [/\b(train|car|boat|plane|road|journey|travel)\b/, ['travel','waiting']],
+  [/\b(fire|flame|heat|burn|coal)\b/, ['fire','heat']],
+  [/\b(cold|winter|frost|freeze)\b/, ['cold','weather']],
+  [/\b(glass|mirror|window|bottle)\b/, ['glass','fragile']],
+  [/\b(metal|iron|steel|nail|key)\b/, ['metal','tool']],
+  [/\b(tree|leaf|grass|garden|plant|moss)\b/, ['green','old']],
+  [/\b(game|play|toy|puzzle)\b/, ['game','childhood']],
+  [/\b(ghost|story|legend|myth)\b/, ['story','night']],
+  [/\b(space|planet|moon|rocket|orbit)\b/, ['space','flight']]
+];
+
+function resolve(input){
+  const s = strip(input);
+  if (!s) return null;
+  for (const w of WORDS) if (strip(w) === s) return { word: w, exact: true };
+  for (const w of WORDS) if (strip(w).includes(s) || s.includes(strip(w))) return { word: w, exact: false, matched: true };
+
+  // never heard of it: attach it to the graph on guessed tags
+  const tags = [];
+  for (const [re, t] of GUESS) if (re.test(s)) tags.push(...t);
+  if (!tags.length) tags.push('story', 'old');       // everything is a story about something old
+  return { word: input.trim(), exact: false, invented: true, tags: [...new Set(tags)] };
+}
+
+function tagsOf(node){ return node.invented ? node.tags : SIX.words[node.word]; }
+
+/* ---- the search ---------------------------------------------------- *
+ *  Plain breadth-first search over "shares a tag", so the chain really is
+ *  the shortest one available rather than a walk that stops when it gets
+ *  bored. The tag each hop was made on is kept, because that tag is what
+ *  the sentence is written from.
+ * ------------------------------------------------------------------ */
+function neighbours(word, tags){
+  const out = new Map();       // neighbour -> the tag that got us there
+  for (const t of tags){
+    for (const w of (BY_TAG[t] || [])){
+      if (w !== word && !out.has(w)) out.set(w, t);
+    }
+  }
+  return out;
+}
+
+function search(from, to){
+  const startTags = tagsOf(from), endTags = tagsOf(to);
+
+  // an invented end point is reachable from anything sharing a guessed tag
+  const isGoal = (w) => to.invented
+    ? SIX.words[w] && SIX.words[w].some((t) => endTags.includes(t))
+    : w === to.word;
+
+  if (!from.invented && !to.invented && from.word === to.word) return [];
+
+  const prev = new Map();
+  const via = new Map();
+  const q = [];
+  for (const [w, t] of neighbours(from.word, startTags)){
+    prev.set(w, null); via.set(w, t); q.push(w);
+  }
+  // a direct hop, if the two ends already share a tag
+  const shared = startTags.filter((t) => endTags.includes(t));
+  if (shared.length) return [{ tag: shared[0], to: to.word }];
+
+  const seen = new Set(q);
+  while (q.length){
+    const cur = q.shift();
+    if (isGoal(cur) && cur !== from.word){
+      // walk back
+      const path = [];
+      let node = cur;
+      while (node != null){
+        path.unshift({ tag: via.get(node), to: node });
+        node = prev.get(node);
+      }
+      if (to.invented){
+        const t = (SIX.words[cur] || []).find((x) => endTags.includes(x));
+        path.push({ tag: t || 'story', to: to.word });
+      }
+      return path;
+    }
+    for (const [w, t] of neighbours(cur, SIX.words[cur] || [])){
+      if (seen.has(w)) continue;
+      seen.add(w); prev.set(w, cur); via.set(w, t); q.push(w);
+      if (q.length > 4000) break;
+    }
+  }
+  return null;
+}
+
+function sentence(tag, a, b){
+  const forms = SIX.links[tag] || ['{A} and {B} are connected, loosely, by ' + tag + '.'];
+  return pick(forms).replace('{A}', a).replace('{B}', b);
+}
+
+function nodeHTML(text, cls, note){
+  return '<div class="node ' + cls + '"><span class="dot"></span><div>' +
+    '<div class="t">' + esc(text) + '</div>' +
+    (note ? '<div class="m">' + esc(note) + '</div>' : '') + '</div></div>';
+}
+
+/* ---- the long way round -------------------------------------------- *
+ *  The tag graph turned out to be dense: almost any two things in the
+ *  lexicon are one or two hops apart, which is honest and slightly
+ *  disappointing. So there is a second mode that deliberately does not
+ *  take the shortest path — it wanders through three or four intermediate
+ *  things, never repeating one, and only turns for home at the end. It is
+ *  labelled the scenic route because that is what it is.
+ * ------------------------------------------------------------------ */
+function scenicPath(from, to, want){
+  const endTags = tagsOf(to);
+  const used = new Set([from.word, to.word]);
+  const path = [];
+  let cur = from.word, curTags = tagsOf(from);
+
+  for (let i = 0; i < want; i++){
+    const opts = [...neighbours(cur, curTags)].filter(([w]) => !used.has(w));
+    if (!opts.length) break;
+    // prefer a step that does NOT already touch the destination's tags,
+    // so the walk goes somewhere before it comes back
+    const away = opts.filter(([w]) => !SIX.words[w].some((t) => endTags.includes(t)));
+    const step = pick(away.length && i < want - 1 ? away : opts);
+    path.push({ tag: step[1], to: step[0] });
+    used.add(step[0]); cur = step[0]; curTags = SIX.words[step[0]];
+  }
+
+  // and home
+  const home = search({ word: cur, invented: false }, to);
+  if (home === null) return null;
+  return path.concat(home);
+}
+
+function connect(scenic){
+  const from = resolve($('a').value);
+  const to = resolve($('b').value);
+  if (!from || !to){
+    $('out').innerHTML = '<div class="state"><b>Two things, please</b>' +
+      'It needs both ends before it can find anything between them.</div>';
+    return;
+  }
+
+  const path = scenic ? scenicPath(from, to, 3 + Math.floor(Math.random() * 2))
+                      : search(from, to);
+  if (path === null){
+    $('out').innerHTML = '<div class="state"><b>No path</b>' +
+      'The lexicon could not get from one to the other, which given how loose the tags are is ' +
+      'genuinely surprising. Try a different pair.</div>';
+    return;
+  }
+  if (!path.length){
+    $('out').innerHTML = '<div class="state"><b>Those are the same thing</b>' +
+      'Zero degrees. Try two things that are not each other.</div>';
+    return;
+  }
+
+  let html = nodeHTML(from.word, 'start',
+    from.invented ? 'not in the lexicon — attached on a guess' : (from.matched ? 'nearest entry' : ''));
+  let prev = from.word;
+  path.forEach((hop, i) => {
+    html += '<div class="hop"><span class="tag">' + esc(hop.tag) + '</span><br>' +
+      esc(sentence(hop.tag, prev, hop.to)) + '</div>';
+    const last = i === path.length - 1;
+    html += nodeHTML(hop.to, last ? 'end' : '',
+      last && to.invented ? 'not in the lexicon — attached on a guess' : '');
+    prev = hop.to;
+  });
+
+  $('out').innerHTML = html;
+  $('tally').textContent = path.length + (path.length === 1 ? ' degree' : ' degrees') +
+                           (scenic ? ' \u00b7 scenic' : ' \u00b7 shortest');
+}
+
+$('go').addEventListener('click', () => connect(false));
+$('scenic').addEventListener('click', () => connect(true));
+[$('a'), $('b')].forEach((el) => el.addEventListener('keydown', (e) => { if (e.key === 'Enter') connect(false); }));
+$('rand').addEventListener('click', () => {
+  let x = pick(WORDS), y = pick(WORDS);
+  while (y === x) y = pick(WORDS);
+  $('a').value = x; $('b').value = y;
+  connect(false);
+});
+
+$('a').value = 'a lighthouse';
+$('b').value = 'a birthday cake';
+connect(false);
+
+window.__six = { connect: connect, search: search, resolve: resolve, words: WORDS };
+</script>
+</body>
+</html>
