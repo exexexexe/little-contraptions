@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Invisible Ink</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23E8DFC8'/><path d='M7 9h18M7 14h18M7 19h12' stroke='%23D6CBB0' stroke-width='2'/><circle cx='20' cy='19' r='7' fill='%23E8A85C' opacity='.5'/><path d='M15 19h10' stroke='%236B4A24' stroke-width='2'/></svg>">
+<style>
+:root{ color-scheme: light; }
+:root{
+  --paper:#E9E0C9;
+  --paper-2:#DED3B7;
+  --ink:#2E2617;
+  --warm:#B4682C;
+  --dim:#7C7157;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:#241E14;
+  color:var(--ink);font-family:var(--serif);min-height:100vh;
+  padding:28px 16px 80px;display:flex;flex-direction:column;align-items:center;
+}
+.wrap{ max-width:600px;width:100% }
+header{ text-align:center;margin-bottom:18px;color:var(--paper) }
+h1{
+  font-family:var(--mono);font-size:clamp(15px,3.6vw,21px);margin:0;
+  letter-spacing:.28em;text-transform:uppercase;color:var(--paper);font-weight:500;
+}
+.sub{ font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#A2977C;margin-top:10px }
+
+.sheet{
+  position:relative;background:var(--paper);
+  background-image:repeating-linear-gradient(180deg,transparent 0 31px,rgba(120,108,80,.16) 31px 32px);
+  padding:26px 24px;min-height:250px;
+  box-shadow:0 16px 40px rgba(0,0,0,.5);
+  touch-action:none;overflow:hidden;
+}
+.sheet.writing{ cursor:text }
+.sheet.hidden-mode{ cursor:crosshair }
+#msg{
+  position:relative;z-index:1;margin:0;font-size:17px;line-height:32px;
+  white-space:pre-wrap;word-break:break-word;min-height:192px;color:var(--ink);
+}
+#msg[contenteditable]:focus{ outline:none }
+#msg:empty::before{ content:attr(data-ph);color:#A79C80 }
+#veil{ position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;pointer-events:none }
+#veil[hidden]{ display:none }
+
+.strip{
+  display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;justify-content:center;
+}
+button{
+  font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+  background:transparent;color:var(--paper);border:1px solid rgba(233,224,201,.45);
+  padding:12px 16px;cursor:pointer;
+}
+button:hover{ background:rgba(233,224,201,.14) }
+button:focus-visible{ outline:2px solid var(--paper);outline-offset:3px }
+button.primary{ background:var(--paper);color:#241E14;border-color:var(--paper) }
+button.primary:hover{ background:#F4ECD8 }
+button[hidden]{ display:none }
+
+.tell{
+  margin-top:16px;text-align:center;color:#A2977C;
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;line-height:1.9;
+  min-height:2.6em;
+}
+.tell b{ color:var(--paper);font-weight:600 }
+.link{
+  margin-top:12px;width:100%;font-family:var(--mono);font-size:11px;
+  background:rgba(233,224,201,.08);color:var(--paper);
+  border:1px solid rgba(233,224,201,.3);padding:11px 12px;
+}
+.link[hidden]{ display:none }
+.note{ margin-top:26px;font-size:13px;line-height:1.75;color:#8E8368 }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media print{ #lc-back{ display:none } }
+@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Invisible Ink</h1>
+    <p class="sub">Write it, hide it, hand it over</p>
+  </header>
+
+  <div class="sheet writing" id="sheet">
+    <div id="msg" contenteditable="true" spellcheck="false" role="textbox" aria-multiline="true"
+         aria-label="Your message" data-ph="Write something here."></div>
+    <canvas id="veil" hidden aria-hidden="true"></canvas>
+  </div>
+
+  <div class="strip">
+    <button id="hide" class="primary" type="button">Hide it</button>
+    <button id="show" type="button" hidden>Show it again</button>
+    <button id="tilt" type="button" hidden>Use tilt</button>
+    <button id="share" type="button" hidden>Copy a link to it</button>
+  </div>
+  <p class="tell" id="tell">Nothing is hidden yet.</p>
+  <input class="link" id="linkbox" hidden readonly aria-label="A link to this message">
+
+  <p class="note">
+    Held to the light, old invisible ink comes back warm and uneven, never all at once. This does the
+    same with whatever you are holding: on a phone it reads the tilt, and on anything without a
+    motion sensor it falls back to holding the pointer down, without being asked and without
+    breaking. The message travels in the link itself — it is not stored on any server, because there
+    is no server here to store it.
+  </p>
+</div>
+
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<script>
+(function(){
+  'use strict';
+
+  var sheet = document.getElementById('sheet');
+  var msg = document.getElementById('msg');
+  var veil = document.getElementById('veil');
+  var ctx = veil.getContext('2d');
+  var tellEl = document.getElementById('tell');
+  var hideBtn = document.getElementById('hide');
+  var showBtn = document.getElementById('show');
+  var tiltBtn = document.getElementById('tilt');
+  var shareBtn = document.getElementById('share');
+  var linkBox = document.getElementById('linkbox');
+
+  var hidden = false, tiltMode = false, tiltSeen = false, base = null;
+  var W = 0, H = 0, DPR = 1;
+  var reveal = null;            // {x, y, r} in css pixels, or null
+  var tiltOpen = 0;             // 0..1, how far the tilt has opened it
+
+  /* ---- the message travels in the link ------------------------------- */
+  function encode(t){
+    try { return btoa(unescape(encodeURIComponent(t))).replace(/=+$/, ''); }
+    catch (e){ return ''; }
+  }
+  function decode(s){
+    try { return decodeURIComponent(escape(atob(s.replace(/\s/g, '')))); }
+    catch (e){ return ''; }
+  }
+
+  function resize(){
+    DPR = Math.min(2, window.devicePixelRatio || 1);
+    W = sheet.clientWidth; H = sheet.clientHeight;
+    veil.width = Math.round(W * DPR); veil.height = Math.round(H * DPR);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    if (hidden) paint();
+  }
+  window.addEventListener('resize', resize);
+
+  /* ---- the veil ------------------------------------------------------- *
+   * An opaque sheet of the same paper, laid over the words. Revealing is
+   * cutting a soft hole in it, not changing the text — so the words are
+   * always really there, and always really covered.                     */
+  var grain = null;
+  function makeGrain(){
+    var g = document.createElement('canvas');
+    g.width = 140; g.height = 140;
+    var gc = g.getContext('2d');
+    var d = gc.createImageData(140, 140);
+    for (var i = 0; i < d.data.length; i += 4){
+      var v = 214 + (Math.random() * 26 - 13);
+      d.data[i] = v + 19; d.data[i + 1] = v + 6; d.data[i + 2] = v - 24; d.data[i + 3] = 255;
+    }
+    gc.putImageData(d, 0, 0);
+    grain = ctx.createPattern(g, 'repeat');
+  }
+
+  function paint(){
+    ctx.clearRect(0, 0, W, H);
+    if (!grain) makeGrain();
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = grain;
+    ctx.fillRect(0, 0, W, H);
+    // the ruled lines carry on over the veil, so the sheet looks continuous
+    ctx.strokeStyle = 'rgba(120,108,80,.16)';
+    ctx.lineWidth = 1;
+    for (var y = 57.5; y < H; y += 32){
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+    }
+
+    ctx.globalCompositeOperation = 'destination-out';
+    if (tiltMode && tiltOpen > 0.02){
+      // tilting opens it from the middle outward, unevenly, like warmth
+      var r = tiltOpen * Math.max(W, H) * 0.95;
+      var g1 = ctx.createRadialGradient(W * 0.5, H * 0.45, 0, W * 0.5, H * 0.45, r);
+      g1.addColorStop(0, 'rgba(0,0,0,1)');
+      g1.addColorStop(0.62, 'rgba(0,0,0,.86)');
+      g1.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = g1;
+      ctx.fillRect(0, 0, W, H);
+    }
+    if (reveal){
+      var g2 = ctx.createRadialGradient(reveal.x, reveal.y, 0, reveal.x, reveal.y, reveal.r);
+      g2.addColorStop(0, 'rgba(0,0,0,1)');
+      g2.addColorStop(0.55, 'rgba(0,0,0,.92)');
+      g2.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = g2;
+      ctx.fillRect(0, 0, W, H);
+    }
+    ctx.globalCompositeOperation = 'source-over';
+  }
+
+  function setHidden(on){
+    hidden = on;
+    msg.setAttribute('contenteditable', on ? 'false' : 'true');
+    sheet.classList.toggle('writing', !on);
+    sheet.classList.toggle('hidden-mode', on);
+    veil.hidden = !on;
+    hideBtn.hidden = on;
+    showBtn.hidden = !on;
+    shareBtn.hidden = !on;
+    tiltBtn.hidden = !(on && tiltAvailable && !tiltMode);
+    reveal = null; tiltOpen = 0;
+    if (on){ resize(); paint(); }
+    tell();
+  }
+
+  function tell(){
+    if (!hidden){ tellEl.textContent = 'Nothing is hidden yet.'; return; }
+    tellEl.innerHTML = tiltMode
+      ? '<b>Tilt it.</b> The further you tip it, the more comes back.'
+      : '<b>Hold the pointer down</b> and move it over the sheet.' +
+        (tiltAvailable ? ' Or switch to tilt.' : '');
+  }
+
+  /* ---- holding: the fallback that always works ------------------------ */
+  var down = false;
+  function at(e){
+    var r = sheet.getBoundingClientRect();
+    return { x: e.clientX - r.left, y: e.clientY - r.top, r: Math.max(70, Math.min(W, H) * 0.34) };
+  }
+  sheet.addEventListener('pointerdown', function(e){
+    if (!hidden) return;
+    down = true;
+    sheet.setPointerCapture(e.pointerId);
+    reveal = at(e); paint();
+  });
+  sheet.addEventListener('pointermove', function(e){
+    if (!hidden || !down) return;
+    reveal = at(e); paint();
+  });
+  function up(e){
+    if (!down) return;
+    down = false;
+    try { sheet.releasePointerCapture(e.pointerId); } catch (err) {}
+    reveal = null; paint();
+  }
+  sheet.addEventListener('pointerup', up);
+  sheet.addEventListener('pointercancel', up);
+  sheet.addEventListener('pointerleave', up);
+
+  /* ---- tilting: only if the device really answers --------------------- *
+   * Presence of the API is not enough — plenty of desktops expose it and
+   * never fire it, and iOS needs asking. So the button only appears once
+   * a real reading has arrived, and until then holding is the way in.  */
+  // A desktop with an accelerometer it never meaningfully moves should not be
+  // offered tilt at all — the button would switch to a mode that does nothing.
+  // A coarse pointer is the honest test for "this is a thing you pick up".
+  var handheld = matchMedia('(pointer: coarse)').matches;
+  var tiltAvailable = false;
+  function onOrient(e){
+    if (e.beta === null && e.gamma === null) return;
+    if (!tiltSeen && handheld){
+      tiltSeen = true; tiltAvailable = true;
+      tiltBtn.hidden = !(hidden && !tiltMode);
+      tell();
+    }
+    if (!tiltMode || !hidden) return;
+    if (!base) base = { b: e.beta || 0, g: e.gamma || 0 };
+    var db = Math.abs((e.beta || 0) - base.b), dg = Math.abs((e.gamma || 0) - base.g);
+    var amount = Math.min(1, (db + dg) / 46);
+    tiltOpen += (amount - tiltOpen) * 0.25;
+    paint();
+  }
+  if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission !== 'function'){
+    window.addEventListener('deviceorientation', onOrient);
+  }
+
+  tiltBtn.addEventListener('click', function(){
+    function go(){
+      tiltMode = true; base = null; tiltBtn.hidden = true; tell(); paint();
+    }
+    if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function'){
+      DeviceOrientationEvent.requestPermission().then(function(state){
+        if (state === 'granted'){ window.addEventListener('deviceorientation', onOrient); go(); }
+        else { tiltAvailable = false; tiltBtn.hidden = true; tell(); }
+      }).catch(function(){ tiltAvailable = false; tiltBtn.hidden = true; tell(); });
+    } else if (tiltSeen){ go(); }
+  });
+  // iOS will not fire anything until asked, so offer the button on a device
+  // that has a touchscreen and the API, and fall back if the ask is refused.
+  if (handheld && window.DeviceOrientationEvent &&
+      typeof DeviceOrientationEvent.requestPermission === 'function'){
+    tiltAvailable = true;
+  }
+
+  /* ---- wiring ---------------------------------------------------------- */
+  hideBtn.addEventListener('click', function(){
+    if (!msg.textContent.trim()){
+      tellEl.textContent = 'There is nothing written yet.';
+      msg.focus();
+      return;
+    }
+    setHidden(true);
+  });
+  showBtn.addEventListener('click', function(){ setHidden(false); msg.focus(); });
+
+  shareBtn.addEventListener('click', function(){
+    var url = location.origin + location.pathname + '#' + encode(msg.textContent);
+    linkBox.hidden = false;
+    linkBox.value = url;
+    linkBox.select();
+    var done = function(ok){
+      tellEl.innerHTML = ok ? '<b>Copied.</b> The message is inside the link itself.'
+                            : 'Here is the link — copy it yourself, the browser would not.';
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(url).then(function(){ done(true); }, function(){ done(false); });
+    } else done(false);
+  });
+
+  // arriving by link: the message is already hidden, as it should be
+  if (location.hash.length > 1){
+    var t = decode(location.hash.slice(1));
+    if (t){ msg.textContent = t; resize(); setHidden(true); }
+  }
+  resize();
+
+  window.__ink = function(){
+    return { hidden: hidden, tiltMode: tiltMode, tiltAvailable: tiltAvailable,
+             text: msg.textContent, veilShown: !veil.hidden,
+             editable: msg.getAttribute('contenteditable'),
+             tell: tellEl.textContent.slice(0, 50) };
+  };
+  window.__write = function(t){ msg.textContent = t; };
+  window.__link = function(){ return location.origin + location.pathname + '#' + encode(msg.textContent); };
+  window.__hole = function(){
+    // is anything actually cut out of the veil right now?
+    var d = ctx.getImageData(Math.round(W / 2 * DPR), Math.round(H * 0.45 * DPR), 1, 1).data;
+    return d[3];
+  };
+})();
+</script>
+</body>
+</html>

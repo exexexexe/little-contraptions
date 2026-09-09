@@ -224,6 +224,29 @@ const HOUSE_RULES =
   '"Here is", and do not wrap the answer in markdown code fences.';
 
 const PROMPTS = {
+  'reverse-turing': {
+    json: true,
+    max_tokens: 620,
+    temperature: 1.05,
+    system:
+      HOUSE_RULES + ' ' +
+      'You write single plain sentences in the register of English prose fiction from ' +
+      'roughly 1810 to 1925 — the period the human sentences in this game are drawn ' +
+      'from, so that the comparison is a fair one and not a test of whether the reader ' +
+      'can spot a modern idiom. Write like a competent novelist of that period: ' +
+      'concrete, unhurried, occasionally dry. NEVER quote or paraphrase any real ' +
+      'sentence from any real book, famous or otherwise — every one must be newly ' +
+      'invented. No proper nouns from real works. Avoid the tics that give a model ' +
+      'away: no "delve", no "tapestry", no "testament to", no triples, no sentence ' +
+      'that explains its own significance. Return JSON only, shaped exactly: ' +
+      '{"lines":["sentence", ...]}. Give 8 sentences, each between 8 and 30 words, ' +
+      'each about a different one of the subjects given.',
+    user: (i) => {
+      const subs = clean(i.subjects, 300);
+      if (!subs) return '';
+      return 'Subjects, one sentence each, in order: ' + subs;
+    },
+  },
   'universes-colliding': {
     json: true,
     max_tokens: 650,
@@ -582,6 +605,63 @@ async function handleApi(req, res, url) {
     }
   }
 
+  // --- coarse location from the caller's IP -------------------------
+  // The hub's weather widget wants somewhere to report on without putting a
+  // permission prompt on the front door, so it asks who is calling rather
+  // than asking the browser. ip-api.com is keyless and — like Open Notify
+  // above — serves plain HTTP only, so it has to be called from here.
+  //
+  // City-level at best, often only the right country, which is all an
+  // ornament needs. Nothing is stored: the address goes upstream, the answer
+  // is cached against it for six hours, and that cache dies with the process.
+  //
+  // Failure answers 200 with ok:false rather than 5xx. The caller is a piece
+  // of desktop decoration with its own fallback, and a widget that cannot
+  // place you is a normal afternoon, not a server error.
+  if (path === '/api/where') {
+    const ip = clientIp(req);
+    const key = 'where:' + ip;
+    const hit = cacheGet(key);
+    if (hit) return sendJson(res, 200, hit.body, { 'X-Cache': 'hit' });
+
+    // Loopback and private ranges geolocate to nothing. Asking with no
+    // address at all makes the upstream use the server's own, which is the
+    // useful answer when developing locally and never happens in production,
+    // where Railway sets x-forwarded-for.
+    const privateIp = /^(::1$|::ffff:127\.|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|169\.254\.|f[cd])/i;
+    const routable = ip !== 'unknown' && !privateIp.test(ip);
+
+    try {
+      const up = await fetchUpstream(
+        'http://ip-api.com/json/' + (routable ? encodeURIComponent(ip) : '') +
+        '?fields=status,country,countryCode,city,regionName,lat,lon,timezone',
+        { Accept: 'application/json' });
+      if (up.status >= 400) return sendJson(res, 200, { ok: false, reason: 'upstream_' + up.status });
+
+      let j;
+      try { j = JSON.parse(up.body); }
+      catch (e) { return sendJson(res, 200, { ok: false, reason: 'unexpected_payload' }); }
+
+      if (!j || j.status !== 'success' || typeof j.lat !== 'number' || typeof j.lon !== 'number') {
+        return sendJson(res, 200, { ok: false, reason: 'not_located' });
+      }
+
+      const body = {
+        ok: true,
+        city: j.city || '',
+        region: j.regionName || '',
+        country: j.country || '',
+        countryCode: j.countryCode || '',
+        lat: j.lat,
+        lon: j.lon,
+        timezone: j.timezone || '',
+      };
+      cacheSet(key, 200, body, 6 * 60 * 60 * 1000);   // 6 h
+      return sendJson(res, 200, body, { 'X-Cache': 'miss' });
+    } catch (e) {
+      return sendJson(res, 200, { ok: false, reason: 'unreachable' });
+    }
+  }
   // --- submarine cable map relay -----------------------------------
   // TeleGeography publish this openly but send no CORS headers, so a browser
   // cannot read it directly. Same rule as the RSS relay: a fixed allowlist of
