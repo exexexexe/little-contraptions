@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conduct</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230B0A14'/><circle cx='10' cy='20' r='5' fill='%23C9A227' opacity='.55'/><circle cx='21' cy='14' r='6.5' fill='%236FA8D8' opacity='.5'/><path d='M6 26L24 7' stroke='%23F2ECD8' stroke-width='1.8'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --hall:#08070E;
+  --hall-2:#12101E;
+  --gold:#D8B24A;
+  --pale:#EDE8DA;
+  --dim:#7B7690;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%}
+body{
+  background:var(--hall);color:var(--pale);font-family:var(--serif);
+  height:100%;overflow:hidden;
+}
+#hall{ position:fixed;inset:0;display:block;width:100%;height:100%;touch-action:none }
+
+.veil{
+  position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:22px;text-align:center;padding:24px;
+  background:radial-gradient(700px 520px at 50% 46%, rgba(18,16,30,.86), rgba(8,7,14,.97));
+  transition:opacity .7s ease, visibility .7s;
+}
+.veil.gone{ opacity:0;visibility:hidden;pointer-events:none }
+.veil h1{
+  font-family:var(--mono);font-size:clamp(18px,4.4vw,26px);margin:0;
+  letter-spacing:.3em;text-transform:uppercase;color:var(--gold);font-weight:500;
+}
+.veil p{ margin:0;max-width:34ch;line-height:1.65;color:#B9B3C6;font-size:15px }
+.veil button{
+  font-family:var(--mono);font-size:11px;letter-spacing:.24em;text-transform:uppercase;
+  background:transparent;color:var(--gold);border:1px solid var(--gold);
+  padding:14px 28px;cursor:pointer;
+}
+.veil button:hover{ background:var(--gold);color:#14110A }
+.veil button:focus-visible{ outline:2px solid var(--pale);outline-offset:4px }
+
+.readout{
+  position:fixed;left:0;right:0;bottom:20px;text-align:center;z-index:10;
+  font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--dim);pointer-events:none;
+}
+.hush{
+  position:fixed;right:14px;top:14px;z-index:11;
+  font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;
+  background:rgba(18,16,30,.8);color:var(--dim);border:1px solid rgba(237,232,218,.2);
+  padding:9px 13px;cursor:pointer;
+}
+.hush:hover{ color:var(--pale);border-color:rgba(237,232,218,.5) }
+.hush:focus-visible{ outline:2px solid var(--gold);outline-offset:3px }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media print{ #lc-back{ display:none } }
+@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } }
+</style>
+</head>
+<body>
+
+<canvas id="hall" aria-hidden="true"></canvas>
+
+<div class="veil" id="veil">
+  <h1>Conduct</h1>
+  <p>Six sections are waiting. Move over one and it plays louder; move away and it
+     drops back. There is no score and no wrong answer — you are only balancing them.</p>
+  <button id="begin" type="button">Raise the baton</button>
+</div>
+
+<button class="hush" id="hush" type="button" hidden>Silence</button>
+<p class="readout" id="readout"></p>
+
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<script>
+(function(){
+  'use strict';
+
+  var cv = document.getElementById('hall');
+  var ctx2d = cv.getContext('2d');
+  var veil = document.getElementById('veil');
+  var beginBtn = document.getElementById('begin');
+  var hushBtn = document.getElementById('hush');
+  var readout = document.getElementById('readout');
+  var calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var W = 0, H = 0, DPR = 1;
+  function resize(){
+    DPR = Math.min(2, window.devicePixelRatio || 1);
+    W = cv.clientWidth; H = cv.clientHeight;
+    cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+    ctx2d.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  /* ---- where everybody sits --------------------------------------- *
+   * Positions are fractions of the stage, laid out the way an orchestra
+   * actually is: strings front and left, brass behind, percussion at the
+   * back, celeste off to one side.                                    */
+  var SECTIONS = [
+    { id: 'basses',   name: 'Double basses', x: 0.16, y: 0.74, hue: 28,  gain: 0 },
+    { id: 'strings',  name: 'Strings',       x: 0.34, y: 0.52, hue: 44,  gain: 0 },
+    { id: 'winds',    name: 'Woodwinds',     x: 0.54, y: 0.34, hue: 150, gain: 0 },
+    { id: 'brass',    name: 'Brass',         x: 0.74, y: 0.52, hue: 20,  gain: 0 },
+    { id: 'celeste',  name: 'Celeste',       x: 0.86, y: 0.24, hue: 205, gain: 0 },
+    { id: 'timpani',  name: 'Timpani',       x: 0.50, y: 0.84, hue: 340, gain: 0 }
+  ];
+
+  // A minor, wandering. Semitones from A2.
+  var CHORDS = [
+    [0, 3, 7, 12],      // Am
+    [-4, 0, 3, 8],      // F
+    [3, 7, 10, 15],     // C
+    [-2, 2, 5, 10]      // G
+  ];
+  var PENT = [0, 3, 5, 7, 10];
+  var BASE = 110;                          // A2
+  function hz(semi){ return BASE * Math.pow(2, semi / 12); }
+
+  var ac = null, master = null, started = false, chordAt = 0, chordIdx = 0;
+  var voices = {};
+
+  function makeNoise(){
+    var len = 2 * ac.sampleRate;
+    var buf = ac.createBuffer(1, len, ac.sampleRate);
+    var d = buf.getChannelData(0);
+    for (var i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    return buf;
+  }
+
+  function build(){
+    ac = new (window.AudioContext || window.webkitAudioContext)();
+
+    var comp = ac.createDynamicsCompressor();
+    comp.threshold.value = -18; comp.ratio.value = 5; comp.attack.value = 0.02;
+    master = ac.createGain();
+    master.gain.value = 0.0001;
+    master.connect(comp); comp.connect(ac.destination);
+    master.gain.setTargetAtTime(0.85, ac.currentTime, 1.2);
+
+    SECTIONS.forEach(function(s){
+      var g = ac.createGain();
+      g.gain.value = 0.0001;
+      g.connect(master);
+      voices[s.id] = { out: g, oscs: [] };
+    });
+
+    function tone(sec, type, semi, detune, level, filterHz){
+      var o = ac.createOscillator();
+      o.type = type;
+      o.frequency.value = hz(semi);
+      o.detune.value = detune || 0;
+      var g = ac.createGain();
+      g.gain.value = level;
+      var node = o;
+      if (filterHz){
+        var f = ac.createBiquadFilter();
+        f.type = 'lowpass'; f.frequency.value = filterHz; f.Q.value = 0.7;
+        o.connect(f); node = f;
+      }
+      node.connect(g); g.connect(voices[sec].out);
+      o.start();
+      voices[sec].oscs.push({ o: o, semi: semi });
+      return o;
+    }
+
+    // continuous layers, retuned when the chord moves
+    tone('basses', 'sine', -12, 0, 0.5, 220);
+    tone('basses', 'triangle', -12, -6, 0.22, 180);
+
+    [0, 3, 7, 12].forEach(function(s, i){
+      tone('strings', 'sawtooth', s, (i % 2 ? 7 : -7), 0.075, 1100);
+    });
+    [12, 15, 19].forEach(function(s, i){
+      tone('winds', 'triangle', s, (i - 1) * 4, 0.13, 2200);
+    });
+    [0, 7, 12].forEach(function(s, i){
+      tone('brass', 'sawtooth', s, (i - 1) * 5, 0.07, 700);
+    });
+
+    // a slow breath across the sustained layers so nothing sits dead still
+    var lfo = ac.createOscillator(); lfo.frequency.value = 0.07;
+    var lfoG = ac.createGain(); lfoG.gain.value = 0.05;
+    lfo.connect(lfoG); lfoG.connect(master.gain); lfo.start();
+
+    // timpani: a soft filtered thud, not a drum kit
+    var noise = makeNoise();
+    function thud(){
+      if (!started) return;
+      var src = ac.createBufferSource();
+      src.buffer = noise; src.loop = true;
+      var f = ac.createBiquadFilter();
+      f.type = 'bandpass'; f.frequency.value = 74; f.Q.value = 2.4;
+      var g = ac.createGain();
+      g.gain.setValueAtTime(0.0001, ac.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.9, ac.currentTime + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + 1.5);
+      src.connect(f); f.connect(g); g.connect(voices.timpani.out);
+      src.start(); src.stop(ac.currentTime + 1.6);
+    }
+    setInterval(thud, 2400);
+
+    // celeste: sparse struck notes, only while that corner is being asked for
+    function ping(){
+      if (!started) return;
+      var s = SECTIONS[4];
+      if (s.gain > 0.12 && Math.random() < 0.55 + s.gain * 0.4){
+        var semi = CHORDS[chordIdx][0] + PENT[(Math.random() * PENT.length) | 0] + 24;
+        var o = ac.createOscillator();
+        o.type = 'sine'; o.frequency.value = hz(semi);
+        var g = ac.createGain();
+        g.gain.setValueAtTime(0.0001, ac.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.5, ac.currentTime + 0.008);
+        g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + 2.4);
+        o.connect(g); g.connect(voices.celeste.out);
+        o.start(); o.stop(ac.currentTime + 2.5);
+      }
+    }
+    setInterval(ping, 700);
+
+    // the chord moves on its own, slowly, so it never becomes a drone
+    setInterval(function(){
+      if (!started) return;
+      chordIdx = (chordIdx + 1) % CHORDS.length;
+      chordAt = performance.now();
+      var chord = CHORDS[chordIdx];
+      Object.keys(voices).forEach(function(k){
+        voices[k].oscs.forEach(function(v, i){
+          var semi = v.semi;
+          var target = chord[i % chord.length] + (semi >= 12 ? 12 : 0) + (semi <= -12 ? -12 : 0);
+          v.o.frequency.setTargetAtTime(hz(target), ac.currentTime, 1.1);
+        });
+      });
+    }, 11000);
+  }
+
+  /* ---- the baton --------------------------------------------------- */
+  var bx = 0.5, by = 0.5, haveBaton = false;
+  var trail = [];
+
+  function onMove(e){
+    var r = cv.getBoundingClientRect();
+    bx = (e.clientX - r.left) / r.width;
+    by = (e.clientY - r.top) / r.height;
+    haveBaton = true;
+    trail.push({ x: bx, y: by, t: performance.now() });
+    if (trail.length > 60) trail.shift();
+  }
+  window.addEventListener('pointermove', onMove, { passive: true });
+
+  function mix(){
+    if (!started) return;
+    var loudest = null;
+    SECTIONS.forEach(function(s){
+      var dx = (s.x - bx) * 1.0, dy = (s.y - by) * 0.72;   // the stage is wider than it is deep
+      var d = Math.sqrt(dx * dx + dy * dy);
+      // everyone is always audible a little; being near you is what swells it
+      var want = haveBaton ? Math.max(0, 1 - d / 0.46) : 0.28;
+      s.gain = want * want * 0.85 + 0.05;
+      voices[s.id].out.gain.setTargetAtTime(s.gain, ac.currentTime, 0.22);
+      if (!loudest || s.gain > loudest.gain) loudest = s;
+    });
+    readout.textContent = loudest ? loudest.name.toLowerCase() + ' — leading' : '';
+  }
+
+  /* ---- the hall ---------------------------------------------------- */
+  function draw(now){
+    ctx2d.clearRect(0, 0, W, H);
+    var g = ctx2d.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, '#0A0912'); g.addColorStop(1, '#141122');
+    ctx2d.fillStyle = g; ctx2d.fillRect(0, 0, W, H);
+
+    ctx2d.globalCompositeOperation = 'lighter';
+    SECTIONS.forEach(function(s){
+      var x = s.x * W, y = s.y * H;
+      var pulse = calm ? 1 : 1 + Math.sin(now / 900 + s.x * 9) * 0.05;
+      var r = (0.07 + s.gain * 0.20) * Math.min(W, H) * 1.5 * pulse;
+      var rg = ctx2d.createRadialGradient(x, y, 0, x, y, r);
+      var a = 0.10 + s.gain * 0.42;
+      rg.addColorStop(0, 'hsla(' + s.hue + ',62%,62%,' + a.toFixed(3) + ')');
+      rg.addColorStop(1, 'hsla(' + s.hue + ',62%,50%,0)');
+      ctx2d.fillStyle = rg;
+      ctx2d.beginPath(); ctx2d.arc(x, y, r, 0, Math.PI * 2); ctx2d.fill();
+    });
+    ctx2d.globalCompositeOperation = 'source-over';
+
+    SECTIONS.forEach(function(s){
+      var x = s.x * W, y = s.y * H;
+      ctx2d.fillStyle = 'rgba(237,232,218,' + (0.25 + s.gain * 0.6).toFixed(3) + ')';
+      ctx2d.font = '10px ui-monospace, Menlo, monospace';
+      ctx2d.textAlign = 'center';
+      ctx2d.fillText(s.name.toUpperCase(), x, y + 4);
+    });
+
+    // the baton's wake
+    if (started && trail.length > 1){
+      ctx2d.lineCap = 'round';
+      for (var i = 1; i < trail.length; i++){
+        var age = (now - trail[i].t) / 900;
+        if (age > 1) continue;
+        ctx2d.strokeStyle = 'rgba(240,232,208,' + ((1 - age) * 0.5).toFixed(3) + ')';
+        ctx2d.lineWidth = (1 - age) * 3.2;
+        ctx2d.beginPath();
+        ctx2d.moveTo(trail[i - 1].x * W, trail[i - 1].y * H);
+        ctx2d.lineTo(trail[i].x * W, trail[i].y * H);
+        ctx2d.stroke();
+      }
+    }
+
+    mix();
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+
+  /* ---- starting and stopping --------------------------------------- */
+  function start(){
+    if (started) return;
+    try { build(); } catch (e){
+      veil.querySelector('p').textContent =
+        'This browser will not give the page an audio engine, so there is nothing to conduct. ' +
+        'Everything else in the cabinet still works.';
+      return;
+    }
+    started = true;
+    veil.classList.add('gone');
+    hushBtn.hidden = false;
+    if (ac.state === 'suspended') ac.resume();
+  }
+  beginBtn.addEventListener('click', start);
+
+  hushBtn.addEventListener('click', function(){
+    if (!ac) return;
+    if (ac.state === 'running'){ ac.suspend(); hushBtn.textContent = 'Resume'; }
+    else { ac.resume(); hushBtn.textContent = 'Silence'; }
+  });
+
+  window.__conduct = function(){
+    return {
+      started: started,
+      state: ac && ac.state,
+      sections: SECTIONS.map(function(s){ return { id: s.id, gain: +s.gain.toFixed(3) }; }),
+      leading: readout.textContent
+    };
+  };
+  window.__baton = function(x, y){ bx = x; by = y; haveBaton = true; };
+})();
+</script>
+</body>
+</html>

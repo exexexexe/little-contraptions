@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Glossary</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23140F1C'/><path d='M7 8h13l5 5v11H7z' fill='%23F0E8D8'/><path d='M11 14h9M11 18h9M11 22h6' stroke='%23B45C8E' stroke-width='1.7'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --bg:#120E1A;
+  --bg-2:#1B1526;
+  --card:#1E1829;
+  --pink:#E88FB4;
+  --pale:#F0E8DC;
+  --dim:#948AA6;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:radial-gradient(900px 700px at 50% 0%, var(--bg-2) 0%, var(--bg) 62%);
+  color:var(--pale);font-family:var(--serif);min-height:100vh;
+  padding:32px 18px 80px;
+}
+.wrap{ max-width:1080px;margin:0 auto }
+header{ text-align:center;margin-bottom:26px }
+h1{
+  font-family:var(--mono);font-size:clamp(18px,4.2vw,26px);margin:0;
+  letter-spacing:.28em;text-transform:uppercase;color:var(--pink);font-weight:500;
+}
+.sub{ font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-top:11px }
+
+.tools{ display:flex;justify-content:center;margin:22px 0 8px }
+input[type=search]{
+  width:min(380px,100%);font-family:var(--mono);font-size:12px;letter-spacing:.06em;
+  background:rgba(240,232,220,.05);color:var(--pale);
+  border:1px solid rgba(232,143,180,.28);padding:12px 14px;border-radius:2px;
+}
+input[type=search]::placeholder{ color:#6E6580 }
+input[type=search]:focus{ outline:none;border-color:var(--pink) }
+.count{ text-align:center;font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:var(--dim);margin:12px 0 22px;text-transform:uppercase }
+
+.grid{ display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:20px }
+.term{
+  background:var(--card);border:1px solid rgba(240,232,220,.09);
+  border-radius:3px;overflow:hidden;display:flex;flex-direction:column;
+}
+.term[hidden]{ display:none }
+.scene-wrap{ aspect-ratio:5/3;position:relative;background:#0E0A16 }
+.scene-wrap svg{ position:absolute;inset:0;width:100%;height:100% }
+.body{ padding:15px 16px 18px;display:flex;flex-direction:column;gap:9px;flex:1 }
+.head{ display:flex;align-items:baseline;gap:9px;flex-wrap:wrap }
+.head h2{
+  font-family:var(--mono);font-size:16px;margin:0;letter-spacing:.05em;
+  color:var(--pale);font-weight:600;
+}
+.head .say{ font-family:var(--mono);font-size:10.5px;color:var(--dim) }
+.kind{
+  font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--pink);border:1px solid rgba(232,143,180,.4);padding:2px 6px;border-radius:2px;
+}
+.def{ margin:0;font-size:14.5px;line-height:1.6 }
+.origin{
+  margin:0;font-size:12.5px;line-height:1.6;color:var(--dim);
+  border-left:2px solid rgba(232,143,180,.3);padding-left:10px;
+}
+.eg{ margin:0 0 0;font-size:12.5px;line-height:1.55;color:#B6ADC4;font-style:italic;margin-top:auto;padding-top:4px }
+
+.none{ text-align:center;color:var(--dim);font-family:var(--mono);font-size:12px;padding:40px 0 }
+.none[hidden]{ display:none }
+
+footer{
+  margin-top:44px;padding-top:20px;border-top:1px solid rgba(240,232,220,.1);
+  font-size:13px;line-height:1.75;color:var(--dim);max-width:66ch;margin-left:auto;margin-right:auto;
+}
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media print{ #lc-back{ display:none } }
+@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>The Glossary</h1>
+    <p class="sub">Twenty words, defined as they are actually used</p>
+  </header>
+
+  <div class="tools">
+    <input id="q" type="search" placeholder="filter — try 'ballroom' or 'nothing'"
+           aria-label="Filter the glossary" autocomplete="off">
+  </div>
+  <p class="count" id="count"></p>
+
+  <div class="grid" id="grid"></div>
+  <p class="none" id="none" hidden>Nothing under that.</p>
+
+  <footer id="foot">
+    Several of these are much older than the feeds that spread them — <em>ate</em>, <em>it&rsquo;s
+    giving</em>, <em>no cap</em> and <em>bussin&rsquo;</em> all come out of Black American speech,
+    and in the ballroom cases out of Black queer speech specifically, decades before any of it
+    reached a general audience. Where that is the case the note says so. Where an origin is
+    genuinely disputed, the note says that instead of picking one.
+  </footer>
+</div>
+
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<script src="data.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  /* ================= layered scenes ================================= *
+   *  The same build as the almanac's backdrops, scaled down: a graded
+   *  sky, an optional light source, silhouette bands that lighten
+   *  toward the horizon, then one drawn motif in front. Nothing here is
+   *  photographic and nothing is a stock illustration.
+   * ================================================================== */
+  var SW = 300, SH = 180;
+
+  function prng(seed){
+    var s = seed >>> 0;
+    return function(){ s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
+  }
+
+  function bandPath(kind, base, amp, rand){
+    var y0 = base * SH, a = amp * SH;
+    var pts = [], n, i;
+    if (kind === 'flat'){
+      pts = [[0, y0], [SW, y0 + (rand() - 0.5) * a]];
+    } else if (kind === 'hills'){
+      n = 5; for (i = 0; i <= n; i++) pts.push([SW * i / n, y0 - Math.sin(i / n * Math.PI) * a * (0.5 + rand() * 0.7)]);
+    } else if (kind === 'clouds'){
+      n = 7; for (i = 0; i <= n; i++) pts.push([SW * i / n, y0 - Math.abs(Math.sin(i * 1.7)) * a * (0.4 + rand() * 0.8)]);
+    } else { // ridge
+      n = 9; for (i = 0; i <= n; i++) pts.push([SW * i / n, y0 + (rand() - 0.5) * a * 1.6]);
+    }
+    return 'M0,' + SH + ' L' + pts.map(function(p){ return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' L') +
+           ' L' + SW + ',' + SH + ' Z';
+  }
+
+  var INK = '#17111F';
+  var MOTIFS = {
+    'two-figures': '<g fill="' + INK + '" opacity=".9">' +
+      '<circle cx="118" cy="112" r="11"/><path d="M105 152q13-26 26 0z"/>' +
+      '<circle cx="168" cy="108" r="12"/><path d="M153 152q15-30 30 0z"/>' +
+      '<path d="M130 116q10-7 22-4" stroke="' + INK + '" stroke-width="3" fill="none"/></g>',
+    castle: '<g fill="' + INK + '" opacity=".88">' +
+      '<path d="M108 150h84v-38h-84z"/><path d="M108 112h12v-16h-12zM138 112h12v-20h-12zM168 112h12v-16h-12z"/>' +
+      '<path d="M126 96l6-14 6 14zM156 92l6-16 6 16z"/></g>' +
+      '<ellipse cx="150" cy="152" rx="62" ry="9" fill="#FFF" opacity=".22"/>',
+    toilet: '<g fill="' + INK + '" opacity=".9">' +
+      '<path d="M124 104h52v10a26 26 0 0 1-52 0z"/><rect x="132" y="132" width="36" height="8" rx="2"/>' +
+      '<rect x="168" y="80" width="20" height="26" rx="3"/></g>',
+    plate: '<g><ellipse cx="150" cy="130" rx="46" ry="14" fill="' + INK + '" opacity=".9"/>' +
+      '<path d="M150 130l30-9a34 34 0 0 0-30-5z" fill="#F0E2C0"/>' +
+      '<path d="M196 116q10-10 16-2t-10 12z" fill="' + INK + '" opacity=".85"/></g>',
+    shout: '<g fill="' + INK + '" opacity=".9">' +
+      '<path d="M150 78l11 22 24-9-11 23 24 10-25 6 6 24-19-16-16 18 2-25-25 2 17-18-20-14 24-5z"/></g>',
+    flatline: '<g stroke="' + INK + '" stroke-width="5" fill="none" opacity=".9" stroke-linecap="round">' +
+      '<path d="M56 128l22-40 14 28"/><path d="M92 116h116"/><path d="M208 116l14-30 22 42"/></g>',
+    'empty-plate': '<g><ellipse cx="150" cy="126" rx="46" ry="14" fill="' + INK + '" opacity=".9"/>' +
+      '<ellipse cx="150" cy="124" rx="33" ry="9" fill="#F0E2C0" opacity=".35"/>' +
+      '<rect x="200" y="98" width="4" height="40" rx="2" fill="' + INK + '" opacity=".9"/></g>',
+    cap: '<g><path d="M112 124a38 26 0 0 1 76 0z" fill="' + INK + '" opacity=".9"/>' +
+      '<path d="M188 124h26v7h-26z" fill="' + INK + '" opacity=".9"/>' +
+      '<path d="M100 146L212 96" stroke="#E88FB4" stroke-width="6" stroke-linecap="round"/></g>',
+    bowl: '<g fill="' + INK + '" opacity=".9"><path d="M112 116h76a38 38 0 0 1-76 0z"/>' +
+      '<path d="M132 100q-8-14 4-24M150 96q-8-16 4-26M168 100q-8-14 4-24" stroke="' + INK +
+      '" stroke-width="4" fill="none" opacity=".65"/></g>',
+    jar: '<g fill="' + INK + '" opacity=".88"><rect x="124" y="92" width="52" height="56" rx="7"/>' +
+      '<rect x="120" y="84" width="60" height="10" rx="3"/></g>' +
+      '<path d="M150 130c-9-8-16-13-16-20a8 8 0 0 1 16-4 8 8 0 0 1 16 4c0 7-7 12-16 20z" fill="#E8C0A8"/>',
+    spotlight: '<g><path d="M150 34L96 150h108z" fill="#FFF4DC" opacity=".30"/>' +
+      '<circle cx="150" cy="122" r="11" fill="' + INK + '" opacity=".9"/>' +
+      '<path d="M136 152q14-26 28 0z" fill="' + INK + '" opacity=".9"/></g>',
+    npc: '<g fill="' + INK + '" opacity=".9"><rect x="126" y="104" width="30" height="30"/>' +
+      '<rect x="130" y="134" width="22" height="20"/>' +
+      '<rect x="168" y="88" width="72" height="34" rx="3" fill="#EFE7DA"/>' +
+      '<path d="M176 100h56M176 110h38" stroke="' + INK + '" stroke-width="4"/>' +
+      '<path d="M168 122l-12 12 18-2z" fill="#EFE7DA"/></g>',
+    pedestal: '<g fill="' + INK + '" opacity=".9"><rect x="126" y="128" width="48" height="24"/>' +
+      '<rect x="134" y="94" width="32" height="34" rx="4"/>' +
+      '<circle cx="150" cy="82" r="9"/></g>' +
+      '<g fill="#F6E39A"><path d="M104 92l3 8 8 3-8 3-3 8-3-8-8-3 8-3z"/>' +
+      '<path d="M198 74l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"/></g>',
+    pan: '<g fill="' + INK + '" opacity=".9"><path d="M110 116h68a34 34 0 0 1-68 0z"/>' +
+      '<rect x="176" y="110" width="46" height="7" rx="3"/></g>' +
+      '<path d="M128 104q-10-18 2-30t0-24M152 100q-10-16 2-28" stroke="#9E8FA8" stroke-width="4" fill="none" opacity=".7"/>',
+    aura: '<g fill="none" stroke="#B6F2E4"><circle cx="150" cy="112" r="30" opacity=".5" stroke-width="3"/>' +
+      '<circle cx="150" cy="112" r="42" opacity=".28" stroke-width="3"/>' +
+      '<circle cx="150" cy="112" r="54" opacity=".14" stroke-width="3"/></g>' +
+      '<g fill="' + INK + '" opacity=".9"><circle cx="150" cy="104" r="11"/><path d="M136 148q14-28 28 0z"/></g>',
+    phone: '<g><rect x="122" y="66" width="56" height="94" rx="8" fill="' + INK + '" opacity=".9"/>' +
+      '<rect x="128" y="76" width="44" height="72" rx="3" fill="#C0A8DC" opacity=".5"/>' +
+      '<path d="M136 150q6 18 0 26M150 152q6 20 0 28M164 150q6 18 0 26" stroke="#8E76C8" stroke-width="5" fill="none" opacity=".7"/></g>',
+    'two-dotted': '<g fill="' + INK + '" opacity=".9"><circle cx="112" cy="110" r="11"/><path d="M99 150q13-26 26 0z"/>' +
+      '<circle cx="188" cy="110" r="11"/><path d="M175 150q13-26 26 0z"/></g>' +
+      '<path d="M128 118h44" stroke="#F0B8C8" stroke-width="4" stroke-dasharray="7 8" stroke-linecap="round"/>',
+    grass: '<g stroke="' + INK + '" stroke-width="5" fill="none" stroke-linecap="round" opacity=".9">' +
+      '<path d="M96 158q4-30 -6-44M116 158q0-34 10-46M136 158q-2-28 6-40M156 158q2-32 12-42M176 158q-2-30 4-40M196 158q2-26 10-36"/></g>' +
+      '<rect x="216" y="96" width="46" height="34" rx="3" fill="' + INK + '" opacity=".55"/>',
+    timeline: '<g stroke="' + INK + '" stroke-width="5" fill="none" opacity=".9" stroke-linecap="round">' +
+      '<path d="M52 122h58"/><path d="M110 122c0-18 34-18 34 0s-34 18-34 0" /><path d="M144 122h104"/></g>' +
+      '<circle cx="127" cy="122" r="6" fill="#E0E6FF"/>',
+    sixseven: '<g fill="' + INK + '" opacity=".9" font-family="ui-monospace,Menlo,monospace" ' +
+      'font-size="66" font-weight="700" text-anchor="middle"><text x="150" y="140">6 7</text></g>'
+  };
+
+  function buildScene(sc, seed){
+    var rand = prng(seed * 2654435761);
+    var id = 's' + seed;
+    var defs = '<linearGradient id="' + id + 'k" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0" stop-color="' + sc.sky[0] + '"/>' +
+      '<stop offset="0.55" stop-color="' + sc.sky[1] + '"/>' +
+      '<stop offset="1" stop-color="' + sc.sky[2] + '"/></linearGradient>';
+    var body = '<rect width="' + SW + '" height="' + SH + '" fill="url(#' + id + 'k)"/>';
+
+    if (sc.glow){
+      defs += '<radialGradient id="' + id + 'g"><stop offset="0" stop-color="' + sc.glow.c + '"/>' +
+              '<stop offset="1" stop-color="rgba(255,255,255,0)"/></radialGradient>';
+      body += '<circle cx="' + (sc.glow.x * SW) + '" cy="' + (sc.glow.y * SH) + '" r="' + (SH * 0.7) +
+              '" fill="url(#' + id + 'g)"/>';
+    }
+    (sc.bands || []).forEach(function(b){
+      body += '<path d="' + bandPath(b.s, b.base, b.amp, rand) + '" fill="' + b.f +
+              '" opacity="' + (b.o == null ? 1 : b.o) + '"/>';
+    });
+    body += MOTIFS[sc.motif] || '';
+    // a little grain over everything, the same trick the almanac uses
+    defs += '<filter id="' + id + 'n"><feTurbulence type="fractalNoise" baseFrequency="0.9" ' +
+            'numOctaves="3" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter>';
+    body += '<rect width="' + SW + '" height="' + SH + '" filter="url(#' + id + 'n)" opacity="0.05" ' +
+            'style="mix-blend-mode:overlay"/>';
+
+    return '<svg viewBox="0 0 ' + SW + ' ' + SH + '" preserveAspectRatio="xMidYMid slice" ' +
+           'aria-hidden="true"><defs>' + defs + '</defs>' + body + '</svg>';
+  }
+
+  /* ================= the page ====================================== */
+  var DATA = window.SLANG || [];
+  var grid = document.getElementById('grid');
+  var none = document.getElementById('none');
+  var countEl = document.getElementById('count');
+  var q = document.getElementById('q');
+
+  // Quotes matter here: this string also goes into a data- attribute, and
+  // the examples are full of them, so an unescaped one truncated the search
+  // text at the first quotation mark.
+  function esc(t){
+    return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  grid.innerHTML = DATA.map(function(e, i){
+    return '<article class="term" data-find="' +
+      esc((e.t + ' ' + e.k + ' ' + e.d + ' ' + e.o + ' ' + e.x).toLowerCase()) + '">' +
+      '<div class="scene-wrap">' + buildScene(e.scene, i + 7) + '</div>' +
+      '<div class="body">' +
+        '<div class="head"><h2>' + esc(e.t) + '</h2>' +
+          (e.s ? '<span class="say">' + esc(e.s) + '</span>' : '') +
+          '<span class="kind">' + esc(e.k) + '</span></div>' +
+        '<p class="def">' + esc(e.d) + '</p>' +
+        '<p class="origin">' + esc(e.o) + '</p>' +
+        '<p class="eg">' + esc(e.x) + '</p>' +
+      '</div></article>';
+  }).join('');
+
+  var cards = [].slice.call(grid.children);
+  function apply(){
+    var term = q.value.trim().toLowerCase();
+    var shown = 0;
+    cards.forEach(function(c){
+      var on = !term || c.dataset.find.indexOf(term) >= 0;
+      c.hidden = !on;
+      if (on) shown++;
+    });
+    none.hidden = shown > 0;
+    countEl.textContent = shown === DATA.length
+      ? DATA.length + ' terms'
+      : shown + ' of ' + DATA.length + ' terms';
+  }
+  q.addEventListener('input', apply);
+  apply();
+
+  window.__glossary = function(){
+    return { terms: DATA.length, rendered: cards.length,
+             scenes: grid.querySelectorAll('.scene-wrap svg').length,
+             visible: cards.filter(function(c){ return !c.hidden; }).length };
+  };
+  window.__filter = function(v){ q.value = v; apply(); return window.__glossary().visible; };
+})();
+</script>
+</body>
+</html>
