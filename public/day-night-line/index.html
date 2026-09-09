@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Day/Night Line</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230A0F1A'/><path d='M16 4a12 12 0 000 24z' fill='%23F5D06B'/><path d='M16 4a12 12 0 010 24z' fill='%231D2A46'/><circle cx='16' cy='16' r='12' fill='none' stroke='%234E7BB8' stroke-width='1.6'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --bg:#0A0F1A;
+  --panel:#111828;
+  --edge:#22304A;
+  --ink:#DCE4F2;
+  --dim:#828FAE;
+  --sun:#F5D06B;
+  --sea:#12203A;
+  --land:#2C4266;
+  --night:#060A14;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);
+  background-image:radial-gradient(70% 44% at 50% 0%, rgba(245,208,107,.07), transparent 64%);
+  color:var(--ink);font-family:var(--mono);font-size:13px;
+  min-height:100vh;padding:24px 16px 84px;
+  display:flex;flex-direction:column;align-items:center;
+}
+.wrap{ max-width:860px;width:100% }
+
+header{ text-align:center }
+h1{ margin:0;font-size:clamp(17px,4.2vw,25px);letter-spacing:.24em;text-transform:uppercase;color:var(--sun);font-weight:700 }
+.sub{ margin-top:9px;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim) }
+
+.map{
+  margin-top:18px;background:var(--sea);border:1px solid var(--edge);
+  position:relative;overflow:hidden;
+}
+.map svg{ display:block;width:100%;height:auto }
+.map .clock{
+  position:absolute;left:9px;top:8px;font-size:10px;letter-spacing:.14em;
+  color:rgba(255,255,255,.75);background:rgba(6,10,20,.6);padding:4px 8px;
+}
+
+.bar{
+  display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-top:12px;
+  font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);
+}
+.bar b{ color:var(--ink) }
+.bar .key{ display:flex;align-items:center;gap:6px }
+.bar .key i{ width:16px;height:9px;display:block }
+.bar .key i.day{ background:linear-gradient(90deg,#2C4266,#4E7BB8) }
+.bar .key i.night{ background:#060A14;border:1px solid #22304A }
+.bar .key i.sun{ background:var(--sun);border-radius:50%;width:9px;height:9px }
+
+.cards{ display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:9px;margin-top:14px }
+.card{ background:var(--panel);border:1px solid var(--edge);padding:13px 15px }
+.card h3{ margin:0 0 6px;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--sun);font-weight:700 }
+.card .big{ font-size:22px;letter-spacing:.02em;color:var(--ink);font-variant-numeric:tabular-nums }
+.card .m{ font-size:11px;line-height:1.7;color:var(--dim);margin-top:5px }
+
+.places{ margin-top:14px;background:var(--panel);border:1px solid var(--edge) }
+.places .h{ padding:11px 15px;border-bottom:1px solid var(--edge);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim) }
+.places table{ width:100%;border-collapse:collapse;font-size:12.5px }
+.places td{ padding:8px 15px;border-bottom:1px solid rgba(34,48,74,.6) }
+.places tr:last-child td{ border-bottom:0 }
+.places .p{ color:var(--ink) }
+.places .t{ text-align:right;font-variant-numeric:tabular-nums;color:var(--dim) }
+.places .s{ width:1%;white-space:nowrap;text-align:right }
+.places .s i{
+  display:inline-block;width:9px;height:9px;border-radius:50%;
+  background:var(--night);border:1px solid #2A3A58;
+}
+.places .s i.lit{ background:var(--sun);border-color:var(--sun) }
+
+.fact{
+  margin-top:14px;background:var(--panel);border-left:4px solid var(--sun);
+  padding:14px 16px;font-size:13.5px;line-height:1.75;color:#C4CEE4;
+}
+.fact b{ color:var(--sun);font-weight:700 }
+.fact .next{ display:block;margin-top:10px }
+.fact button{
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;
+  background:transparent;color:var(--dim);border:1px solid var(--edge);padding:7px 12px;cursor:pointer;
+}
+.fact button:hover{ border-color:var(--sun);color:var(--sun) }
+
+footer{
+  max-width:860px;width:100%;margin:24px auto 0;padding-top:14px;border-top:1px solid var(--edge);
+  font-size:10.5px;line-height:1.85;color:var(--dim);
+}
+footer a{ color:var(--sun) }
+
+/* ---------- shared: back to the cabinet ---------- */
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 var(--mono);
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } }
+</style>
+</head>
+<body>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<div class="wrap">
+  <header>
+    <h1>The Day/Night Line</h1>
+    <div class="sub">where the sun is, right now</div>
+  </header>
+
+  <div class="map">
+    <svg id="svg" viewBox="0 0 720 360" role="img" aria-label="A world map with the day and night sides shaded"></svg>
+    <div class="clock" id="clock"></div>
+  </div>
+
+  <div class="bar">
+    <span class="key"><i class="day"></i> daylight</span>
+    <span class="key"><i class="night"></i> night</span>
+    <span class="key"><i class="sun"></i> the sun is directly overhead here</span>
+    <span style="margin-left:auto">updates every second</span>
+  </div>
+
+  <div class="cards">
+    <div class="card"><h3>Sun directly over</h3><div class="big" id="sunpos">—</div><div class="m" id="sunm"></div></div>
+    <div class="card"><h3>In daylight now</h3><div class="big" id="litpct">—</div><div class="m" id="litm"></div></div>
+    <div class="card"><h3>Coordinated Universal Time</h3><div class="big" id="utc">—</div><div class="m" id="utcm"></div></div>
+  </div>
+
+  <div class="places">
+    <div class="h">a few places, and whether the sun is up</div>
+    <table id="cities"><tbody></tbody></table>
+  </div>
+
+  <div class="fact" id="fact"></div>
+</div>
+
+<footer>
+  The terminator is computed here, in your browser, from the date and the standard low-precision solar
+  position &mdash; the sun's declination and the equation of time &mdash; which is accurate to well under
+  a degree, or roughly a minute of sunrise. It is not fetched from anywhere and nothing about you is
+  sent anywhere; the city times come from your own browser's time-zone database. The shading is
+  geometric daylight and takes no account of atmospheric refraction, terrain, or the fact that the sun
+  has a width, so a place drawn right on the line is genuinely ambiguous rather than wrongly drawn.
+  Every time-zone fact below is real and checkable.
+  <a href="/">&larr; back to the cabinet</a>
+</footer>
+
+<script src="/shared/world-land.js"></script>
+<script>
+'use strict';
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+const W = 720, H = 360;
+const x2lon = (x) => x / W * 360 - 180;
+const lon2x = (lon) => (lon + 180) / 360 * W;
+const lat2y = (lat) => (90 - lat) / 180 * H;
+const rad = Math.PI / 180;
+
+/* ------------------------------------------------------------------ *
+ *  Where the sun is.
+ *
+ *  The standard low-precision solar position: the mean longitude and
+ *  mean anomaly give the ecliptic longitude, which with the obliquity
+ *  gives the declination and the right ascension. The difference between
+ *  mean and apparent solar time is the equation of time, and that is
+ *  what shifts the terminator east or west of the naive noon line.
+ *
+ *  Good to well under a degree, which is about a minute of sunrise, and
+ *  the footer says so rather than claiming an ephemeris.
+ * ------------------------------------------------------------------ */
+function solar(date){
+  const jd = date.getTime() / 86400000 + 2440587.5;
+  const n = jd - 2451545.0;                       // days from J2000.0
+  const L = (280.460 + 0.9856474 * n) % 360;      // mean longitude
+  const g = ((357.528 + 0.9856003 * n) % 360) * rad;  // mean anomaly
+  const lambda = (L + 1.915 * Math.sin(g) + 0.020 * Math.sin(2 * g)) * rad;
+  const eps = (23.439 - 0.0000004 * n) * rad;     // obliquity
+
+  const dec = Math.asin(Math.sin(eps) * Math.sin(lambda));
+  let ra = Math.atan2(Math.cos(eps) * Math.sin(lambda), Math.cos(lambda));
+  ra = ((ra / rad) + 360) % 360;
+
+  // equation of time, in minutes
+  const eot = 4 * (((L % 360) + 360) % 360 - ra);
+  const eotNorm = ((eot + 720) % 1440) - 720;
+
+  // the sub-solar point: the longitude where it is solar noon
+  const utcMinutes = date.getUTCHours() * 60 + date.getUTCMinutes() + date.getUTCSeconds() / 60;
+  const subLon = -((utcMinutes + eotNorm) / 4 - 180);
+  const wrapped = ((subLon + 540) % 360) - 180;
+
+  return { dec: dec / rad, lon: wrapped, eot: eotNorm };
+}
+
+/* Is the sun above the geometric horizon at this lat/lon? */
+function isLit(lat, lon, sun){
+  const h = Math.sin(lat * rad) * Math.sin(sun.dec * rad) +
+            Math.cos(lat * rad) * Math.cos(sun.dec * rad) *
+            Math.cos((lon - sun.lon) * rad);
+  return h > 0;
+}
+
+/* The terminator as a path: for each longitude, the latitude at which
+   the sun is exactly on the horizon. Where the declination is zero this
+   is a straight line; otherwise it is a sinusoid, and at the solstices
+   one pole is entirely inside it. */
+function terminatorPath(sun){
+  const decR = sun.dec * rad;
+  const pts = [];
+  for (let x = 0; x <= W; x += 2){
+    const lon = x2lon(x);
+    // solve sin(lat)sin(dec) + cos(lat)cos(dec)cos(H) = 0 for lat
+    const Hh = (lon - sun.lon) * rad;
+    const lat = Math.atan(-Math.cos(Hh) / Math.tan(decR)) / rad;
+    pts.push([x, lat2y(lat)]);
+  }
+  // close the polygon over whichever pole is in darkness
+  const northDark = sun.dec > 0 ? false : true;
+  const edge = northDark ? 0 : H;
+  let d = 'M' + pts.map((p) => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' L');
+  d += ' L' + W + ',' + edge + ' L0,' + edge + ' Z';
+  return d;
+}
+
+/* ---- the map ------------------------------------------------------- */
+function draw(sun){
+  const path = terminatorPath(sun);
+  $('svg').innerHTML =
+    '<rect width="720" height="360" fill="#12203A"/>' +
+    '<g opacity=".28" stroke="#4E7BB8" stroke-width=".5">' +
+      [ -60,-30,0,30,60 ].map((la) =>
+        '<line x1="0" y1="' + lat2y(la).toFixed(1) + '" x2="720" y2="' + lat2y(la).toFixed(1) + '"/>').join('') +
+      [ -120,-60,0,60,120 ].map((lo) =>
+        '<line x1="' + lon2x(lo).toFixed(1) + '" y1="0" x2="' + lon2x(lo).toFixed(1) + '" y2="360"/>').join('') +
+    '</g>' +
+    '<path d="' + window.WORLD_LAND + '" fill="#2C4266" stroke="#4E7BB8" stroke-width=".5"/>' +
+    '<path d="' + path + '" fill="#060A14" opacity=".68"/>' +
+    '<path d="' + path + '" fill="none" stroke="#F5D06B" stroke-width="1" opacity=".5"/>' +
+    '<circle cx="' + lon2x(sun.lon).toFixed(1) + '" cy="' + lat2y(sun.dec).toFixed(1) +
+      '" r="7" fill="#F5D06B" opacity=".28"/>' +
+    '<circle cx="' + lon2x(sun.lon).toFixed(1) + '" cy="' + lat2y(sun.dec).toFixed(1) +
+      '" r="3.2" fill="#F5D06B"/>';
+}
+
+/* ---- places -------------------------------------------------------- *
+ *  Real cities with their IANA zones. The local time comes from the
+ *  browser's own time-zone database, so daylight saving is handled by
+ *  something that actually knows the rules rather than by an offset
+ *  typed in here.
+ * ------------------------------------------------------------------ */
+const CITIES = [
+  { n:'Stockholm',    z:'Europe/Stockholm',   lat:59.33, lon:18.07 },
+  { n:'London',       z:'Europe/London',      lat:51.51, lon:-0.13 },
+  { n:'São Paulo',    z:'America/Sao_Paulo',  lat:-23.55, lon:-46.63 },
+  { n:'New York',     z:'America/New_York',   lat:40.71, lon:-74.01 },
+  { n:'San Francisco',z:'America/Los_Angeles',lat:37.77, lon:-122.42 },
+  { n:'Lagos',        z:'Africa/Lagos',       lat:6.52,  lon:3.38 },
+  { n:'Mumbai',       z:'Asia/Kolkata',       lat:19.08, lon:72.88 },
+  { n:'Tokyo',        z:'Asia/Tokyo',         lat:35.68, lon:139.69 },
+  { n:'Auckland',     z:'Pacific/Auckland',   lat:-36.85, lon:174.76 },
+  { n:'Longyearbyen', z:'Arctic/Longyearbyen',lat:78.22, lon:15.63 }
+];
+
+function timeIn(zone, date){
+  try {
+    return new Intl.DateTimeFormat('en-GB', {
+      timeZone: zone, hour:'2-digit', minute:'2-digit', hour12:false
+    }).format(date);
+  } catch (e){ return '—'; }
+}
+
+/* ---- real time-zone facts ------------------------------------------ *
+ *  All of these are checkable. Nothing here is invented, and where a
+ *  fact has a caveat the caveat is in the sentence.
+ * ------------------------------------------------------------------ */
+const FACTS = [
+  'China spans about sixty degrees of longitude — five hours of sun — and keeps <b>a single time zone</b> for all of it. In the far west, the sun can still be up well after 10 p.m. by the clock.',
+  'Nepal runs at <b>UTC+05:45</b>. The forty-five-minute offset is not a rounding error: it is set from the local meridian at Kathmandu.',
+  '<b>Kiribati</b> moved the international date line east around itself in 1995 so the whole country would share a date. Its easternmost islands are now UTC+14, the furthest ahead anywhere gets.',
+  'Spain is west of Greenwich but keeps <b>Central European Time</b>, an hour ahead of the sun. That is why the country eats so late by northern European standards.',
+  'India runs on <b>UTC+05:30</b>, a single zone for a country nearly two thousand miles across. Its neighbour Pakistan is at +05:00 and Bangladesh at +06:00, so the border crossings are half an hour.',
+  '<b>Longyearbyen</b>, in Svalbard, gets about four months with the sun never setting and four with it never rising. The clock keeps going regardless, which is the entire point of the clock.',
+  'The <b>equation of time</b> means real solar noon drifts up to sixteen minutes either side of clock noon over the year. A sundial and a watch agree exactly on only four days.',
+  '<b>Lord Howe Island</b>, off Australia, shifts by thirty minutes rather than an hour for daylight saving — the only place that does.',
+  'Most of <b>Arizona</b> does not observe daylight saving, but the Navajo Nation within it does, and the Hopi Reservation within that does not. Driving across produces two clock changes and then two back.',
+  'At the poles every line of longitude meets, so <b>Antarctic stations</b> simply use whichever time zone their supply flights come from. Neighbouring bases can be a working day apart.',
+  'Because the terminator moves west at about <b>1,670 km/h at the equator</b> and slows to nothing at the poles, a walk of a few metres near a pole can outrun the sunset.',
+  'The line on this map is the <b>geometric</b> horizon. Real sunrise is a couple of minutes earlier and sunset a couple later, because the atmosphere bends light around the edge of the world.'
+];
+let factAt = Math.floor(Math.random() * FACTS.length);
+
+function showFact(){
+  $('fact').innerHTML = FACTS[factAt] +
+    '<span class="next"><button id="nextfact" type="button">another</button></span>';
+  $('nextfact').addEventListener('click', () => {
+    factAt = (factAt + 1) % FACTS.length;
+    showFact();
+  });
+}
+
+/* ---- the tick ------------------------------------------------------ */
+function tick(){
+  const now = new Date();
+  const sun = solar(now);
+  draw(sun);
+
+  const ns = sun.dec >= 0 ? 'N' : 'S';
+  const ew = sun.lon >= 0 ? 'E' : 'W';
+  $('sunpos').textContent = Math.abs(sun.dec).toFixed(1) + '° ' + ns + '  ' +
+                            Math.abs(sun.lon).toFixed(1) + '° ' + ew;
+  $('sunm').textContent = 'It is solar noon on that meridian. The equation of time is currently ' +
+    (sun.eot >= 0 ? '+' : '') + sun.eot.toFixed(1) + ' minutes.';
+
+  // Not a computed number, and deliberately so: the terminator is a great
+  // circle, so the lit fraction is exactly one half at every moment of
+  // every year. The card exists to say that, because it surprises people.
+  $('litpct').textContent = '50%';
+  $('litm').textContent = 'Always, and exactly. The terminator is a great circle, so half the ' +
+    'sphere is lit whatever the season — what the tilt changes is which half.';
+
+  $('utc').textContent = now.toISOString().slice(11, 19);
+  $('utcm').textContent = now.toISOString().slice(0, 10) + ' · your browser says ' +
+    (Intl.DateTimeFormat().resolvedOptions().timeZone || 'an unknown zone');
+
+  $('clock').textContent = now.toISOString().slice(11, 16) + ' UTC';
+
+  $('cities').querySelector('tbody').innerHTML = CITIES.map((c) => {
+    const lit = isLit(c.lat, c.lon, sun);
+    return '<tr><td class="p">' + esc(c.n) + '</td>' +
+      '<td class="t">' + timeIn(c.z, now) + '</td>' +
+      '<td class="s"><i class="' + (lit ? 'lit' : '') + '"></i></td></tr>';
+  }).join('');
+}
+
+showFact();
+tick();
+setInterval(() => { if (!document.hidden) tick(); }, 1000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) tick(); });
+
+window.__daynight = { solar, isLit, terminatorPath, tick };
+</script>
+</body>
+</html>

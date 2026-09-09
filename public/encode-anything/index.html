@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Encode Anything</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='5' fill='%230C1114'/><rect x='5' y='9' width='4' height='4' fill='%234FE0A0'/><rect x='12' y='9' width='4' height='4' fill='%234FE0A0'/><rect x='19' y='9' width='4' height='4' fill='%23234A3C'/><rect x='5' y='19' width='4' height='4' fill='%23234A3C'/><rect x='12' y='19' width='4' height='4' fill='%234FE0A0'/><rect x='19' y='19' width='4' height='4' fill='%234FE0A0'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --bg:#0C1114;
+  --panel:#121A1E;
+  --panel-2:#18242A;
+  --edge:#243840;
+  --ink:#DCEAE6;
+  --dim:#7E9A94;
+  --green:#4FE0A0;
+  --amber:#E0C24F;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);
+  background-image:
+    radial-gradient(70% 44% at 50% 0%, rgba(79,224,160,.09), transparent 64%),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.012) 0 1px, transparent 1px 3px);
+  color:var(--ink);font-family:var(--mono);font-size:13px;
+  min-height:100vh;padding:24px 16px 84px;
+  display:flex;flex-direction:column;align-items:center;
+}
+.wrap{ max-width:780px;width:100% }
+
+header{ text-align:center }
+h1{ margin:0;font-size:clamp(17px,4.2vw,25px);letter-spacing:.26em;text-transform:uppercase;color:var(--green);font-weight:700 }
+.sub{ margin-top:9px;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim) }
+
+.io{ margin-top:20px;background:var(--panel);border:1px solid var(--edge);padding:15px 16px }
+label span{ display:block;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin-bottom:7px }
+textarea{
+  width:100%;font-family:var(--mono);font-size:15px;line-height:1.6;
+  background:#0A1013;border:1px solid var(--edge);color:var(--ink);
+  padding:11px 12px;resize:vertical;min-height:66px;
+}
+textarea:focus{ outline:2px solid var(--green);outline-offset:1px }
+textarea::placeholder{ color:#4E6862 }
+.dir{ display:flex;gap:6px;flex-wrap:wrap;margin-top:11px;align-items:center }
+button{
+  font-size:10px;letter-spacing:.14em;text-transform:uppercase;font-family:var(--mono);
+  background:var(--panel-2);color:var(--ink);border:1px solid var(--edge);
+  padding:10px 15px;cursor:pointer;
+}
+button:hover{ border-color:var(--green);color:var(--green) }
+button[aria-pressed="true"]{ background:var(--green);border-color:var(--green);color:#08120E;font-weight:700 }
+button:focus-visible{ outline:2px solid var(--amber);outline-offset:2px }
+.dir .n{ margin-left:auto;font-size:10px;color:var(--dim) }
+
+/* ---------- the outputs ---------- */
+.out{ margin-top:14px;display:grid;gap:10px }
+.enc{ background:var(--panel);border:1px solid var(--edge) }
+.enc .h{
+  display:flex;gap:12px;align-items:baseline;padding:10px 14px;
+  border-bottom:1px solid var(--edge);background:var(--panel-2);
+}
+.enc .h b{ font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--green);font-weight:700 }
+.enc .h .m{ font-size:9.5px;color:var(--dim);letter-spacing:.08em }
+.enc .h .copy{ margin-left:auto;padding:5px 10px;font-size:9px }
+.enc .v{
+  padding:12px 14px;font-size:13.5px;line-height:1.75;word-break:break-all;white-space:pre-wrap;
+  color:#BFE0D6;
+}
+.enc .v.wide{ letter-spacing:.06em }
+
+/* semaphore is drawn, not lettered */
+.flags{ display:flex;flex-wrap:wrap;gap:10px;padding:13px 14px }
+.flag{ text-align:center;width:56px }
+.flag svg{ display:block;width:56px;height:56px }
+.flag .c{ font-size:11px;color:var(--dim);margin-top:2px }
+
+/* morse, as marks */
+.morse{ display:flex;flex-wrap:wrap;gap:10px 14px;padding:13px 14px;align-items:flex-start }
+.mchar{ text-align:center }
+.mchar .marks{ display:flex;gap:3px;align-items:center;height:16px }
+.mchar .dot{ width:6px;height:6px;border-radius:50%;background:var(--green) }
+.mchar .dash{ width:17px;height:6px;border-radius:3px;background:var(--green) }
+.mchar .gap{ width:10px;height:6px }
+.mchar .c{ font-size:11px;color:var(--dim);margin-top:3px }
+/* egg #5 — the marks rearrange into a small egg */
+.mchar.egging .marks{ transition:none }
+#eggshell{
+  padding:16px 14px 6px;display:none;
+}
+#eggshell.on{ display:block }
+#eggshell svg{ display:block;margin:0 auto }
+#eggshell .cap{
+  text-align:center;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--amber);margin-top:9px;
+}
+
+footer{
+  max-width:780px;width:100%;margin:24px auto 0;padding-top:14px;border-top:1px solid var(--edge);
+  font-size:10.5px;line-height:1.85;color:var(--dim);
+}
+footer a{ color:var(--green) }
+
+/* ---------- shared: back to the cabinet ---------- */
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 var(--mono);
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } }
+</style>
+</head>
+<body>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<div class="wrap">
+  <header>
+    <h1>Encode Anything</h1>
+    <div class="sub">binary &middot; hex &middot; base64 &middot; morse &middot; flags</div>
+  </header>
+
+  <div class="io">
+    <label for="q"><span id="lbl">Plain text</span></label>
+    <textarea id="q" maxlength="600" placeholder="type something"></textarea>
+    <div class="dir">
+      <button id="mEnc" type="button" aria-pressed="true">Encode</button>
+      <button id="mDec" type="button" aria-pressed="false">Decode</button>
+      <span class="n" id="n"></span>
+    </div>
+  </div>
+
+  <div class="out" id="out"></div>
+</div>
+
+<footer>
+  Everything is converted in your browser and nothing is sent anywhere. Text is treated as UTF-8, so a
+  character outside ASCII becomes several bytes and the binary and hex show all of them; base64 is the
+  standard alphabet with padding. Morse has no case, no punctuation beyond a few marks, and no letters
+  outside A&ndash;Z and 0&ndash;9, so anything else is dropped rather than invented &mdash; the count
+  above says how much. Semaphore is the two-flag alphabet, and it is generated from the rule rather than typed out: eight arm
+  positions, seven &ldquo;circles&rdquo;, one flag holding still while the other walks round. That
+  construction produces exactly 26 letters and the two service signs, which is why J sits where it does
+  rather than after I &mdash; and it means the table cannot contain a typo. Decoding accepts binary, hex,
+  base64 or morse and works out which it is looking at.
+  <a href="/">&larr; back to the cabinet</a>
+</footer>
+
+<script>
+'use strict';
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+/* ------------------------------------------------------------------ *
+ *  The tables.
+ * ------------------------------------------------------------------ */
+const MORSE = {
+  A:'.-', B:'-...', C:'-.-.', D:'-..', E:'.', F:'..-.', G:'--.', H:'....',
+  I:'..', J:'.---', K:'-.-', L:'.-..', M:'--', N:'-.', O:'---', P:'.--.',
+  Q:'--.-', R:'.-.', S:'...', T:'-', U:'..-', V:'...-', W:'.--', X:'-..-',
+  Y:'-.--', Z:'--..',
+  '0':'-----','1':'.----','2':'..---','3':'...--','4':'....-',
+  '5':'.....','6':'-....','7':'--...','8':'---..','9':'----.',
+  '.':'.-.-.-', ',':'--..--', '?':'..--..', "'":'.----.', '/':'-..-.',
+  '-':'-....-', '(':'-.--.', ')':'-.--.-', ':':'---...', '=':'-...-',
+  '+':'.-.-.', '@':'.--.-.'
+};
+const UNMORSE = {};
+for (const k in MORSE) UNMORSE[MORSE[k]] = k;
+
+/* ------------------------------------------------------------------ *
+ *  Semaphore, built from the rule rather than typed out from memory.
+ *
+ *  The two-flag alphabet is not an arbitrary list: it is seven "circles".
+ *  There are eight arm positions, an eighth of a turn apart. In the first
+ *  circle one flag sits at position 1 and the other takes positions 2
+ *  through 8, giving seven letters; in the second, one flag sits at
+ *  position 2 and the other takes 3 through 8, giving six; and so on down
+ *  to a single sign in the last. Seven circles produce exactly 26 letters
+ *  plus the two service signs — the cancel, and the one that says numbers
+ *  follow — which is why J sits where it does rather than after I.
+ *
+ *  Generating it from that rule means the table cannot contain a typo,
+ *  and the construction is the part a reader can check.
+ * ------------------------------------------------------------------ */
+const SEM = (function () {
+  const circles = [
+    ['A','B','C','D','E','F','G'],          // first flag at position 1
+    ['H','I','K','L','M','N'],              // ... at 2
+    ['O','P','Q','R','S'],                  // ... at 3
+    ['T','U','Y','#cancel'],                // ... at 4
+    ['#numerals','J','V'],                  // ... at 5
+    ['W','X'],                              // ... at 6
+    ['Z']                                   // ... at 7
+  ];
+  const out = {};
+  circles.forEach((letters, ci) => {
+    const first = ci + 1;
+    letters.forEach((ch, i) => {
+      const second = first + 1 + i;
+      if (ch[0] === '#') return;            // the service signs are not letters
+      // stored in eighths of a turn clockwise from straight down
+      out[ch] = [first - 1, second - 1];
+    });
+  });
+  return out;
+})();
+
+const enc = new TextEncoder();
+const dec = new TextDecoder();
+
+function bytesOf(s){ return Array.from(enc.encode(s)); }
+
+function toBinary(s){ return bytesOf(s).map((b) => b.toString(2).padStart(8, '0')).join(' '); }
+function toHex(s){ return bytesOf(s).map((b) => b.toString(16).toUpperCase().padStart(2, '0')).join(' '); }
+function toB64(s){
+  let bin = '';
+  for (const b of bytesOf(s)) bin += String.fromCharCode(b);
+  return btoa(bin);
+}
+function toMorse(s){
+  const up = s.toUpperCase();
+  const out = [], dropped = [];
+  for (const ch of up){
+    if (ch === ' '){ out.push('/'); continue; }
+    if (MORSE[ch]) out.push(MORSE[ch]);
+    else if (ch.trim()) dropped.push(ch);
+  }
+  return { text: out.join(' '), dropped };
+}
+function toSemaphore(s){
+  const up = s.toUpperCase();
+  const out = [], dropped = [];
+  for (const ch of up){
+    if (ch === ' '){ out.push({ ch: ' ', a: null }); continue; }
+    if (SEM[ch]) out.push({ ch, a: SEM[ch] });
+    else if (ch.trim()) dropped.push(ch);
+  }
+  return { flags: out, dropped };
+}
+
+/* ---- drawing ------------------------------------------------------- */
+function flagSVG(angles, letter){
+  if (!angles) return '<svg viewBox="0 0 40 40"></svg>';
+  const cx = 20, cy = 20, r = 15;
+  const arm = (eighth) => {
+    // 0 = straight down, going clockwise
+    const a = (Math.PI / 4) * eighth + Math.PI / 2;
+    return [cx + Math.cos(a) * r, cy + Math.sin(a) * r];
+  };
+  const [x1, y1] = arm(angles[0]);
+  const [x2, y2] = arm(angles[1]);
+  return '<svg viewBox="0 0 40 40" role="img" aria-label="Semaphore ' + letter + '">' +
+    '<circle cx="20" cy="18" r="4.4" fill="none" stroke="#4E6862" stroke-width="1.6"/>' +
+    '<line x1="20" y1="22" x2="20" y2="33" stroke="#4E6862" stroke-width="1.6"/>' +
+    '<line x1="' + cx + '" y1="' + cy + '" x2="' + x1.toFixed(1) + '" y2="' + y1.toFixed(1) +
+      '" stroke="#4FE0A0" stroke-width="2.6" stroke-linecap="round"/>' +
+    '<line x1="' + cx + '" y1="' + cy + '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) +
+      '" stroke="#E0C24F" stroke-width="2.6" stroke-linecap="round"/>' +
+    '<circle cx="' + x1.toFixed(1) + '" cy="' + y1.toFixed(1) + '" r="2.4" fill="#4FE0A0"/>' +
+    '<circle cx="' + x2.toFixed(1) + '" cy="' + y2.toFixed(1) + '" r="2.4" fill="#E0C24F"/>' +
+    '</svg>';
+}
+
+function morseMarks(code, letter){
+  const marks = code.split('').map((c) =>
+    c === '.' ? '<span class="dot"></span>' : '<span class="dash"></span>').join('');
+  return '<div class="mchar"><div class="marks">' + marks + '</div>' +
+         '<div class="c">' + esc(letter) + '</div></div>';
+}
+
+function panel(name, meta, body, copyText, cls){
+  return '<div class="enc"><div class="h"><b>' + esc(name) + '</b>' +
+    '<span class="m">' + esc(meta) + '</span>' +
+    (copyText != null ? '<button class="copy" type="button" data-copy="' +
+      esc(copyText).replace(/\n/g, '&#10;') + '">copy</button>' : '') +
+    '</div>' + (cls ? '<div class="' + cls + '">' : '<div class="v">') + body + '</div></div>';
+}
+
+/* ---- egg #5 -------------------------------------------------------- *
+ *  Encode the phrase "easter egg" and the morse marks briefly stop being
+ *  a message and arrange themselves into a small egg. The dots and dashes
+ *  used are exactly the ones that phrase produces — nothing is added —
+ *  they are simply laid out on an ellipse instead of in a line.
+ * ------------------------------------------------------------------ */
+function eggShape(code){
+  const marks = code.replace(/[^.\-]/g, '').split('');
+  const W = 150, H = 190, cx = W / 2, cy = H / 2 + 6;
+  const rx = 52, ry = 72;
+  const parts = marks.map((m, i) => {
+    // an egg is an ellipse with the top narrowed, so the x radius is
+    // scaled by how far up the shape the point is
+    const t = (i / marks.length) * Math.PI * 2 - Math.PI / 2;
+    const y = cy + Math.sin(t) * ry;
+    // an egg is an ellipse with the top pulled in hard and the bottom left
+    // alone; a plain ellipse just reads as an oval
+    const up = Math.max(0, -Math.sin(t));
+    const narrow = 1 - 0.52 * Math.pow(up, 1.4);
+    const x = cx + Math.cos(t) * rx * narrow;
+    const rot = (t * 180 / Math.PI) + 90;
+    return m === '.'
+      ? '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="3.4" fill="#E0C24F"/>'
+      : '<rect x="' + (x - 8).toFixed(1) + '" y="' + (y - 3).toFixed(1) +
+        '" width="16" height="6" rx="3" fill="#4FE0A0" transform="rotate(' +
+        rot.toFixed(1) + ' ' + x.toFixed(1) + ' ' + y.toFixed(1) + ')"/>';
+  }).join('');
+  return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '" ' +
+    'role="img" aria-label="The morse marks arranged into an egg">' + parts + '</svg>' +
+    '<div class="cap">' + marks.length + ' marks, rearranged</div>';
+}
+
+const EGG = /^\s*easter\s*egg\s*$/i;
+
+/* ---- decoding ------------------------------------------------------ */
+function sniff(t){
+  const s = t.trim();
+  if (!s) return null;
+  if (/^[.\-\/\s]+$/.test(s) && /[.\-]/.test(s)) return 'morse';
+  if (/^[01\s]+$/.test(s) && s.replace(/\s/g, '').length % 8 === 0) return 'binary';
+  if (/^[0-9a-fA-F\s]+$/.test(s) && s.replace(/\s/g, '').length % 2 === 0) return 'hex';
+  if (/^[A-Za-z0-9+/=\s]+$/.test(s)) return 'base64';
+  return null;
+}
+
+function decode(t){
+  const kind = sniff(t);
+  if (!kind) return { ok: false, why: 'Could not tell what that is. Binary, hex, base64 or morse.' };
+  const s = t.trim();
+  try {
+    if (kind === 'morse'){
+      const words = s.trim().split(/\s*\/\s*/);
+      const out = words.map((w) => w.trim().split(/\s+/).filter(Boolean)
+        .map((c) => UNMORSE[c] || '�').join('')).join(' ');
+      return { ok: true, kind: 'morse', text: out };
+    }
+    let bytes;
+    if (kind === 'binary'){
+      const bits = s.replace(/\s/g, '');
+      bytes = bits.match(/.{8}/g).map((b) => parseInt(b, 2));
+    } else if (kind === 'hex'){
+      const hx = s.replace(/\s/g, '');
+      bytes = hx.match(/.{2}/g).map((b) => parseInt(b, 16));
+    } else {
+      const bin = atob(s.replace(/\s/g, ''));
+      bytes = Array.from(bin, (c) => c.charCodeAt(0));
+    }
+    return { ok: true, kind: kind, text: dec.decode(new Uint8Array(bytes)) };
+  } catch (e){
+    return { ok: false, why: 'That looked like ' + kind + ' but would not decode.' };
+  }
+}
+
+/* ---- rendering ----------------------------------------------------- */
+let mode = 'encode';
+
+function run(){
+  const t = $('q').value;
+  if (mode === 'decode'){
+    const r = decode(t);
+    $('n').textContent = '';
+    $('out').innerHTML = r.ok
+      ? panel('Plain text', 'read as ' + r.kind, esc(r.text), r.text)
+      : panel('No', '', esc(r.why));
+    return;
+  }
+
+  if (!t){ $('out').innerHTML = ''; $('n').textContent = ''; return; }
+
+  const bytes = bytesOf(t);
+  const m = toMorse(t);
+  const sem = toSemaphore(t);
+
+  $('n').textContent = t.length + (t.length === 1 ? ' character' : ' characters') +
+    ' · ' + bytes.length + (bytes.length === 1 ? ' byte' : ' bytes') +
+    (m.dropped.length ? ' · ' + m.dropped.length + ' dropped by morse' : '');
+
+  const morseHTML = m.text
+    ? '<div class="morse">' + t.toUpperCase().split('').map((ch) => {
+        if (ch === ' ') return '<div class="mchar"><div class="marks"><span class="gap"></span></div><div class="c">/</div></div>';
+        return MORSE[ch] ? morseMarks(MORSE[ch], ch) : '';
+      }).join('') + '</div>'
+    : '<div class="v">nothing morse can carry</div>';
+
+  const semHTML = sem.flags.length
+    ? '<div class="flags">' + sem.flags.map((f) =>
+        '<div class="flag">' + flagSVG(f.a, f.ch) +
+        '<div class="c">' + (f.ch === ' ' ? '&nbsp;' : esc(f.ch)) + '</div></div>').join('') + '</div>'
+    : '<div class="v">nothing semaphore can carry</div>';
+
+  $('out').innerHTML =
+    panel('Binary', bytes.length * 8 + ' bits', esc(toBinary(t)), toBinary(t)) +
+    panel('Hex', bytes.length + ' bytes', esc(toHex(t)), toHex(t)) +
+    panel('Base64', 'standard alphabet', esc(toB64(t)), toB64(t)) +
+    panel('Morse', m.dropped.length ? m.dropped.length + ' character(s) dropped' : 'A–Z, 0–9 and a few marks',
+          (EGG.test(t) ? '<div id="eggshell" class="on">' + eggShape(m.text) + '</div>' : '') + morseHTML,
+          m.text, 'x') +
+    panel('Semaphore', sem.dropped.length ? sem.dropped.length + ' character(s) dropped' : 'two-flag alphabet',
+          semHTML, null, 'x');
+}
+
+$('out').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-copy]');
+  if (!b) return;
+  navigator.clipboard.writeText(b.dataset.copy).then(
+    () => { b.textContent = 'copied'; setTimeout(() => b.textContent = 'copy', 1300); },
+    () => { b.textContent = 'no'; setTimeout(() => b.textContent = 'copy', 1300); }
+  );
+});
+
+$('q').addEventListener('input', run);
+$('mEnc').addEventListener('click', () => {
+  mode = 'encode';
+  $('mEnc').setAttribute('aria-pressed', 'true'); $('mDec').setAttribute('aria-pressed', 'false');
+  $('lbl').textContent = 'Plain text';
+  $('q').placeholder = 'type something';
+  run();
+});
+$('mDec').addEventListener('click', () => {
+  mode = 'decode';
+  $('mDec').setAttribute('aria-pressed', 'true'); $('mEnc').setAttribute('aria-pressed', 'false');
+  $('lbl').textContent = 'Binary, hex, base64 or morse';
+  $('q').placeholder = '01001000 01101001';
+  run();
+});
+
+$('q').value = 'hello';
+run();
+
+window.__encode = { toBinary, toHex, toB64, toMorse, toSemaphore, decode, sniff,
+                    isEgg: (s) => EGG.test(s), run };
+</script>
+</body>
+</html>
