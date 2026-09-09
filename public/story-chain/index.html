@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Story Chain</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%231A1622'/><path d='M7 9h18M7 14h18M7 19h12' stroke='%23C9A227' stroke-width='2' stroke-linecap='round'/><circle cx='23' cy='19' r='2.6' fill='%23C9A227'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --bg:#15121C;
+  --panel:#1E1929;
+  --edge:#332B45;
+  --ink:#E6E0F0;
+  --dim:#9A90AE;
+  --gold:#C9A227;
+  --gold-2:#E4C25A;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);
+  background-image:radial-gradient(120% 80% at 50% 0%, rgba(201,162,39,.07), transparent 60%);
+  color:var(--ink);font-family:var(--serif);
+  min-height:100vh;padding:28px 16px 88px;
+  display:flex;flex-direction:column;align-items:center;
+}
+.wrap{ max-width:720px;width:100% }
+
+header{ text-align:center;margin-bottom:8px }
+h1{
+  margin:0;font-family:var(--mono);font-size:clamp(17px,4.2vw,24px);
+  letter-spacing:.3em;text-transform:uppercase;color:var(--gold);font-weight:700;
+}
+.sub{ margin-top:9px;font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim) }
+
+.tally{
+  text-align:center;margin:20px 0 16px;font-family:var(--mono);font-size:10.5px;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--dim);
+}
+.tally b{ color:var(--gold-2);font-size:22px;letter-spacing:.02em;display:block;margin-bottom:4px }
+
+/* ---------- the story ---------- */
+.story{
+  background:var(--panel);border:1px solid var(--edge);
+  padding:22px 24px;font-size:17.5px;line-height:1.78;
+}
+.story .s{ display:inline }
+.story .s.you{ color:var(--gold-2) }
+.story .s.newest{ background:rgba(201,162,39,.14);box-shadow:0 0 0 3px rgba(201,162,39,.14) }
+.story .n{
+  font-family:var(--mono);font-size:9px;color:#665C7C;vertical-align:super;
+  margin-right:3px;letter-spacing:.04em;
+}
+.story .gap{
+  display:block;font-family:var(--mono);font-size:10px;letter-spacing:.2em;
+  text-transform:uppercase;color:#5B5273;margin-bottom:16px;
+}
+
+/* the marker at a thousand */
+.mark{
+  display:block;margin:22px 0;text-align:center;
+  font-family:var(--mono);font-size:11px;letter-spacing:.36em;text-transform:uppercase;
+  color:var(--gold);border-top:1px solid var(--edge);border-bottom:1px solid var(--edge);
+  padding:14px 0;
+}
+.mark i{ display:block;font-family:var(--serif);font-style:italic;font-size:14px;
+  letter-spacing:0;text-transform:none;color:var(--dim);margin-top:7px }
+
+/* ---------- the desk ---------- */
+.desk{ margin-top:18px;background:var(--panel);border:1px solid var(--edge);padding:16px 18px }
+.desk h2{
+  margin:0 0 11px;font-family:var(--mono);font-size:10px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--gold);font-weight:700;
+}
+textarea{
+  width:100%;font:inherit;font-size:16px;line-height:1.6;color:var(--ink);
+  background:#181322;border:1px solid var(--edge);border-radius:2px;
+  padding:11px 12px;resize:vertical;min-height:74px;
+}
+textarea:focus{ outline:2px solid var(--gold);outline-offset:1px;border-color:var(--gold) }
+textarea::placeholder{ color:#6B6182 }
+textarea:disabled{ opacity:.5 }
+
+.row{ display:flex;gap:11px;align-items:center;margin-top:11px;flex-wrap:wrap }
+button{
+  font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  background:var(--gold);color:#1A1622;border:0;border-radius:2px;
+  padding:12px 20px;cursor:pointer;font-weight:700;
+}
+button:hover{ background:var(--gold-2) }
+button:disabled{ background:#4A425C;color:#8D849F;cursor:default }
+button:focus-visible{ outline:2px solid var(--ink);outline-offset:2px }
+.left{ margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--dim) }
+.left.warn{ color:#D98B6E }
+
+.note{
+  margin-top:11px;font-family:var(--mono);font-size:11px;line-height:1.8;color:var(--dim);
+  border-left:3px solid var(--edge);padding-left:11px;min-height:20px;
+}
+.note.bad{ border-color:#B0503F;color:#DFA093 }
+.note.good{ border-color:#5C9E58;color:#A5D4A1 }
+
+.state{
+  border:1px dashed var(--edge);padding:22px;font-family:var(--mono);
+  font-size:12px;line-height:1.85;color:var(--dim);
+}
+.state b{ display:block;color:var(--gold);margin-bottom:7px;letter-spacing:.06em }
+
+footer{
+  max-width:720px;width:100%;margin:28px auto 0;padding-top:14px;border-top:1px solid var(--edge);
+  font-family:var(--mono);font-size:10.5px;line-height:1.85;color:var(--dim);
+}
+footer a{ color:var(--gold-2) }
+
+/* ---------- shared: back to the cabinet ---------- */
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 var(--mono);
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } }
+</style>
+</head>
+<body>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<div class="wrap">
+  <header>
+    <h1>The Story Chain</h1>
+    <div class="sub">one sentence each &middot; no going back</div>
+  </header>
+
+  <div id="shell">
+    <div class="tally" id="tally"></div>
+    <div class="story" id="story"></div>
+
+    <div class="desk">
+      <h2>Add the next sentence</h2>
+      <textarea id="what" maxlength="180" placeholder="Pick up where it left off." aria-label="Your sentence, up to 180 characters"></textarea>
+      <div class="row">
+        <button id="add" type="button">Add it</button>
+        <span class="left" id="left">180 left</span>
+      </div>
+      <div class="note" id="note"></div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  One story, written by everybody, one sentence at a time. You cannot write two in a row and you
+  cannot edit or delete anything &mdash; not yours and certainly not anyone else's &mdash; so whatever
+  the last person did to the plot is now your problem. Sentences are capped at 180 characters and
+  links are refused. The chain knows your lines from everyone else's by a random string your browser
+  invented; there is no account and nothing else is stored.
+  <a href="/">&larr; back to the cabinet</a>
+</footer>
+
+<script src="/shared/lc-id.js"></script>
+<script>
+'use strict';
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+const MAX = 180;
+let total = 0, busy = false, waitTimer = 0, seenEnd = false;
+
+function note(text, kind){
+  const n = $('note');
+  n.className = 'note' + (kind ? ' ' + kind : '');
+  n.textContent = text || '';
+}
+
+/* ---- the thousandth sentence -------------------------------------- *
+   The chain does not end there — it carries straight on — but a round
+   number that large deserves to be marked rather than slid past. The
+   marker is drawn from the count, so it is still there tomorrow for
+   whoever scrolls back to it. */
+function markerFor(n){
+  return '<span class="mark">The End?<i>One thousand sentences. Nobody has stopped, and ' +
+         'there is no reason to. Sentence ' + (n + 1) + ' goes below.</i></span>';
+}
+
+function render(d){
+  if (!d || !d.ok){
+    $('shell').innerHTML = '<div class="state"><b>' +
+      (d && d.why === 'no_store' ? 'No shared storage today' : 'Could not reach the story') +
+      '</b>' + esc(LCId.why(d && d.why)) + '</div>';
+    return;
+  }
+  total = d.total;
+  $('tally').innerHTML = total
+    ? '<b>' + total.toLocaleString() + '</b>' +
+      (total === 1 ? 'sentence so far' : 'sentences so far') +
+      ' &middot; ' + d.contributors + (d.contributors === 1 ? ' writer' : ' writers')
+    : '<b>0</b>nobody has started it';
+
+  if (!d.lines.length){
+    $('story').innerHTML = '<span class="gap">the story has not been started</span>' +
+      '<i style="color:#9A90AE">Whatever you write below is the first sentence, and everyone who ' +
+      'comes after has to live with it.</i>';
+  } else {
+    const first = d.lines[0].n;
+    let html = first > 1 ? '<span class="gap">&hellip; showing the last ' + d.lines.length +
+                           ' of ' + total + ' sentences</span>' : '';
+    html += d.lines.map((l, i) => {
+      const mark = (l.n === 1001 || (l.n > 1000 && d.lines[i - 1] && d.lines[i - 1].n === 1000))
+        ? markerFor(1000) : '';
+      return mark + '<span class="s' + (l.you ? ' you' : '') +
+        (i === d.lines.length - 1 ? ' newest' : '') + '">' +
+        '<span class="n">' + l.n + '</span>' + esc(l.text) + '</span> ';
+    }).join('');
+    // the marker sits after sentence 1000 even when 1001 is not written yet
+    if (total === 1000) html += markerFor(1000);
+    $('story').innerHTML = html;
+  }
+
+  // whose turn it is
+  clearInterval(waitTimer);
+  if (d.yoursIsLast){
+    $('what').disabled = true; $('add').disabled = true;
+    note('You wrote the last one. Somebody else goes next — come back when they have.');
+  } else if (d.waitFor > 0){
+    $('what').disabled = true; $('add').disabled = true;
+    const tick = () => {
+      const s = Math.ceil((d.waitFor -= 1000) / 1000);
+      if (s <= 0){ clearInterval(waitTimer); $('what').disabled = false; $('add').disabled = false; note(''); }
+      else note('One sentence a minute. ' + s + ' to go.');
+    };
+    note('One sentence a minute. ' + Math.ceil(d.waitFor / 1000) + ' to go.');
+    waitTimer = setInterval(tick, 1000);
+  } else {
+    $('what').disabled = false; $('add').disabled = false;
+  }
+
+  if (total >= 1000 && !seenEnd){ seenEnd = true; }
+}
+
+function load(){ return LCId.get('/api/story').then(render); }
+
+function submit(){
+  if (busy) return;
+  const text = $('what').value.trim();
+  if (!text){ note('Write something first.', 'bad'); return; }
+  busy = true; $('add').disabled = true;
+  note('Adding…');
+  LCId.post('/api/story', { text: text }).then((d) => {
+    busy = false;
+    if (!d || !d.ok){
+      $('add').disabled = false;
+      if (d && d.why === 'too_soon'){
+        note('One sentence a minute. ' + Math.ceil((d.wait || 0) / 1000) + ' seconds to go.', 'bad');
+      } else note(LCId.why(d && d.why), 'bad');
+      return;
+    }
+    $('what').value = ''; count();
+    render(d);
+    note('Added. Sentence ' + d.total + '.', 'good');
+  });
+}
+
+function count(){
+  const n = MAX - $('what').value.length;
+  $('left').textContent = n + ' left';
+  $('left').classList.toggle('warn', n < 25);
+}
+
+$('what').addEventListener('input', count);
+$('add').addEventListener('click', submit);
+$('what').addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') submit();
+});
+
+count();
+load();
+setInterval(() => { if (!document.hidden && !busy) load(); }, 20000);
+
+window.__story = { render: render, marker: markerFor };
+</script>
+</body>
+</html>

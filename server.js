@@ -245,6 +245,56 @@ function castCheck(ip) {
   return { ok: true, remaining: CAST_MAX - hits.length };
 }
 
+/* Writes that end up on a page other people read — a guestbook line, a
+   sentence of the story, a handful of pixels — get their own allowance,
+   separate from the generator's and from the bottles'. Same shape as
+   castCheck: per IP, in memory, gone on redeploy. */
+const WRITE_MAX = 30;
+const writeHits = new Map();
+function writeCheck(ip) {
+  const now = Date.now();
+  let hits = (writeHits.get(ip) || []).filter((t) => now - t < RATE_WINDOW);
+  if (hits.length >= WRITE_MAX) {
+    writeHits.set(ip, hits);
+    return { ok: false, retryAfter: Math.ceil((RATE_WINDOW - (now - hits[0])) / 1000) };
+  }
+  hits.push(now);
+  writeHits.set(ip, hits);
+  if (writeHits.size > 5000) {
+    for (const [k, v] of writeHits) {
+      if (!v.length || now - v[v.length - 1] > RATE_WINDOW) writeHits.delete(k);
+    }
+  }
+  return { ok: true, remaining: WRITE_MAX - hits.length };
+}
+
+/* ------------------------------------------------------------------ *
+ *  Who is here this minute.
+ *
+ *  Deliberately NOT in the database. "Right now" is a fact about this
+ *  process in the last ninety seconds; writing it to disk would make it
+ *  a fact about history instead, and the toy would then be claiming to
+ *  know something it does not. The register is a Map of the same random
+ *  browser tokens everything else uses, swept on every read, and it is
+ *  empty again the moment the server restarts — which is the honest
+ *  answer, because after a restart nobody has said hello yet.
+ * ------------------------------------------------------------------ */
+const HERE_WINDOW = 90 * 1000;
+const here = new Map();          // token -> last beat
+
+function beat(token) {
+  const now = Date.now();
+  if (typeof token === 'string' && /^[a-z0-9]{8,64}$/i.test(token)) here.set(token, now);
+  for (const [k, t] of here) if (now - t > HERE_WINDOW) here.delete(k);
+  // A stampede should cost memory, not the process. 20k tokens is far past
+  // anything this hub will see and still only a couple of megabytes.
+  if (here.size > 20000) {
+    const oldest = [...here.entries()].sort((a, b) => a[1] - b[1]);
+    for (let i = 0; i < oldest.length - 20000; i++) here.delete(oldest[i][0]);
+  }
+  return here.size;
+}
+
 function readBody(req) {
   return new Promise((resolve, reject) => {
     let size = 0;
@@ -1442,6 +1492,90 @@ async function handleApi(req, res, url) {
     });
   }
 
+  /* ------------------------------------------------------------------ *
+   *  Shared boards, the guestbook, the canvas, the story, the head-count.
+   *
+   *  All five answer 200 with { ok:false, why:'no_store' } rather than a
+   *  5xx when the volume is not there, because every one of these pages
+   *  has a state for "there is no shared storage today" and none of them
+   *  should read as a broken server.
+   * ------------------------------------------------------------------ */
+
+  // --- how many people are on the hub right now --------------------
+  // In memory only; see the note on `here` above.
+  if (path === '/api/here') {
+    const token = url.searchParams.get('t') || '';
+    return sendJson(res, 200, { ok: true, here: beat(token), window: HERE_WINDOW });
+  }
+
+  // --- shared high scores ------------------------------------------
+  if (path === '/api/scores') {
+    if (!store.ready()) return sendJson(res, 200, { ok: false, why: 'no_store' });
+
+    if (req.method === 'POST') {
+      const gate = writeCheck(clientIp(req));
+      if (!gate.ok) return sendJson(res, 429, { ok: false, why: 'too_many', retryAfter: gate.retryAfter });
+      let body = {};
+      try { body = JSON.parse(await readBody(req) || '{}'); }
+      catch (e) { return sendJson(res, 400, { ok: false, why: 'bad_body' }); }
+      const out = store.submitScore(body.board, body.token, body.score, body.handle, body.detail);
+      return sendJson(res, out.ok ? 200 : 400, out);
+    }
+    const board = url.searchParams.get('board') || '';
+    if (!board) return sendJson(res, 200, { ok: true, boards: store.boardList() });
+    return sendJson(res, 200, store.leaderboard(board, url.searchParams.get('t') || ''));
+  }
+
+  // --- the guestbook ------------------------------------------------
+  if (path === '/api/guestbook') {
+    if (!store.ready()) return sendJson(res, 200, { ok: false, why: 'no_store' });
+
+    if (req.method === 'POST') {
+      const gate = castCheck(clientIp(req));      // same meanness as a bottle
+      if (!gate.ok) return sendJson(res, 429, { ok: false, why: 'too_many', retryAfter: gate.retryAfter });
+      let body = {};
+      try { body = JSON.parse(await readBody(req) || '{}'); }
+      catch (e) { return sendJson(res, 400, { ok: false, why: 'bad_body' }); }
+      const out = store.sign(body.token, body.handle, body.text);
+      return sendJson(res, out.ok ? 200 : 400, out);
+    }
+    return sendJson(res, 200, store.guestbook(
+      url.searchParams.get('t') || '', url.searchParams.get('before') || 0));
+  }
+
+  // --- the collaborative canvas -------------------------------------
+  if (path === '/api/pixels') {
+    if (!store.ready()) return sendJson(res, 200, { ok: false, why: 'no_store' });
+
+    if (req.method === 'POST') {
+      const gate = writeCheck(clientIp(req));
+      if (!gate.ok) return sendJson(res, 429, { ok: false, why: 'too_many', retryAfter: gate.retryAfter });
+      let body = {};
+      try { body = JSON.parse(await readBody(req) || '{}'); }
+      catch (e) { return sendJson(res, 400, { ok: false, why: 'bad_body' }); }
+      const out = store.place(body.token, body.px);
+      return sendJson(res, out.ok ? 200 : 400, out);
+    }
+    return sendJson(res, 200, store.canvas(url.searchParams.get('t') || ''));
+  }
+
+  // --- the story ----------------------------------------------------
+  if (path === '/api/story') {
+    if (!store.ready()) return sendJson(res, 200, { ok: false, why: 'no_store' });
+
+    if (req.method === 'POST') {
+      const gate = castCheck(clientIp(req));
+      if (!gate.ok) return sendJson(res, 429, { ok: false, why: 'too_many', retryAfter: gate.retryAfter });
+      let body = {};
+      try { body = JSON.parse(await readBody(req) || '{}'); }
+      catch (e) { return sendJson(res, 400, { ok: false, why: 'bad_body' }); }
+      const out = store.addSentence(body.token, body.text);
+      return sendJson(res, out.ok ? 200 : 400, out);
+    }
+    return sendJson(res, 200, store.story(
+      url.searchParams.get('t') || '', url.searchParams.get('from') || 0));
+  }
+
   // --- which optional keys are configured --------------------------
   // Lets a toy render an honest "needs a key" state instead of failing.
   if (path === '/api/keys') {
@@ -1462,7 +1596,8 @@ const server = http.createServer((req, res) => {
 
   // POST is allowed for the one route that takes a body; everything else
   // is still read-only, as it was.
-  const WRITABLE = ['/api/generate', '/api/presence', '/api/bottle', '/api/bottle/found'];
+  const WRITABLE = ['/api/generate', '/api/presence', '/api/bottle', '/api/bottle/found',
+                   '/api/scores', '/api/guestbook', '/api/pixels', '/api/story'];
   const writable = req.method === 'POST' && WRITABLE.includes(parsed.pathname);
   if (req.method !== 'GET' && req.method !== 'HEAD' && !writable) {
     res.writeHead(405).end('Method not allowed');
@@ -1503,7 +1638,10 @@ const server = http.createServer((req, res) => {
     res.writeHead(200, {
       'Content-Type': TYPES[ext] || 'application/octet-stream',
       'Content-Length': stat.size,
-      'Cache-Control': ext === '.html' ? 'no-cache' : 'public, max-age=3600',
+      // NO_CACHE is a development switch: an hour of browser cache on a
+      // .js file is right in production and maddening while editing one.
+      'Cache-Control': process.env.NO_CACHE ? 'no-store'
+        : (ext === '.html' ? 'no-cache' : 'public, max-age=3600'),
     });
 
     if (req.method === 'HEAD') { res.end(); return; }

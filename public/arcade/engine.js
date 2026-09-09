@@ -269,6 +269,38 @@
       return false;
     };
 
+    /* ---- the shared board ----------------------------------------- *
+     *  The local best above is still the number on the menu, because that
+     *  one is instant and always true. This is the other one: everybody's,
+     *  fetched from the same SQLite the guestbook and the canvas use.
+     *
+     *  Nothing here can stop the cabinet. If the server has no shared
+     *  storage, or the fetch fails, `A.board` simply reports it and the
+     *  screen says so in the cabinet's own voice; the games are untouched.
+     * ---------------------------------------------------------------- */
+    var HANDLE_KEY = 'lc-handle';
+    A.handle = function (next) {
+      if (next !== undefined) {
+        try { localStorage.setItem(HANDLE_KEY, String(next).slice(0, 12)); } catch (e) {}
+        return next;
+      }
+      try { return (localStorage.getItem(HANDLE_KEY) || '').slice(0, 12); } catch (e) { return ''; }
+    };
+
+    A.boardId = function (id) { return 'arcade:' + id; };
+
+    A.fetchBoard = function (id) {
+      if (!window.LCId) return Promise.resolve({ ok: false, why: 'no_store' });
+      return LCId.get('/api/scores?board=' + encodeURIComponent(A.boardId(id)));
+    };
+    A.postScore = function (id, score, handle) {
+      if (!window.LCId) return Promise.resolve({ ok: false, why: 'no_store' });
+      A.handle(handle);
+      return LCId.post('/api/scores', {
+        board: A.boardId(id), score: score, handle: handle
+      });
+    };
+
     /* ---- HUD, in 1980s cabinet conventions ---- */
     A.hud = function (g, opts) {
       g.rect(0, 0, W, 11, 1);
@@ -287,10 +319,128 @@
     var mode = 'menu', sel = 0, cur = null, over = 0, paused = false;
     var last = performance.now(), acc = 0;
 
+    /* name entry and the board share one small state machine so that
+       finishing a game walks you straight through both. */
+    var LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 .-';
+    var entry = { at: 0, chars: [0, 0, 0], gameId: null, score: 0, blink: 0 };
+    var board = { id: null, name: '', data: null, state: 'idle', pending: false };
+
     function startGame(i) {
       cur = A.games[i];
       cur.reset();
       mode = 'play'; over = 0; paused = false;
+    }
+
+    function beginEntry(game, score) {
+      // seed from whatever was typed last time, so a regular is not made
+      // to spell their name again every round
+      var was = (A.handle() || '').toUpperCase();
+      for (var i = 0; i < 3; i++) {
+        var k = LETTERS.indexOf(was[i] || 'A');
+        entry.chars[i] = k < 0 ? 0 : k;
+      }
+      entry.at = 0; entry.blink = 0;
+      entry.gameId = game.id; entry.score = score;
+      mode = 'name';
+    }
+
+    function entryText() {
+      return LETTERS[entry.chars[0]] + LETTERS[entry.chars[1]] + LETTERS[entry.chars[2]];
+    }
+
+    function openBoard(id, name) {
+      board.id = id; board.name = name; board.data = null;
+      board.state = 'loading'; board.pending = true;
+      mode = 'board';
+      A.fetchBoard(id).then(function (d) {
+        board.pending = false;
+        if (!d || !d.ok) { board.state = d && d.why === 'no_store' ? 'nostore' : 'failed'; return; }
+        board.data = d; board.state = 'ok';
+      });
+    }
+
+    function submitAndShow() {
+      var name = entryText().replace(/\s+$/, '');
+      A.handle(name);
+      var id = entry.gameId;
+      board.id = id;
+      board.name = (function () {
+        for (var i = 0; i < A.games.length; i++) if (A.games[i].id === id) return A.games[i].name;
+        return id;
+      })();
+      board.data = null; board.state = 'loading'; board.pending = true;
+      mode = 'board';
+      A.postScore(id, entry.score, name).then(function (d) {
+        board.pending = false;
+        if (!d || !d.ok) { board.state = d && d.why === 'no_store' ? 'nostore' : 'failed'; return; }
+        board.data = d; board.state = 'ok';
+      });
+    }
+
+    function drawEntry(g) {
+      g.clear(0);
+      g.rect(0, 0, W, 24, 1);
+      g.rect(0, 24, W, 1, 14);
+      g.textC('NEW  ENTRY', 9, 9);
+
+      g.textC('SCORE  ' + entry.score, 44, 4);
+      g.textC('THREE  LETTERS  FOR  THE  BOARD', 60, 3);
+
+      // the three slots, big
+      var s = 4, w = 6 * s, gap = 14;
+      var total = 3 * w + 2 * gap;
+      var x0 = (W - total) / 2;
+      for (var i = 0; i < 3; i++) {
+        var x = x0 + i * (w + gap);
+        var on = i === entry.at;
+        g.text(LETTERS[entry.chars[i]], x, 90, on ? 9 : 4, s);
+        g.rect(x, 90 + 7 * s + 4, w - s, 2, on ? 9 : 2);
+        if (on && entry.blink < 0.5) { g.text('^', x + w / 2 - 3 * s / 2, 90 + 7 * s + 9, 13, 1); }
+      }
+
+      g.rect(0, H - 34, W, 34, 1);
+      g.rect(0, H - 34, W, 1, 2);
+      g.textC('UP/DOWN  LETTER   LEFT/RIGHT  SLOT', H - 27, 3);
+      g.textC('Z  CONFIRM      X  SKIP THE BOARD', H - 15, 13);
+    }
+
+    function drawBoard(g) {
+      g.clear(0);
+      g.rect(0, 0, W, 24, 1);
+      g.rect(0, 24, W, 1, 14);
+      g.textC('HIGH  SCORES', 9, 9);
+      g.textC(String(board.name || '').slice(0, 30), 30, 13);
+
+      if (board.state === 'loading') { g.textC('READING  THE  BOARD...', 110, 3); }
+      else if (board.state === 'nostore') {
+        g.textC('NO  SHARED  BOARD  ON  THIS', 96, 8);
+        g.textC('SERVER.  YOUR  OWN  BEST  IS', 108, 8);
+        g.textC('STILL  KEPT  IN  THIS  BROWSER.', 120, 8);
+      }
+      else if (board.state === 'failed') {
+        g.textC('COULD  NOT  REACH  THE  BOARD.', 104, 7);
+        g.textC('THE  GAMES  ARE  FINE.', 116, 3);
+      }
+      else if (board.data) {
+        var top = board.data.top || [];
+        if (!top.length) { g.textC('NOBODY  HAS  PLAYED  THIS  YET', 108, 3); }
+        for (var i = 0; i < Math.min(10, top.length); i++) {
+          var r = top[i], y = 44 + i * 14;
+          var col = r.you ? 9 : (i === 0 ? 13 : 4);
+          if (r.you) g.rect(10, y - 3, 300, 12, 1);
+          g.text(String(r.rank), 14, y, col);
+          g.text(String(r.handle).toUpperCase().slice(0, 12), 44, y, col);
+          var sc = String(r.score);
+          g.text(sc, 300 - g.textW(sc), y, col);
+        }
+        var n = board.data.players || 0;
+        g.textC(n + (n === 1 ? '  PLAYER' : '  PLAYERS'), 190, 2);
+        if (board.data.mine) g.textC('YOU  ARE  NUMBER  ' + board.data.mine.rank, 202, 3);
+      }
+
+      g.rect(0, H - 20, W, 20, 1);
+      g.rect(0, H - 20, W, 1, 2);
+      g.textC('Z  OR  X  TO  GO  BACK', H - 14, 3);
     }
 
     function drawMenu(g) {
@@ -316,7 +466,7 @@
       g.rect(0, H - 26, W, 26, 1);
       g.rect(0, H - 26, W, 1, 2);
       g.textC(d.slice(0, 44), H - 21, 3);
-      g.textC('Z / SPACE  TO  START', H - 11, 13);
+      g.textC('Z  START      X  HIGH SCORES', H - 11, 13);
     }
 
     function loop(now) {
@@ -330,8 +480,29 @@
         if (A.hit('up')) sel = (sel + n - 1) % n;
         if (A.hit('right')) sel = (sel + perCol) % n;
         if (A.hit('left')) sel = (sel + n - perCol) % n;
+        if (A.hit('b')) { openBoard(A.games[sel].id, A.games[sel].name); drawBoard(g); return; }
         if (A.hit('a') || A.hit('start')) startGame(sel);
         drawMenu(g);
+        return;
+      }
+
+      if (mode === 'name') {
+        entry.blink = (entry.blink + dt) % 1;
+        if (A.hit('up'))    entry.chars[entry.at] = (entry.chars[entry.at] + 1) % LETTERS.length;
+        if (A.hit('down'))  entry.chars[entry.at] = (entry.chars[entry.at] + LETTERS.length - 1) % LETTERS.length;
+        if (A.hit('right')) entry.at = (entry.at + 1) % 3;
+        if (A.hit('left'))  entry.at = (entry.at + 2) % 3;
+        if (A.hit('b') || A.hit('back')) { mode = 'menu'; cur = null; drawMenu(g); return; }
+        if (A.hit('a') || A.hit('start')) { submitAndShow(); drawBoard(g); return; }
+        drawEntry(g);
+        return;
+      }
+
+      if (mode === 'board') {
+        if (A.hit('a') || A.hit('b') || A.hit('back') || A.hit('start')) {
+          mode = 'menu'; cur = null; drawMenu(g); return;
+        }
+        drawBoard(g);
         return;
       }
 
@@ -341,7 +512,11 @@
       if (!paused) {
         if (over > 0) {
           over -= dt;
-          if (over <= 0) { mode = 'menu'; cur = null; return; }
+          if (over <= 0) {
+            // A zero is not worth a name; anything else gets offered the board.
+            if ((cur.score | 0) > 0) { beginEntry(cur, cur.score | 0); return; }
+            mode = 'menu'; cur = null; return;
+          }
         } else {
           cur.step(dt, A);
           if (cur.dead) {
@@ -370,6 +545,10 @@
     if (!A.games.length) { g.clear(0); g.textC('NO GAMES LOADED', 110, 7); return; }
     requestAnimationFrame(loop);
     A._g = g;
+    A._state = function () { return { mode: mode, entry: entry, board: board, sel: sel }; };
+    A._go = function (m) { mode = m; };
+    A._entry = beginEntry;
+    A._openBoard = openBoard;
   };
 
   global.ARCADE = A;

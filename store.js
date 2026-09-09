@@ -89,6 +89,52 @@ function open() {
         seen_at  INTEGER NOT NULL
       );
       CREATE INDEX IF NOT EXISTS visitors_seen ON visitors(seen_at);
+
+      /* --- shared high scores, one row per (game, token) ---------------
+         A visitor keeps one entry per game: beating your own score edits
+         the row you already have rather than filling the board with your
+         afternoon. The token is the same browser-invented id the presence
+         table uses and is never shown; the handle is what the board shows,
+         and is whatever three letters were typed into an arcade cabinet. */
+      CREATE TABLE IF NOT EXISTS scores (
+        board   TEXT    NOT NULL,
+        token   TEXT    NOT NULL,
+        handle  TEXT    NOT NULL DEFAULT '',
+        score   INTEGER NOT NULL,
+        detail  TEXT    NOT NULL DEFAULT '',
+        at      INTEGER NOT NULL,
+        PRIMARY KEY (board, token)
+      );
+      CREATE INDEX IF NOT EXISTS scores_board ON scores(board, score DESC);
+
+      CREATE TABLE IF NOT EXISTS guestbook (
+        id     INTEGER PRIMARY KEY AUTOINCREMENT,
+        token  TEXT    NOT NULL,
+        handle TEXT    NOT NULL DEFAULT '',
+        text   TEXT    NOT NULL,
+        at     INTEGER NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS guestbook_at ON guestbook(at DESC);
+
+      /* One row per occupied cell. A cell is overwritable — the canvas is
+         meant to keep changing — so the primary key is the coordinate and
+         the last person to place there owns it. */
+      CREATE TABLE IF NOT EXISTS pixels (
+        x     INTEGER NOT NULL,
+        y     INTEGER NOT NULL,
+        c     INTEGER NOT NULL,
+        token TEXT    NOT NULL,
+        at    INTEGER NOT NULL,
+        PRIMARY KEY (x, y)
+      );
+
+      CREATE TABLE IF NOT EXISTS story (
+        n     INTEGER PRIMARY KEY AUTOINCREMENT,
+        text  TEXT    NOT NULL,
+        token TEXT    NOT NULL,
+        at    INTEGER NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS story_at ON story(at DESC);
     `);
     reason = null;
     console.log('[store] open at %s', dbPath);
@@ -234,8 +280,312 @@ function roster() {
   return { ok: true, places: rows, today: total, now: nowish, tracked: ever };
 }
 
+/* ------------------------------------------------------------------ *
+ *  Shared boards, the guestbook, the canvas and the story.
+ *
+ *  Everything below shares three rules with the bottles above:
+ *    - the only identity is a random token the browser invented, and it
+ *      never leaves the server;
+ *    - anything a stranger will read goes through cleanText(), which is
+ *      a length cap and a link filter, not moderation, and says so;
+ *    - the writer's own row is recognised by token so a board can say
+ *      "that one is yours" without knowing who anyone is.
+ * ------------------------------------------------------------------ */
+
+const TOKEN_RE = /^[a-z0-9]{8,64}$/i;
+const okToken = (t) => typeof t === 'string' && TOKEN_RE.test(t);
+
+/* Boards are named here, not by the caller. A free-text board name would
+   let anyone mint an unbounded number of tables' worth of rows. */
+const BOARDS = {
+  // one per arcade cabinet game; the ids match the game modules' own
+  'arcade:mazechase': { dir: 'high', label: 'The Rounds' },
+  'arcade:pentomino': { dir: 'high', label: 'Pentafall' },
+  'arcade:platform':  { dir: 'high', label: 'The Long Way Down' },
+  'arcade:digger':    { dir: 'high', label: 'Deep Seam' },
+  'arcade:mines':     { dir: 'high', label: 'Clearance' },
+  'arcade:stacker':   { dir: 'high', label: 'Hoister' },
+  'arcade:billiards': { dir: 'high', label: 'Side Pocket' },
+  'arcade:invaders':  { dir: 'high', label: 'Descent' },
+  'arcade:breakout':  { dir: 'high', label: 'Wallbreak' },
+  'arcade:snake':     { dir: 'high', label: 'Serpentine' },
+  'arcade:asteroids': { dir: 'high', label: 'Drift' },
+  'arcade:simon':     { dir: 'high', label: 'Four Tones' },
+  'arcade:pong':      { dir: 'high', label: 'Rally' },
+  'arcade:racer':     { dir: 'high', label: 'Backroad' },
+  // the song guesser: one board counts streaks, one counts speed
+  'needle:streak':    { dir: 'high', label: 'Longest streak' },
+  // milliseconds to a correct answer, so here lower is better
+  'needle:fast':      { dir: 'low',  label: 'Fastest correct guess' },
+};
+
+const boardList = () => Object.keys(BOARDS).map((k) =>
+  ({ id: k, label: BOARDS[k].label, dir: BOARDS[k].dir }));
+
+/* A handle is three-to-twelve visible characters. Arcade cabinets take
+   three; the song guesser is happier with a word. Empty is allowed and
+   shows as "anon" on the board rather than being rejected. */
+function cleanHandle(raw) {
+  if (typeof raw !== 'string') return '';
+  const h = raw.replace(CONTROL, '').replace(/\s+/g, ' ').trim().slice(0, 12);
+  return LINKY.test(h) ? '' : h;
+}
+
+function submitScore(board, token, score, handle, detail) {
+  if (!ready()) return { ok: false, why: 'no_store' };
+  const spec = BOARDS[board];
+  if (!spec) return { ok: false, why: 'unknown_board' };
+  if (!okToken(token)) return { ok: false, why: 'bad_token' };
+
+  const n = Number(score);
+  if (!Number.isFinite(n) || n < 0 || n > 1e9) return { ok: false, why: 'bad_score' };
+  const v = Math.round(n);
+
+  const h = cleanHandle(handle);
+  const d = typeof detail === 'string' ? detail.replace(CONTROL, '').trim().slice(0, 40) : '';
+  const now = Date.now();
+
+  // "Better" depends on the board: most of these want the biggest number,
+  // the speed one wants the smallest. Doing this in SQL keeps the read and
+  // the write from disagreeing about which way is up.
+  const better = spec.dir === 'low' ? 'excluded.score < scores.score'
+                                    : 'excluded.score > scores.score';
+  db.prepare(`
+    INSERT INTO scores (board, token, handle, score, detail, at)
+    VALUES (?, ?, ?, ?, ?, ?)
+    ON CONFLICT(board, token) DO UPDATE SET
+      score  = CASE WHEN ${better} THEN excluded.score  ELSE scores.score  END,
+      detail = CASE WHEN ${better} THEN excluded.detail ELSE scores.detail END,
+      at     = CASE WHEN ${better} THEN excluded.at     ELSE scores.at     END,
+      handle = excluded.handle
+  `).run(board, token, h, v, d, now);
+
+  return Object.assign({ ok: true }, leaderboard(board, token));
+}
+
+function leaderboard(board, token) {
+  if (!ready()) return { ok: false, why: 'no_store' };
+  const spec = BOARDS[board];
+  if (!spec) return { ok: false, why: 'unknown_board' };
+  const order = spec.dir === 'low' ? 'ASC' : 'DESC';
+
+  const rows = db.prepare(
+    `SELECT handle, score, detail, at, token FROM scores
+     WHERE board = ? ORDER BY score ${order}, at ASC LIMIT 20`
+  ).all(board);
+
+  const total = db.prepare('SELECT COUNT(*) AS n FROM scores WHERE board = ?').get(board).n;
+
+  let mine = null;
+  if (okToken(token)) {
+    const row = db.prepare(
+      'SELECT handle, score, detail, at FROM scores WHERE board = ? AND token = ?'
+    ).get(board, token);
+    if (row) {
+      const ahead = db.prepare(
+        `SELECT COUNT(*) AS n FROM scores WHERE board = ? AND score ${spec.dir === 'low' ? '<' : '>'} ?`
+      ).get(board, row.score).n;
+      mine = Object.assign({ rank: ahead + 1 }, row);
+    }
+  }
+
+  // The token is how "yours" is marked and is never sent back out.
+  const top = rows.map((r, i) => ({
+    rank: i + 1,
+    handle: r.handle || 'anon',
+    score: r.score,
+    detail: r.detail,
+    at: r.at,
+    you: okToken(token) && r.token === token,
+  }));
+
+  return { ok: true, board, label: spec.label, dir: spec.dir, players: total, top, mine };
+}
+
+/* ---- guestbook ---------------------------------------------------- */
+
+const GUESTBOOK_PAGE = 50;
+
+function sign(token, handle, text) {
+  if (!ready()) return { ok: false, why: 'no_store' };
+  if (!okToken(token)) return { ok: false, why: 'bad_token' };
+  const c = cleanText(text);
+  if (!c.ok) return { ok: false, why: c.why };
+
+  // One signature every two minutes per browser. Slower than the per-IP
+  // gate in the server so a shared address does not lock a household out.
+  const recent = db.prepare(
+    'SELECT at FROM guestbook WHERE token = ? ORDER BY at DESC LIMIT 1'
+  ).get(token);
+  if (recent && Date.now() - recent.at < 2 * 60 * 1000) {
+    return { ok: false, why: 'too_soon', wait: 2 * 60 * 1000 - (Date.now() - recent.at) };
+  }
+
+  const info = db.prepare(
+    'INSERT INTO guestbook (token, handle, text, at) VALUES (?, ?, ?, ?)'
+  ).run(token, cleanHandle(handle), c.text, Date.now());
+
+  return Object.assign({ ok: true, id: Number(info.lastInsertRowid) }, guestbook(token, 0));
+}
+
+function guestbook(token, before) {
+  if (!ready()) return { ok: false, why: 'no_store' };
+  const cursor = Number(before);
+  const hasCursor = Number.isFinite(cursor) && cursor > 0;
+  const stmt = db.prepare(
+    'SELECT id, handle, text, at, token FROM guestbook ' +
+    (hasCursor ? 'WHERE id < ? ' : '') +
+    'ORDER BY id DESC LIMIT ' + GUESTBOOK_PAGE
+  );
+  const rows = hasCursor ? stmt.all(cursor) : stmt.all();
+
+  const total = db.prepare('SELECT COUNT(*) AS n FROM guestbook').get().n;
+  return {
+    ok: true, total,
+    entries: rows.map((r) => ({
+      id: r.id, handle: r.handle || 'anon', text: r.text, at: r.at,
+      you: okToken(token) && r.token === token,
+    })),
+    more: rows.length === GUESTBOOK_PAGE,
+  };
+}
+
+/* ---- the pixel canvas --------------------------------------------- */
+
+const CANVAS_W = 96, CANVAS_H = 64;
+const PALETTE_N = 16;          // the page's palette; only the index is stored
+const PIXEL_BUDGET = 8;        // per browser, per window
+const PIXEL_WINDOW = 30 * 60 * 1000;
+
+function place(token, spots) {
+  if (!ready()) return { ok: false, why: 'no_store' };
+  if (!okToken(token)) return { ok: false, why: 'bad_token' };
+  if (!Array.isArray(spots) || !spots.length) return { ok: false, why: 'nothing' };
+
+  const now = Date.now();
+  const used = db.prepare(
+    'SELECT COUNT(*) AS n FROM pixels WHERE token = ? AND at >= ?'
+  ).get(token, now - PIXEL_WINDOW).n;
+  const left = Math.max(0, PIXEL_BUDGET - used);
+  if (!left) return { ok: false, why: 'no_budget', budget: PIXEL_BUDGET, left: 0, resetsIn: PIXEL_WINDOW };
+
+  const take = spots.slice(0, left);
+  const stmt = db.prepare(
+    'INSERT INTO pixels (x, y, c, token, at) VALUES (?, ?, ?, ?, ?) ' +
+    'ON CONFLICT(x, y) DO UPDATE SET c = excluded.c, token = excluded.token, at = excluded.at'
+  );
+  let wrote = 0;
+  for (const s of take) {
+    const x = Math.round(Number(s && s.x)), y = Math.round(Number(s && s.y));
+    const c = Math.round(Number(s && s.c));
+    if (!Number.isFinite(x) || x < 0 || x >= CANVAS_W) continue;
+    if (!Number.isFinite(y) || y < 0 || y >= CANVAS_H) continue;
+    if (!Number.isFinite(c) || c < 0 || c >= PALETTE_N) continue;
+    stmt.run(x, y, c, token, now);
+    wrote++;
+  }
+  if (!wrote) return { ok: false, why: 'off_canvas' };
+  return Object.assign({ ok: true, wrote }, canvas(token));
+}
+
+function canvas(token) {
+  if (!ready()) return { ok: false, why: 'no_store' };
+  const rows = db.prepare('SELECT x, y, c FROM pixels').all();
+
+  // A flat array of x,y,c triples: at 96x64 the whole canvas is under
+  // 19 KB of JSON even when full, so there is no need for a diff protocol.
+  const flat = [];
+  for (const r of rows) { flat.push(r.x, r.y, r.c); }
+
+  const now = Date.now();
+  let left = PIXEL_BUDGET, resetsIn = 0;
+  if (okToken(token)) {
+    const mine = db.prepare(
+      'SELECT COUNT(*) AS n, MIN(at) AS first FROM pixels WHERE token = ? AND at >= ?'
+    ).get(token, now - PIXEL_WINDOW);
+    left = Math.max(0, PIXEL_BUDGET - mine.n);
+    resetsIn = mine.first ? Math.max(0, mine.first + PIXEL_WINDOW - now) : 0;
+  }
+  const painters = db.prepare('SELECT COUNT(DISTINCT token) AS n FROM pixels').get().n;
+
+  return { ok: true, w: CANVAS_W, h: CANVAS_H, palette: PALETTE_N,
+           px: flat, placed: rows.length, painters,
+           budget: PIXEL_BUDGET, left, resetsIn, window: PIXEL_WINDOW };
+}
+
+/* ---- the story ---------------------------------------------------- */
+
+const STORY_TAIL = 40;
+const SENTENCE_MAX = 180;
+const STORY_COOLDOWN = 60 * 1000;
+
+/* A sentence, not a paragraph and not an essay. The cap is tighter than
+   the bottles' and one line only, because the whole point is that the
+   next person gets to write the next bit. */
+function cleanSentence(raw) {
+  if (typeof raw !== 'string') return { ok: false, why: 'no_text' };
+  let t = raw.replace(CONTROL, '').replace(/\s+/g, ' ').trim();
+  if (!t) return { ok: false, why: 'empty' };
+  if (t.length > SENTENCE_MAX) return { ok: false, why: 'too_long' };
+  if (LINKY.test(t)) return { ok: false, why: 'no_links' };
+  return { ok: true, text: t };
+}
+
+function addSentence(token, text) {
+  if (!ready()) return { ok: false, why: 'no_store' };
+  if (!okToken(token)) return { ok: false, why: 'bad_token' };
+  const c = cleanSentence(text);
+  if (!c.ok) return { ok: false, why: c.why };
+
+  // Nobody writes the story on their own: one sentence a minute per
+  // browser, and never two in a row.
+  const last = db.prepare('SELECT token, at FROM story ORDER BY n DESC LIMIT 1').get();
+  if (last && last.token === token) return { ok: false, why: 'your_turn_passed' };
+
+  const mine = db.prepare('SELECT at FROM story WHERE token = ? ORDER BY n DESC LIMIT 1').get(token);
+  if (mine && Date.now() - mine.at < STORY_COOLDOWN) {
+    return { ok: false, why: 'too_soon', wait: STORY_COOLDOWN - (Date.now() - mine.at) };
+  }
+
+  const info = db.prepare(
+    'INSERT INTO story (text, token, at) VALUES (?, ?, ?)'
+  ).run(c.text, token, Date.now());
+
+  return Object.assign({ ok: true, added: Number(info.lastInsertRowid) }, story(token));
+}
+
+function story(token, from) {
+  if (!ready()) return { ok: false, why: 'no_store' };
+  const total = db.prepare('SELECT COUNT(*) AS n FROM story').get().n;
+
+  const start = Number(from);
+  const rows = Number.isFinite(start) && start > 0
+    ? db.prepare('SELECT n, text, token, at FROM story WHERE n >= ? ORDER BY n ASC LIMIT ?')
+        .all(start, STORY_TAIL)
+    : db.prepare('SELECT n, text, token, at FROM story ORDER BY n DESC LIMIT ?')
+        .all(STORY_TAIL).reverse();
+
+  const last = db.prepare('SELECT token FROM story ORDER BY n DESC LIMIT 1').get();
+  const mine = okToken(token)
+    ? db.prepare('SELECT at FROM story WHERE token = ? ORDER BY n DESC LIMIT 1').get(token)
+    : null;
+
+  return {
+    ok: true, total, max: SENTENCE_MAX,
+    lines: rows.map((r) => ({ n: r.n, text: r.text, at: r.at,
+                              you: okToken(token) && r.token === token })),
+    yoursIsLast: !!(last && okToken(token) && last.token === token),
+    waitFor: mine ? Math.max(0, mine.at + STORY_COOLDOWN - Date.now()) : 0,
+    contributors: db.prepare('SELECT COUNT(DISTINCT token) AS n FROM story').get().n,
+  };
+}
+
 module.exports = {
   ready, status, MAX_TEXT,
   castBottle, findBottle, markFound, bottleStats,
   seen, roster,
+  BOARDS, boardList, submitScore, leaderboard,
+  sign, guestbook,
+  place, canvas, CANVAS_W, CANVAS_H, PALETTE_N,
+  addSentence, story, SENTENCE_MAX,
 };
