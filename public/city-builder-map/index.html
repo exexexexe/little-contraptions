@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Build a City, One Street at a Time</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='4' fill='%23F1EDE2'/><path d='M2 12h28M2 21h28M11 2v28M21 2v28' stroke='%23A89C82' stroke-width='2'/><rect x='13' y='14' width='6' height='5' fill='%23C4703A'/></svg>">
+<style>
+:root{ color-scheme: light; }
+:root{
+  --paper:#F1EDE2;
+  --map:#F7F4EC;
+  --ink:#2A2620;
+  --ink-2:#5A5347;
+  --dim:#938C7C;
+  --rule:#CFC6B2;
+  --road:#B9AF98;
+  --major:#8C8371;
+  --water:#A8C4CE;
+  --park:#B7C9A3;
+  --build:#DCD3C0;
+  --accent:#C4703A;
+  --serif:"Iowan Old Style","Palatino Linotype",Georgia,serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);
+  background-image:repeating-linear-gradient(0deg, rgba(90,80,60,.025) 0 1px, transparent 1px 5px);
+  color:var(--ink);font-family:var(--serif);font-size:16px;
+  min-height:100vh;padding:24px 16px 84px;
+  display:flex;flex-direction:column;align-items:center;
+}
+.wrap{ max-width:900px;width:100% }
+
+header{ text-align:center;border-bottom:3px double var(--rule);padding-bottom:13px }
+h1{ margin:0;font-size:clamp(23px,5.2vw,35px);font-weight:400;color:var(--accent) }
+.sub{ margin-top:8px;font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim) }
+
+.city{ margin-top:16px;display:grid;grid-template-columns:1fr 250px;gap:12px }
+@media (max-width:760px){ .city{ grid-template-columns:1fr } }
+
+.mapbox{ background:var(--map);border:1px solid var(--rule);position:relative;overflow:hidden }
+.mapbox svg{ display:block;width:100%;height:auto }
+.mapbox .tip{
+  position:absolute;pointer-events:none;background:rgba(30,26,20,.92);color:#F4F0E6;
+  font-family:var(--mono);font-size:10.5px;padding:5px 9px;white-space:nowrap;
+  opacity:0;transition:opacity .12s;
+}
+.mapbox .tip.on{ opacity:1 }
+
+.side{ display:flex;flex-direction:column;gap:10px }
+.card{ background:var(--map);border:1px solid var(--rule);padding:13px 15px }
+.card h3{ margin:0 0 8px;font-family:var(--mono);font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);font-weight:700 }
+.card .name{ font-size:20px;line-height:1.25 }
+.card .m{ font-family:var(--mono);font-size:10.5px;color:var(--dim);margin-top:5px;line-height:1.7 }
+.card ul{ margin:0;padding:0;list-style:none;font-size:14px;line-height:1.75 }
+.card li{ display:flex;gap:8px;align-items:baseline }
+.card li i{ width:10px;height:10px;flex:0 0 auto;border-radius:2px }
+.card li span{ flex:1 }
+.card li b{ font-family:var(--mono);font-size:10px;color:var(--dim);font-weight:400 }
+
+.deck{ display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center }
+button{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;
+  background:var(--accent);color:#FBF6EC;border:1px solid var(--accent);
+  padding:12px 20px;cursor:pointer;font-weight:700;
+}
+button:hover{ background:#D4854F }
+button.sec{ background:transparent;color:var(--ink-2);border-color:var(--rule);font-weight:400 }
+button.sec:hover{ border-color:var(--accent);color:var(--accent) }
+button:focus-visible{ outline:2px solid var(--ink);outline-offset:2px }
+.seed{ margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--dim) }
+
+.namer{ margin-top:12px;background:var(--map);border:1px solid var(--rule);padding:13px 15px }
+.namer label{ display:block;font-family:var(--mono);font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin-bottom:7px }
+.namer .row{ display:flex;gap:8px;flex-wrap:wrap }
+input[type=text]{
+  flex:1;min-width:180px;font:inherit;font-size:15px;color:var(--ink);
+  background:#FDFBF5;border:1px solid var(--rule);padding:10px 11px;
+}
+input:focus{ outline:2px solid var(--accent);outline-offset:1px }
+.namer .said{ margin-top:9px;font-family:var(--mono);font-size:11px;line-height:1.75;color:var(--dim);min-height:1.6em }
+
+/* egg #15 — quiet, as asked */
+.nod{
+  margin-top:9px;border-left:3px solid var(--accent);padding:8px 0 8px 12px;
+  font-size:15px;line-height:1.65;color:var(--ink-2);
+}
+.nod b{ color:var(--accent);font-weight:400 }
+
+footer{
+  max-width:900px;width:100%;margin:22px auto 0;padding-top:14px;border-top:1px solid var(--rule);
+  font-family:var(--mono);font-size:10.5px;line-height:1.85;color:var(--dim);
+}
+footer a{ color:var(--accent) }
+
+/* ---------- shared: back to the cabinet ---------- */
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 var(--mono);
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } }
+</style>
+</head>
+<body>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<div class="wrap">
+  <header>
+    <h1>Build a City, One Street at a Time</h1>
+    <div class="sub">a place that does not exist &middot; drawn to scale anyway</div>
+  </header>
+
+  <div class="city">
+    <div class="mapbox" id="mapbox">
+      <svg id="map" viewBox="0 0 900 640" role="img" aria-label="A street map of an invented city"></svg>
+      <div class="tip" id="tip"></div>
+    </div>
+    <div class="side">
+      <div class="card"><h3>The city</h3><div class="name" id="cityname">—</div><div class="m" id="citym"></div></div>
+      <div class="card"><h3>Districts</h3><ul id="districts"></ul></div>
+      <div class="card"><h3>A few streets</h3><ul id="streets"></ul></div>
+    </div>
+  </div>
+
+  <div class="deck">
+    <button id="go" type="button">Found another city</button>
+    <button id="grow" class="sec" type="button">Give it another century</button>
+    <span class="seed" id="seed"></span>
+  </div>
+
+  <div class="namer">
+    <label for="street">Name a street yourself</label>
+    <div class="row">
+      <input type="text" id="street" maxlength="40" placeholder="whatever you like" autocomplete="off">
+      <button id="name" type="button">Put it on the map</button>
+    </div>
+    <div class="said" id="said"></div>
+    <div id="nod"></div>
+  </div>
+</div>
+
+<footer>
+  Every city, district and street name here is generated in your browser from word lists written for this
+  cabinet, and the layout is a procedural one seeded by the city's own name &mdash; so the same city
+  always comes out the same way, and a city nobody has generated has never existed anywhere. No real
+  place is being mapped, and any resemblance to an actual street is the arithmetic being unlucky.
+  Nothing is fetched and nothing you type is sent anywhere.
+  <a href="/">&larr; back to the cabinet</a>
+</footer>
+
+<script>
+'use strict';
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+/* ---- a seeded generator, so a city is reproducible ---------------- */
+function hash(str){
+  let h = 0x811c9dc5;
+  for (let i = 0; i < str.length; i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+  return h >>> 0;
+}
+function rngFrom(seed){
+  let a = seed >>> 0;
+  return function(){
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+let R = rngFrom(1);
+const rf = (a, b) => a + R() * (b - a);
+const ri = (a, b) => Math.floor(rf(a, b + 1));
+const pk = (arr) => arr[Math.floor(R() * arr.length)];
+
+/* ---- names --------------------------------------------------------- */
+const CITY_A = ['Ald','Bram','Cald','Dun','Ell','Far','Gald','Hal','Kes','Marl','Nor','Oster',
+  'Pen','Quar','Rav','Sten','Thorn','Ulv','Vess','Wold'];
+const CITY_B = ['bury','mouth','holm','ford','wick','stead','march','haven','bridge','gate',
+  'field','fell','strand','vik','borg','ness'];
+const DISTRICT_A = ['Old','Lower','Upper','New','North','South','Little','Great','Far','Inner','Outer'];
+const DISTRICT_B = ['Quarter','Gardens','Wharf','Rows','Kilns','Fields','Yard','Terrace','Bank',
+  'Meadows','Works','Bar','Green','Reach','Mill'];
+const ST_A = ['Cooper','Anchor','Lantern','Sparrow','Willow','Kiln','Cutler','Ferry','Chandler',
+  'Tanner','Marsh','Bell','Ropewalk','Gallow','Salter','Draper','Vintner','Pilgrim','Grain',
+  'Harrow','Wheelwright','Blackthorn','Hollow','Quarry','Fisher','Mason','Weaver','Turner'];
+const ST_B = ['Street','Lane','Row','Walk','Rise','Steps','Passage','Yard','Way','Close','Hill',
+  'Crescent','Bank','Gate','Alley'];
+const WATERS = ['the Kett','the Vess','the Slow','the Ard','the Marrow','the Nine','the Ochre'];
+const FOUNDED = ['a river crossing','a ferry','a salt works','a monastery','a garrison',
+  'a market that outgrew its village','a lighthouse and one very stubborn family',
+  'a bridge somebody built without asking'];
+const KNOWN = ['bell-founding','a very good market on Thursdays','an argument about the bridge',
+  'boat-building nobody wanted','the second-best cathedral in the region',
+  'a fog that arrives at the same hour every autumn','more bakeries than the population justifies',
+  'a football team that has never been promoted'];
+
+/* ---- the plan ------------------------------------------------------ *
+ *  A medieval core of irregular blocks near the crossing, a grid laid
+ *  over the newer half, one river, one park, and a ring road that gave
+ *  up halfway. Everything is derived from the seed, so a city keeps its
+ *  shape when you come back to it.
+ * ------------------------------------------------------------------ */
+const W = 900, H = 640;
+let city = null;
+
+function build(name, centuries){
+  R = rngFrom(hash(name));
+  const c = {
+    name,
+    centuries: centuries || 0,
+    water: pk(WATERS),
+    founded: pk(FOUNDED),
+    known: pk(KNOWN),
+    roads: [],
+    blocks: [],
+    districts: [],
+    streets: [],
+    park: null,
+    river: null
+  };
+
+  // the river: a wandering polyline across the map
+  const ry = rf(H * 0.35, H * 0.65);
+  const pts = [];
+  for (let x = -40; x <= W + 40; x += 60){
+    pts.push([x, ry + Math.sin(x / 130 + R() * 6) * 46 + rf(-14, 14)]);
+  }
+  c.river = pts;
+
+  // the grid, over the newer half
+  const gridX = ri(7, 11), gridY = ri(5, 8);
+  const gx0 = W * 0.42, gx1 = W - 30, gy0 = 40, gy1 = H - 40;
+  for (let i = 0; i <= gridX; i++){
+    const x = gx0 + (gx1 - gx0) * (i / gridX) + rf(-5, 5);
+    c.roads.push({ d: 'M' + x.toFixed(1) + ',' + gy0 + ' L' + x.toFixed(1) + ',' + gy1,
+                   major: i % 3 === 0 });
+  }
+  for (let j = 0; j <= gridY; j++){
+    const y = gy0 + (gy1 - gy0) * (j / gridY) + rf(-5, 5);
+    c.roads.push({ d: 'M' + gx0 + ',' + y.toFixed(1) + ' L' + gx1 + ',' + y.toFixed(1),
+                   major: j % 3 === 0 });
+  }
+
+  // the old town: roads that wander out from one point
+  const ox = W * 0.2, oy = ry;
+  const spokes = ri(6, 9);
+  for (let s = 0; s < spokes; s++){
+    let x = ox, y = oy;
+    let a = (s / spokes) * Math.PI * 2 + rf(-.3, .3);
+    let d = 'M' + x.toFixed(1) + ',' + y.toFixed(1);
+    const steps = ri(4, 8);
+    for (let k = 0; k < steps; k++){
+      a += rf(-.45, .45);
+      const len = rf(28, 62);
+      x += Math.cos(a) * len; y += Math.sin(a) * len;
+      x = Math.max(14, Math.min(W * 0.46, x));
+      y = Math.max(14, Math.min(H - 14, y));
+      d += ' L' + x.toFixed(1) + ',' + y.toFixed(1);
+    }
+    c.roads.push({ d, major: s % 3 === 0, old: true });
+  }
+
+  // a ring that gave up
+  const rr = rf(210, 280);
+  const start = rf(0, Math.PI * 2), sweep = rf(Math.PI * 0.9, Math.PI * 1.7);
+  let d = '';
+  for (let t = 0; t <= 1.001; t += 0.04){
+    const a = start + sweep * t;
+    const x = W * 0.42 + Math.cos(a) * rr * 1.25;
+    const y = ry + Math.sin(a) * rr * 0.8;
+    d += (d ? ' L' : 'M') + x.toFixed(1) + ',' + y.toFixed(1);
+  }
+  c.roads.push({ d, ring: true, major: true });
+
+  // buildings: little rectangles in the blocks
+  for (let i = 0; i < 260 + (c.centuries * 60); i++){
+    const inOld = R() < 0.45;
+    const x = inOld ? rf(30, W * 0.42) : rf(W * 0.44, W - 30);
+    const y = rf(30, H - 30);
+    const w = inOld ? rf(5, 12) : rf(8, 18);
+    const h = inOld ? rf(5, 12) : rf(6, 14);
+    // keep buildings out of the river
+    const riverY = ry + Math.sin(x / 130) * 46;
+    if (Math.abs(y - riverY) < 26) continue;
+    c.blocks.push([x, y, w, h]);
+  }
+
+  // One park. Its name comes from its own word list rather than the
+  // district one, because a park called "North Gardens" sitting next to
+  // a district called "North Gardens" reads as a bug rather than as a
+  // coincidence — and it happened on the first city generated.
+  const PARK_A = ['Founder’s','Cutler’s','Weaver’s','Bridge','Abbey','Castle','Chapel',
+                  'Merchant’s','Sailor’s','Wheelwright’s'];
+  const PARK_B = ['Park','Green','Common','Meadow','Ground','Walk'];
+  c.park = { x: rf(W * 0.5, W * 0.78), y: rf(60, H - 170), w: rf(90, 170), h: rf(70, 130),
+             name: pk(PARK_A) + ' ' + pk(PARK_B) };
+
+  // districts
+  const seen = new Set();
+  for (let i = 0; i < 5; i++){
+    let n = pk(DISTRICT_A) + ' ' + pk(DISTRICT_B);
+    let guard = 0;
+    while (seen.has(n) && guard++ < 20) n = pk(DISTRICT_A) + ' ' + pk(DISTRICT_B);
+    seen.add(n);
+    c.districts.push({ n, x: rf(60, W - 60), y: rf(50, H - 50),
+                       colour: ['#C4703A','#6E8C5A','#5A7A96','#96665A','#8A7A4A'][i] });
+  }
+
+  // named streets
+  const st = new Set();
+  for (let i = 0; i < 8; i++){
+    let n = pk(ST_A) + ' ' + pk(ST_B);
+    let guard = 0;
+    while (st.has(n) && guard++ < 20) n = pk(ST_A) + ' ' + pk(ST_B);
+    st.add(n);
+    c.streets.push({ n, note: pk(['the old one','widened in error','one-way, wrongly',
+      'nobody parks here','cobbled, still','renamed twice','the good end','the other end']) });
+  }
+
+  return c;
+}
+
+function draw(c){
+  const river = 'M' + c.river.map((p) => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' L');
+  $('map').innerHTML =
+    '<rect width="' + W + '" height="' + H + '" fill="#F7F4EC"/>' +
+    // park
+    '<rect x="' + c.park.x.toFixed(1) + '" y="' + c.park.y.toFixed(1) + '" width="' + c.park.w.toFixed(1) +
+      '" height="' + c.park.h.toFixed(1) + '" rx="10" fill="#B7C9A3" opacity=".8"/>' +
+    // river
+    '<path d="' + river + '" fill="none" stroke="#A8C4CE" stroke-width="26" stroke-linecap="round"/>' +
+    '<path d="' + river + '" fill="none" stroke="#93B5C2" stroke-width="1" opacity=".7"/>' +
+    // buildings
+    '<g fill="#DCD3C0">' + c.blocks.map((b) =>
+      '<rect x="' + b[0].toFixed(1) + '" y="' + b[1].toFixed(1) + '" width="' + b[2].toFixed(1) +
+      '" height="' + b[3].toFixed(1) + '"/>').join('') + '</g>' +
+    // roads
+    '<g fill="none" stroke-linecap="round">' + c.roads.map((r) =>
+      '<path d="' + r.d + '" stroke="' + (r.major ? '#8C8371' : '#B9AF98') +
+      '" stroke-width="' + (r.major ? 3.4 : 1.8) + '"/>').join('') + '</g>' +
+    // district labels
+    c.districts.map((d) =>
+      '<text x="' + d.x.toFixed(1) + '" y="' + d.y.toFixed(1) + '" fill="' + d.colour +
+      '" font-size="13" font-family="Iowan Old Style, Georgia, serif" text-anchor="middle" ' +
+      'opacity=".9">' + esc(d.n) + '</text>').join('') +
+    '<text x="' + (c.park.x + c.park.w / 2).toFixed(1) + '" y="' + (c.park.y + c.park.h / 2).toFixed(1) +
+      '" fill="#57703F" font-size="12" font-family="Iowan Old Style, Georgia, serif" ' +
+      'text-anchor="middle">' + esc(c.park.name) + '</text>';
+}
+
+function paint(c){
+  draw(c);
+  $('cityname').textContent = c.name;
+  $('citym').textContent = 'On ' + c.water + ' · founded on ' + c.founded +
+    (c.centuries ? ' · ' + c.centuries + ' further ' + (c.centuries === 1 ? 'century' : 'centuries') + ' of growth' : '') +
+    '. Known for ' + c.known + '.';
+  $('districts').innerHTML = c.districts.map((d) =>
+    '<li><i style="background:' + d.colour + '"></i><span>' + esc(d.n) + '</span></li>').join('');
+  $('streets').innerHTML = c.streets.map((s) =>
+    '<li><span>' + esc(s.n) + '</span><b>' + esc(s.note) + '</b></li>').join('');
+  $('seed').textContent = 'seed ' + hash(c.name).toString(36);
+}
+
+function found(){
+  R = rngFrom(Date.now() ^ Math.floor(Math.random() * 1e9));
+  const name = pk(CITY_A) + pk(CITY_B);
+  city = build(name, 0);
+  paint(city);
+}
+
+$('go').addEventListener('click', found);
+$('grow').addEventListener('click', () => {
+  if (!city) return;
+  city = build(city.name, city.centuries + 1);
+  paint(city);
+});
+
+/* ---- egg #15 -------------------------------------------------------- *
+ *  Name a street after a real Stockholm one and the map says something
+ *  small and does not make a fuss about it. The list is real streets and
+ *  squares; the match ignores the Swedish suffix so "Drottninggatan",
+ *  "Drottning gatan" and "drottning" all land.
+ * ------------------------------------------------------------------ */
+const STOCKHOLM = [
+  ['drottninggatan', 'the long one, running north out of the middle of town'],
+  ['sveavägen',      'the broad one, all the way up to the observatory hill'],
+  ['kungsgatan',     'the one with the two towers at either end of it'],
+  ['birger jarlsgatan', 'the one named after the man who is supposed to have founded the place'],
+  ['götgatan',       'the long climb up through Södermalm'],
+  ['hornsgatan',     'the one along the ridge, with the puckeln in the middle'],
+  ['strandvägen',    'the waterfront one with all the expensive windows'],
+  ['västerlånggatan','the crooked one down in the old town'],
+  ['österlånggatan', 'the other crooked one down in the old town'],
+  ['stureplan',      'strictly a square, and the one with the concrete mushroom'],
+  ['sergels torg',   'the one with the triangles on the floor'],
+  ['odengatan',      'the one that runs past the library'],
+  ['ringvägen',      'the one that goes most of the way round Söder'],
+  ['folkungagatan',  'the one that runs down to the water at the other end'],
+  ['skeppsbron',     'the quay along the front of the old town'],
+  ['norrlandsgatan', 'a short one, and mostly offices'],
+  ['fleminggatan',   'the long one through Kungsholmen'],
+  ['karlavägen',     'the one with the trees down the middle'],
+  ['valhallavägen',  'the wide one out past the stadium'],
+  ['bergsgatan',     'the one behind the courthouse']
+];
+
+function normalise(s){
+  return s.toLowerCase()
+    .replace(/[^a-zåäöéèü\s]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+function stockholmMatch(input){
+  const n = normalise(input);
+  if (!n) return null;
+  for (const [street, what] of STOCKHOLM){
+    if (n === street || n === street.replace(/\s/g, '')) return { street, what, exact: true };
+    // "drottning gatan" and "drottning" both count
+    const stem = street.replace(/(gatan|vägen|torg|bron|plan)$/, '').trim();
+    if (stem.length > 4 && (n.startsWith(stem) || n.replace(/\s/g, '').startsWith(stem))){
+      return { street, what, exact: false };
+    }
+  }
+  return null;
+}
+
+$('name').addEventListener('click', () => {
+  const raw = $('street').value.trim();
+  if (!city || !raw){ $('said').textContent = 'Type a name first.'; return; }
+
+  // it really does go on the map
+  city.streets.unshift({ n: raw, note: 'yours' });
+  city.streets = city.streets.slice(0, 9);
+  paint(city);
+  $('said').textContent = '“' + raw + '” has been added to ' + city.name + '.';
+
+  const nod = stockholmMatch(raw);
+  $('nod').innerHTML = nod
+    ? '<div class="nod">The surveyor pauses over that one. There is a real ' +
+      '<b>' + esc(nod.street.replace(/\b\w/g, (m) => m.toUpperCase())) + '</b> ' +
+      'in Stockholm &mdash; ' + esc(nod.what) + '. It has been noted in the margin and nobody ' +
+      'is going to make anything of it.</div>'
+    : '';
+  $('street').value = '';
+});
+$('street').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('name').click(); });
+
+found();
+
+window.__city = { found, build, paint, stockholmMatch, get city(){ return city; } };
+</script>
+</body>
+</html>

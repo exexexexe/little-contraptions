@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Declassified Search History</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='4' fill='%23F4F1E8'/><rect x='5' y='7' width='22' height='3' fill='%23222'/><rect x='5' y='13' width='16' height='3' fill='%23222'/><rect x='5' y='19' width='20' height='3' fill='%23C0392B'/><rect x='5' y='25' width='11' height='3' fill='%23222'/></svg>">
+<style>
+:root{ color-scheme: light; }
+:root{
+  --paper:#EFEBE0;
+  --sheet:#FAF8F1;
+  --ink:#1C1A16;
+  --ink-2:#4A463C;
+  --dim:#8A8578;
+  --rule:#C9C3B2;
+  --red:#B03A2E;
+  --stamp:#8A2B22;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --type:"Courier New",Courier,ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);
+  background-image:
+    radial-gradient(60% 40% at 18% 0%, rgba(0,0,0,.05), transparent 62%),
+    repeating-linear-gradient(0deg, rgba(0,0,0,.018) 0 1px, transparent 1px 4px);
+  color:var(--ink);font-family:var(--type);font-size:14px;
+  min-height:100vh;padding:24px 16px 84px;
+  display:flex;flex-direction:column;align-items:center;
+}
+.wrap{ max-width:760px;width:100% }
+
+/* ---------- the file ---------- */
+.file{
+  background:var(--sheet);border:1px solid var(--rule);
+  box-shadow:0 14px 34px rgba(60,50,30,.14);
+  padding:26px clamp(18px,4.4vw,40px) 28px;position:relative;
+}
+.file::before{
+  content:'';position:absolute;left:0;right:0;top:0;height:5px;
+  background:repeating-linear-gradient(90deg,var(--ink) 0 22px,transparent 22px 34px);
+  opacity:.75;
+}
+.hdr{ display:flex;gap:14px;flex-wrap:wrap;align-items:baseline;border-bottom:2px solid var(--ink);padding-bottom:11px }
+.hdr h1{ margin:0;font-size:clamp(16px,3.6vw,22px);letter-spacing:.16em;text-transform:uppercase;font-weight:700 }
+.hdr .no{ margin-left:auto;font-size:11px;letter-spacing:.14em;color:var(--dim) }
+.meta{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:9px 18px;
+  margin-top:13px;font-size:11.5px;line-height:1.7;color:var(--ink-2);
+}
+.meta b{ display:block;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);font-weight:700 }
+
+.stamp{
+  position:absolute;right:clamp(14px,4vw,38px);top:52px;
+  border:3px solid var(--stamp);color:var(--stamp);
+  font-size:13px;letter-spacing:.22em;text-transform:uppercase;font-weight:700;
+  padding:6px 12px;transform:rotate(-9deg);opacity:.82;
+}
+@media (max-width:620px){ .stamp{ position:static;display:inline-block;transform:none;margin-top:12px } }
+
+/* ---------- the log ---------- */
+.log{ margin-top:20px }
+.q{
+  display:flex;gap:12px;align-items:baseline;padding:8px 0;
+  border-bottom:1px dotted var(--rule);
+  animation:in .3s ease-out both;
+}
+@keyframes in{ from{ opacity:0;transform:translateX(-6px) } to{ opacity:1;transform:none } }
+.q .t{ flex:0 0 auto;font-size:11px;color:var(--dim);letter-spacing:.04em;width:5.5em }
+.q .s{ flex:1;line-height:1.5;font-size:15px }
+.q .n{ flex:0 0 auto;font-size:10.5px;color:var(--dim) }
+.q.redacted .s{ background:var(--ink);color:transparent;user-select:none;border-radius:1px }
+.q.late .s{ color:var(--red) }
+.q.meta .s{ color:#2A5C8A }
+
+.gap{
+  text-align:center;font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);
+  padding:12px 0;
+}
+
+.deck{ display:flex;gap:8px;flex-wrap:wrap;margin-top:18px;align-items:center }
+button{
+  font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+  background:var(--ink);color:var(--sheet);border:1px solid var(--ink);
+  padding:11px 18px;cursor:pointer;font-weight:700;
+}
+button:hover{ background:#33302A }
+button.sec{ background:transparent;color:var(--ink-2);border-color:var(--rule);font-weight:400 }
+button.sec:hover{ border-color:var(--ink);color:var(--ink) }
+button:focus-visible{ outline:2px solid var(--red);outline-offset:2px }
+.deck .idle{ margin-left:auto;font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;color:var(--dim) }
+
+footer{
+  max-width:760px;width:100%;margin:24px auto 0;padding-top:14px;border-top:1px solid var(--rule);
+  font-family:var(--mono);font-size:10.5px;line-height:1.85;color:var(--dim);
+}
+footer a{ color:var(--red) }
+
+/* ---------- shared: back to the cabinet ---------- */
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 var(--mono);
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } .q{ animation:none } }
+</style>
+</head>
+<body>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<div class="wrap">
+  <div class="file">
+    <div class="stamp">Declassified</div>
+    <div class="hdr">
+      <h1>Search History</h1>
+      <span class="no" id="fileno"></span>
+    </div>
+    <div class="meta" id="meta"></div>
+    <div class="log" id="log"></div>
+  </div>
+
+  <div class="deck">
+    <button id="go" type="button">Release another file</button>
+    <button id="more" class="sec" type="button">Later that night</button>
+    <span class="idle" id="idle"></span>
+  </div>
+</div>
+
+<footer>
+  There is no data here. The subject does not exist, the file number is made up, the timestamps are
+  generated, and every line was written for this cabinet out of word lists on this page. Nothing was
+  leaked, nothing was scraped, and nothing about you is read or recorded &mdash; this page has no
+  access to your history and would not want it. It is a joke about the shape of a bad night, not about
+  anybody in particular.
+  <a href="/">&larr; back to the cabinet</a>
+</footer>
+
+<script>
+'use strict';
+const $ = (id) => document.getElementById(id);
+const pick = (a) => a[Math.floor(Math.random() * a.length)];
+const ri = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+/* ------------------------------------------------------------------ *
+ *  Nobody's search history.
+ *
+ *  Five tiers, escalating. The point of the joke is the SLOPE — a
+ *  perfectly reasonable question at 21:40 and the same person at 03:12 —
+ *  so the generator picks one line per tier in order and lets the
+ *  timestamps do the work.
+ * ------------------------------------------------------------------ */
+const TIERS = [
+  [ // 1 — entirely reasonable
+    'what time does the post office close',
+    'how long do you boil an egg',
+    'is it supposed to rain thursday',
+    'bank holiday 2027 dates',
+    'best value dishwasher tablets',
+    'how to get a wine stain out of a rug',
+    'is 8000 steps enough',
+    'why does my radiator click'
+  ],
+  [ // 2 — the first wobble
+    'is it normal for a fridge to be this loud',
+    'how far can you actually see on a clear day',
+    'what happened to the man who invented the pringles can',
+    'do fish sleep',
+    'why is the sky blue but the sea is not',
+    'is a tomato technically a berry yes or no',
+    'how much of the ocean is unexplored actually',
+    'can a duck live in a flat'
+  ],
+  [ // 3 — the wheels are coming off
+    'how much would it cost to buy a lighthouse',
+    'can you legally rename yourself something with a number in it',
+    'is it illegal to keep a bee',
+    'how many push ups until people notice',
+    'do owls know they are owls',
+    'what is the maximum legal length of a scarf',
+    'can i be buried in the garden uk',
+    'is there a word for the feeling of a tuesday',
+    'how do you become a lighthouse keeper realistically'
+  ],
+  [ // 4 — three in the morning
+    'am i the same person as yesterday technically',
+    'what were people worrying about in 1830',
+    'if i moved abroad would anyone stop me',
+    'how long could i survive in a normal supermarket',
+    'do other people hear their own voice like this',
+    'is it too late to learn the cello 34',
+    'what happens to the internet if everyone logs off at once',
+    'is my ceiling load bearing (assume the worst)',
+    'how many hours have i spent looking at a rectangle'
+  ],
+  [ // 5 — the last one before the phone is put down
+    'how to become a lighthouse keeper (serious enquiries)',
+    'is it weird to write to a lighthouse',
+    'can you apologise to a building',
+    'what is the smallest number of people who can start a village',
+    'is anyone else awake',
+    'how do you know when a decision is a decision',
+    'lighthouse keeper vacancies 2027 no experience'
+  ]
+];
+
+const REDACTABLE = 0.12;
+
+const AGENCIES = ['Directorate of Domestic Curiosity','Office of Unremarkable Records',
+  'Bureau of Late-Night Enquiry','Standing Committee on Private Questions',
+  'Department of Nobody in Particular'];
+const CLASSES = ['Restricted — routine','Confidential — dull','Secret — mostly embarrassing',
+  'Eyes only — nobody asked'];
+const SUBJECTS = ['SUBJECT 14','SUBJECT B','THE OCCUPANT','PERSON OF NO INTEREST','SUBJECT 9-A'];
+
+let startedAt = 0;
+let lines = [];
+let extraTier = 0;
+
+function stamp(minutesFromStart){
+  const base = 21 * 60 + 40;          // the evening starts at 21:40
+  const t = (base + minutesFromStart) % (24 * 60);
+  return String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0');
+}
+
+function lineHTML(text, minutes, i, cls){
+  return '<div class="q ' + (cls || '') + '" style="animation-delay:' + (i * 0.05).toFixed(2) + 's">' +
+    '<span class="t">' + stamp(minutes) + '</span>' +
+    '<span class="s">' + esc(text) + '</span>' +
+    '<span class="n">' + String(i + 1).padStart(2, '0') + '</span></div>';
+}
+
+function release(){
+  extraTier = 0;
+  lines = [];
+  let mins = 0;
+  const perTier = [2, 2, 3, 3, 2];
+
+  TIERS.forEach((tier, ti) => {
+    const pool = tier.slice();
+    for (let i = 0; i < perTier[ti]; i++){
+      const q = pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
+      mins += ri(2, 26) + ti * 8;
+      lines.push({ q, mins, tier: ti });
+    }
+  });
+
+  $('fileno').textContent = 'FILE ' + ri(100, 999) + '/' + ri(10, 99) + '-' + pick('ABCDEFGH');
+  $('meta').innerHTML =
+    '<div><b>Originating body</b>' + esc(pick(AGENCIES)) + '</div>' +
+    '<div><b>Classification</b>' + esc(pick(CLASSES)) + '</div>' +
+    '<div><b>Subject</b>' + esc(pick(SUBJECTS)) + '</div>' +
+    '<div><b>Period covered</b>one evening</div>';
+
+  paint();
+  startedAt = Date.now();
+  metaFired = false;
+}
+
+function paint(){
+  let html = '';
+  lines.forEach((l, i) => {
+    if (i > 0 && lines[i].mins - lines[i - 1].mins > 40){
+      html += '<div class="gap">— ' + (lines[i].mins - lines[i - 1].mins) + ' minutes unaccounted for —</div>';
+    }
+    // Whether a line is redacted is decided once, when the line is made,
+    // not on every repaint — otherwise the black bars would jump around
+    // every time "later that night" added a line.
+    if (l.redacted === undefined) l.redacted = l.tier < 3 && Math.random() < REDACTABLE;
+    const cls = l.meta ? 'meta' : ((l.tier >= 3 ? 'late' : '') + (l.redacted ? ' redacted' : ''));
+    html += lineHTML(l.q, l.mins, i, cls.trim());
+  });
+  $('log').innerHTML = html;
+}
+
+/* "Later that night" pushes further into the last tier rather than
+   restarting, so the escalation keeps going. */
+const DEEPER = [
+  'is the lighthouse thing a real feeling or is it just late',
+  'how many people have looked up lighthouse vacancies tonight',
+  'what is the opposite of a lighthouse',
+  'can you get planning permission for one lighthouse',
+  'is it fine to want to be somewhere with one job'
+];
+$('more').addEventListener('click', () => {
+  extraTier++;
+  const last = lines[lines.length - 1];
+  lines.push({ q: pick(DEEPER), mins: last.mins + ri(18, 70), tier: 4 });
+  paint();
+});
+
+/* ---- egg #8 -------------------------------------------------------- *
+ *  Leave the file open and untouched for long enough and one more line
+ *  appears, timestamped now, and it is about you rather than about the
+ *  subject. The timer resets on any interaction, so it only ever
+ *  happens to somebody who genuinely walked away.
+ * ------------------------------------------------------------------ */
+const IDLE_MS = 75 * 1000;
+const META_LINES = [
+  'how to close this tab',
+  'how long have i been looking at somebody else’s search history',
+  'is reading a fake search history a hobby',
+  'what time is it actually'
+];
+let metaFired = false;
+let lastPoke = Date.now();
+
+function poke(){
+  lastPoke = Date.now();
+  if (!metaFired) $('idle').textContent = '';
+}
+['pointerdown','keydown','wheel','touchstart','scroll'].forEach((ev) =>
+  window.addEventListener(ev, poke, { passive: true }));
+
+setInterval(() => {
+  if (document.hidden || metaFired) return;
+  const idle = Date.now() - lastPoke;
+  if (idle > IDLE_MS){
+    metaFired = true;
+    $('idle').textContent = '';
+    const last = lines[lines.length - 1];
+    const now = new Date();
+    lines.push({ q: pick(META_LINES), mins: last.mins + ri(30, 90), meta: true, tier: 5 });
+    paint();
+    // and the file quietly changes whose it is
+    const subj = $('meta').querySelector('div:nth-child(3)');
+    if (subj) subj.innerHTML = '<b>Subject</b>whoever left this open';
+  } else if (idle > IDLE_MS - 25000){
+    $('idle').textContent = 'the file is still open';
+  }
+}, 2000);
+
+$('go').addEventListener('click', release);
+release();
+
+window.__declass = { release, lines: () => lines, IDLE_MS,
+                     forceIdle: () => { lastPoke = 0; },
+                     fired: () => metaFired };
+</script>
+</body>
+</html>
