@@ -50,14 +50,12 @@ The hub filters them by the tag on each card.
 | 28 | [Civilizations, Ranked](/civilizations/) | scroll story | Up the Kardashev scale — build a Dyson swarm, send a message through a wormhole. |
 | 29 | [The Loot Terminal](/loot-terminal/) | generator | Fantasy item appraisal with a compendium that persists in the browser. |
 
-Still to build: Movie night. `TMDB_API_KEY` is plumbed through `/api/keys` and gates nothing,
-because the toy itself was never written — no page, no route, no markup, in this tree or anywhere
-in the history. Setting the key today would change nothing you can see.
+(The table above stops at 29; the hub itself is at 109. Bringing it up to date is on the list.)
 
 `/api/keys` reports which optional keys are configured — `nasa`, `tmdb`, `groq`, `pexels` — plus
 `store`, which is not a key but says whether the shared database is open. `pexels` gates
-`/atmosphere/`; `store` gates `/message-in-a-bottle/` and `/who-else-is-here/`. Each says so on
-its own page and nothing else is affected.
+`/atmosphere/`; `tmdb` gates `/movie-night/`; `store` gates `/message-in-a-bottle/` and
+`/who-else-is-here/`. Each says so on its own page and nothing else is affected.
 
 `GROQ_API_KEY` powers `POST /api/generate`, the shared text-generation route used by
 what-beats-this, character-match, universes-colliding, espionage, bureaucracy and
@@ -141,6 +139,7 @@ nothing moves at all until a hand is on the cradle.
     /api/where             coarse location from the caller's IP, 6 h cache
     /api/photos?mode=      Pexels relay for /atmosphere/, fixed search list, 1 h cache
     /api/preview?title=&artist=  Deezer metadata relay for /europop-guesser/, no key needed
+    /api/movie?mood=       TMDB relay for /movie-night/, TMDB_API_KEY, 6 h pool cache
     /api/presence          POST: record this visit by city, GET: today's roster
     /api/bottle            GET: a surfaced note at random, POST: cast one
     /api/bottle/found      POST: mark a note as actually read
@@ -157,6 +156,18 @@ straight from Deezer, whose CDN does send `Access-Control-Allow-Origin: *`. Prev
 and expire, so a fresh one is fetched each round. Spotify was considered and rejected: its
 `preview_url` is now marked deprecated and nullable, needs OAuth, and its terms say preview clips
 may not be offered as a standalone product.
+
+`/api/movie` needs `TMDB_API_KEY` and answers one film, never a list — `/movie-night/` deals a
+single card and the route is shaped to match. The moods are a fixed allowlist on the server, like
+the RSS and photo relays, so the browser cannot turn it into a free TMDB proxy. Two upstream calls
+per deal: `/discover/movie` for the pool (cached six hours, so a veto costs only the second call)
+and `/movie/{id}` for the runtime, tagline and watch providers, which discover does not return.
+
+Two things about TMDB that had to be found by trying rather than by reading: `with_genres` treats
+`,` as AND and `|` as OR, so a comma asks for films that are both action *and* adventure (964 rows
+against 3,877); and the discover index disagrees with the detail records about runtime — id 4105
+answers a `with_runtime.lte=120` query and then reports 125 minutes. The route therefore checks the
+runtime again after fetching details and deals another card if the cap was broken.
 
 `/api/photos` needs `PEXELS_API_KEY` and answers `200 {ok:false, reason:"no_key"}` without one, so
 `/atmosphere/` shows an honest needs-a-key panel instead of failing. `mode` is `nostalgia` or

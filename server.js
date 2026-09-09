@@ -1161,6 +1161,260 @@ async function handleApi(req, res, url) {
     return sendJson(res, 200, store.markFound(body.id));
   }
 
+  /* ------------------------------------------------------------------ *
+   *  Tonight's film (TMDB).
+   *
+   *  Movie night deals one card, so this route answers with exactly one
+   *  film — never a list. The browser never sees the key and never picks
+   *  the query: the moods below are a fixed allowlist, like the RSS and
+   *  photo relays, so this cannot be turned into a free TMDB proxy on
+   *  somebody else's quota.
+   *
+   *  Two upstream calls per deal:
+   *    1. /discover/movie  — the filtered pool. Cached for six hours,
+   *       so vetoing costs only the second call.
+   *    2. /movie/{id}      — runtime and tagline, which discover does not
+   *       return, plus watch/providers for "where you can see it".
+   *
+   *  A tight combination often matches nothing at all (documentaries,
+   *  2020s, well-known: zero rows on 9 Sep 2026). Rather than shrug, the
+   *  route walks a relaxation ladder and reports which rung it landed on,
+   *  so the page can say what it had to give up.
+   *
+   *  Watch-provider data is JustWatch's, via TMDB, and both are credited
+   *  on the page as their terms ask.
+   * ------------------------------------------------------------------ */
+  if (path === '/api/movie') {
+    // Genre ids are TMDB's own. The separator matters: discover reads "," as
+    // AND and "|" as OR, so a comma here would ask for films that are both
+    // action *and* adventure. Measured: 28,12 gives 964 rows, 28|12 gives 3877.
+    const MOODS = {
+      moving:   { label: 'something that moves',   genres: '28|12' },       // action, adventure
+      funny:    { label: 'make me laugh',          genres: '35' },          // comedy
+      scary:    { label: 'scare me',               genres: '27' },          // horror
+      feeling:  { label: 'something to feel',      genres: '18|10749' },    // drama, romance
+      elsewhere:{ label: 'somewhere else',         genres: '878|14' },      // sci-fi, fantasy
+      puzzle:   { label: 'keep me guessing',       genres: '9648|80|53' },  // mystery, crime, thriller
+      light:    { label: 'nothing heavy',          genres: '16|10751' },    // animation, family
+      real:     { label: 'something true',         genres: '99|36' },       // documentary, history
+    };
+    const DECADES = {
+      '1960s': ['1960-01-01', '1969-12-31'], '1970s': ['1970-01-01', '1979-12-31'],
+      '1980s': ['1980-01-01', '1989-12-31'], '1990s': ['1990-01-01', '1999-12-31'],
+      '2000s': ['2000-01-01', '2009-12-31'], '2010s': ['2010-01-01', '2019-12-31'],
+      '2020s': ['2020-01-01', '2029-12-31'],
+    };
+    const FAME = {                       // how far off the beaten path to go
+      known:   { min: 1200 },            // you have probably heard of it
+      any:     { min: 250 },
+      obscure: { min: 80, max: 900 },    // rated by few enough people to be a find
+    };
+
+    const mood = MOODS[String(url.searchParams.get('mood') || '').toLowerCase()];
+    if (!mood) {
+      return sendJson(res, 400, { error: 'unknown_mood', allowed: Object.keys(MOODS) });
+    }
+    const decade = DECADES[url.searchParams.get('decade')] || null;
+    const lengthCap = [90, 120].includes(parseInt(url.searchParams.get('length'), 10))
+      ? parseInt(url.searchParams.get('length'), 10) : null;
+    const fame = FAME[url.searchParams.get('fame')] || FAME.any;
+
+    if (!process.env.TMDB_API_KEY) {
+      // A state the page renders, not an error it has to catch.
+      return sendJson(res, 200, { ok: false, reason: 'no_key' });
+    }
+
+    // Ids already dealt tonight, so a veto never hands back the same film.
+    const seen = String(url.searchParams.get('seen') || '')
+      .split(',').map((n) => parseInt(n, 10)).filter((n) => n > 0).slice(0, 40);
+
+    // The ladder. Rung 0 is what was asked for; each rung after it gives up
+    // more, cheapest constraint first. Each carries the full list of what it
+    // dropped relative to the request — not just the newest omission — so the
+    // page can say "I ignored the decade and how well known it is" and be
+    // telling the truth. Constraints that were never set are never "given up".
+    const rungs = [{ decade, lengthCap, fame, dropped: [] }];
+    const askedFame = fame !== FAME.any;
+    if (askedFame) rungs.push({ decade, lengthCap, fame: FAME.any, dropped: ['fame'] });
+    if (lengthCap) {
+      rungs.push({ decade, lengthCap: null, fame: FAME.any,
+        dropped: askedFame ? ['fame', 'length'] : ['length'] });
+    }
+    if (decade) {
+      rungs.push({ decade: null, lengthCap, fame: FAME.any,
+        dropped: askedFame ? ['fame', 'decade'] : ['decade'] });
+    }
+    const all = ['fame', 'length', 'decade'].filter((k) =>
+      (k === 'fame' && askedFame) || (k === 'length' && lengthCap) || (k === 'decade' && decade));
+    rungs.push({ decade: null, lengthCap: null, fame: FAME.any, dropped: all });
+
+    const base = 'https://api.themoviedb.org/3';
+    const key = process.env.TMDB_API_KEY;
+    const MIN_RUNTIME = 60;              // below this it is a short, not a night
+
+    async function poolFor(rung, page) {
+      const p = new URLSearchParams({
+        api_key: key,
+        include_adult: 'false',
+        include_video: 'false',
+        language: 'en-US',
+        sort_by: 'vote_count.desc',
+        with_genres: mood.genres,
+        page: String(page),
+      });
+      p.set('vote_count.gte', String(rung.fame.min));
+      if (rung.fame.max) p.set('vote_count.lte', String(rung.fame.max));
+      // A floor, always. Without it the animation and documentary pools deal
+      // eight-minute shorts, which is not what anyone means by a movie night.
+      p.set('with_runtime.gte', String(MIN_RUNTIME));
+      if (rung.decade) {
+        p.set('primary_release_date.gte', rung.decade[0]);
+        p.set('primary_release_date.lte', rung.decade[1]);
+      }
+      if (rung.lengthCap) p.set('with_runtime.lte', String(rung.lengthCap));
+
+      const ck = 'movie:' + mood.genres + ':' + (rung.decade ? rung.decade[0] : 'any') +
+        ':' + (rung.lengthCap || 'any') + ':' + rung.fame.min + ':' + (rung.fame.max || 0) + ':' + page;
+      const hit = cacheGet(ck);
+      if (hit) return hit.body;
+
+      const up = await fetchUpstream(base + '/discover/movie?' + p.toString(), { Accept: 'application/json' });
+      if (up.status === 401) throw new Error('bad_key');
+      if (up.status >= 400) throw new Error('upstream_' + up.status);
+      let j;
+      try { j = JSON.parse(up.body); } catch (e) { throw new Error('unexpected_payload'); }
+      const body = {
+        pages: Math.min(j.total_pages || 0, 500),
+        results: (j.results || []).filter((m) => m && m.poster_path && m.overview && m.id),
+      };
+      cacheSet(ck, 200, body, 6 * 60 * 60 * 1000);   // 6 h
+      return body;
+    }
+
+    // One candidate from the highest rung of the ladder that can supply one,
+    // skipping anything already dealt tonight and anything this request has
+    // itself just rejected.
+    async function pick(reject) {
+      for (const rung of rungs) {
+        const first = await poolFor(rung, 1);
+        if (!first.pages) continue;
+
+        // Look on a random page of the pool so the same mood does not deal
+        // the same twenty films every night; deep pages get thin, so stay
+        // in the part of the list that still has vote counts worth trusting.
+        const reach = Math.max(1, Math.min(first.pages, 12));
+        const order = [1 + Math.floor(Math.random() * reach), 1];
+        for (const page of order) {
+          const pool = page === 1 ? first : await poolFor(rung, page);
+          const fresh = pool.results.filter((m) => !seen.includes(m.id) && !reject.has(m.id));
+          if (fresh.length) {
+            return { film: fresh[Math.floor(Math.random() * fresh.length)], dropped: rung.dropped };
+          }
+        }
+      }
+      return null;
+    }
+
+    async function detailsFor(id) {
+      const up = await fetchUpstream(
+        base + '/movie/' + id + '?api_key=' + encodeURIComponent(key) +
+        '&language=en-US&append_to_response=watch/providers', { Accept: 'application/json' });
+      if (up.status >= 400) return {};
+      try { return JSON.parse(up.body) || {}; } catch (e) { return {}; }
+    }
+
+    // Where the caller could actually watch it. Their country comes from the
+    // address that is already being used by the desktop weather widget, and
+    // shares its six-hour cache; if it cannot be worked out, the page simply
+    // does not offer that line rather than showing another country's answer.
+    let country = '';
+    try {
+      const geo = await geoLookup(clientIp(req));
+      country = (geo && geo.countryCode) || '';
+    } catch (e) { /* no country: no providers line */ }
+
+    /* TMDB's discover index and its own detail records do not always agree
+       about runtime. Black Rain (id 4105) is returned by a query carrying
+       with_runtime.lte=120 and then reports 125 minutes on /movie/4105 —
+       checked on 9 Sep 2026, not assumed. The detail record is the number the
+       page prints, so it is the one that has to be true: when a length was
+       asked for, verify it against the details and deal again if it is broken.
+       Three tries, then hand the film over with 'length' admitted as dropped
+       rather than spending the night refusing to answer. */
+    let chosen = null, dropped = [], detail = {};
+    try {
+      const rejected = new Set();
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const got = await pick(rejected);
+        if (!got) break;
+        chosen = got.film; dropped = got.dropped;
+        detail = await detailsFor(chosen.id);
+        const runtime = typeof detail.runtime === 'number' ? detail.runtime : 0;
+        const overruns = lengthCap && !dropped.includes('length') && runtime > lengthCap;
+        const tooShort = runtime > 0 && runtime < MIN_RUNTIME;
+        if (!overruns && !tooShort) break;
+        rejected.add(chosen.id);
+        chosen = null;
+      }
+      if (!chosen) {
+        // Every candidate overran. Take one anyway, and admit the cap only if
+        // this particular film actually breaks it — claiming to have given up
+        // a constraint that was in fact met is its own small lie.
+        const got = await pick(new Set());
+        if (got) {
+          chosen = got.film;
+          detail = await detailsFor(chosen.id);
+          const runtime = typeof detail.runtime === 'number' ? detail.runtime : 0;
+          dropped = (lengthCap && runtime > lengthCap && !got.dropped.includes('length'))
+            ? got.dropped.concat('length') : got.dropped;
+        }
+      }
+    } catch (e) {
+      const why = String(e && e.message || 'unreachable');
+      return sendJson(res, 200, { ok: false, reason: why === 'bad_key' ? 'bad_key' : why });
+    }
+
+    if (!chosen) return sendJson(res, 200, { ok: false, reason: 'nothing_matched' });
+
+    const wp = (detail['watch/providers'] && detail['watch/providers'].results) || {};
+    const here = (country && wp[country]) || null;
+    const names = (list) => (list || []).map((p) => p && p.provider_name).filter(Boolean).slice(0, 4);
+
+    return sendJson(res, 200, {
+      ok: true,
+      id: chosen.id,
+      title: chosen.title || chosen.original_title || 'Untitled',
+      year: (chosen.release_date || '').slice(0, 4),
+      overview: chosen.overview,
+      poster: 'https://image.tmdb.org/t/p/w500' + chosen.poster_path,
+      backdrop: chosen.backdrop_path ? 'https://image.tmdb.org/t/p/w780' + chosen.backdrop_path : '',
+      runtime: typeof detail.runtime === 'number' && detail.runtime > 0 ? detail.runtime : null,
+      tagline: detail.tagline || '',
+      // Order matters: a fantasy film that is also animation, family and comedy
+      // should not show three genres that leave the reader wondering why it was
+      // dealt for "somewhere else entirely". The ones that matched come first.
+      genres: (() => {
+        const wanted = mood.genres.split('|').map(Number);
+        const all = (detail.genres || []).filter((g) => g && g.name);
+        const hit = all.filter((g) => wanted.includes(g.id));
+        const rest = all.filter((g) => !wanted.includes(g.id));
+        return hit.concat(rest).map((g) => g.name).slice(0, 3);
+      })(),
+      score: typeof chosen.vote_average === 'number' ? Math.round(chosen.vote_average * 10) / 10 : null,
+      votes: chosen.vote_count || 0,
+      language: chosen.original_language || '',
+      link: 'https://www.themoviedb.org/movie/' + chosen.id,
+      watch: here ? {
+        country,
+        stream: names(here.flatrate),
+        rent: names(here.rent),
+        link: here.link || '',
+      } : null,
+      dropped,                  // which of the asked-for constraints had to go
+      mood: mood.label,
+    });
+  }
+
   // --- which optional keys are configured --------------------------
   // Lets a toy render an honest "needs a key" state instead of failing.
   if (path === '/api/keys') {
