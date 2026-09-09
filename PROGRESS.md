@@ -14,7 +14,14 @@ the strength of having written it. **All 132 drawers** were then re-checked
 together at the end — every card points at a page that exists, and every page
 loads with no console error and real content on screen.
 
-**Not deployed.** The commits are local.
+**Deployed.** Pushed to `main` and live at https://contraptions.up.railway.app —
+including the two dedicated-session items below. Production was previously running
+a separate `deploy-needle-drop` branch, so the service was pointed back at `main`;
+checked first that this working copy was byte-identical to that branch on every
+file it touched, so nothing the other session had shipped was rolled back.
+Verified live: 132 cards, all 22 new pages 200, `store: true` on the mounted
+volume with the four new tables created, all five shared routes answering, and
+the head-count genuinely counting.
 
 ---
 
