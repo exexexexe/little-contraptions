@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Index of Devices That Do Not Exist</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%231B1B24'/><rect x='6' y='6' width='8' height='20' rx='1' fill='%23D8B15E'/><rect x='16' y='9' width='4' height='17' rx='1' fill='%237FB5A6'/><rect x='22' y='6' width='4' height='20' rx='1' fill='%23C57B6B'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --ink:#ECE7DC;
+  --dim:#9A958A;
+  --dimmer:#6C6960;
+  --bg:#16161C;
+  --panel:#1D1D25;
+  --line:rgba(236,231,220,.13);
+  --gold:#D8B15E;
+  --jade:#7FB5A6;
+  --clay:#C57B6B;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+}
+*{box-sizing:border-box}
+html{ scroll-behavior:smooth }
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font-family:var(--serif);font-size:16px;line-height:1.5;
+  padding-bottom:64px;
+}
+
+/* ---------- shared: back to the cabinet ---------- */
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 var(--mono);
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{
+  width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6);
+}
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media print{ #lc-back{ display:none } }
+@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } html{scroll-behavior:auto} }
+
+.wrap{ max-width:940px;margin:0 auto;padding:0 20px }
+
+/* ---------- masthead ---------- */
+header{ padding:54px 0 26px;border-bottom:1px solid var(--line) }
+h1{
+  font-size:clamp(28px,5.2vw,46px);line-height:1.08;margin:0 0 14px;font-weight:400;
+  letter-spacing:-.01em;
+}
+h1 em{ font-style:italic;color:var(--gold) }
+.standfirst{ margin:0;max-width:60ch;color:var(--dim);font-size:15.5px;line-height:1.62 }
+.tally{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.17em;text-transform:uppercase;
+  color:var(--dimmer);margin:18px 0 0;
+}
+.tally b{ color:var(--ink);font-weight:600 }
+
+/* ---------- controls ---------- */
+.controls{
+  position:sticky;top:0;z-index:40;background:var(--bg);
+  padding:16px 0 14px;border-bottom:1px solid var(--line);
+  margin-bottom:4px;
+}
+.searchrow{ display:flex;gap:9px;align-items:stretch;flex-wrap:wrap }
+.searchbox{ position:relative;flex:1 1 260px;min-width:0 }
+.searchbox svg{
+  position:absolute;left:12px;top:50%;transform:translateY(-50%);
+  width:15px;height:15px;stroke:var(--dimmer);fill:none;stroke-width:1.7;pointer-events:none;
+}
+#q{
+  width:100%;font-family:var(--serif);font-size:16px;color:var(--ink);
+  background:var(--panel);border:1px solid var(--line);border-radius:3px;
+  padding:11px 38px 11px 34px;
+}
+#q::placeholder{ color:var(--dimmer) }
+#q:focus{ outline:none;border-color:var(--gold) }
+#clear{
+  position:absolute;right:6px;top:50%;transform:translateY(-50%);
+  background:none;border:0;color:var(--dimmer);font-size:18px;line-height:1;
+  cursor:pointer;padding:6px 8px;
+}
+#clear:hover{ color:var(--ink) }
+#clear[hidden]{ display:none !important }
+
+select, .btn{
+  font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:3px;
+  padding:0 12px;height:43px;cursor:pointer;
+}
+select:focus-visible, .btn:focus-visible{ outline:2px solid var(--gold);outline-offset:2px }
+.btn:hover{ border-color:rgba(236,231,220,.4) }
+
+.chips{ display:flex;flex-wrap:wrap;gap:6px;margin-top:11px }
+.chip{
+  font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--dim);background:transparent;border:1px solid var(--line);border-radius:999px;
+  padding:6px 11px;cursor:pointer;
+}
+.chip:hover{ color:var(--ink);border-color:rgba(236,231,220,.35) }
+.chip[aria-pressed=true]{ background:var(--ink);color:#16161C;border-color:var(--ink);font-weight:600 }
+.chip:focus-visible{ outline:2px solid var(--gold);outline-offset:2px }
+.chip .n{ opacity:.5;margin-left:5px }
+.chip[aria-pressed=true] .n{ opacity:.55 }
+
+/* ---------- results ---------- */
+.status{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.15em;text-transform:uppercase;
+  color:var(--dimmer);padding:18px 0 6px;
+}
+.status b{ color:var(--gold);font-weight:600 }
+
+ol.list{ list-style:none;margin:0;padding:0 }
+li.row{
+  display:grid;grid-template-columns:auto 1fr;gap:0 16px;
+  padding:17px 0;border-bottom:1px solid rgba(236,231,220,.07);
+  scroll-margin-top:210px;
+}
+li.row .idx{
+  font-family:var(--mono);font-size:10.5px;color:var(--dimmer);
+  padding-top:5px;min-width:3.4ch;text-align:right;font-variant-numeric:tabular-nums;
+}
+.name{ font-size:18.5px;line-height:1.28;margin:0;font-weight:400 }
+.meta{
+  font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+  margin:6px 0 0;display:flex;flex-wrap:wrap;gap:5px 10px;align-items:center;
+}
+.src{ color:var(--jade) }
+.src.apoc{ color:var(--clay) }
+.cat{ color:var(--dimmer) }
+.cat::before{ content:"\00B7";margin-right:9px;color:rgba(236,231,220,.24) }
+.line{ margin:9px 0 0;color:var(--dim);font-size:15.5px;line-height:1.58;max-width:66ch }
+mark{ background:rgba(216,177,94,.26);color:var(--ink);border-radius:2px;padding:0 1px }
+li.row.hit{ animation:flash 1.7s ease-out }
+@keyframes flash{ from{ background:rgba(216,177,94,.16) } to{ background:transparent } }
+@media (prefers-reduced-motion: reduce){ li.row.hit{ animation:none;outline:1px solid var(--gold) } }
+
+.empty{ padding:56px 0;text-align:center;color:var(--dim) }
+.empty p{ margin:0 0 14px }
+
+#more{ margin:26px 0 0;width:100%;height:48px }
+
+footer{
+  margin-top:52px;padding:24px 0 10px;border-top:1px solid var(--line);
+  color:var(--dimmer);font-size:13.5px;line-height:1.65;max-width:66ch;
+}
+footer a{ color:var(--dim) }
+
+@media (max-width:560px){
+  header{ padding:38px 0 20px }
+  li.row{ grid-template-columns:1fr;gap:0 }
+  li.row .idx{ text-align:left;padding:0 0 4px }
+  .controls{ padding:12px 0 12px }
+}
+</style>
+</head>
+<body>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">&#8592;</span><span class="w">cabinet</span></a>
+
+<div class="wrap">
+<header>
+  <h1>The Index of Devices<br><em>That Do Not Exist</em></h1>
+  <p class="standfirst">
+    Five hundred machines, one line each: what it is called, where it comes from, and
+    what it actually does. No plot summaries and no borrowed prose &mdash; every line was
+    written for this page. Roughly two in five were invented for this index and exist
+    nowhere else; those are marked <span style="color:var(--clay)">in rust</span> and can
+    be filtered out if you only want the ones you can look up.
+  </p>
+  <p class="tally" id="tally"></p>
+</header>
+
+<div class="controls">
+  <div class="searchrow">
+    <div class="searchbox">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+      <input id="q" type="search" autocomplete="off" spellcheck="false"
+             placeholder="Search names, sources, descriptions..." aria-label="Search the index">
+      <button id="clear" type="button" aria-label="Clear search" hidden>&times;</button>
+    </div>
+    <select id="source" aria-label="Filter by source"></select>
+    <select id="sort" aria-label="Sort order">
+      <option value="az">A &ndash; Z</option>
+      <option value="za">Z &ndash; A</option>
+      <option value="src">By source</option>
+      <option value="shelf">Shelf order</option>
+    </select>
+    <button class="btn" id="lucky" type="button">Surprise me</button>
+  </div>
+  <div class="chips" id="chips" role="group" aria-label="Filter by category"></div>
+</div>
+
+<p class="status" id="status" role="status" aria-live="polite"></p>
+
+<ol class="list" id="list"></ol>
+<button class="btn" id="more" type="button" hidden></button>
+
+<div class="empty" id="empty" hidden>
+  <p>Nothing in the index matches that.</p>
+  <button class="btn" id="reset" type="button">Clear every filter</button>
+</div>
+
+<footer>
+  <p>
+    Names of works are given so you can find the original. Everything described here belongs
+    to whoever made it; this page holds no artwork, no stills and no quoted text, only a
+    factual sentence per device written from scratch. Entries with a rust-coloured source
+    line are apocryphal &mdash; invented for this index, cited by nobody, and mine.
+  </p>
+  <p><a href="/">&#8592; back to the cabinet</a></p>
+</footer>
+</div>
+
+<script src="data.js"></script>
+<script>
+(function(){
+  'use strict';
+  var ALL = window.WIKI || [];
+
+  var CATS = {
+    transport:'transport', weapon:'weapons', tool:'tools', body:'body &amp; medicine',
+    comms:'communication', computing:'computing', energy:'energy &amp; materials',
+    time:'time', space:'space', domestic:'domestic'
+  };
+
+  var PAGE = 120;                     // rows drawn per press, to keep the first paint quick
+  var shown = PAGE;
+  var state = { q:'', cat:'', src:'', sort:'az' };
+
+  var $ = function(id){ return document.getElementById(id); };
+  var listEl = $('list'), statusEl = $('status'), emptyEl = $('empty'), moreEl = $('more');
+
+  /* ---- normalise once, so every keystroke is a plain substring test ---- */
+  var DOCS = ALL.map(function(e, i){
+    return {
+      i: i, name: e[0], src: e[1], cat: e[2], line: e[3],
+      hay: (e[0] + ' ' + e[1] + ' ' + e[3]).toLowerCase(),
+      key: e[0].replace(/^(the|a|an) /i,'').toLowerCase()
+    };
+  });
+
+  var realCount = DOCS.filter(function(d){ return d.src; }).length;
+
+  function countSources(){
+    var s = {}; DOCS.forEach(function(d){ if (d.src) s[d.src] = 1; });
+    return Object.keys(s).length;
+  }
+
+  $('tally').innerHTML = '<b>' + DOCS.length + '</b> entries &nbsp;&middot;&nbsp; <b>' +
+    realCount + '</b> from published work &nbsp;&middot;&nbsp; <b>' + (DOCS.length - realCount) +
+    '</b> apocryphal &nbsp;&middot;&nbsp; <b>' + countSources() + '</b> sources';
+
+  function esc(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c];
+    });
+  }
+
+  /* ---- category chips, counted ---- */
+  (function buildChips(){
+    var counts = {};
+    DOCS.forEach(function(d){ counts[d.cat] = (counts[d.cat]||0) + 1; });
+    var frag = '<button class="chip" type="button" data-cat="" aria-pressed="true">everything' +
+               '<span class="n">' + DOCS.length + '</span></button>';
+    Object.keys(CATS).forEach(function(k){
+      if (!counts[k]) return;
+      frag += '<button class="chip" type="button" data-cat="' + k + '" aria-pressed="false">' +
+              CATS[k] + '<span class="n">' + counts[k] + '</span></button>';
+    });
+    $('chips').innerHTML = frag;
+  })();
+
+  /* ---- source dropdown, alphabetical, with an apocrypha option ---- */
+  (function buildSources(){
+    var counts = {};
+    DOCS.forEach(function(d){ if (d.src) counts[d.src] = (counts[d.src]||0) + 1; });
+    var names = Object.keys(counts).sort(function(a,b){ return a.localeCompare(b); });
+    var html = '<option value="">Every source</option>' +
+               '<option value=" real">Published work only (' + realCount + ')</option>' +
+               '<option value=" apoc">Apocryphal only (' + (DOCS.length - realCount) + ')</option>';
+    names.forEach(function(n){
+      html += '<option value="' + esc(n) + '">' + esc(n) + ' (' + counts[n] + ')</option>';
+    });
+    $('source').innerHTML = html;
+  })();
+
+  /* ---- highlight the matched run, on escaped text ---- */
+  function mark(text, needle){
+    var safe = esc(text);
+    if (!needle) return safe;
+    var n = esc(needle);
+    if (!n) return safe;
+    var lower = safe.toLowerCase(), find = n.toLowerCase(), out = '', from = 0, at;
+    while ((at = lower.indexOf(find, from)) !== -1) {
+      out += safe.slice(from, at) + '<mark>' + safe.slice(at, at + n.length) + '</mark>';
+      from = at + n.length;
+    }
+    return out + safe.slice(from);
+  }
+
+  /* ---- the filter itself ---- */
+  function select(){
+    var q = state.q.trim().toLowerCase();
+    var out = [];
+    for (var i = 0; i < DOCS.length; i++) {
+      var d = DOCS[i];
+      if (state.cat && d.cat !== state.cat) continue;
+      if (state.src === ' real' && !d.src) continue;
+      if (state.src === ' apoc' && d.src) continue;
+      if (state.src && state.src.charAt(0) !== ' ' && d.src !== state.src) continue;
+      if (q && d.hay.indexOf(q) === -1) continue;
+      out.push(d);
+    }
+    if (state.sort === 'az') out.sort(function(a,b){ return a.key < b.key ? -1 : a.key > b.key ? 1 : 0; });
+    else if (state.sort === 'za') out.sort(function(a,b){ return a.key > b.key ? -1 : a.key < b.key ? 1 : 0; });
+    else if (state.sort === 'src') out.sort(function(a,b){
+      // apocrypha has no source, so it sorts to the end rather than to the top
+      if (!a.src !== !b.src) return a.src ? -1 : 1;
+      if (a.src !== b.src) return a.src.localeCompare(b.src);
+      return a.key < b.key ? -1 : 1;
+    });
+    return out;
+  }
+
+  var current = [];
+
+  function render(){
+    current = select();
+    var q = state.q.trim();
+    var slice = current.slice(0, shown);
+    var html = '';
+    for (var i = 0; i < slice.length; i++) {
+      var d = slice[i];
+      var apoc = !d.src;
+      html += '<li class="row" id="e' + d.i + '">' +
+        '<div class="idx">' + (i + 1) + '</div>' +
+        '<div>' +
+          '<h2 class="name">' + mark(d.name, q) + '</h2>' +
+          '<p class="meta"><span class="src' + (apoc ? ' apoc' : '') + '">' +
+            (apoc ? 'invented for this index' : mark(d.src, q)) +
+          '</span><span class="cat">' + CATS[d.cat] + '</span></p>' +
+          '<p class="line">' + mark(d.line, q) + '</p>' +
+        '</div>' +
+      '</li>';
+    }
+    listEl.innerHTML = html;
+
+    var n = current.length;
+    statusEl.innerHTML = n === DOCS.length
+      ? 'Showing all <b>' + n + '</b> entries'
+      : '<b>' + n + '</b> of ' + DOCS.length + ' entries';
+    emptyEl.hidden = n !== 0;
+    listEl.hidden = n === 0;
+
+    if (n > shown) {
+      moreEl.hidden = false;
+      moreEl.textContent = 'Show ' + Math.min(PAGE, n - shown) + ' more of ' + (n - shown);
+    } else {
+      moreEl.hidden = true;
+    }
+  }
+
+  /* ---- events ---- */
+  var timer = null;
+  $('q').addEventListener('input', function(e){
+    $('clear').hidden = !e.target.value;
+    clearTimeout(timer);
+    timer = setTimeout(function(){
+      state.q = $('q').value; shown = PAGE; render();
+    }, 90);
+  });
+  $('clear').addEventListener('click', function(){
+    $('q').value = ''; $('clear').hidden = true; state.q = ''; shown = PAGE; render(); $('q').focus();
+  });
+  $('chips').addEventListener('click', function(e){
+    var b = e.target.closest('.chip'); if (!b) return;
+    state.cat = b.dataset.cat;
+    [].forEach.call($('chips').children, function(c){
+      c.setAttribute('aria-pressed', c === b ? 'true' : 'false');
+    });
+    shown = PAGE; render();
+  });
+  $('source').addEventListener('change', function(e){ state.src = e.target.value; shown = PAGE; render(); });
+  $('sort').addEventListener('change', function(e){ state.sort = e.target.value; shown = PAGE; render(); });
+  moreEl.addEventListener('click', function(){
+    var was = shown; shown += PAGE; render();
+    var el = listEl.children[was]; if (el) el.scrollIntoView({ block:'center' });
+  });
+  $('reset').addEventListener('click', function(){
+    state = { q:'', cat:'', src:'', sort:state.sort };
+    $('q').value = ''; $('clear').hidden = true; $('source').value = '';
+    [].forEach.call($('chips').children, function(c, i){
+      c.setAttribute('aria-pressed', i === 0 ? 'true' : 'false');
+    });
+    shown = PAGE; render();
+  });
+
+  /* One entry at random out of whatever is currently in view, drawn into
+     sight rather than silently selected somewhere below the fold. */
+  $('lucky').addEventListener('click', function(){
+    if (!current.length) return;
+    var at = Math.floor(Math.random() * current.length);
+    var pick = current[at];
+    if (at >= shown) { shown = Math.ceil((at + 1) / PAGE) * PAGE; render(); }
+    var el = document.getElementById('e' + pick.i);
+    if (!el) return;
+    [].forEach.call(listEl.querySelectorAll('.hit'), function(x){ x.classList.remove('hit'); });
+    el.scrollIntoView({ block:'center' });
+    void el.offsetWidth;
+    el.classList.add('hit');
+  });
+
+  document.addEventListener('keydown', function(e){
+    if (e.key === '/' && document.activeElement !== $('q')) { e.preventDefault(); $('q').focus(); }
+    else if (e.key === 'Escape' && document.activeElement === $('q')) { $('clear').click(); }
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
