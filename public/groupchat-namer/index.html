@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Name the Group Chat</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23101822'/><path d='M5 8h16v11H12l-5 4v-4H5z' fill='%2340C4A0'/><path d='M13 13h14v10h-4l-4 3v-3h-6z' fill='%23F0E8D8'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --bg:#0D141C;
+  --bg-2:#16202C;
+  --mint:#40C4A0;
+  --pale:#EEF2F5;
+  --dim:#8A98A6;
+  --bubble:#1E2A38;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:radial-gradient(820px 640px at 50% 2%, var(--bg-2) 0%, var(--bg) 66%);
+  color:var(--pale);font-family:var(--serif);min-height:100vh;
+  padding:30px 16px 80px;display:flex;flex-direction:column;align-items:center;
+}
+.wrap{ max-width:560px;width:100% }
+header{ text-align:center;margin-bottom:22px }
+h1{
+  font-family:var(--mono);font-size:clamp(15px,3.6vw,21px);margin:0;
+  letter-spacing:.26em;text-transform:uppercase;color:var(--mint);font-weight:500;
+}
+.sub{ font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-top:10px }
+
+/* the phone */
+.phone{
+  background:#0A1017;border:1px solid rgba(238,242,245,.14);border-radius:14px;
+  overflow:hidden;box-shadow:0 18px 44px rgba(0,0,0,.55);
+}
+.chathead{
+  display:flex;align-items:center;gap:11px;padding:13px 14px;
+  background:linear-gradient(180deg,#1B2632,#141D27);
+  border-bottom:1px solid rgba(238,242,245,.1);
+}
+.avatars{ display:flex;flex:0 0 auto }
+.avatars i{
+  width:26px;height:26px;border-radius:50%;display:block;margin-left:-8px;
+  border:2px solid #0A1017;
+}
+.avatars i:first-child{ margin-left:0 }
+.chatname{ flex:1 1 auto;min-width:0 }
+.chatname b{
+  display:block;font-family:var(--serif);font-size:17px;font-weight:600;line-height:1.25;
+  overflow-wrap:anywhere;
+}
+.chatname span{ font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;color:var(--dim);text-transform:uppercase }
+.thread{ padding:16px 14px 20px;display:flex;flex-direction:column;gap:9px;min-height:130px }
+.msg{
+  max-width:78%;padding:9px 12px;border-radius:14px;font-size:14px;line-height:1.5;
+  background:var(--bubble);align-self:flex-start;border-bottom-left-radius:4px;
+}
+.msg.me{ align-self:flex-end;background:#1E4A40;border-radius:14px;border-bottom-right-radius:4px }
+.msg small{ display:block;font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--dim);margin-bottom:4px;text-transform:uppercase }
+
+.controls{ display:flex;gap:8px;margin-top:16px;flex-wrap:wrap }
+button{
+  font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  background:transparent;color:var(--mint);border:1px solid var(--mint);
+  padding:14px 18px;cursor:pointer;flex:1 1 auto;
+}
+button:hover{ background:var(--mint);color:#0A1017 }
+button:focus-visible{ outline:2px solid var(--pale);outline-offset:3px }
+button.sec{ color:var(--dim);border-color:rgba(238,242,245,.24);flex:0 0 auto }
+button.sec:hover{ background:rgba(238,242,245,.1);color:var(--pale) }
+
+.tone{ display:flex;gap:5px;flex-wrap:wrap;margin-top:18px;justify-content:center }
+.tone button{
+  flex:0 0 auto;font-size:10px;padding:8px 11px;letter-spacing:.1em;
+  color:var(--dim);border-color:rgba(238,242,245,.2);
+}
+.tone button[aria-pressed=true]{ background:var(--mint);color:#0A1017;border-color:var(--mint) }
+
+.kept{ margin-top:26px }
+.kept h2{ font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin:0 0 10px }
+.kept ul{ list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1px;background:rgba(238,242,245,.1);border:1px solid rgba(238,242,245,.1) }
+.kept li{ background:#121A24;padding:10px 12px;font-size:14.5px;display:flex;justify-content:space-between;gap:10px;align-items:center }
+.kept li button{ flex:0 0 auto;padding:5px 8px;font-size:9px;border-color:rgba(238,242,245,.2);color:var(--dim) }
+.kept[hidden]{ display:none }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media print{ #lc-back{ display:none } }
+@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Name the Group Chat</h1>
+    <p class="sub">It has been &ldquo;New Group&rdquo; for two years</p>
+  </header>
+
+  <div class="phone">
+    <div class="chathead">
+      <div class="avatars" id="avatars" aria-hidden="true"></div>
+      <div class="chatname">
+        <b id="name">&mdash;</b>
+        <span id="meta">7 members</span>
+      </div>
+    </div>
+    <div class="thread" id="thread"></div>
+  </div>
+
+  <div class="controls">
+    <button id="again" type="button">Another one</button>
+    <button class="sec" id="keep" type="button">Keep it</button>
+  </div>
+
+  <div class="tone" id="tone" role="group" aria-label="Tone"></div>
+
+  <div class="kept" id="kept" hidden>
+    <h2>Shortlist</h2>
+    <ul id="keptlist"></ul>
+  </div>
+</div>
+
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<script>
+(function(){
+  'use strict';
+
+  var ADJ = ['unhinged','emotionally unavailable','structurally unsound','mildly concerning',
+    'legally distinct','chronically online','deeply unserious','fiscally irresponsible',
+    'unsupervised','feral','load-bearing','non-refundable','recently unemployed','borderline',
+    'sleep-deprived','ungovernable','off-brand','under-seasoned','clinically fine','unbothered'];
+  var NOUN = ['goblins','accountants','disasters','pigeons','committee','support group','menaces',
+    'houseplants','raccoons','consultants','minor characters','group project','liabilities',
+    'shareholders','witnesses','tribunal','delinquents','stakeholders','crows','focus group'];
+  var PLACE = ['the group project','a wedding we were not invited to','the car park','Wetherspoons',
+    'a Tesco at 2am','someone else’s barbecue','the bit before the wedding','a bus we missed',
+    'the back of the class','a holiday nobody booked','the queue','a house viewing'];
+  var VERB = ['ignoring','avoiding','postponing','overthinking','relitigating','workshopping',
+    'catastrophising','fumbling','scheduling','abandoning'];
+  var THING = ['the plan','brunch','one specific text','the group holiday','a spreadsheet',
+    'the seating chart','this conversation','the budget','a decision','the reply'];
+  var EMOJI = ['🔥','💀','🤡','🐛','🧊',
+    '🦍','🍔','👻','🦋','🧿','🌀'];
+  var NUM = ['Two','Three','Four','Five','Six','Seven','Nine','Eleven'];
+
+  function pick(a){ return a[(Math.random() * a.length) | 0]; }
+  function cap(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
+
+  /* ---- the patterns ------------------------------------------------- *
+   * Grouped by tone so the picker actually changes the character of the
+   * output, rather than reshuffling one pile.                          */
+  var PATTERNS = {
+    daft: [
+      function(){ return 'The ' + pick(ADJ) + ' ' + pick(NOUN); },
+      function(){ return cap(pick(NOUN)) + ' Anonymous'; },
+      function(){ return pick(NUM) + ' ' + pick(NOUN) + ' and a ' + pick(NOUN).replace(/s$/, ''); },
+      function(){ return cap(pick(VERB)) + ' ' + pick(THING); },
+      function(){ return pick(EMOJI) + ' ' + cap(pick(NOUN)) + ' ' + pick(EMOJI); },
+      function(){ return 'Certified ' + pick(ADJ); }
+    ],
+    dry: [
+      function(){ return 'Group Chat (' + pick(['pending','provisional','under review','deprecated','v4']) + ')'; },
+      function(){ return cap(pick(NOUN)) + ', ' + pick(['Ltd','plc','& Co','Holdings','Working Group']); },
+      function(){ return 'Re: Re: Re: ' + pick(THING); },
+      function(){ return 'Minutes of the ' + cap(pick(NOUN)); },
+      function(){ return 'The ' + cap(pick(NOUN)) + ' Steering Committee'; },
+      function(){ return 'Do Not Reply All'; }
+    ],
+    passive: [
+      function(){ return 'Nobody has read this'; },
+      function(){ return 'Still ' + pick(VERB) + ' ' + pick(THING); },
+      function(){ return 'We said ' + pick(['Thursday','8pm','next week','the 14th','half seven']); },
+      function(){ return 'Someone reply'; },
+      function(){ return 'This was your idea'; },
+      function(){ return 'Three of you have seen this'; }
+    ],
+    fond: [
+      function(){ return 'The ' + pick(ADJ) + ' ones'; },
+      function(){ return cap(pick(VERB)) + ' at ' + pick(PLACE); },
+      function(){ return 'Since ' + (1996 + ((Math.random() * 28) | 0)); },
+      function(){ return 'Everyone from ' + pick(PLACE); },
+      function(){ return 'The usual ' + pick(NOUN); },
+      function(){ return 'Still here'; }
+    ]
+  };
+  var TONES = [
+    { id:'daft', n:'Daft' }, { id:'dry', n:'Dry' },
+    { id:'passive', n:'Passive-aggressive' }, { id:'fond', n:'Fond' }
+  ];
+  var tone = 'daft';
+
+  var LINES = [
+    ['Ana', 'can we PLEASE change the name'],
+    ['Joel', 'it has been New Group since 2023'],
+    ['me', 'fine. rolling for a new one'],
+    ['Priya', 'this one. no notes'],
+    ['Sam', 'who added me to this'],
+    ['Ana', 'i am not explaining this name to my mother'],
+    ['Joel', 'leave it. it is perfect'],
+    ['me', 'again'],
+    ['Priya', 'absolutely not'],
+    ['Sam', 'genuinely how did you get worse at this']
+  ];
+  var HUES = [162, 20, 268, 200, 42, 320, 96];
+
+  var nameEl = document.getElementById('name');
+  var threadEl = document.getElementById('thread');
+  var keptEl = document.getElementById('kept');
+  var keptList = document.getElementById('keptlist');
+  var kept = [];
+  var current = '';
+  var last = '';
+
+  (function avatars(){
+    var w = document.getElementById('avatars');
+    for (var i = 0; i < 4; i++){
+      var i2 = document.createElement('i');
+      i2.style.background = 'linear-gradient(140deg,hsl(' + HUES[i] + ',52%,58%),hsl(' +
+                            HUES[i] + ',52%,38%))';
+      w.appendChild(i2);
+    }
+  })();
+
+  function esc(t){
+    return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function generate(){
+    var pool = PATTERNS[tone];
+    var out = '';
+    for (var i = 0; i < 12; i++){
+      out = pool[(Math.random() * pool.length) | 0]();
+      if (out !== last) break;                 // never the same one twice running
+    }
+    last = out;
+    current = out;
+    nameEl.textContent = out;
+
+    // two or three reactions, so the chat looks like it is reacting to this name
+    var n = 2 + ((Math.random() * 2) | 0);
+    var used = {};
+    var html = '';
+    for (var j = 0; j < n; j++){
+      var l;
+      do { l = LINES[(Math.random() * LINES.length) | 0]; } while (used[l[1]]);
+      used[l[1]] = 1;
+      html += '<div class="msg' + (l[0] === 'me' ? ' me' : '') + '"><small>' + esc(l[0]) +
+              '</small>' + esc(l[1]) + '</div>';
+    }
+    threadEl.innerHTML = html;
+  }
+
+  function paintKept(){
+    keptEl.hidden = !kept.length;
+    keptList.innerHTML = kept.map(function(k, i){
+      return '<li><span>' + esc(k) + '</span>' +
+             '<button type="button" data-i="' + i + '">drop</button></li>';
+    }).join('');
+  }
+  keptList.addEventListener('click', function(e){
+    var b = e.target.closest ? e.target.closest('button') : null;
+    if (!b) return;
+    kept.splice(parseInt(b.dataset.i, 10), 1);
+    paintKept();
+  });
+
+  document.getElementById('again').addEventListener('click', generate);
+  document.getElementById('keep').addEventListener('click', function(){
+    if (!current || kept.indexOf(current) >= 0) return;
+    kept.unshift(current);
+    if (kept.length > 8) kept.pop();
+    paintKept();
+  });
+
+  var toneWrap = document.getElementById('tone');
+  toneWrap.innerHTML = TONES.map(function(t){
+    return '<button type="button" data-t="' + t.id + '" aria-pressed="' +
+           (t.id === tone) + '">' + t.n + '</button>';
+  }).join('');
+  toneWrap.addEventListener('click', function(e){
+    var b = e.target.closest ? e.target.closest('button') : null;
+    if (!b) return;
+    tone = b.dataset.t;
+    [].forEach.call(toneWrap.children, function(x){
+      x.setAttribute('aria-pressed', String(x.dataset.t === tone));
+    });
+    generate();
+  });
+
+  generate();
+
+  window.__namer = {
+    name: function(){ return current; },
+    tone: function(){ return tone; },
+    setTone: function(t){ tone = t; generate(); return current; },
+    generate: generate,
+    kept: function(){ return kept.slice(); },
+    sample: function(t, n){
+      var was = tone; tone = t;
+      var out = [];
+      for (var i = 0; i < n; i++){ generate(); out.push(current); }
+      tone = was;
+      return out;
+    }
+  };
+})();
+</script>
+</body>
+</html>
