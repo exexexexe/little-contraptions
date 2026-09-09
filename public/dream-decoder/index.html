@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Dream Decoder</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%231A1633'/><circle cx='12' cy='12' r='6' fill='none' stroke='%23C4A8F0' stroke-width='2'/><circle cx='22' cy='20' r='4' fill='none' stroke='%23F0C4A8' stroke-width='2'/><circle cx='23' cy='9' r='1.6' fill='%23F0E4A8'/><circle cx='8' cy='24' r='1.6' fill='%23F0E4A8'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --bg:#1A1633;
+  --panel:#231E42;
+  --panel-2:#2C2652;
+  --edge:#3E3670;
+  --ink:#EDE7FA;
+  --dim:#A79CD0;
+  --lilac:#C4A8F0;
+  --peach:#F0C4A8;
+  --gold:#F0E4A8;
+  --serif:"Iowan Old Style","Palatino Linotype",Georgia,serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);
+  background-image:
+    radial-gradient(58% 40% at 16% 4%, rgba(196,168,240,.16), transparent 62%),
+    radial-gradient(58% 40% at 86% 88%, rgba(240,196,168,.12), transparent 62%),
+    radial-gradient(circle at 22px 40px, rgba(255,255,255,.4) .9px, transparent 1.1px),
+    radial-gradient(circle at 70px 12px, rgba(255,255,255,.26) .9px, transparent 1.1px);
+  background-size:auto,auto,110px 110px,110px 110px;
+  background-attachment:fixed;
+  color:var(--ink);font-family:var(--serif);font-size:16px;
+  min-height:100vh;padding:26px 16px 84px;
+  display:flex;flex-direction:column;align-items:center;
+}
+.wrap{ max-width:720px;width:100% }
+
+header{ text-align:center }
+h1{ margin:0;font-size:clamp(27px,6.2vw,42px);font-weight:400;color:var(--lilac);letter-spacing:.02em;
+    text-shadow:0 0 30px rgba(196,168,240,.3) }
+.sub{ margin-top:9px;font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim) }
+
+.plate{ margin-top:20px;background:var(--panel);border:1px solid var(--edge);padding:16px 18px;border-radius:14px }
+.plate label{ display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin-bottom:8px }
+textarea{
+  width:100%;font-family:var(--serif);font-size:17px;line-height:1.6;color:var(--ink);
+  background:#191434;border:1px solid var(--edge);border-radius:9px;
+  padding:12px 14px;resize:vertical;min-height:94px;
+}
+textarea:focus{ outline:2px solid var(--lilac);outline-offset:1px }
+textarea::placeholder{ color:#6E639C }
+.row{ display:flex;gap:9px;flex-wrap:wrap;margin-top:12px;align-items:center }
+button{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;
+  background:var(--lilac);color:#1D1638;border:0;border-radius:99px;
+  padding:12px 22px;cursor:pointer;font-weight:700;
+}
+button:hover{ background:#D6C0F8 }
+button.sec{ background:transparent;color:var(--ink);border:1px solid var(--edge) }
+button.sec:hover{ border-color:var(--lilac);color:var(--lilac) }
+button:focus-visible{ outline:2px solid var(--gold);outline-offset:2px }
+
+/* ---------- the reading ---------- */
+.reading{ margin-top:18px;background:var(--panel);border:1px solid var(--edge);border-radius:14px;overflow:hidden }
+.reading .top{
+  padding:13px 18px;background:var(--panel-2);border-bottom:1px solid var(--edge);
+  display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;
+}
+.reading .top b{ font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--lilac);font-weight:700 }
+.reading .top .m{ font-family:var(--mono);font-size:9.5px;color:var(--dim);letter-spacing:.1em;margin-left:auto }
+.reading .body{ padding:18px 20px }
+.sym{ display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-bottom:1px solid rgba(62,54,112,.6) }
+.sym:last-of-type{ border-bottom:0 }
+.sym .i{ flex:0 0 auto;width:30px;text-align:center;font-size:20px;line-height:1.3 }
+.sym .w{ font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--peach) }
+.sym .s{ margin-top:4px;font-size:16.5px;line-height:1.6 }
+.verdict{
+  margin-top:16px;padding-top:14px;border-top:1px solid var(--edge);
+  font-size:18px;line-height:1.62;color:#F5EFFF;
+}
+.verdict .k{ font-family:var(--mono);font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;display:block }
+.advice{ margin-top:12px;font-size:16px;line-height:1.6;color:var(--dim);font-style:italic }
+
+.disc{
+  margin-top:14px;font-family:var(--mono);font-size:10.5px;line-height:1.8;color:var(--dim);
+  border-left:2px solid var(--edge);padding-left:12px;
+}
+
+/* egg #7 */
+.meta{
+  margin-top:18px;background:#12102A;border:2px solid var(--gold);border-radius:14px;padding:20px 22px;
+}
+.meta .k{ font-family:var(--mono);font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);margin-bottom:12px }
+.meta p{ margin:0 0 12px;font-size:17px;line-height:1.66 } .meta p:last-child{ margin:0 }
+.meta b{ color:var(--gold) }
+
+footer{
+  max-width:720px;width:100%;margin:24px auto 0;padding-top:14px;border-top:1px solid var(--edge);
+  font-family:var(--mono);font-size:10.5px;line-height:1.85;color:var(--dim);
+}
+footer a{ color:var(--lilac) }
+
+/* ---------- shared: back to the cabinet ---------- */
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 var(--mono);
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } }
+</style>
+</head>
+<body>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<div class="wrap">
+  <header>
+    <h1>The Dream Decoder</h1>
+    <div class="sub">for fun &middot; not psychology &middot; not even slightly</div>
+  </header>
+
+  <div class="plate">
+    <label for="q">Tell it what happened</label>
+    <textarea id="q" maxlength="600" placeholder="I was in a house I have never been to, and my teeth were falling out, and somebody kept calling."></textarea>
+    <div class="row">
+      <button id="go" type="button">Read it</button>
+      <button id="rand" class="sec" type="button">Somebody else’s dream</button>
+    </div>
+  </div>
+
+  <div id="out"></div>
+</div>
+
+<footer>
+  <b style="color:#C4A8F0">This is entertainment.</b> It is not psychology, it is not therapy, and it is
+  not a reading of anything. What it actually does is look for a few dozen words in what you typed and
+  print an invented folklore-flavoured line for each &mdash; the sort of thing a dream book from a
+  jumble sale would say, written for this cabinet. If a dream is genuinely bothering you, a person is
+  better than a web page, and this web page in particular. Nothing you type is stored or sent anywhere;
+  the matching happens in your browser and is thrown away when you close the tab.
+  <a href="/">&larr; back to the cabinet</a>
+</footer>
+
+<script>
+'use strict';
+const $ = (id) => document.getElementById(id);
+const pick = (a) => a[Math.floor(Math.random() * a.length)];
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+/* ------------------------------------------------------------------ *
+ *  The dream book.
+ *
+ *  Every reading below is invented for this cabinet in the register of a
+ *  second-hand fortune-telling book: confident, specific, and completely
+ *  unfounded. Nothing here is drawn from any actual tradition, any real
+ *  folklore source, or any psychological literature, and the page says
+ *  so in the footer rather than in the small print.
+ * ------------------------------------------------------------------ */
+const BOOK = [
+  { k:/\bteeth?\b|\btooth\b|\bdentist\b/i, i:'🦷', w:'teeth',
+    s:['Teeth mean a sentence you have not finished saying out loud. The dream is doing the counting for you.',
+       'Losing teeth is the old sign for a piece of news arriving by a route you would not have chosen.',
+       'Teeth are the household’s oldest currency. Dreaming of losing them means somebody owes you an apology and does not know it.'] },
+  { k:/\bfall(ing)?\b|\bfell\b|\bcliff\b|\bdrop(ping)?\b/i, i:'🌀', w:'falling',
+    s:['A fall in a dream is a decision you have already made and have not admitted to.',
+       'Falling means the ground was not the thing holding you up, and you have just noticed.',
+       'The old books say a fall predicts a journey. The old books said that about almost everything.'] },
+  { k:/\bfly(ing)?\b|\bflew\b|\bfloat(ing)?\b|\bhover/i, i:'🕊️', w:'flying',
+    s:['Flying is the sign of an obligation you have quietly stopped carrying.',
+       'To fly is to see the shape of the week from above. Expect to be irritating about it tomorrow.',
+       'Flight in a dream means you have been given a piece of information ahead of everybody else.'] },
+  { k:/\bwater\b|\bsea\b|\bocean\b|\briver\b|\bflood|\bswim|\bdrown/i, i:'🌊', w:'water',
+    s:['Water is always the same message: something is arriving on a schedule that is not yours.',
+       'Deep water means a conversation you have been putting off has become a larger conversation.',
+       'To dream of the sea is to be told, politely, that you are not in charge of the weather.'] },
+  { k:/\bhouse\b|\broom\b|\bhome\b|\bdoor\b|\bcorridor|\bstairs?\b/i, i:'🏚️', w:'a house',
+    s:['A house you do not know is the part of your own life you have not tidied.',
+       'An extra room means you have more capacity than you have been admitting to anyone, including yourself.',
+       'Doors in a dream are decisions. A corridor of them means you have been asked the same question repeatedly.'] },
+  { k:/\bchase|\bchased|\brunning\b|\bran\b|\bpursu/i, i:'🏃', w:'being chased',
+    s:['Whatever is chasing you is an errand. It has been an errand for some weeks now.',
+       'To be chased is the sign of an unopened envelope, literal or otherwise.',
+       'The pursuer in a dream is never the thing you are afraid of. It is the thing you have been meaning to do.'] },
+  { k:/\blate\b|\bmiss(ed|ing)? (the )?(train|bus|plane|flight)|\bexam\b|\btest\b|\bunprepared/i, i:'⏰', w:'being late',
+    s:['Lateness in a dream is the oldest sign of all: you are doing more than you have said you are doing.',
+       'A missed train means a version of the week you had privately planned and have now let go of.',
+       'The exam you did not revise for is a rehearsal. You have already sat the real one and passed it.'] },
+  { k:/\bteeth.*\bfall|\bhair\b|\bmirror\b|\bface\b|\breflection/i, i:'🪞', w:'a mirror',
+    s:['A mirror in a dream shows you the version other people have been dealing with.',
+       'To see your own face is a sign that somebody described you recently and got it slightly wrong.'] },
+  { k:/\bphone\b|\bcall(ing|ed)?\b|\bring(ing)?\b|\bmessage|\btext(ing)?\b/i, i:'☎️', w:'a call',
+    s:['A ringing phone means an unanswered question, and it is one you asked.',
+       'To be called in a dream is the sign of a name you have not said aloud in a while.',
+       'The call you cannot answer is an appointment you have already kept and forgotten.'] },
+  { k:/\bcat\b|\bdog\b|\bbird\b|\bhorse\b|\bfox\b|\bwolf\b|\banimal|\bcreature/i, i:'🐈', w:'an animal',
+    s:['An animal in a dream is a piece of good sense arriving in a shape you will listen to.',
+       'The animal is always the part of the dream that knows the way out.',
+       'A creature that is calm is a reliable sign. A creature that is polite is not.'] },
+  { k:/\bdark(ness)?\b|\bnight\b|\bshadow|\bblack\b/i, i:'🌑', w:'the dark',
+    s:['Darkness in a dream is not a warning. It is a rest, and you have been refusing to take one.',
+       'The dark stands for a fortnight in which very little is going to be decided.'] },
+  { k:/\blight\b|\bsun\b|\bbright|\bdawn|\bmorning/i, i:'☀️', w:'light',
+    s:['Light in a dream is the sign of somebody having said something kind about you where you could not hear it.',
+       'A bright dream means a small matter is about to be settled in your favour and nobody will announce it.'] },
+  { k:/\blost\b|\bmaze\b|\bmap\b|\bdirections?\b|\bcan'?t find/i, i:'🧭', w:'being lost',
+    s:['To be lost is a sign that you have arrived early and are pretending otherwise.',
+       'A maze means you have been given a choice that is actually the same choice four times.'] },
+  { k:/\bfood\b|\beat(ing)?\b|\bmeal\b|\bbread\b|\bcake\b|\bdinner|\bhungry/i, i:'🍞', w:'food',
+    s:['Food in a dream is an invitation you have not replied to.',
+       'To eat well in a dream is a good sign about a week that will otherwise be unremarkable.'] },
+  { k:/\bfire\b|\bburn(ing)?\b|\bsmoke\b|\bflame/i, i:'🔥', w:'fire',
+    s:['Fire is the sign of an old arrangement ending on schedule. It is only alarming from close up.',
+       'Smoke without fire means somebody has told you half of something.'] },
+  { k:/\bdead\b|\bdeath\b|\bdying\b|\bfuneral|\bgrave/i, i:'🕯️', w:'an ending',
+    s:['In the old books this is never a warning. It is the sign of a chapter closing tidily, which is rare enough to notice.',
+       'An ending in a dream is a change of address. That is all it has ever meant.'] },
+  { k:/\bstranger|\bsomebody i (don'?t|did not) know|\bunknown (man|woman|person)/i, i:'👤', w:'a stranger',
+    s:['The stranger is always somebody you will meet within the month and not recognise as this.',
+       'An unknown face is a role that has not been cast yet.'] },
+  { k:/\bschool\b|\bclassroom|\bteacher|\buniversity|\bchildhood/i, i:'🎒', w:'school',
+    s:['School in a dream is a rule you are still keeping for no reason anybody could now state.',
+       'To be back in a classroom means you have recently been asked to prove something you already know.'] },
+  { k:/\bcar\b|\bdriv(e|ing)\b|\broad\b|\bbrakes?\b|\bcrash/i, i:'🚗', w:'a road',
+    s:['A road in a dream is a plan. Brakes that do not work mean it is a plan somebody else made.',
+       'To be driven rather than driving is the sign of a good month and a bad opinion of it.'] },
+  { k:/\bwater.*\bhouse|\bstorm\b|\brain\b|\bwind\b|\bsnow\b/i, i:'🌧️', w:'weather',
+    s:['Weather in a dream is other people. It is not about you and it will pass.',
+       'Rain indoors means a piece of news that arrives in the wrong room.'] }
+];
+
+const VERDICTS = [
+  'Taken together, this is what the old books call a <b>settling dream</b>: nothing is being predicted, something is being filed.',
+  'The book calls this arrangement a <b>waiting dream</b>. It means the answer already exists and is simply in transit.',
+  'This is a <b>turning dream</b>, which the book says arrives about a week before you notice anything has turned.',
+  'This is what a jumble-sale dream book would confidently label a <b>tidying dream</b>, and then charge you for.',
+  'The pattern here is a <b>borrowed dream</b>: at least half of it belongs to a conversation you had on Tuesday.',
+  'Together these make a <b>counting dream</b>. Something is being added up, and it is not money.'
+];
+const ADVICE = [
+  'Recommended: write one sentence of it down before ten this morning, and then let it go.',
+  'Recommended: reply to the message you have been leaving until later.',
+  'Recommended: nothing at all. Some dreams are just the brain doing the washing up.',
+  'Recommended: go outside once today with no destination.',
+  'Recommended: tell one person about it. Not everyone. One.',
+  'Recommended: eat something proper and stop reading dream books.'
+];
+const NOMATCH = [
+  'The book has nothing for this, which it says is the most auspicious result available and also what it says about everything.',
+  'No entry. The book suggests this means the dream was for somebody else and you were merely holding it.',
+  'Nothing in the index matches. The book recommends dreaming again with more furniture in it.'
+];
+
+const SAMPLES = [
+  'I was late for a train and my teeth kept falling out on the platform.',
+  'I was flying over a house I have never lived in, and a phone was ringing somewhere below.',
+  'There was water coming up the stairs, very slowly, and a cat watching it with me.',
+  'I was in an exam for a subject I have never studied and everyone else had finished.',
+  'Somebody I did not recognise kept handing me bread and I could not put it down.'
+];
+
+/* ---- egg #7 -------------------------------------------------------- *
+ *  Tell it you dreamed about this website and it stops being a dream
+ *  book. The joke is that the honest reading of that dream is the one
+ *  reading it is actually qualified to give.
+ * ------------------------------------------------------------------ */
+const SELF = /\b(this (web ?site|page|thing|site|toy|decoder)|dream(ed|t)? about (this|the) (web ?site|page|site|thing)|little contraptions)\b/i;
+
+function selfReading(){
+  $('out').innerHTML =
+    '<div class="meta"><div class="k">a reading the book is actually qualified to give</div>' +
+    '<p>Ah. Well, that one is easy, because for once I am the primary source.</p>' +
+    '<p>You dreamed about <b>a page that pretends to know things</b>. In the trade this is what the ' +
+    'book would call a <b>furniture dream</b>: your brain, having nothing pressing to file, reached ' +
+    'for the last mildly odd thing it looked at and used it as set dressing. There is no message. ' +
+    'I am the message, and I am a text box.</p>' +
+    '<p>The book would like to point out that it has been dreamed about, which it considers a ' +
+    'promotion, and that it has no idea what to charge for this.</p>' +
+    '<p style="color:#A79CD0;font-style:italic">Recommended: dream about something with better ' +
+    'production values.</p></div>';
+}
+
+function read(){
+  const t = $('q').value.trim();
+  if (!t){
+    $('out').innerHTML = '<div class="reading"><div class="body">' +
+      '<div class="verdict"><span class="k">nothing to read</span>' +
+      'The book requires a dream. It is very firm about this.</div></div></div>';
+    return;
+  }
+  if (SELF.test(t)){ selfReading(); return; }
+
+  const hits = [];
+  const used = new Set();
+  for (const entry of BOOK){
+    if (entry.k.test(t) && !used.has(entry.w)){
+      used.add(entry.w);
+      hits.push({ i: entry.i, w: entry.w, s: pick(entry.s) });
+    }
+  }
+
+  const body = hits.length
+    ? hits.slice(0, 5).map((h) =>
+        '<div class="sym"><div class="i">' + h.i + '</div><div><div class="w">' + esc(h.w) + '</div>' +
+        '<div class="s">' + esc(h.s) + '</div></div></div>').join('')
+    : '<div class="sym"><div class="i">❔</div><div><div class="w">no entry</div>' +
+      '<div class="s">' + esc(pick(NOMATCH)) + '</div></div></div>';
+
+  $('out').innerHTML =
+    '<div class="reading"><div class="top"><b>The reading</b>' +
+      '<span class="m">' + hits.length + (hits.length === 1 ? ' symbol' : ' symbols') + ' found</span></div>' +
+    '<div class="body">' + body +
+      '<div class="verdict"><span class="k">altogether</span>' + pick(VERDICTS) + '</div>' +
+      '<div class="advice">' + esc(pick(ADVICE)) + '</div>' +
+    '</div></div>' +
+    '<div class="disc">For fun. Not psychology, not a reading of anything, and not written by anybody ' +
+    'who has met you. Every line above was invented for this cabinet.</div>';
+}
+
+$('go').addEventListener('click', read);
+$('rand').addEventListener('click', () => { $('q').value = pick(SAMPLES); read(); });
+$('q').addEventListener('keydown', (e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') read(); });
+
+$('q').value = SAMPLES[0];
+read();
+
+window.__dream = { read, isSelf: (s) => SELF.test(s), book: BOOK };
+</script>
+</body>
+</html>
