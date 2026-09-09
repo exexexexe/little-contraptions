@@ -6,7 +6,9 @@
 TV-voice archetypes, a third mode for Atmosphere, a third handset for the Zone PDA,
 seventeen easter eggs, and four shared modules extracted out of toys that already
 existed. Every new page was loaded in a real browser; nothing below is claimed on
-the strength of having written it.
+the strength of having written it. **All 132 drawers** were then re-checked
+together at the end — every card points at a page that exists, and every page
+loads with no console error and real content on screen.
 
 **Not deployed.** The commits are local.
 
@@ -39,6 +41,26 @@ the honest answer really is that nobody has said hello yet.
 writable directory denied. All four data routes answer `200 {ok:false,
 why:"no_store"}`, all five pages show the same honest panel, and the arcade and
 the song guesser keep working on local scores alone.
+
+---
+
+### One thing about this run that is not about the code
+
+**Another session was committing to this repository at the same time.** Commit
+`b854a66` ("Needle Drop: 140 more Europop, no repeats, and a speaker that
+moves") landed at 19:21:32, three seconds before this session's TV-voice commit.
+Both sessions had `public/needle-drop/index.html` open.
+
+Nothing was lost, and it was checked rather than assumed: the file now carries
+**both** sets of work — their 304-track pool and shuffled-bag dealer, and this
+session's shared leaderboards and streak counter — and it was driven through five
+rounds in a browser with no errors. One side effect to know about: five lines of
+their cache-buster change were swept into this session's commit `546ac08` by a
+`git add -A` that ran while their edit was in the working tree, so that hunk sits
+under the wrong commit message. The content is intact and the diff shows what it
+is.
+
+Worth avoiding next time by not running two sessions on one working copy.
 
 ---
 
