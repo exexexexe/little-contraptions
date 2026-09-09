@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rock Adoption</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%231C1A16'/><path d='M6 22c-1-6 4-12 10-12s11 5 10 11c-1 4-19 5-20 1z' fill='%23948A7C'/><circle cx='12' cy='17' r='1.3' fill='%235E564C'/><circle cx='20' cy='19' r='1' fill='%235E564C'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --bg:#1A1815;
+  --bg-2:#25221D;
+  --gold:#C9A65C;
+  --pale:#EFEAE0;
+  --dim:#948C7E;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:radial-gradient(820px 660px at 50% 2%, var(--bg-2) 0%, var(--bg) 68%);
+  color:var(--pale);font-family:var(--serif);min-height:100vh;
+  padding:28px 16px 80px;display:flex;flex-direction:column;align-items:center;
+}
+.wrap{ max-width:600px;width:100% }
+header{ text-align:center;margin-bottom:20px }
+h1{
+  font-family:var(--mono);font-size:clamp(14px,3.4vw,20px);margin:0;
+  letter-spacing:.26em;text-transform:uppercase;color:var(--gold);font-weight:500;
+}
+.sub{ font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-top:10px }
+
+.rocks{ display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:14px }
+.rocks button{
+  width:74px;height:64px;padding:0;background:rgba(239,234,224,.05);
+  border:1px solid rgba(239,234,224,.18);cursor:pointer;
+}
+.rocks button[aria-pressed=true]{ border-color:var(--gold);background:rgba(201,166,92,.16) }
+.rocks canvas{ display:block;width:100%;height:100% }
+
+.fields{ display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px }
+input[type=text]{
+  flex:1 1 190px;min-width:0;font-family:var(--serif);font-size:16px;
+  background:rgba(239,234,224,.06);color:var(--pale);
+  border:1px solid rgba(201,166,92,.35);padding:13px 14px;border-radius:2px;
+}
+input[type=text]::placeholder{ color:#7E7668 }
+input[type=text]:focus{ outline:none;border-color:var(--gold) }
+label.file{
+  flex:0 0 auto;display:inline-flex;align-items:center;
+  font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  border:1px dashed rgba(239,234,224,.3);color:var(--dim);padding:0 14px;cursor:pointer;
+}
+label.file:hover{ color:var(--pale);border-color:var(--pale) }
+label.file input{ display:none }
+.row{ display:flex;gap:8px;flex-wrap:wrap }
+button.act{
+  font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  background:transparent;color:var(--gold);border:1px solid var(--gold);
+  padding:13px 16px;cursor:pointer;flex:1 1 auto;
+}
+button.act:hover{ background:var(--gold);color:#1A1815 }
+button.act.sec{ color:var(--dim);border-color:rgba(239,234,224,.25) }
+button.act.sec:hover{ background:rgba(239,234,224,.12);color:var(--pale) }
+button.act:focus-visible{ outline:2px solid var(--pale);outline-offset:3px }
+
+.cert{ display:flex;justify-content:center;padding:22px 0 6px }
+#cert{ display:block;width:100%;max-width:480px;height:auto;box-shadow:0 16px 40px rgba(0,0,0,.6) }
+.note{ margin-top:20px;font-size:13.5px;line-height:1.7;color:var(--dim) }
+.note b{ color:var(--pale);font-weight:600 }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media print{ #lc-back{ display:none } }
+@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Rock Adoption</h1>
+    <p class="sub">The registry is open</p>
+  </header>
+
+  <div class="rocks" id="rocks" role="group" aria-label="Choose a rock"></div>
+
+  <div class="fields">
+    <input id="name" type="text" maxlength="24" autocomplete="off"
+           placeholder="Name your rock" aria-label="Name your rock">
+    <label class="file">Use my own photo
+      <input id="file" type="file" accept="image/*">
+    </label>
+  </div>
+  <div class="row">
+    <button class="act" id="issue" type="button">Issue the certificate</button>
+    <button class="act sec" id="save" type="button">Save</button>
+  </div>
+
+  <div class="cert">
+    <canvas id="cert" width="900" height="1200" role="img"
+            aria-label="A certificate of adoption for a pet rock."></canvas>
+  </div>
+
+  <p class="note" id="msg">
+    <b>Your photograph never leaves this tab.</b> It is read by the browser, drawn straight onto the
+    certificate and forgotten when you close the page — there is nowhere for it to be sent, because
+    this toy has no server side at all. The traits are invented on the spot from the rock's name.
+  </p>
+</div>
+
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<script>
+(function(){
+  'use strict';
+  var cv = document.getElementById('cert');
+  var ctx = cv.getContext('2d');
+  var W = cv.width, H = cv.height;
+
+  function hash(s){
+    var h = 2166136261 >>> 0;
+    for (var i = 0; i < s.length; i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
+    return h;
+  }
+  function prng(seed){
+    var s = seed >>> 0;
+    return function(){ s = (Math.imul(s, 1664525) + 1013904223) >>> 0; return s / 4294967296; };
+  }
+
+  var TRAITS = [
+    'Sits.','Has never once complained.','Does not require walking.','Immune to flattery.',
+    'Sleeps through anything.','Holds a grudge for approximately 400 million years.',
+    'Excellent listener.','Will not fetch. Will not be asked twice.',
+    'Unbothered by weather.','Does not shed.','Suspicious of the sea.','Content.',
+    'Has strong opinions and keeps them to itself.','Cannot be startled.',
+    'Refuses to learn tricks on principle.','Warm on one side only.',
+    'Has been dropped and does not mention it.','Prefers to be indoors, for reasons of its own.',
+    'Neither loyal nor disloyal.','Extremely patient with children.'
+  ];
+  var CARE = [
+    'Feed nothing. Water optional and discouraged.',
+    'Keep away from tumblers, cutting wheels and geologists.',
+    'May be left alone for up to forty years.',
+    'Dust occasionally. Do not attempt to bathe.',
+    'Does not need a lead, but may be carried.',
+    'If lost, it will not come back. It will not go anywhere either.'
+  ];
+  var BREEDS = ['Common Garden','Coastal Shingle','River-Worn','Quarry Stock','Field Boundary',
+                'Roadside Aggregate','Beach Cobble','Unclassified'];
+
+  var chosen = 0, custom = null, petName = '';
+
+  /* ---- drawn rocks, so there is something to adopt without a photo ---- */
+  function drawRock(c, w, h, seed){
+    var R = prng(seed);
+    var greys = [['#A8A196','#6E675C'],['#9C8F80','#615748'],['#8E9AA0','#5A646A'],
+                 ['#B0A48E','#726751'],['#8A8A8A','#565656'],['#A69080','#6B5A4C']];
+    var g = greys[seed % greys.length];
+    var cx = w / 2, cy = h * 0.58, rx = w * 0.40, ry = h * 0.30;
+    var pts = [], n = 11;
+    for (var i = 0; i < n; i++){
+      var a = (i / n) * Math.PI * 2;
+      var wob = 0.76 + R() * 0.42;
+      pts.push([cx + Math.cos(a) * rx * wob, cy + Math.sin(a) * ry * wob]);
+    }
+    c.clearRect(0, 0, w, h);
+    // shadow
+    c.fillStyle = 'rgba(0,0,0,.28)';
+    c.beginPath(); c.ellipse(cx, cy + ry * 0.86, rx * 0.92, ry * 0.22, 0, 0, 7); c.fill();
+    // body
+    var grad = c.createLinearGradient(cx - rx, cy - ry, cx + rx, cy + ry);
+    grad.addColorStop(0, g[0]); grad.addColorStop(1, g[1]);
+    c.fillStyle = grad;
+    c.beginPath();
+    c.moveTo(pts[0][0], pts[0][1]);
+    for (var k = 1; k <= n; k++){
+      var p0 = pts[k % n], p1 = pts[(k + 1) % n];
+      c.quadraticCurveTo(p0[0], p0[1], (p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2);
+    }
+    c.closePath(); c.fill();
+    // speckle and a highlight
+    for (var s = 0; s < 90; s++){
+      var a2 = R() * Math.PI * 2, rr = Math.sqrt(R());
+      c.fillStyle = 'rgba(0,0,0,' + (0.04 + R() * 0.13).toFixed(3) + ')';
+      c.beginPath();
+      c.arc(cx + Math.cos(a2) * rx * rr * 0.86, cy + Math.sin(a2) * ry * rr * 0.86,
+            0.6 + R() * 2.4, 0, 7);
+      c.fill();
+    }
+    c.fillStyle = 'rgba(255,255,255,.16)';
+    c.beginPath(); c.ellipse(cx - rx * 0.3, cy - ry * 0.42, rx * 0.3, ry * 0.2, -0.5, 0, 7); c.fill();
+  }
+
+  /* ---- the thumbnails ---- */
+  var picker = document.getElementById('rocks');
+  for (var i = 0; i < 6; i++){
+    (function(i){
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.setAttribute('aria-pressed', String(i === 0));
+      b.setAttribute('aria-label', 'Rock ' + (i + 1));
+      var c = document.createElement('canvas');
+      c.width = 148; c.height = 128;
+      drawRock(c.getContext('2d'), 148, 128, 101 + i * 37);
+      b.appendChild(c);
+      b.addEventListener('click', function(){
+        chosen = i; custom = null;
+        [].forEach.call(picker.children, function(x, k){ x.setAttribute('aria-pressed', String(k === i)); });
+        issue();
+      });
+      picker.appendChild(b);
+    })(i);
+  }
+
+  /* ---- the certificate ---- */
+  function issue(){
+    petName = (document.getElementById('name').value.trim() || 'Rocky').slice(0, 24);
+    var R = prng(hash(petName.toLowerCase()) + chosen * 7717);
+
+    ctx.fillStyle = '#F6F1E2';
+    ctx.fillRect(0, 0, W, H);
+    // paper tone — seeded like everything else, so re-issuing the same
+    // certificate gives you the same certificate rather than reshuffling
+    // the grain under it
+    for (var i = 0; i < 2200; i++){
+      ctx.fillStyle = 'rgba(140,116,72,' + (0.012 + R() * 0.03).toFixed(3) + ')';
+      ctx.fillRect(R() * W, R() * H, 2, 2);
+    }
+
+    var ink = '#2B2318', gold = '#9A7A2E';
+    ctx.strokeStyle = ink; ctx.lineWidth = 8;
+    ctx.strokeRect(34, 34, W - 68, H - 68);
+    ctx.lineWidth = 2;
+    ctx.strokeRect(52, 52, W - 104, H - 104);
+    // corner flourishes
+    ctx.lineWidth = 3;
+    [[52,52,1,1],[W-52,52,-1,1],[52,H-52,1,-1],[W-52,H-52,-1,-1]].forEach(function(c){
+      ctx.beginPath();
+      ctx.moveTo(c[0] + 34 * c[2], c[1]);
+      ctx.quadraticCurveTo(c[0], c[1], c[0], c[1] + 34 * c[3]);
+      ctx.stroke();
+    });
+
+    ctx.fillStyle = ink;
+    ctx.textAlign = 'center';
+    ctx.font = '400 22px Georgia, serif';
+    ctx.fillText('THE MUNICIPAL REGISTRY OF SEDENTARY COMPANIONS', W / 2, 122);
+    ctx.font = '700 54px Georgia, serif';
+    ctx.fillText('Certificate of Adoption', W / 2, 186);
+    ctx.strokeStyle = gold; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(W * 0.28, 206); ctx.lineTo(W * 0.72, 206); ctx.stroke();
+
+    // the portrait
+    var px = W / 2, py = 400, prx = 190, pry = 160;
+    ctx.save();
+    ctx.beginPath(); ctx.ellipse(px, py, prx, pry, 0, 0, 7); ctx.clip();
+    ctx.fillStyle = '#E4DCC6'; ctx.fillRect(px - prx, py - pry, prx * 2, pry * 2);
+    if (custom){
+      var s = Math.max(prx * 2 / custom.width, pry * 2 / custom.height);
+      ctx.drawImage(custom, px - custom.width * s / 2, py - custom.height * s / 2,
+                    custom.width * s, custom.height * s);
+    } else {
+      var off = document.createElement('canvas');
+      off.width = prx * 2; off.height = pry * 2;
+      drawRock(off.getContext('2d'), prx * 2, pry * 2, 101 + chosen * 37);
+      ctx.drawImage(off, px - prx, py - pry);
+    }
+    ctx.restore();
+    ctx.strokeStyle = ink; ctx.lineWidth = 6;
+    ctx.beginPath(); ctx.ellipse(px, py, prx, pry, 0, 0, 7); ctx.stroke();
+
+    // name
+    ctx.fillStyle = ink;
+    var size = 62;
+    ctx.font = '700 ' + size + 'px Georgia, serif';
+    while (ctx.measureText(petName).width > W - 200 && size > 26){
+      size -= 3; ctx.font = '700 ' + size + 'px Georgia, serif';
+    }
+    ctx.fillText(petName, W / 2, 640);
+    ctx.font = 'italic 24px Georgia, serif';
+    ctx.fillText('of the ' + BREEDS[(R() * BREEDS.length) | 0] + ' variety', W / 2, 676);
+
+    // traits
+    var picked = [], guard = 0;
+    while (picked.length < 4 && guard++ < 200){
+      var t = TRAITS[(R() * TRAITS.length) | 0];
+      if (picked.indexOf(t) < 0) picked.push(t);
+    }
+    ctx.textAlign = 'left';
+    ctx.font = '600 20px Georgia, serif';
+    ctx.fillText('TEMPERAMENT', 110, 740);
+    ctx.font = '400 24px Georgia, serif';
+    picked.forEach(function(t, i){
+      ctx.fillText('·  ' + t, 118, 782 + i * 40);
+    });
+
+    ctx.font = '600 20px Georgia, serif';
+    ctx.fillText('CARE', 110, 976);
+    ctx.font = '400 22px Georgia, serif';
+    var care = CARE[(R() * CARE.length) | 0];
+    ctx.fillText(care, 118, 1012);
+
+    // registration
+    ctx.font = '400 19px ui-monospace, Menlo, monospace';
+    ctx.fillText('REG. ' + String(100000 + ((R() * 899999) | 0)) + ' / ' +
+      new Date().getFullYear(), 110, 1094);
+    ctx.textAlign = 'right';
+    var d = new Date();
+    ctx.fillText('Adopted ' + d.getDate() + ' ' +
+      ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()] +
+      ' ' + d.getFullYear(), W - 110, 1094);
+
+    // the seal
+    var sx = W - 190, sy = 980;
+    ctx.save();
+    ctx.globalAlpha = .82;
+    ctx.strokeStyle = gold; ctx.fillStyle = gold;
+    ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.arc(sx, sy, 62, 0, 7); ctx.stroke();
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(sx, sy, 52, 0, 7); ctx.stroke();
+    for (var k = 0; k < 24; k++){
+      var a = (k / 24) * Math.PI * 2;
+      ctx.beginPath();
+      ctx.moveTo(sx + Math.cos(a) * 62, sy + Math.sin(a) * 62);
+      ctx.lineTo(sx + Math.cos(a) * 70, sy + Math.sin(a) * 70);
+      ctx.stroke();
+    }
+    ctx.textAlign = 'center';
+    ctx.font = '700 15px Georgia, serif';
+    ctx.fillText('REGISTERED', sx, sy - 6);
+    ctx.fillText('SEDENTARY', sx, sy + 14);
+    ctx.restore();
+  }
+
+  document.getElementById('issue').addEventListener('click', issue);
+  document.getElementById('name').addEventListener('keydown', function(e){ if (e.key === 'Enter') issue(); });
+
+  document.getElementById('file').addEventListener('change', function(e){
+    var f = e.target.files && e.target.files[0];
+    if (!f) return;
+    var img = new Image();
+    var url = URL.createObjectURL(f);
+    img.onload = function(){
+      custom = img;
+      [].forEach.call(picker.children, function(x){ x.setAttribute('aria-pressed', 'false'); });
+      issue();
+      URL.revokeObjectURL(url);
+    };
+    img.onerror = function(){
+      document.getElementById('msg').textContent =
+        'That file would not open as an image. Pick one of the rocks above instead.';
+      URL.revokeObjectURL(url);
+    };
+    img.src = url;
+  });
+
+  document.getElementById('save').addEventListener('click', function(){
+    try {
+      var a = document.createElement('a');
+      a.download = 'adoption-' + petName.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.png';
+      a.href = cv.toDataURL('image/png');
+      a.click();
+    } catch (e){
+      document.getElementById('msg').textContent =
+        'This browser would not hand the page a file. The certificate is on screen and can be saved ' +
+        'with a right-click.';
+    }
+  });
+
+  issue();
+
+  window.__rock = {
+    setName: function(n){ document.getElementById('name').value = n; issue(); return petName; },
+    choose: function(i){ picker.children[i].click(); return chosen; },
+    chosen: function(){ return chosen; },
+    hasCustom: function(){ return !!custom; },
+    rocks: function(){ return picker.children.length; },
+    fingerprint: function(){
+      var d = ctx.getImageData(0, 0, W, H).data, n = 0;
+      for (var i = 0; i < d.length; i += 1009) n = (n * 31 + d[i]) >>> 0;
+      return n;
+    }
+  };
+})();
+</script>
+</body>
+</html>

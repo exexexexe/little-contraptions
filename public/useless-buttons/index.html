@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Museum of Useless Buttons</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23151318'/><rect x='6' y='11' width='20' height='10' rx='3' fill='%23C8C2D0'/><rect x='6' y='9' width='20' height='10' rx='3' fill='%23E8E2F0'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --bg:#131117;
+  --bg-2:#1D1A23;
+  --accent:#C9A6E8;
+  --pale:#EFEBF4;
+  --dim:#8F87A0;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+  --hue:0deg;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:radial-gradient(900px 700px at 50% 0%, var(--bg-2) 0%, var(--bg) 66%);
+  color:var(--pale);font-family:var(--serif);min-height:100vh;
+  padding:30px 16px 80px;
+  filter:hue-rotate(var(--hue));transition:filter .6s ease;
+}
+.wrap{ max-width:940px;margin:0 auto }
+header{ text-align:center;margin-bottom:26px }
+h1{
+  font-family:var(--mono);font-size:clamp(14px,3.4vw,20px);margin:0;
+  letter-spacing:.26em;text-transform:uppercase;color:var(--accent);font-weight:500;
+}
+.sub{ font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-top:10px }
+
+.grid{ display:grid;grid-template-columns:repeat(auto-fill,minmax(224px,1fr));gap:16px }
+.case{
+  background:rgba(239,235,244,.04);border:1px solid rgba(239,235,244,.12);
+  padding:16px 15px 14px;display:flex;flex-direction:column;gap:11px;
+  position:relative;overflow:hidden;min-height:186px;
+}
+.plinth{
+  flex:1 1 auto;display:flex;align-items:center;justify-content:center;
+  position:relative;min-height:86px;
+}
+.plaque{ border-top:1px solid rgba(239,235,244,.14);padding-top:9px }
+.plaque b{
+  display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--accent);margin-bottom:4px;
+}
+.plaque span{ display:block;font-size:12.5px;line-height:1.5;color:var(--dim) }
+
+.b{
+  font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+  background:linear-gradient(180deg,#4A4356,#332E3C);
+  color:var(--pale);border:1px solid #14121A;
+  box-shadow:inset 1px 1px 0 rgba(255,255,255,.16), 0 3px 0 #1A1720;
+  padding:12px 16px;cursor:pointer;position:relative;
+}
+.b:active{ transform:translateY(2px);box-shadow:inset 1px 1px 0 rgba(255,255,255,.1), 0 1px 0 #1A1720 }
+.b:focus-visible{ outline:2px solid var(--accent);outline-offset:3px }
+
+.note{ margin-top:28px;font-size:13.5px;line-height:1.75;color:var(--dim);max-width:64ch }
+
+/* --- per-exhibit --- */
+#c-runaway .plinth{ overflow:hidden }
+#b-runaway{ transition:transform .18s cubic-bezier(.3,1.4,.5,1) }
+@keyframes wobble{
+  0%{transform:scale(1,1)} 18%{transform:scale(1.28,.72)} 36%{transform:scale(.82,1.2)}
+  54%{transform:scale(1.12,.9)} 72%{transform:scale(.95,1.05)} 100%{transform:scale(1,1)}
+}
+#b-wobble.go{ animation:wobble .7s ease-out }
+#b-sink{ transition:transform 1.1s cubic-bezier(.5,0,.9,.6), opacity 1.1s }
+#b-sink.gone{ transform:translateY(120px) rotate(9deg);opacity:0 }
+.dup{ font-size:9px;padding:7px 9px }
+#b-slow{ overflow:hidden }
+#b-slow i{
+  position:absolute;left:0;top:0;bottom:0;width:0;background:rgba(201,166,232,.35);
+  z-index:0;
+}
+#b-slow span{ position:relative;z-index:1 }
+.frag{ position:absolute;width:6px;height:6px;background:var(--pale);pointer-events:none }
+#c-mirror.flip{ transform:rotate(180deg) }
+#c-mirror{ transition:transform .8s ease }
+.tick{ font-family:var(--mono);font-size:10px;color:var(--dim);text-align:center;min-height:14px }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media print{ #lc-back{ display:none } }
+@media (prefers-reduced-motion: reduce){
+  #lc-back, body, #b-runaway, #b-sink, #c-mirror{ transition:none }
+  #b-wobble.go{ animation:none }
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>The Museum of Useless Buttons</h1>
+    <p class="sub">Twelve exhibits &middot; please do touch</p>
+  </header>
+
+  <div class="grid" id="grid"></div>
+
+  <p class="note">
+    Every exhibit does something different from every other exhibit. That was the brief, and it is
+    the only rule the collection has: no two of these are the same joke wearing a different label.
+    One of them is not useless at all, which you will find out by pressing it.
+  </p>
+</div>
+
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<script>
+(function(){
+  'use strict';
+
+  var EXHIBITS = [
+    ['runaway','The Runaway','Cannot be caught by a mouse. Yields immediately to a finger or a keyboard, which it considers unsporting.'],
+    ['honest','The Honest One','Tells you exactly how many times it has done nothing.'],
+    ['wobble','The Wobbler','Structurally sound. Emotionally not.'],
+    ['hue','The Colour Thief','Takes the museum’s colour with it. Give it back by pressing again.'],
+    ['tone','The Noisemaker','Synthesises one note. Never the same one twice in a row.'],
+    ['dup','The Duplicator','Makes a smaller one. The smaller one also works.'],
+    ['sink','The Sinker','Falls through the floor of its own case. Returns when it has thought about it.'],
+    ['liar','The Liar','Asks you not to press it, then revises its position.'],
+    ['slow','The Slow One','Takes three seconds to press. Nothing at the end of it.'],
+    ['mirror','The Mirror','Turns its own case over.'],
+    ['crumble','The Crumbler','Comes apart. Reassembles, grudgingly.'],
+    ['useful','The One That Works','The only exhibit in the collection with a function.']
+  ];
+
+  var grid = document.getElementById('grid');
+  grid.innerHTML = EXHIBITS.map(function(e){
+    return '<div class="case" id="c-' + e[0] + '">' +
+      '<div class="plinth"><button class="b" id="b-' + e[0] + '" type="button">' +
+        '<span>' + e[1].replace('The ', '') + '</span></button></div>' +
+      '<div class="tick" id="t-' + e[0] + '"></div>' +
+      '<div class="plaque"><b>' + e[1] + '</b><span>' + e[2] + '</span></div></div>';
+  }).join('');
+
+  function $(id){ return document.getElementById(id); }
+  var fired = {};
+  function mark(id, what){ fired[id] = what; }
+
+  /* 1. dodges the pointer, but only a pointer that can hover */
+  var run = $('b-runaway'), runCase = $('c-runaway');
+  var canHover = matchMedia('(hover: hover) and (pointer: fine)').matches;
+  if (canHover){
+    runCase.addEventListener('pointermove', function(e){
+      var r = run.getBoundingClientRect();
+      var dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
+      if (Math.hypot(dx, dy) > 70) return;
+      var cr = runCase.getBoundingClientRect();
+      var maxX = Math.max(0, (cr.width - r.width) / 2 - 6);
+      var maxY = Math.max(0, (cr.height - r.height) / 2 - 6);
+      run.style.transform = 'translate(' + (-Math.sign(dx) * Math.min(maxX, 46 + Math.random() * 20)).toFixed(0) +
+        'px,' + (-Math.sign(dy) * Math.min(maxY, 22 + Math.random() * 14)).toFixed(0) + 'px)';
+      mark('runaway', 'moved');
+    });
+  }
+  run.addEventListener('click', function(){
+    $('t-runaway').textContent = 'caught. it is not pleased.';
+    run.style.transform = '';
+    mark('runaway', 'caught');
+  });
+
+  /* 2. counts its own uselessness */
+  var honest = 0;
+  $('b-honest').addEventListener('click', function(){
+    honest++;
+    $('t-honest').textContent = 'nothing has now happened ' + honest +
+      (honest === 1 ? ' time' : ' times');
+    mark('honest', honest);
+  });
+
+  /* 3. a spring */
+  $('b-wobble').addEventListener('click', function(){
+    var el = this;
+    el.classList.remove('go');
+    void el.offsetWidth;
+    el.classList.add('go');
+    mark('wobble', 'sprung');
+  });
+
+  /* 4. rotates the hue of the entire museum */
+  var hue = 0;
+  $('b-hue').addEventListener('click', function(){
+    hue = (hue + 47) % 360;
+    document.documentElement.style.setProperty('--hue', hue + 'deg');
+    $('t-hue').textContent = hue === 0 ? 'returned' : hue + ' degrees away';
+    mark('hue', hue);
+  });
+
+  /* 5. one synthesised note, never twice running */
+  var ac = null, lastNote = -1;
+  var SCALE = [0, 2, 4, 7, 9, 12, 14, 16];
+  $('b-tone').addEventListener('click', function(){
+    var i;
+    do { i = (Math.random() * SCALE.length) | 0; } while (i === lastNote && SCALE.length > 1);
+    lastNote = i;
+    var f = 220 * Math.pow(2, SCALE[i] / 12);
+    $('t-tone').textContent = Math.round(f) + ' Hz';
+    mark('tone', Math.round(f));
+    try {
+      if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)();
+      if (ac.state === 'suspended') ac.resume();
+      var t = ac.currentTime;
+      var o = ac.createOscillator(), g = ac.createGain();
+      o.type = 'triangle'; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.16, t + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.7);
+      o.connect(g); g.connect(ac.destination);
+      o.start(t); o.stop(t + 0.72);
+    } catch (e){ $('t-tone').textContent = 'no audio here'; }
+  });
+
+  /* 6. spawns smaller working copies, then gives up */
+  var dupCase = $('c-dup'), dups = 0;
+  function makeDup(parent, scale){
+    if (dups >= 7){
+      dupCase.querySelectorAll('.dup').forEach(function(x){ x.remove(); });
+      dups = 0;
+      $('t-dup').textContent = 'too many. it started again.';
+      mark('dup', 0);
+      return;
+    }
+    dups++;
+    var b = document.createElement('button');
+    b.className = 'b dup';
+    b.type = 'button';
+    b.textContent = 'again';
+    b.style.fontSize = Math.max(7, 9 - dups * 0.4) + 'px';
+    b.addEventListener('click', function(){ makeDup(b, scale * 0.86); });
+    dupCase.querySelector('.plinth').appendChild(b);
+    $('t-dup').textContent = dups + ' of them now';
+    mark('dup', dups);
+  }
+  $('b-dup').addEventListener('click', function(){ makeDup(null, 1); });
+
+  /* 7. falls through the floor */
+  $('b-sink').addEventListener('click', function(){
+    var el = this;
+    if (el.classList.contains('gone')) return;
+    el.classList.add('gone');
+    $('t-sink').textContent = 'gone';
+    mark('sink', 'sunk');
+    setTimeout(function(){
+      el.classList.remove('gone');
+      $('t-sink').textContent = 'it thought better of it';
+    }, 2400);
+  });
+
+  /* 8. escalating refusals */
+  var LIES = ['Do not press','I said do not press','Why','That is twice','You are enjoying this',
+              'Fine','Press it as much as you like','I have stopped caring','Do not press'];
+  var lie = 0;
+  $('b-liar').addEventListener('click', function(){
+    lie = (lie + 1) % LIES.length;
+    this.querySelector('span').textContent = LIES[lie];
+    mark('liar', lie);
+  });
+  $('b-liar').querySelector('span').textContent = LIES[0];
+
+  /* 9. takes three seconds and then does nothing */
+  var slowBtn = $('b-slow');
+  slowBtn.insertAdjacentHTML('afterbegin', '<i></i>');
+  var slowFill = slowBtn.querySelector('i'), slowTimer = null, slowStart = 0;
+  function slowGo(){
+    if (slowTimer) return;
+    slowStart = performance.now();
+    slowTimer = setInterval(function(){
+      var p = Math.min(1, (performance.now() - slowStart) / 3000);
+      slowFill.style.width = (p * 100) + '%';
+      if (p >= 1){
+        clearInterval(slowTimer); slowTimer = null;
+        slowFill.style.width = '0%';
+        $('t-slow').textContent = 'pressed. nothing.';
+        mark('slow', 'completed');
+      }
+    }, 40);
+  }
+  slowBtn.addEventListener('click', slowGo);
+
+  /* 10. turns its own case upside down */
+  $('b-mirror').addEventListener('click', function(){
+    var c = $('c-mirror');
+    c.classList.toggle('flip');
+    $('t-mirror').textContent = c.classList.contains('flip') ? 'upside down' : 'the right way up';
+    mark('mirror', c.classList.contains('flip'));
+  });
+
+  /* 11. comes apart into pieces that fall */
+  var crumble = $('b-crumble');
+  crumble.addEventListener('click', function(){
+    var el = this;
+    if (el.dataset.busy) return;
+    el.dataset.busy = '1';
+    var r = el.getBoundingClientRect();
+    var host = $('c-crumble').querySelector('.plinth');
+    var hr = host.getBoundingClientRect();
+    el.style.visibility = 'hidden';
+    var bits = [];
+    for (var i = 0; i < 26; i++){
+      var f = document.createElement('div');
+      f.className = 'frag';
+      var fx = r.left - hr.left + Math.random() * r.width;
+      var fy = r.top - hr.top + Math.random() * r.height;
+      f.style.left = fx + 'px'; f.style.top = fy + 'px';
+      f.style.background = 'hsl(' + (260 + Math.random() * 40) + ',26%,' + (60 + Math.random() * 26) + '%)';
+      host.appendChild(f);
+      bits.push({ el: f, x: fx, y: fy, vx: (Math.random() - 0.5) * 3.4, vy: -1.6 - Math.random() * 2.4 });
+    }
+    mark('crumble', bits.length);
+    var t0 = performance.now();
+    (function fall(now){
+      var dt = Math.min(32, now - t0) / 16; t0 = now;
+      var alive = false;
+      bits.forEach(function(b){
+        b.vy += 0.5 * dt; b.x += b.vx * dt; b.y += b.vy * dt;
+        if (b.y < hr.height + 40){ alive = true; }
+        b.el.style.transform = 'translate(' + (b.x - parseFloat(b.el.style.left)) + 'px,' +
+                               (b.y - parseFloat(b.el.style.top)) + 'px)';
+      });
+      if (alive) requestAnimationFrame(fall);
+      else {
+        bits.forEach(function(b){ b.el.remove(); });
+        el.style.visibility = '';
+        el.dataset.busy = '';
+        $('t-crumble').textContent = 'reassembled';
+      }
+    })(t0);
+  });
+
+  /* 12. the one that does something */
+  $('b-useful').addEventListener('click', function(){
+    var now = new Date();
+    var stamp = now.toISOString();
+    mark('useful', stamp);
+    var done = function(ok){
+      $('t-useful').textContent = ok ? 'copied: ' + stamp.slice(11, 19) : stamp.slice(11, 19);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(stamp).then(function(){ done(true); }, function(){ done(false); });
+    } else done(false);
+  });
+
+  window.__museum = {
+    count: EXHIBITS.length,
+    ids: EXHIBITS.map(function(e){ return e[0]; }),
+    press: function(id){ $('b-' + id).click(); return fired[id]; },
+    fired: function(){ return fired; },
+    signature: function(){
+      // a snapshot of everything an exhibit could plausibly have changed
+      return {
+        hue: getComputedStyle(document.documentElement).getPropertyValue('--hue').trim(),
+        dups: document.querySelectorAll('.dup').length,
+        frags: document.querySelectorAll('.frag').length,
+        flipped: $('c-mirror').classList.contains('flip'),
+        sunk: $('b-sink').classList.contains('gone'),
+        wobbling: $('b-wobble').classList.contains('go'),
+        liar: $('b-liar').textContent.trim(),
+        ticks: EXHIBITS.map(function(e){ return $('t-' + e[0]).textContent; }).join('|'),
+        slowWidth: slowFill.style.width
+      };
+    }
+  };
+})();
+</script>
+</body>
+</html>
