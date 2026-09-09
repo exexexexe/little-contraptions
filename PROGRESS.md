@@ -1,5 +1,111 @@
 # Overnight batch — progress log
 
+## Summary — batch 15, the arcade and the song guesser
+
+**Two things built: a thirteen-game arcade cabinet, and the Europop guesser widened into
+Needle Drop. The cabinet went from 109 drawers to 110** — the guesser was expanded in place
+rather than duplicated, as asked, which meant renaming it.
+
+**Nothing else was touched.** No change to the hub shell beyond one card, one renamed card and
+two icon mappings. `server.js` gained no new route; the existing `/api/preview` got stricter.
+
+**Not deployed.** The commits are local.
+
+### Look at these first
+
+1. **The song pool is 164 tracks, not 500, and that is the honest number.** Every candidate was
+   put through the same `/api/preview` call the game itself uses, and only the ones Deezer
+   actually returned — right artist, playable preview, not a karaoke or instrumental take — were
+   kept. 177 candidates went in and 129 came out. Nearly every Russian and Ukrainian miss was my
+   own fault: I had written the titles in transliteration and **Deezer indexes them in Cyrillic**,
+   so those were re-queried in native script and 37 more came back. The brief said accuracy over
+   count and to build incrementally, so the remaining gap to 500 is left as curation rather than
+   filled with unchecked guesses. Per scene: Europop 56, Italy 43, Russia 35, Ukraine 26,
+   **Georgia 4**.
+
+2. **Georgian is the thin one and needs someone who actually knows the scene.** Four tracks
+   survived, all Eurovision entries, because that is the Georgian pop I could name and verify.
+   Most of what I tried — Mgzavrebi, The Shin, Young Georgian Lolitaz, several Eurovision
+   entrants — is simply not on Deezer with a preview. This is the one part of the brief I could
+   not deliver properly and it wants a native speaker with a list, not more guessing from me.
+
+3. **Playing the platformer found four real bugs that were invisible from looking at it.** This is
+   the part of the session worth reading:
+   - `boxHits` sampled only **one** bottom corner, so the moment the player's right edge crossed a
+     gap the whole body counted as unsupported. You fell a tile early at every ledge and could
+     never jump *from* an edge, because `p.on` was already false.
+   - Walkers in four levels sat one row above the floor. With nothing under them they flipped
+     direction every frame and hovered on the spot instead of patrolling.
+   - The jump rose 35.6 px while the level art assumed three-tile steps of 48 px. **Level 6 was not
+     hard, it was impossible.** The jump is 250 now, and there is an audit that refuses a step it
+     cannot clear.
+   - A platform on row 9 leaves 32 px of headroom over a 50 px jump, so jumping *under* one
+     cancelled the jump mid-rise and dropped you into the pit you were trying to clear. That is
+     why four levels looked fine and were unplayable. Levels with floor hazards no longer carry
+     low platforms.
+
+   All ten levels now pass a structural audit — reachability, spike runs, gap widths, walkers
+   grounded, headroom over every hazard — and a physics-aware bot clears **10/10 on the first
+   attempt with zero deaths**.
+
+4. **The retro look is enforced by the architecture, not by discipline.** Every game draws into one
+   320x240 buffer which is then scaled by a whole number with smoothing off, so nothing inside the
+   cabinet can be smooth even by accident. Sixteen colours, a 5x7 bitmap font set by hand — no
+   webfont is blocky enough at this size — and the CRT treatment applied once at the shell so each
+   game inherits it. The two the brief warned would drift, the platformer and billiards, are drawn
+   with the same primitives as everything else.
+
+5. **PENTAFALL is meaningfully different, not superficially.** Twelve pentominoes, five cells each,
+   a twelve-wide well, and a colour mapping that avoids the familiar convention entirely. Five-cell
+   pieces change how it plays as well as how it looks: the well is wider because pentominoes do not
+   pack, and a clear is worth more because it is harder to arrange.
+
+6. **`/api/preview` was handing back karaoke and instrumental takes.** Searching "Boten Anna
+   Basshunter" returned an instrumental — a clip that plays and cannot be named, which reads as a
+   broken game rather than a hard round. It now rejects those outright and prefers the exact title
+   by the right artist over a remix or alternate version.
+
+### What was verified, and how
+
+- **Every one of the thirteen games was driven, not just loaded.** All thirteen survive 600 frames
+  of random input with no thrown errors, and each was opened from the menu and played with real key
+  presses. High scores persist across a reload (checked by writing one and reloading).
+- **The falling-block game was checked against the thing it must not be.** Screenshotted mid-game:
+  the pieces on the field are visibly five-cell — a plus-shaped X, a W, a P — in oranges, cyans and
+  greens, on a twelve-wide well.
+- **Ten platformer levels, start to finish**, as described above. The brief asked for eight.
+- **The clip really does start at one second.** Measured on the audio element, not the UI: with the
+  window at 2 s the clip stopped at `currentTime` 2.02 and paused itself; the source is a real
+  30-second Deezer preview.
+- **Pause and volume are real.** Pause froze `currentTime` at 0.73 across a 700 ms wait and resumed
+  to 1.35; the volume slider set `audio.volume` to 0.22.
+- **The year filter really changes the pool**: 164 / 48 / 34 / 29 / 53 across the four ranges, and
+  the track actually drawn was inside the selected range every time. The scene filter gives 43
+  Italian tracks, all of them Italian.
+- All 110 drawers return 200, the hub shows 110 cards, both new toys appear as cards and as desktop
+  icons with hand-picked icons, and no page throws.
+
+### What was decided without asking
+
+- **The guesser was renamed.** Its pool is no longer Europop, so `/europop-guesser/` became
+  `/needle-drop/` and the card moved with it. The old path now 404s. The brief asked for an
+  original name and identity for this mechanic, and leaving a directory called "europop" on a
+  five-country pool would have been wrong in both directions.
+- **Verification for the arcade drove the real game loop**, rather than trying to be a human at the
+  keyboard for thirteen games. Where it mattered — that the clip starts at one second, that the
+  platformer is completable, that pause works — real input was used and is reported as such.
+- **A `_fit` and a small state object are exposed on `window`** in the arcade and the guesser, so
+  the scaling and the audio window can be checked from outside. Harmless, and it is what made the
+  audio claim checkable rather than asserted.
+
+### Still to do
+
+- **The song pool.** 164 verified of a target of 500. The method is repeatable: add candidates to
+  the list, run them through `/api/preview`, keep what answers. Georgian needs a person, not a
+  script.
+
+---
+
 ## Summary — batch 14
 
 **11 toys built, verified in a real browser, and added to the hub.** The cabinet went from 97 drawers
