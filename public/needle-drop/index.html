@@ -43,20 +43,58 @@ header{ padding:38px 0 10px;text-align:center }
 h1{ font-size:12px;letter-spacing:.3em;text-transform:uppercase;font-weight:600;margin:0 0 6px;color:var(--violet) }
 .tag{ font-size:11.5px;color:var(--dim);margin:0 }
 
-/* ---------- the record ---------- */
-.deck{ display:flex;justify-content:center;padding:20px 0 6px }
-.disc{ position:relative;width:150px;height:150px;border-radius:50%;
-  background:radial-gradient(circle at 50% 50%, #2B2338 0 17%, #17121F 17.5% 100%);
+/* ---------- the speaker ---------- */
+.deck{ display:flex;justify-content:center;padding:20px 0 8px }
+.spk{
+  position:relative;width:168px;height:168px;border-radius:10px;
+  background:linear-gradient(160deg,#251E33,#171220);
   border:1px solid rgba(240,236,246,.14);
-  box-shadow:0 10px 30px rgba(0,0,0,.5), inset 0 0 30px rgba(0,0,0,.6);
+  box-shadow:0 12px 34px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.05);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;
 }
-.disc::before{ content:"";position:absolute;inset:14px;border-radius:50%;
-  background:repeating-radial-gradient(circle, rgba(240,236,246,.05) 0 1px, transparent 1px 4px) }
-.disc::after{ content:"";position:absolute;left:50%;top:50%;width:9px;height:9px;margin:-4.5px;
-  border-radius:50%;background:var(--gold) }
-.disc.spin{ animation:rot 2.6s linear infinite }
-@keyframes rot{ to{ transform:rotate(360deg) } }
-@media (prefers-reduced-motion: reduce){ .disc.spin{ animation:none } }
+/* the grille cloth */
+.spk::before{
+  content:"";position:absolute;inset:6px;border-radius:7px;pointer-events:none;
+  background:repeating-linear-gradient(90deg, rgba(240,236,246,.045) 0 1px, transparent 1px 3px),
+             repeating-linear-gradient(0deg, rgba(240,236,246,.035) 0 1px, transparent 1px 3px);
+}
+.woofer{
+  position:relative;width:96px;height:96px;border-radius:50%;
+  background:radial-gradient(circle at 50% 44%, #4A3C63 0 6%, #2E2540 6% 62%, #221B31 62% 100%);
+  box-shadow:inset 0 0 18px rgba(0,0,0,.75), 0 2px 6px rgba(0,0,0,.5);
+  transform-origin:50% 50%;
+}
+/* the surround, and the dust cap in the middle */
+.woofer::before{ content:"";position:absolute;inset:9px;border-radius:50%;
+  border:2px solid rgba(240,236,246,.07) }
+.woofer::after{ content:"";position:absolute;left:50%;top:50%;width:30px;height:30px;margin:-15px;
+  border-radius:50%;background:radial-gradient(circle at 42% 38%, var(--violet), #6E4E96 70%);
+  box-shadow:0 0 12px rgba(201,166,240,.35) }
+.tweeter{
+  width:30px;height:30px;border-radius:50%;
+  background:radial-gradient(circle at 44% 40%, #3A2F4E 0 40%, #241D33 100%);
+  box-shadow:inset 0 0 8px rgba(0,0,0,.7);
+}
+.tweeter i{ display:block;width:11px;height:11px;margin:9px auto 0;border-radius:50%;
+  background:var(--gold);opacity:.8 }
+/* the rings that leave the cone while it is playing */
+.ring{ position:absolute;left:50%;top:50%;width:96px;height:96px;margin:-48px 0 0 -48px;
+  border-radius:50%;border:1px solid var(--violet);opacity:0;pointer-events:none }
+
+.spk.playing .woofer{ animation:cone .42s ease-in-out infinite }
+.spk.playing .tweeter i{ animation:tw .21s ease-in-out infinite }
+.spk.playing .ring{ animation:ping 1.15s ease-out infinite }
+.spk.playing .ring.b{ animation-delay:.38s }
+.spk.playing .ring.c{ animation-delay:.76s }
+@keyframes cone{ 0%,100%{ transform:scale(1) } 42%{ transform:scale(1.055) } 70%{ transform:scale(.985) } }
+@keyframes tw{ 0%,100%{ transform:scale(1);opacity:.75 } 50%{ transform:scale(1.35);opacity:1 } }
+@keyframes ping{ 0%{ transform:scale(1);opacity:.5 } 100%{ transform:scale(1.7);opacity:0 } }
+/* paused: hold still, but stay lit so it reads as loaded rather than dead */
+.spk.held .woofer{ animation:none;transform:scale(1.02) }
+@media (prefers-reduced-motion: reduce){
+  .spk.playing .woofer, .spk.playing .tweeter i, .spk.playing .ring{ animation:none }
+  .spk.playing .woofer{ transform:scale(1.04) }
+}
 
 /* ---------- the reveal bar ---------- */
 .bar{ position:relative;height:12px;background:var(--panel);border:1px solid var(--line);
@@ -126,6 +164,29 @@ ol.tries .n{ color:var(--dimmer);font-size:10px;min-width:2.5ch }
 .stat .k{ font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--dimmer) }
 .stat .v{ font-size:18px;font-weight:600;margin-top:2px }
 
+/* ---------- the shared boards ---------- */
+.boards{ margin:20px 0 0;background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:14px 15px }
+.boards h3{ font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin:0 0 3px;font-weight:700 }
+.boards .lede{ font-size:11px;color:var(--dimmer);margin:0 0 12px }
+.bcols{ display:grid;grid-template-columns:1fr 1fr;gap:14px }
+@media (max-width:560px){ .bcols{ grid-template-columns:1fr } }
+.bcol h4{ font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin:0 0 7px;font-weight:600 }
+.bcol ol{ margin:0;padding:0;list-style:none }
+.bcol li{ display:flex;gap:8px;font-size:12px;padding:3px 0;border-bottom:1px solid rgba(240,236,246,.05) }
+.bcol li.you{ color:var(--gold) }
+.bcol li .r{ color:var(--dimmer);width:1.4em;flex:0 0 auto }
+.bcol li .h{ flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap }
+.bcol li .s{ font-variant-numeric:tabular-nums }
+.bcol .none{ font-size:11px;color:var(--dimmer) }
+.bhandle{ display:flex;gap:8px;align-items:center;margin-top:13px;flex-wrap:wrap }
+.bhandle input{
+  font-family:var(--mono);font-size:12px;color:var(--ink);background:#171122;
+  border:1px solid var(--line);border-radius:3px;padding:8px 10px;width:150px;
+}
+.bhandle input:focus{ outline:2px solid var(--violet);outline-offset:1px }
+.bhandle .say{ font-size:10.5px;color:var(--dimmer) }
+.boards .off{ font-size:11px;color:var(--dimmer);line-height:1.7 }
+
 .msg{ font-size:11.5px;color:var(--dim);min-height:1.5em;margin:10px 0 0;text-align:center }
 .msg.bad{ color:var(--bad) }
 .note{ background:var(--panel);border:1px solid var(--line);border-radius:3px;
@@ -144,7 +205,14 @@ footer a{ color:var(--dim) }
     <p class="tag">One second of it. Ask for more if you have to.</p>
   </header>
 
-  <div class="deck"><div class="disc" id="disc"></div></div>
+  <div class="deck">
+    <div class="spk" id="spk" aria-hidden="true">
+      <div class="woofer">
+        <span class="ring"></span><span class="ring b"></span><span class="ring c"></span>
+      </div>
+      <div class="tweeter"><i></i></div>
+    </div>
+  </div>
 
   <div class="bar">
     <div class="win" id="win"></div>
@@ -200,7 +268,27 @@ footer a{ color:var(--dim) }
   <div class="stats">
     <div class="stat"><div class="k">Round</div><div class="v" id="sRound">1</div></div>
     <div class="stat"><div class="k">Got</div><div class="v" id="sGot">0</div></div>
+    <div class="stat"><div class="k">Streak</div><div class="v" id="sStreak">0</div></div>
     <div class="stat"><div class="k">Score</div><div class="v" id="sScore">0</div></div>
+  </div>
+
+  <div class="boards" id="boards">
+    <h3>Everybody&rsquo;s boards</h3>
+    <p class="lede">Two things are worth being good at here, so there are two boards.</p>
+    <div class="bcols">
+      <div class="bcol">
+        <h4>Longest streak</h4>
+        <ol id="bStreak"></ol>
+      </div>
+      <div class="bcol">
+        <h4>Fastest correct guess</h4>
+        <ol id="bFast"></ol>
+      </div>
+    </div>
+    <div class="bhandle">
+      <input id="bName" maxlength="12" placeholder="a name for the board" aria-label="What to appear as on the boards, up to twelve characters">
+      <span class="say" id="bSay">Whatever you type is what a stranger sees. Nothing else about you is stored.</span>
+    </div>
   </div>
 
   <div class="note">
@@ -216,7 +304,12 @@ footer a{ color:var(--dim) }
   <footer><p><a href="/">&#8592; back to the cabinet</a></p></footer>
 </div>
 
-<script src="data.js"></script>
+<script src="/shared/lc-id.js"></script>
+<!-- The version is the track count, and it is a cache-buster, not decoration.
+     Static files here are served with max-age=3600, so without it a returning
+     visitor replays yesterday's pool for an hour and the counts look wrong.
+     Bump it whenever data.js changes. -->
+<script src="data.js?v=304"></script>
 <script>
 (function(){
   'use strict';
@@ -232,6 +325,20 @@ footer a{ color:var(--dim) }
 
   var pool = [], track = null, step = 0, tries = [], over = false;
   var round = 1, got = 0, score = 0;
+  var bag = [], lastTrack = null;
+
+  function setPlaying(state){
+    var el = $('spk');
+    el.classList.toggle('playing', state === 'play');
+    el.classList.toggle('held', state === 'hold');
+  }
+  /* Two things the shared boards care about, kept separately from the
+     per-session score: the streak (which resets on any miss or skip-out)
+     and the fastest correct guess, measured from the moment the round
+     was dealt to the moment the right name was typed. Wall clock, not
+     the audio window — the audio window is what the score already
+     rewards, and the two are different skills. */
+  var streak = 0, bestStreak = 0, roundStart = 0, fastest = 0;
 
   /* ---- scene filter options ---- */
   (function(){
@@ -249,11 +356,14 @@ footer a{ color:var(--dim) }
     var era = $('era').value, sc = $('scene').value;
     var lo = 0, hi = 9999;
     if (era !== 'all') { var p = era.split('-'); lo = +p[0]; hi = +p[1]; }
+    var before = pool;
     pool = TRACKS.filter(function(t){
       if (t[2] < lo || t[2] > hi) return false;
       if (sc !== 'all' && t[3] !== sc) return false;
       return true;
     });
+    // the filters changed the pool, so the old deal is void
+    if (before.length !== pool.length) bag = [];
     $('poolCount').textContent = pool.length + ' in the pool';
     return pool;
   }
@@ -274,8 +384,9 @@ footer a{ color:var(--dim) }
       $('msg').textContent = 'Nothing in the pool with those filters.';
       return;
     }
-    track = pool[(Math.random() * pool.length) | 0];
+    track = deal();
     step = 0; tries = []; over = false;
+    roundStart = Date.now();
     $('tries').innerHTML = '';
     $('result').hidden = true;
     $('next').hidden = true;
@@ -288,6 +399,26 @@ footer a{ color:var(--dim) }
     stop();
     paintTicks();
     prefetch();
+  }
+
+  /* Deal from a shuffled bag rather than picking at random each round.
+     Random picking repeats constantly — with 56 tracks there was a better
+     than even chance of a repeat within ten rounds. A bag guarantees you
+     see every track once before any of them comes back, and the reshuffle
+     never hands you the same one twice across the seam. */
+  function deal(){
+    if (!bag.length) {
+      bag = pool.slice();
+      for (var i = bag.length - 1; i > 0; i--) {
+        var j = (Math.random() * (i + 1)) | 0, t = bag[i];
+        bag[i] = bag[j]; bag[j] = t;
+      }
+      if (bag.length > 1 && bag[bag.length - 1] === lastTrack) {
+        var swap = bag.pop(); bag.splice((Math.random() * (bag.length - 1)) | 0, 0, swap);
+      }
+    }
+    lastTrack = bag.pop();
+    return lastTrack;
   }
 
   var srcUrl = null, fetching = false;
@@ -320,7 +451,7 @@ footer a{ color:var(--dim) }
     $('playhead').style.width = (w * 100) + '%';
     if (!audio.paused && audio.currentTime >= stopAt) {
       audio.pause();
-      $('disc').classList.remove('spin');
+      setPlaying('hold');
       $('pause').disabled = true;
       $('playhead').style.width = (stopAt / MAXW * 100) + '%';
     }
@@ -336,7 +467,7 @@ footer a{ color:var(--dim) }
     stopAt = STEPS[step];
     audio.currentTime = 0;
     audio.play().then(function(){
-      $('disc').classList.add('spin');
+      setPlaying('play');
       $('pause').disabled = false;
       $('pause').textContent = 'Pause';
       if (raf) cancelAnimationFrame(raf);
@@ -350,7 +481,7 @@ footer a{ color:var(--dim) }
   function stop(){
     try { audio.pause(); } catch (e) {}
     if (raf) { cancelAnimationFrame(raf); raf = null; }
-    $('disc').classList.remove('spin');
+    setPlaying('off');
     $('pause').disabled = true;
     $('playhead').style.width = '0';
   }
@@ -358,10 +489,10 @@ footer a{ color:var(--dim) }
   $('play').addEventListener('click', play);
   $('pause').addEventListener('click', function(){
     if (audio.paused) {
-      audio.play(); $('disc').classList.add('spin'); $('pause').textContent = 'Pause';
+      audio.play(); setPlaying('play'); $('pause').textContent = 'Pause';
       if (!raf) tick();
     } else {
-      audio.pause(); $('disc').classList.remove('spin'); $('pause').textContent = 'Resume';
+      audio.pause(); setPlaying('hold'); $('pause').textContent = 'Resume';
     }
   });
   $('vol').addEventListener('input', function(){ audio.volume = $('vol').value / 100; });
@@ -427,9 +558,66 @@ footer a{ color:var(--dim) }
     if (win) {
       got++;
       score += [100, 80, 60, 45, 30, 15][step] || 10;
+      streak++;
+      var ms = Math.max(1, Date.now() - roundStart);
+      if (!fastest || ms < fastest) fastest = ms;
+      if (streak > bestStreak) { bestStreak = streak; postBoard('needle:streak', streak, STEPS[step] + ' s of audio'); }
+      postBoard('needle:fast', ms, STEPS[step] + ' s of audio');
+      $('rHead').textContent = 'Got it in ' + STEPS[step] + ' seconds \u00b7 ' + (ms / 1000).toFixed(1) + ' s on the clock';
+    } else {
+      streak = 0;
     }
     $('sGot').textContent = got;
+    $('sStreak').textContent = streak;
     $('sScore').textContent = score;
+  }
+
+  /* ---- the shared boards ------------------------------------------ *
+   *  Same store as the arcade cabinet and the guestbook. A submission is
+   *  fire-and-forget: if the shared side is missing the panel says so
+   *  once and the game is completely unaffected.
+   * ----------------------------------------------------------------- */
+  var boardsOff = false;
+
+  function fmtScore(boardId, v){
+    return boardId === 'needle:fast' ? (v / 1000).toFixed(2) + ' s' : String(v);
+  }
+
+  function paintBoard(elId, boardId, d){
+    var el = $(elId);
+    if (!d || !d.ok){
+      boardsOff = true;
+      $('boards').innerHTML = '<h3>Everybody&rsquo;s boards</h3><p class="off">' +
+        (d && d.why === 'no_store'
+          ? 'This server has no shared storage mounted, so there are no shared boards today. ' +
+            'The game itself is unaffected.'
+          : 'Could not reach the boards just now. The game itself is unaffected.') + '</p>';
+      return;
+    }
+    var top = d.top || [];
+    if (!top.length){ el.innerHTML = '<li class="none">nobody yet</li>'; return; }
+    el.innerHTML = top.slice(0, 8).map(function(r){
+      return '<li' + (r.you ? ' class="you"' : '') + '>' +
+        '<span class="r">' + r.rank + '</span>' +
+        '<span class="h">' + esc(r.handle) + '</span>' +
+        '<span class="s">' + esc(fmtScore(boardId, r.score)) + '</span></li>';
+    }).join('');
+  }
+
+  function loadBoards(){
+    if (boardsOff || !window.LCId) return;
+    LCId.get('/api/scores?board=needle%3Astreak').then(function(d){ paintBoard('bStreak', 'needle:streak', d); });
+    LCId.get('/api/scores?board=needle%3Afast').then(function(d){ paintBoard('bFast', 'needle:fast', d); });
+  }
+
+  function postBoard(boardId, value, detail){
+    if (boardsOff || !window.LCId) return;
+    LCId.post('/api/scores', {
+      board: boardId, score: value, handle: LCId.handle(), detail: detail
+    }).then(function(d){
+      if (d && d.ok) paintBoard(boardId === 'needle:fast' ? 'bFast' : 'bStreak', boardId, d);
+      else if (d && d.why === 'no_store') paintBoard('bStreak', boardId, d);
+    });
   }
 
   $('submit').addEventListener('click', function(){
@@ -468,12 +656,24 @@ footer a{ color:var(--dim) }
     if (!e.target.closest('.guessbox')) $('sugg').hidden = true;
   });
 
+  if (window.LCId){
+    $('bName').value = LCId.handle();
+    $('bName').addEventListener('change', function(){
+      var h = LCId.handle($('bName').value);
+      $('bName').value = h;
+      $('bSay').textContent = h ? 'Saved. New entries go up as "' + h + '".'
+                                : 'Left blank, which shows as "anon".';
+    });
+    loadBoards();
+  }
+
   // expose a little of the state so the reveal can be checked from outside
   window.NeedleDrop = {
     get audio(){ return audio; },
     get step(){ return step; },
     get window(){ return STEPS[step]; },
     get pool(){ return pool; },
+    get bagLeft(){ return bag.length; },
     get track(){ return track; },
     STEPS: STEPS
   };
