@@ -181,6 +181,50 @@ h1{
 }
 #lc-neal.on{ opacity:1 }
 
+/* ---- the about card ----
+   In the same family as everything else on this page — the card's own
+   paper, the card's own rule, the card's own type — rather than a modal
+   dropped on top of it. It sits where a card would sit, and it is
+   dismissed the way a card would be. */
+#lc-about{
+  position:fixed;inset:0;z-index:9998;display:flex;align-items:center;justify-content:center;
+  padding:24px;background:rgba(12,9,20,.72);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+  opacity:0;pointer-events:none;transition:opacity .28s ease;
+}
+#lc-about.on{ opacity:1;pointer-events:auto }
+#lc-about .about-card{
+  position:relative;max-width:min(430px,92vw);
+  background:#1A1428;border:1px solid rgba(224,165,72,.4);
+  border-radius:4px;padding:26px 26px 22px;
+  box-shadow:0 26px 60px rgba(0,0,0,.6);
+  font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  color:#EFE8DC;font-size:12.5px;line-height:1.85;
+}
+#lc-about .about-card .num{
+  font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:#E0A548;margin-bottom:11px;
+}
+#lc-about .about-card h2{
+  margin:0 0 12px;font-size:19px;letter-spacing:.03em;font-weight:600;color:#F4EFE2;
+  font-family:inherit;
+}
+#lc-about .about-card p{ margin:0 0 11px }
+#lc-about .about-card .who{ display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:14px 0 }
+#lc-about .about-card .who dt{ color:#9A8DBE;letter-spacing:.14em;text-transform:uppercase;font-size:9.5px;padding-top:3px }
+#lc-about .about-card .who dd{ margin:0;color:#F4EFE2 }
+#lc-about .about-card a{ color:#E0A548 }
+#lc-about .about-card .close{
+  margin-top:14px;background:transparent;border:1px solid rgba(244,239,226,.25);
+  color:#EFE8DC;font-family:inherit;font-size:10px;letter-spacing:.18em;text-transform:uppercase;
+  padding:9px 15px;cursor:pointer;border-radius:2px;
+}
+#lc-about .about-card .close:hover{ border-color:#E0A548;color:#E0A548 }
+#lc-about .about-card .close:focus-visible{ outline:2px solid #E0A548;outline-offset:2px }
+#lc-about .about-card .tag{
+  position:absolute;right:22px;bottom:22px;font-size:9px;letter-spacing:.2em;
+  text-transform:uppercase;color:#6E6390;
+}
+@media (prefers-reduced-motion: reduce){ #lc-about{ transition:none } }
+
 .shuffling .card-slot{ animation:lc-shuffle .7s cubic-bezier(.3,.9,.3,1) }
 @keyframes lc-shuffle{
   0%{ transform:translate(0,0) rotate(0) }
@@ -218,6 +262,9 @@ footer{
   font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
   font-size:11.5px;color:#8A7DAE;
 }
+#lc-here{ opacity:.85 }
+#lc-here b{ color:#C9B6F0;font-weight:600 }
+#lc-here[hidden]{ display:none }
 
 .fade{ opacity:0;transform:translateY(6px);animation:in .5s ease forwards }
 .fade:nth-child(1){ animation-delay:.02s }
@@ -2031,12 +2078,232 @@ footer{
       </a>
     </div>
 
+    <div class="card-slot fade">
+      <div class="stack"></div>
+      <a class="card" href="/guestbook/">
+        <div class="num">No. 111</div>
+        <h2>The Guestbook</h2>
+        <p>Sign it and everyone who comes after reads it. No account, no name behind it &#x2014; the book tells your entries from everyone else&rsquo;s by a random string your own browser invented.</p>
+        <span class="tag">toy</span>
+      </a>
+    </div>
+
+    <div class="card-slot fade">
+      <div class="stack"></div>
+      <a class="card" href="/pixel-canvas/">
+        <div class="num">No. 112</div>
+        <h2>The Pixel Canvas</h2>
+        <p>Ninety-six by sixty-four cells shared by everybody. You get eight pixels every half hour, any of them can be painted over, and something turns up in it eventually whether anyone planned it or not.</p>
+        <span class="tag">toy</span>
+      </a>
+    </div>
+
+    <div class="card-slot fade">
+      <div class="stack"></div>
+      <a class="card" href="/story-chain/">
+        <div class="num">No. 113</div>
+        <h2>The Story Chain</h2>
+        <p>One story, one sentence each, no going back. You cannot write two in a row and you cannot edit anything, so whatever the last person did to the plot is now your problem.</p>
+        <span class="tag">toy</span>
+      </a>
+    </div>
+
+    <div class="card-slot fade">
+      <div class="stack"></div>
+      <a class="card" href="/picture-of-the-day/">
+        <div class="num">No. 114</div>
+        <h2>Picture of the Day</h2>
+        <p>Wikimedia Commons&rsquo; own picture of the day, credited properly, with a personal album kept in your browser and a button that makes it the wallpaper in the Windows 98 mode.</p>
+        <span class="tag">real data</span>
+      </a>
+    </div>
+
+    <div class="card-slot fade">
+      <div class="stack"></div>
+      <a class="card" href="/sitcom-generator/">
+        <div class="num">No. 115</div>
+        <h2>Cold Open</h2>
+        <p>A premise, a beat and a punchline in the shape of a hangout sitcom that does not exist, under warm multi-cam lighting, with a laugh track built out of eighteen noise bursts rather than a recording.</p>
+        <span class="tag">generator</span>
+      </a>
+    </div>
+
+    <div class="card-slot fade">
+      <div class="stack"></div>
+      <a class="card" href="/tactical-loadout/">
+        <div class="num">No. 116</div>
+        <h2>Loadout Card</h2>
+        <p>One invented operator, two invented weapons, two invented gadgets and a note from the section leader. Olive drab, stencil, and a radio squelch on the button.</p>
+        <span class="tag">generator</span>
+      </a>
+    </div>
+
+    <div class="card-slot fade">
+      <div class="stack"></div>
+      <a class="card" href="/gaming-history/">
+        <div class="num">No. 117</div>
+        <h2>Gaming, On This Day</h2>
+        <p>Fifty-seven real, dated events. An entry needs a firm day to be in the list at all, which is why a lot of important history is missing rather than guessed at.</p>
+        <span class="tag">real data</span>
+      </a>
+    </div>
+
+    <div class="card-slot fade">
+      <div class="stack"></div>
+      <a class="card" href="/snarky-weapon/">
+        <div class="num">No. 118</div>
+        <h2>The Talking Gun</h2>
+        <p>An invented weapon with an attitude problem and opinions about how you are holding it. Ask it something genuinely large and see what happens.</p>
+        <span class="tag">generator</span>
+      </a>
+    </div>
+
+    <div class="card-slot fade">
+      <div class="stack"></div>
+      <a class="card" href="/ancient-advisor/">
+        <div class="num">No. 119</div>
+        <h2>The Advisors</h2>
+        <p>A realm that never existed, and the five people shouting at you about it &#x2014; the general, the treasurer, the celebrant, the engineer and the one who talks to the people.</p>
+        <span class="tag">generator</span>
+      </a>
+    </div>
+
+    <div class="card-slot fade">
+      <div class="stack"></div>
+      <a class="card" href="/ships-log/">
+        <div class="num">No. 120</div>
+        <h2>The Ship&rsquo;s Log</h2>
+        <p>Weather, morale, and whatever that was off the starboard bow. Brass, rope and aged paper, with a foghorn.</p>
+        <span class="tag">generator</span>
+      </a>
+    </div>
+
+    <div class="card-slot fade">
+      <div class="stack"></div>
+      <a class="card" href="/generate-a-stand/">
+        <div class="num">No. 121</div>
+        <h2>Your Apparition</h2>
+        <p>An invented name in brackets, six letter grades, an ability that is a rule about the world rather than a laser, and a cost that actually costs something. The reveal is an event.</p>
+        <span class="tag">generator</span>
+      </a>
+    </div>
+
+    <div class="card-slot fade">
+      <div class="stack"></div>
+      <a class="card" href="/infinite-archive/">
+        <div class="num">No. 122</div>
+        <h2>The Infinite Archive</h2>
+        <p>Type anything and it is already on a shelf, in a hexagon numbered in the billions, surrounded by eighteen hundred characters of noise. Ask for the same phrase tomorrow and it is in the same place.</p>
+        <span class="tag">toy</span>
+      </a>
+    </div>
+
+    <div class="card-slot fade">
+      <div class="stack"></div>
+      <a class="card" href="/paradox-machine/">
+        <div class="num">No. 123</div>
+        <h2>The Paradox Machine</h2>
+        <p>Feed it a statement that eats itself and it gives you back a longer one, in eight escalating rungs. Do not feed it the same one twice.</p>
+        <span class="tag">generator</span>
+      </a>
+    </div>
+
+    <div class="card-slot fade">
+      <div class="stack"></div>
+      <a class="card" href="/six-degrees/">
+        <div class="num">No. 124</div>
+        <h2>Six Degrees of Anything</h2>
+        <p>Two things in, and the genuinely shortest path between them through a graph of loose properties &#x2014; round, kept in a pocket, makes a noise. Or the long way round, if you would rather.</p>
+        <span class="tag">toy</span>
+      </a>
+    </div>
+
+    <div class="card-slot fade">
+      <div class="stack"></div>
+      <a class="card" href="/snow-globe/">
+        <div class="num">No. 125</div>
+        <h2>The Nostalgia Snow Globe</h2>
+        <p>Four pixel dioramas under glass. The falling snow is the almanac&rsquo;s, the ambience is Room Tone&rsquo;s, and the snow that settles at the bottom is real rigid-body physics you can shake.</p>
+        <span class="tag">toy</span>
+      </a>
+    </div>
+
+    <div class="card-slot fade">
+      <div class="stack"></div>
+      <a class="card" href="/day-night-line/">
+        <div class="num">No. 126</div>
+        <h2>The Day/Night Line</h2>
+        <p>Where the sun is, right now, computed in your browser rather than fetched &#x2014; plus ten city clocks and twelve real facts about time zones.</p>
+        <span class="tag">real data</span>
+      </a>
+    </div>
+
+    <div class="card-slot fade">
+      <div class="stack"></div>
+      <a class="card" href="/encode-anything/">
+        <div class="num">No. 127</div>
+        <h2>Encode Anything</h2>
+        <p>Binary, hex, base64, morse and semaphore flags, both directions. The semaphore alphabet is generated from the rule that produces it rather than typed out, so it cannot contain a typo.</p>
+        <span class="tag">reference</span>
+      </a>
+    </div>
+
+    <div class="card-slot fade">
+      <div class="stack"></div>
+      <a class="card" href="/closer-than-you-think/">
+        <div class="num">No. 128</div>
+        <h2>Closer Than You&rsquo;d Think</h2>
+        <p>Twenty-two comparisons that mess with your sense of time distance, every date real and every claim shown with the arithmetic and the fact you would want to check.</p>
+        <span class="tag">real data</span>
+      </a>
+    </div>
+
+    <div class="card-slot fade">
+      <div class="stack"></div>
+      <a class="card" href="/dream-decoder/">
+        <div class="num">No. 129</div>
+        <h2>The Dream Decoder</h2>
+        <p>A dream in, a confident and completely unfounded folklore reading out. Entertainment, and it says so where you can see it rather than in the small print.</p>
+        <span class="tag">generator</span>
+      </a>
+    </div>
+
+    <div class="card-slot fade">
+      <div class="stack"></div>
+      <a class="card" href="/city-builder-map/">
+        <div class="num">No. 130</div>
+        <h2>Build a City, One Street at a Time</h2>
+        <p>A procedural street map of a place that does not exist, seeded by its own name so it keeps its shape. Medieval spokes one side, a grid the other, and a ring road that gave up.</p>
+        <span class="tag">generator</span>
+      </a>
+    </div>
+
+    <div class="card-slot fade">
+      <div class="stack"></div>
+      <a class="card" href="/what-if-history/">
+        <div class="num">No. 131</div>
+        <h2>What If It Had Gone Differently</h2>
+        <p>A real, dated event goes in and a badly behaved counterfactual comes out. The date is real; nothing after the fork is.</p>
+        <span class="tag">generator</span>
+      </a>
+    </div>
+
+    <div class="card-slot fade">
+      <div class="stack"></div>
+      <a class="card" href="/declassified-search/">
+        <div class="num">No. 132</div>
+        <h2>Declassified Search History</h2>
+        <p>One evening of somebody&rsquo;s search history, escalating. There is no data here: no subject, no leak, and no access to yours.</p>
+        <span class="tag">generator</span>
+      </a>
+    </div>
+
     <div class="ghost fade">
-      <p>Drawer 111 is still<br>being built.</p>
+      <p>Drawer 133 is still<br>being built.</p>
     </div>
   </div>
 
-  <footer>110 contraptions, and counting.</footer>
+  <footer>132 contraptions, and counting. <span id="lc-here" hidden></span></footer>
 </div>
 
 <button id="lc-mode" type="button" aria-pressed="false">Windows 98</button>
@@ -2705,6 +2972,15 @@ footer{
     'toy':          'chip'
   };
   var BY_SLUG = {
+    'guestbook':'doc', 'pixel-canvas':'frame', 'story-chain':'doc',
+    'picture-of-the-day':'frame', 'sitcom-generator':'news',
+    'tactical-loadout':'chip', 'gaming-history':'game', 'snarky-weapon':'chip',
+    'ancient-advisor':'doc', 'ships-log':'doc', 'generate-a-stand':'chart',
+    'infinite-archive':'doc', 'paradox-machine':'chip', 'six-degrees':'chart',
+    'snow-globe':'globe', 'day-night-line':'globe', 'encode-anything':'chip',
+    'closer-than-you-think':'clock', 'dream-decoder':'heart',
+    'city-builder-map':'globe', 'what-if-history':'news',
+    'declassified-search':'news',
     'needle-drop':'radio', 'arcade':'game',
     'reverse-alarm':'clock',
     'useless-buttons':'game',
@@ -4239,7 +4515,7 @@ footer{
     var original = p ? p.innerHTML : '';
     var taps = 0;
     var LINES = [
-      'Drawer 82 is still<br>being built.',
+      'Drawer 133 is still<br>being built.',
       'Still being built.',
       'Yes, still.',
       'It is a big drawer.',
@@ -4247,7 +4523,7 @@ footer{
       'You have clicked this seven times.',
       'The drawer is fine. I am the problem.',
       'Fine. It is not being built.<br>It never was.',
-      'There is no drawer 82.<br>There is only this.'
+      'There is no drawer 133.<br>There is only this.'
     ];
     ghost.style.cursor = 'pointer';
     ghost.addEventListener('click', function(){
@@ -4279,9 +4555,56 @@ footer{
     }, ms || 4200);
   }
 
-  /* ---- 4. up up down down ------------------------------------------- */
+  /* ---- 4. up up down down -------------------------------------------
+     The code used to reshuffle the cabinet, which was a nice effect
+     attached to nothing. It now opens the about card, and the reshuffle
+     has moved to typing "shuffle" — the same door, a different key, and
+     neither of them was documented anywhere before this comment.
+   ------------------------------------------------------------------- */
   var KONAMI = ['arrowup','arrowup','arrowdown','arrowdown','arrowleft','arrowright','arrowleft','arrowright','b','a'];
   var kbuf = [];
+
+  /* The repository this cabinet actually lives in. Taken from the git
+     remote of this working copy rather than typed from memory. */
+  var REPO = 'https://github.com/exexexexe/little-contraptions';
+
+  var aboutEl = null;
+  function about(){
+    if (!aboutEl){
+      aboutEl = document.createElement('div');
+      aboutEl.id = 'lc-about';
+      aboutEl.setAttribute('role', 'dialog');
+      aboutEl.setAttribute('aria-modal', 'true');
+      aboutEl.setAttribute('aria-label', 'About this cabinet');
+      aboutEl.innerHTML =
+        '<div class="about-card">' +
+          '<div class="num">No. 0 &middot; about</div>' +
+          '<h2>Little Contraptions</h2>' +
+          '<p>A cabinet of small, self-contained web toys. Everything in it runs in your ' +
+          'browser; the server exists to hold keys, relay a few feeds, and remember the ' +
+          'handful of things that are shared.</p>' +
+          '<dl class="who">' +
+            '<dt>Made by</dt><dd>Maksim</dd>' +
+            '<dt>and</dt><dd>Claude</dd>' +
+            '<dt>Source</dt><dd><a href="' + REPO + '" target="_blank" rel="noopener">' +
+              'github.com/exexexexe/little-contraptions</a></dd>' +
+          '</dl>' +
+          '<p>Every drawer was built for this cabinet. Nothing in it is quoted from ' +
+          'anywhere, no recording is played anywhere in it, and where a toy uses real ' +
+          'data it says whose it is.</p>' +
+          '<button class="close" type="button">Close</button>' +
+          '<span class="tag">up up down down</span>' +
+        '</div>';
+      document.body.appendChild(aboutEl);
+      aboutEl.addEventListener('click', function(e){
+        if (e.target === aboutEl || e.target.className === 'close') closeAbout();
+      });
+    }
+    aboutEl.classList.add('on');
+    var b = aboutEl.querySelector('.close');
+    if (b) b.focus();
+  }
+  function closeAbout(){ if (aboutEl) aboutEl.classList.remove('on'); }
 
   function shuffle(){
     var visible = slots.filter(function(s){ return !s.hidden; });
@@ -4313,12 +4636,19 @@ footer{
     if (kbuf.length > KONAMI.length) kbuf.shift();
     if (kbuf.length === KONAMI.length && kbuf.join(',') === KONAMI.join(',')){
       kbuf = [];
-      shuffle();
+      about();
       return;
     }
 
+    if (k === 'escape'){ closeAbout(); return; }
+
     if (k.length !== 1) return;
     buf = (buf + k).slice(-8);
+    if (buf.indexOf('shuffle') >= 0){
+      buf = '';
+      shuffle();
+      return;
+    }
     if (buf.indexOf('neal') >= 0){
       buf = '';
       say('Yes — this whole cabinet is standing on the shoulders of ' +
@@ -4326,11 +4656,59 @@ footer{
     }
   });
 
+  /* ---- 5. how many people are here ---------------------------------- *
+   *  In-memory on the server and nowhere else: "right now" is a fact
+   *  about the last ninety seconds, and writing it down would make the
+   *  hub claim to know something it does not. It is an ornament, so it
+   *  does not appear at all until there is an answer, and it never says
+   *  anything if the server cannot be reached.
+   * ------------------------------------------------------------------ */
+  (function here(){
+    var el = document.getElementById('lc-here');
+    if (!el) return;
+
+    function token(){
+      try {
+        var t = localStorage.getItem('lc-visitor-token');
+        if (t && /^[a-z0-9]{8,64}$/i.test(t)) return t;
+        t = '';
+        var bytes = new Uint8Array(12);
+        (window.crypto || window.msCrypto).getRandomValues(bytes);
+        for (var i = 0; i < bytes.length; i++) t += (bytes[i] % 36).toString(36);
+        localStorage.setItem('lc-visitor-token', t);
+        return t;
+      } catch (e) {
+        var s = '';
+        for (var j = 0; j < 16; j++) s += Math.floor(Math.random() * 36).toString(36);
+        return s;
+      }
+    }
+    var t = token();
+
+    function beat(){
+      if (document.hidden) return;
+      fetch('/api/here?t=' + encodeURIComponent(t))
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          if (!d || !d.ok || !(d.here > 0)) return;
+          el.hidden = false;
+          el.innerHTML = d.here === 1
+            ? '&middot; you are the only one here at the moment'
+            : '&middot; <b>' + d.here + '</b> people here right now';
+        })
+        .catch(function(){ /* an ornament that cannot be drawn is simply not drawn */ });
+    }
+    beat();
+    setInterval(beat, 45000);
+    document.addEventListener('visibilitychange', function(){ if (!document.hidden) beat(); });
+  })();
+
   window.__eggs = {
     notes: slots.length,
     noteFor: noteFor,
     ghostTaps: function(){ return ghost ? ghost.querySelector('p').innerHTML : ''; },
     konami: KONAMI.join(''),
+    about: about, closeAbout: closeAbout, repo: REPO,
     say: say
   };
 })();
