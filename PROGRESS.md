@@ -51,7 +51,17 @@ outside the list was built.
    touched — the routes list and the keys paragraph. Rewriting 91 rows is a job in its own right
    and it needs someone who knows which of the older entries are still accurate.
 
-5. **Another session was committing to `main` while I worked.** Its last commit was 11:55 and the
+5. **The Zone gallery served a war grave, and I have fixed it.** The very first plate it showed in
+   production was a real WWII mass grave in Ukraine, with an invented eerie survey note printed
+   underneath — because a great many war memorials are also Soviet-era concrete and the search could
+   not tell the difference. There is now a name-based exclusion list running in English, Ukrainian
+   and Russian (memorial, grave, cemetery, victims, могила, мемориал, братськ and the rest), the
+   search term that reached hardest for monuments has been dropped, and the footer states the rule.
+   Verified over ten consecutive plates. It will sometimes skip an innocent building with an unlucky
+   name, which is the correct direction to be wrong in. **If you find any other category this ought
+   to be refusing, the list is one array at the top of the file.**
+
+6. **Another session was committing to `main` while I worked.** Its last commit was 11:55 and the
    tree was clean when I started, so nothing collided, but two agents are writing to
    `public/index.html`. Worth settling before the next batch.
 

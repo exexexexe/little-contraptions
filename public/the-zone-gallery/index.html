@@ -196,7 +196,10 @@ footer a{ color:var(--phos) }
   this page that is true. No frame here is a still from <i>Stalker</i>, <i>Solaris</i> or anything
   else; those are under copyright, Commons does not host them, and this annexe does not want them.
   The note underneath each plate is invented and describes nothing that happened. The buildings are
-  real buildings, photographed by real people, standing in places that are not the Zone.
+  real buildings, photographed by real people, standing in places that are not the Zone. War
+  memorials, graves and cemeteries are filtered out by name before anything reaches this page: a
+  great many of them are also Soviet-era concrete, and an invented ghost story has no business
+  being printed under a photograph of somebody's grave.
   The <a href="/the-zone/">field PDA</a> is next door and keeps the same hours.
   <a href="/">&larr; back to the cabinet</a>
 </footer>
@@ -222,11 +225,38 @@ const API = 'https://commons.wikimedia.org/w/api.php';
 const TERMS = [
   'brutalist architecture soviet', 'soviet modernist building', 'abandoned factory russia',
   'khrushchyovka panel housing', 'soviet bus stop concrete', 'abandoned power station',
-  'soviet monument concrete', 'industrial ruin chimney', 'cooling tower abandoned',
+  'soviet metro station architecture', 'industrial ruin chimney', 'cooling tower abandoned',
   'soviet sanatorium building', 'concrete housing block eastern europe', 'abandoned mine building',
   'soviet cinema building', 'water tower industrial abandoned', 'soviet housing estate',
   'derelict industrial hall'
 ];
+
+/* ---------------------------------------------------------------- *
+ *  What this annexe will not put a made-up ghost story under.
+ *
+ *  Searching an open archive for Soviet-era concrete turns up war
+ *  memorials, mass graves and cemeteries, because a great many of them
+ *  are Soviet-era concrete. The first plate this page ever served in
+ *  production was a photograph of a real war grave in Ukraine, with an
+ *  invented survey note about doors underneath it. That is the whole
+ *  reason this list exists.
+ *
+ *  It runs on the file title in several languages, and the searches
+ *  above have had the one that reached hardest for monuments removed.
+ *  It will be over-eager sometimes and skip an innocent building with
+ *  an unlucky name. That is the correct direction to be wrong in.
+ * ---------------------------------------------------------------- */
+const NOT_THIS = [
+  'memorial', 'memoria', 'grave', 'graves', 'cemetery', 'cemetary', 'graveyard', 'tomb',
+  'burial', 'ossuary', 'crematori', 'mausoleum', 'obelisk', 'war dead', 'fallen soldiers',
+  'victims', 'massacre', 'holocaust', 'gulag', 'prison camp', 'concentration camp',
+  'могила', 'мемориал', 'меморіал', 'кладбищ', 'кладовищ', 'братськ', 'братск',
+  'жертв', 'погибш', 'загибл', 'памятник воин', 'пам\u2019ятник воїн'
+];
+function offLimits(title){
+  const t = String(title).toLowerCase();
+  return NOT_THIS.some((w) => t.indexOf(w) >= 0);
+}
 
 /* ---------------------------------------------------------------- *
  *  The reports.
@@ -342,6 +372,7 @@ async function loadMore(){
       const ii = (p.imageinfo || [])[0];
       if (!ii || !ii.thumburl) continue;
       if (!/\.(jpe?g|png)$/i.test(p.title)) continue;      // no video, no SVG diagrams
+      if (offLimits(p.title)) continue;                    // see NOT_THIS
       if (have.has(p.title)) continue;
       const em = ii.extmetadata || {};
       deck.push({
