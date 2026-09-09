@@ -181,6 +181,7 @@ footer a{ color:var(--glass) }
     <button id="shake" type="button">Shake it</button>
     <button id="sound" class="sec" type="button" aria-pressed="false">Room tone</button>
     <button id="music" class="sec" type="button" aria-pressed="false">A carol</button>
+    <button id="tilt" class="sec" type="button" aria-pressed="false" hidden>Tilt to pour</button>
     <span class="m" id="flakes"></span>
   </div>
 
@@ -478,6 +479,82 @@ function watchHidden(dt){
 }
 
 /* ------------------------------------------------------------------ *
+ *  Tilt.
+ *
+ *  The availability test is the one Invisible Ink worked out and is
+ *  worth copying exactly: the presence of DeviceOrientationEvent is not
+ *  enough, because plenty of desktops expose it and never fire it, and
+ *  iOS will not fire anything until it has been asked. So the control
+ *  only appears once a real reading has arrived on a device with a
+ *  coarse pointer — something you actually pick up — and iOS gets a
+ *  button to ask with.
+ *
+ *  What it does here is the obvious thing: the globe's gravity follows
+ *  the way you are holding the phone, so tipping it really does pour the
+ *  snow to one side.
+ *
+ *  And the secret: turn it right over and hold it there. A real snow
+ *  globe does something specific when you do that, and so does this one.
+ * ------------------------------------------------------------------ */
+const handheld = matchMedia('(pointer: coarse)').matches;
+let tiltOn = false, tiltSeen = false, upsideDown = 0, turnedFound = false;
+
+function onOrient(e){
+  if (e.beta === null && e.gamma === null) return;
+  if (!tiltSeen && handheld){
+    tiltSeen = true;
+    $('tilt').hidden = false;
+  }
+  if (!tiltOn || !engine) return;
+
+  const g = Math.max(-90, Math.min(90, e.gamma || 0));
+  const b = e.beta == null ? 0 : e.beta;
+
+  engine.gravity.x = Math.sin(g * Math.PI / 180) * 1.2;
+  // beta runs -180..180; past +-135 the phone is upside down
+  const over = Math.abs(b) > 135;
+  engine.gravity.y = over ? -1 : 1;
+
+  if (over){
+    upsideDown += 1 / 60;
+    if (upsideDown > 1.4 && !turnedFound){
+      turnedFound = true;
+      $('found').hidden = false;
+      $('found').innerHTML = '<div class="k">you turned it over</div>' +
+        'And the snow went to the top, because that is what snow does. There is no trick here ' +
+        'and nothing is being simulated for effect &mdash; the flakes are rigid bodies and you ' +
+        'have inverted their gravity by inverting the phone. Turn it back before it settles up ' +
+        'there, or do not.';
+    }
+  } else {
+    upsideDown = Math.max(0, upsideDown - 1 / 30);
+  }
+}
+
+if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission !== 'function'){
+  window.addEventListener('deviceorientation', onOrient);
+}
+$('tilt').addEventListener('click', () => {
+  function go(){
+    tiltOn = true;
+    $('tilt').setAttribute('aria-pressed', 'true');
+    $('note').textContent = 'Tilt control is on. The globe pours the way you hold it.';
+  }
+  if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function'){
+    DeviceOrientationEvent.requestPermission().then((state) => {
+      if (state === 'granted'){ window.addEventListener('deviceorientation', onOrient); go(); }
+      else { $('tilt').hidden = true; }
+    }).catch(() => { $('tilt').hidden = true; });
+  } else if (tiltSeen) go();
+});
+// iOS fires nothing until asked, so offer the button on a touchscreen that
+// has the API at all, and withdraw it if the ask is refused.
+if (handheld && window.DeviceOrientationEvent &&
+    typeof DeviceOrientationEvent.requestPermission === 'function'){
+  $('tilt').hidden = false;
+}
+
+/* ------------------------------------------------------------------ *
  *  Sound. Room Tone's bench, doing the ambience and the carol.
  * ------------------------------------------------------------------ */
 let bed = null, bedOn = false;
@@ -677,6 +754,8 @@ window.addEventListener('resize', fit);
 window.__globe = {
   kick, get energy(){ return energy; }, hidden, scenes: SCENES,
   get fx(){ return fx; },
+  onOrient, get tilt(){ return { on: tiltOn, seen: tiltSeen, upsideDown, turnedFound }; },
+  enableTilt: () => { tiltOn = true; },
   set: (id) => { scene = SCENES.find((s) => s.id === id) || scene; paintPresets(); drawScene(); if (fx) fx.set(scene.weather); },
   flakes: () => flakes, carols: CAROLS,
   forceEgg: () => { energy = 100; hidden.charge = 3; }
