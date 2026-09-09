@@ -1,0 +1,515 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Ant Farm</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%231A1208'/><rect x='4' y='11' width='24' height='17' fill='%23C08A47'/><path d='M12 11v6l-4 5v6M20 13v7l4 4v4' stroke='%231A1208' stroke-width='3' fill='none'/><circle cx='11' cy='21' r='1.6' fill='%232A1A10'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --night:#0E0D12;
+  --night-2:#17151C;
+  --sand:#C79A5A;
+  --wood-1:#4A3524;
+  --wood-2:#2B1D12;
+  --brass:#C9A227;
+  --ink:#EDE6D8;
+  --dim:#8E8779;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:radial-gradient(760px 560px at 50% 4%, var(--night-2) 0%, var(--night) 66%);
+  color:var(--ink);font-family:var(--serif);min-height:100vh;
+  padding:30px 16px 70px;display:flex;flex-direction:column;align-items:center;
+}
+.wrap{ max-width:900px;width:100% }
+header{ text-align:center;margin-bottom:20px }
+h1{
+  font-family:var(--mono);font-size:clamp(19px,4vw,26px);margin:0;
+  letter-spacing:.24em;text-transform:uppercase;color:var(--brass);font-weight:600;
+}
+.sub{ font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;opacity:.45;margin-top:10px }
+
+/* ---------- the tank ---------- */
+.tank{
+  position:relative;border-radius:3px;
+  padding:9px 9px 0;
+  background:linear-gradient(180deg,#2A2016,#1C150E);
+  box-shadow:0 22px 50px rgba(0,0,0,.6), inset 0 0 0 1px rgba(201,162,39,.22);
+}
+.glass{ position:relative;overflow:hidden;border-radius:2px;background:#0A0805 }
+canvas{
+  display:block;width:100%;height:auto;
+  image-rendering:pixelated;image-rendering:crisp-edges;
+}
+/* a sheet of glass in front of the sand */
+.glass::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:
+    linear-gradient(114deg, rgba(255,255,255,.11) 0 16%, transparent 16.6% 30%,
+                            rgba(255,255,255,.055) 30% 37%, transparent 37.6%),
+    radial-gradient(120% 90% at 50% 0%, transparent 55%, rgba(0,0,0,.42) 100%);
+}
+.base{
+  height:20px;margin:0 -9px;
+  background:linear-gradient(180deg,#4A3524,#2B1D12);
+  border-radius:0 0 3px 3px;
+  display:flex;align-items:center;justify-content:center;
+}
+.plate{
+  font-family:var(--mono);font-size:8.5px;letter-spacing:.22em;text-transform:uppercase;
+  color:#1E1409;background:linear-gradient(180deg,#D8B44A,#A8842A);
+  padding:2px 12px;border-radius:1px;
+}
+
+/* ---------- readout ---------- */
+.stats{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:1px;
+  margin-top:16px;background:rgba(201,162,39,.16);border:1px solid rgba(201,162,39,.16);
+}
+.stat{ background:#131118;padding:11px 12px }
+.stat b{ display:block;font-family:var(--mono);font-size:17px;font-weight:600;color:var(--brass);letter-spacing:.02em }
+.stat span{ display:block;font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-top:5px }
+.note{
+  margin-top:18px;font-size:13.5px;line-height:1.65;color:var(--dim);
+  max-width:62ch;
+}
+.note em{ color:#C6B893;font-style:normal }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media print{ #lc-back{ display:none } }
+@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>The Ant Farm</h1>
+    <p class="sub">Nobody is driving. It digs whether you watch or not.</p>
+  </header>
+
+  <div class="tank">
+    <div class="glass">
+      <canvas id="farm" width="240" height="150" role="img"
+              aria-label="A cross-section of an ant farm. Ants tunnel through sand and carry grains to the surface."></canvas>
+    </div>
+    <div class="base"><span class="plate">Formicarium &middot; No. 66</span></div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><b id="s-ants">—</b><span>ants</span></div>
+    <div class="stat"><b id="s-grains">—</b><span>grains moved</span></div>
+    <div class="stat"><b id="s-dug">—</b><span>sand excavated</span></div>
+    <div class="stat"><b id="s-time">—</b><span>digging for</span></div>
+  </div>
+
+  <p class="note">
+    No two runs are the same and nothing here is scripted. Each ant only knows four things:
+    whether it is carrying a grain, which way it was already heading, what is directly in front
+    of it, and roughly which way is up. <em>Everything else — the shafts, the side galleries, the
+    chambers, the spoil heaps growing on the surface — is what happens when eighteen of them
+    follow those four rules at once.</em>
+  </p>
+</div>
+
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<script>
+(function(){
+  'use strict';
+
+  var cv = document.getElementById('farm');
+  var ctx = cv.getContext('2d', { alpha: false });
+  var W = cv.width, H = cv.height;
+
+  var AIR = 0, SAND = 1, STONE = 2;
+  var SKY = 18;                      // rows of open air above the sand
+  var CAP = 20;                      // grains an ant gathers before hauling up
+  var EFFORT = 30;                   // sim steps of gnawing before a grain comes free
+
+  var cell = new Uint8Array(W * H);
+  var shade = new Uint8Array(W * H); // fixed per-grain colour jitter
+  var base = new Uint8ClampedArray(W * H * 4);
+  var img = ctx.createImageData(W, H);
+
+  var grains = 0, startedAt = Date.now(), excavated = 0, sandTotal = 0;
+
+  function idx(x, y){ return y * W + x; }
+  function inside(x, y){ return x >= 0 && x < W && y >= 0 && y < H; }
+  function clamp(v, lo, hi){ return v < lo ? lo : v > hi ? hi : v; }
+
+  /* ---- the sand, in strata ------------------------------------- *
+   * Bands of slightly different colour so a tunnel cutting across
+   * them reads as depth rather than as a hole in a flat rectangle. */
+  var strata = [];
+  (function(){
+    var y = SKY;
+    while (y < H){
+      var thick = 7 + Math.floor(Math.random() * 15);
+      strata.push({ top: y, bottom: Math.min(H, y + thick), tone: Math.random() });
+      y += thick;
+    }
+  })();
+  function stratumTone(y){
+    for (var i = 0; i < strata.length; i++){
+      if (y >= strata[i].top && y < strata[i].bottom) return strata[i].tone;
+    }
+    return 0.5;
+  }
+
+  function paint(x, y){
+    var i = idx(x, y), p = i * 4, r, g, b, jitter = (shade[i] - 128) / 128;
+    if (cell[i] === STONE){
+      var sl = 0.5 + jitter * 0.1;
+      r = 118 * sl + 34; g = 108 * sl + 32; b = 98 * sl + 30;
+    } else if (cell[i] === SAND){
+      // deeper sand is darker and a little redder; strata shift the tone
+      var depth = (y - SKY) / (H - SKY);
+      var tone = stratumTone(y);
+      var l = 0.86 - depth * 0.34 + (tone - 0.5) * 0.24 + jitter * 0.06;
+      r = 214 * l + 26; g = 158 * l + 18; b = 92 * l + 10;
+    } else if (y < SKY){
+      // the air above the sand: a dim, warm cabinet interior
+      var t = y / SKY;
+      r = 24 + t * 16; g = 22 + t * 14; b = 30 + t * 10;
+    } else {
+      // an excavated tunnel: nearly black, warmer where it is shallow
+      var d2 = (y - SKY) / (H - SKY);
+      r = 32 - d2 * 14; g = 23 - d2 * 10; b = 16 - d2 * 7;
+    }
+    base[p] = r; base[p + 1] = g; base[p + 2] = b; base[p + 3] = 255;
+  }
+
+  for (var y0 = 0; y0 < H; y0++){
+    for (var x0 = 0; x0 < W; x0++){
+      var i0 = idx(x0, y0);
+      shade[i0] = (Math.random() * 255) | 0;
+      cell[i0] = y0 < SKY ? AIR : SAND;
+    }
+  }
+  /* Stones. An ant cannot dig one, so it has to go round — which is most
+     of why the galleries end up crooked instead of ruler-straight. */
+  for (var s0 = 0; s0 < 16; s0++){
+    var cx0 = 6 + Math.floor(Math.random() * (W - 12));
+    var cy0 = SKY + 8 + Math.floor(Math.random() * (H - SKY - 12));
+    var rad = 2.5 + Math.random() * 4.5;
+    for (var yy = Math.floor(cy0 - rad); yy <= cy0 + rad; yy++){
+      for (var xx = Math.floor(cx0 - rad); xx <= cx0 + rad; xx++){
+        if (!inside(xx, yy) || yy < SKY) continue;
+        var dd = Math.hypot(xx - cx0, yy - cy0);
+        if (dd < rad * (0.72 + Math.random() * 0.3)) cell[idx(xx, yy)] = STONE;
+      }
+    }
+  }
+  for (var y1 = 0; y1 < H; y1++){
+    for (var x1 = 0; x1 < W; x1++){
+      if (cell[idx(x1, y1)] === SAND) sandTotal++;
+      paint(x1, y1);
+    }
+  }
+
+  /* ---- the ants ------------------------------------------------ *
+   * An ant knows: how much it is carrying, where it was going, what
+   * is in front of it, and roughly which way is up. Nothing else.
+   *
+   * It gathers a load before hauling, which is the whole reason
+   * galleries get anywhere: an ant that surfaced after every single
+   * grain would never dig further than one step from the shaft.     */
+  var DIRS = [[1,0],[1,1],[0,1],[-1,1],[-1,0],[-1,-1],[0,-1],[1,-1]];
+  // (dx+1)*3+(dy+1) -> index into DIRS, so a step can be turned back into a heading
+  var DIR_OF = [5, 4, 3, 6, -1, 2, 7, 0, 1];
+  var TRAIL_MAX = 3000;
+  var ants = [];
+  for (var a = 0; a < 18; a++){
+    ants.push({
+      x: 8 + Math.floor(a * (W - 16) / 18) + Math.floor(Math.random() * 5),
+      y: SKY,
+      d: 2,                                  // start heading down
+      load: Math.floor(Math.random() * CAP), // stagger them so they never march in step
+      chamber: 0,
+      effort: 0,
+      mode: 1,                               // 0 descend, 1 dig, 2 haul
+      trail: [],                             // cells walked since the last dump
+      seen: new Map()                        // cell -> index in trail, for cutting loops
+    });
+  }
+
+  // Opening a cell and picking the grain up are separate things: an ant on
+  // its way out with a full load still has to widen the shaft, and counting
+  // that as a grain hauled would overstate the figure on the readout.
+  function dig(x, y){
+    var i = idx(x, y);
+    if (cell[i] !== SAND) return false;
+    cell[i] = AIR; excavated++;
+    paint(x, y);
+    return true;
+  }
+
+  function drop(x, y){
+    var i = idx(x, y);
+    if (cell[i] !== AIR) return false;
+    cell[i] = SAND;
+    // Only a grain walled back into the ground undoes an excavation. A grain
+    // carried out and dumped on the spoil heap leaves its tunnel behind it,
+    // so counting that here would net the whole figure back to nothing.
+    if (y >= SKY) excavated--;
+    paint(x, y);
+    return true;
+  }
+
+  function turn(ant, amount){ ant.d = (ant.d + amount + 8) % 8; }
+
+  // The trail is the ant's way home, so it must not be trimmed from the
+  // surface end — that strands it halfway and it starts cutting a chimney.
+  // Instead, walking back over a cell it has already logged cuts the loop
+  // out, which keeps the trail about as long as the tunnel is deep however
+  // long the ant has been wandering.
+  function remember(ant, x, y){
+    if (ant.mode !== 2 && ant.trail.length < TRAIL_MAX){
+      var id = idx(ant.x, ant.y);
+      var at = ant.seen.get(id);
+      if (at !== undefined){
+        for (var t = ant.trail.length - 1; t > at; t--) ant.seen.delete(ant.trail[t]);
+        ant.trail.length = at + 1;
+      } else {
+        ant.seen.set(id, ant.trail.length);
+        ant.trail.push(id);
+      }
+    }
+    ant.x = x; ant.y = y;
+  }
+
+  // The open neighbour furthest in direction `sign` (-1 up, +1 down), or -1
+  // if there is no open tunnel that way. Ties are broken at random: taking
+  // the first match instead quietly walked the whole colony to one wall.
+  function towards(ant, sign){
+    var best = -1, bestY = sign > 0 ? -9e9 : 9e9;
+    for (var k = 0; k < 8; k++){
+      var nx = ant.x + DIRS[k][0], ny = ant.y + DIRS[k][1];
+      if (!inside(nx, ny) || cell[idx(nx, ny)] !== AIR) continue;
+      if (sign > 0 && ny <= ant.y) continue;
+      var better = sign > 0 ? ny > bestY : ny < bestY;
+      if (better || (ny === bestY && Math.random() < 0.5)){ bestY = ny; best = k; }
+    }
+    return best;
+  }
+
+  function dumpLoad(ant){
+    for (var n = 0; n < CAP; n++){
+      var col = clamp(ant.x + ((Math.random() * 9) | 0) - 4, 1, W - 2);
+      var sy = 0;
+      while (sy < H && cell[idx(col, sy)] === AIR) sy++;   // first solid cell down the column
+      if (sy > 1) drop(col, sy - 1);
+    }
+    ant.load = 0;
+    ant.trail.length = 0;
+    ant.seen.clear();
+    ant.mode = 0;                                         // walk back down the shaft
+    ant.d = 2;
+  }
+
+  function step(ant){
+    // An ant part-way through a bite stays on it. Letting it wander while
+    // effort was accumulating meant it kept stepping off the face and
+    // resetting, and almost no grain ever actually came free.
+    if (ant.effort === 0){
+      var r = Math.random();
+      if (r < 0.14) turn(ant, 1);
+      else if (r < 0.28) turn(ant, -1);
+    }
+
+    if (ant.mode === 2){
+      // Hauling. An ant that only looks at its eight neighbours cannot find
+      // its way round a bend, so it cuts a fresh chimney straight up instead
+      // — which wastes the whole trip and fills the tank with shafts. It
+      // walks its own trail back out instead, which is both cheaper and
+      // what actually happens.
+      var stepped = false;
+      while (ant.trail.length){
+        var cellId = ant.trail[ant.trail.length - 1];
+        var bx = cellId % W, by = (cellId / W) | 0;
+        var ddx = bx - ant.x, ddy = by - ant.y;
+        if (ddx === 0 && ddy === 0){ ant.trail.pop(); continue; }   // already here
+        if (Math.abs(ddx) > 1 || Math.abs(ddy) > 1){ ant.trail.pop(); continue; }
+        var di = DIR_OF[(ddx + 1) * 3 + (ddy + 1)];
+        if (di < 0){ ant.trail.pop(); continue; }
+        ant.d = di; ant.trail.pop(); stepped = true;
+        break;
+      }
+      if (!stepped){
+        var up = towards(ant, -1);
+        ant.d = up >= 0 ? up : 6;                       // trail spent: head for the light
+      }
+    } else if (ant.mode === 0){
+      // Walking back down to the face along tunnel that already exists.
+      // Without this an ant dumps its load and starts digging again right
+      // where it is standing, and the colony only ever scratches at the
+      // surface instead of driving a shaft.
+      var down = towards(ant, 1);
+      if (down < 0){ ant.mode = 1; ant.effort = 0; }   // out of tunnel: start cutting
+      else ant.d = down;
+    } else if (ant.chamber > 0){
+      ant.chamber--;
+      for (var k2 = 0; k2 < 8; k2++){
+        if (Math.random() < 0.06){
+          var cx = ant.x + DIRS[k2][0], cy = ant.y + DIRS[k2][1];
+          if (inside(cx, cy) && cy > SKY && dig(cx, cy)){
+            if (ant.load < CAP){ ant.load++; grains++; }
+            break;
+          }
+        }
+      }
+    } else {
+      // Digging: face the sand. Left to pure momentum an ant just mills
+      // about in the pocket it has already opened, so it looks for a
+      // neighbouring cell that still has something in it — preferring to
+      // carry straight on, and preferring down over back up the shaft.
+      if (ant.effort === 0 && Math.random() < 0.55){
+        var bestK = -1, bestScore = -1e9;
+        for (var k3 = 0; k3 < 8; k3++){
+          var ax = ant.x + DIRS[k3][0], ay = ant.y + DIRS[k3][1];
+          if (!inside(ax, ay) || ay <= SKY - 1) continue;
+          if (cell[idx(ax, ay)] !== SAND) continue;
+          var score = DIRS[k3][1] * 1.4 + (k3 === ant.d ? 1.2 : 0) + Math.random() * 1.7;
+          if (score > bestScore){ bestScore = score; bestK = k3; }
+        }
+        if (bestK >= 0) ant.d = bestK;
+      }
+      if (Math.random() < 0.0015) ant.chamber = 24 + Math.floor(Math.random() * 42);
+    }
+
+    var tx = ant.x + DIRS[ant.d][0], ty = ant.y + DIRS[ant.d][1];
+    if (!inside(tx, ty)){ turn(ant, 4); return; }          // the glass: turn round
+    var ti = idx(tx, ty);
+
+    if (cell[ti] === STONE){ turn(ant, Math.random() < 0.5 ? 1 : -1); return; }
+
+    if (ant.mode === 2 && ty < SKY){ dumpLoad(ant); return; }
+
+    if (cell[ti] === SAND){
+      if (ty <= SKY - 1){ turn(ant, 4); return; }
+      if (ant.mode === 0){ ant.mode = 1; ant.effort = 0; return; }   // reached the face
+      // Sand does not come away in one bite. An ant stands at the face and
+      // works at it, which is what keeps the whole tank from being hollowed
+      // out inside a couple of minutes.
+      if (++ant.effort < EFFORT) return;
+      ant.effort = 0;
+      // A full ant must still be allowed to dig. Refusing meant an ant that
+      // had sealed itself in below could never get back up, and once every
+      // ant had done that the colony stopped for good.
+      dig(tx, ty);
+      if (ant.load < CAP){
+        ant.load++; grains++;
+        if (ant.load >= CAP) ant.mode = 2;
+      }
+      remember(ant, tx, ty);
+    } else {
+      ant.effort = 0;                                     // walked off the face
+      remember(ant, tx, ty);
+    }
+  }
+
+  /* ---- drawing -------------------------------------------------- */
+  var ANT_BODY = [104, 52, 28], ANT_HEAD = [178, 104, 54], GRAIN = [214, 176, 112];
+  function plot(x, y, c){
+    if (!inside(x, y)) return;
+    var p = idx(x, y) * 4;
+    img.data[p] = c[0]; img.data[p + 1] = c[1]; img.data[p + 2] = c[2]; img.data[p + 3] = 255;
+  }
+
+  function draw(){
+    img.data.set(base);
+    for (var i = 0; i < ants.length; i++){
+      var an = ants[i];
+      plot(an.x, an.y, ANT_HEAD);
+      plot(an.x - DIRS[an.d][0], an.y - DIRS[an.d][1], ANT_BODY);
+      if (an.load >= CAP) plot(an.x + DIRS[an.d][0], an.y + DIRS[an.d][1], GRAIN);
+    }
+    ctx.putImageData(img, 0, 0);
+  }
+
+  /* ---- readout -------------------------------------------------- */
+  var eAnts = document.getElementById('s-ants'), eGrains = document.getElementById('s-grains'),
+      eDug = document.getElementById('s-dug'), eTime = document.getElementById('s-time');
+  eAnts.textContent = ants.length;
+  function readout(){
+    eGrains.textContent = grains.toLocaleString();
+    eDug.textContent = (Math.max(0, excavated) / sandTotal * 100).toFixed(1) + '%';
+    var s = Math.floor((Date.now() - startedAt) / 1000);
+    var m = Math.floor(s / 60);
+    eTime.textContent = m ? m + 'm ' + (s % 60) + 's' : s + 's';
+  }
+
+  /* ---- the loop ------------------------------------------------- *
+   * Reduced motion still digs — a still ant farm is not an ant farm —
+   * but it takes its time about it.                                 */
+  var calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var SIM_HZ = calm ? 6 : 20;                // ant steps per second, not per frame,
+  var running = true, frame = 0;             // so a fast screen does not dig faster
+  var acc = 0, last = performance.now();
+
+  document.addEventListener('visibilitychange', function(){
+    var wasHidden = !running;
+    running = !document.hidden;              // no point simulating an unwatched tab
+    if (running && wasHidden){ last = performance.now(); acc = 0; requestAnimationFrame(loop); }
+  });
+
+  function loop(now){
+    if (!running) return;
+    var dt = Math.min(0.25, (now - last) / 1000);
+    last = now;
+    acc += dt * SIM_HZ;
+    var n = Math.min(10, Math.floor(acc));
+    acc -= n;
+    for (var s = 0; s < n; s++){
+      for (var i = 0; i < ants.length; i++){
+        step(ants[i]);
+        // A loaded ant is on a road it already knows, so it covers ground
+        // twice as fast as one feeling its way at the face.
+        if (ants[i].mode === 2) step(ants[i]);
+      }
+    }
+    draw();
+    if ((frame++ % 20) === 0) readout();
+    requestAnimationFrame(loop);
+  }
+  readout();
+  requestAnimationFrame(loop);
+
+  // exposed only so the build check can confirm the colony is actually working
+  window.__farm = function(){
+    var modes = [0, 0, 0], ys = [];
+    for (var i = 0; i < ants.length; i++){ modes[ants[i].mode]++; ys.push(ants[i].y); }
+    return {
+      grains: grains, excavated: excavated, ants: ants.length,
+      descend: modes[0], dig: modes[1], haul: modes[2],
+      minY: Math.min.apply(null, ys), maxY: Math.max.apply(null, ys),
+      loads: ants.map(function(a){ return a.load; })
+    };
+  };
+})();
+</script>
+</body>
+</html>

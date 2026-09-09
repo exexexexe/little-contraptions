@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Worry Stone</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23161A18'/><ellipse cx='16' cy='17' rx='11' ry='8.5' fill='%236E7B70'/><ellipse cx='16' cy='17' rx='5' ry='3.6' fill='%23515C54'/><ellipse cx='11.5' cy='13' rx='3' ry='1.7' fill='%23A9B6A8' opacity='.6'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --void:#111413;
+  --void-2:#1A1F1C;
+  --stone:#77857A;
+  --pale:#D6DED6;
+  --dim:#75817A;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%}
+body{
+  background:radial-gradient(760px 620px at 50% 42%, var(--void-2) 0%, var(--void) 70%);
+  color:var(--pale);font-family:var(--serif);min-height:100%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:24px 16px 70px;overscroll-behavior:none;
+}
+.stage{
+  position:relative;touch-action:none;cursor:grab;
+  width:min(430px,86vw);aspect-ratio:1/1;
+  display:flex;align-items:center;justify-content:center;
+  border:0;background:transparent;padding:0;
+}
+.stage:active{ cursor:grabbing }
+.stage:focus-visible{ outline:2px solid #9FC0A8;outline-offset:14px;border-radius:50% }
+canvas{ display:block;width:100%;height:100% }
+
+.count{
+  font-family:var(--mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--dim);margin-top:26px;text-align:center;min-height:15px;
+  transition:color .6s;
+}
+.count b{ color:var(--pale);font-weight:600 }
+.hint{
+  font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;
+  color:#4E574F;margin-top:12px;text-align:center;transition:opacity .8s;
+}
+.hint.gone{ opacity:0 }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media print{ #lc-back{ display:none } }
+@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } }
+</style>
+</head>
+<body>
+
+<button class="stage" id="stage" aria-label="A worry stone. Press and rub it.">
+  <canvas id="stone"></canvas>
+</button>
+
+<p class="count" id="count"></p>
+<p class="hint" id="hint">press and rub</p>
+
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<script>
+(function(){
+  'use strict';
+
+  var KEY = 'lc-worrystone';
+  var stage = document.getElementById('stage');
+  var cv = document.getElementById('stone');
+  var ctx = cv.getContext('2d');
+  var countEl = document.getElementById('count');
+  var hintEl = document.getElementById('hint');
+
+  var calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var W = 0, H = 0, DPR = 1, CX = 0, CY = 0, RX = 0, RY = 0;
+
+  /* ---- the count, which resets with the date ---------------------- */
+  function today(){
+    var d = new Date();
+    return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+  }
+  var rubs = 0;
+  (function(){
+    try {
+      var raw = JSON.parse(localStorage.getItem(KEY) || 'null');
+      if (raw && raw.d === today()) rubs = raw.n | 0;
+    } catch (e) {}
+  })();
+  function save(){
+    try { localStorage.setItem(KEY, JSON.stringify({ d: today(), n: rubs })); } catch (e) {}
+  }
+  function showCount(){
+    countEl.innerHTML = rubs === 0
+      ? 'not yet rubbed today'
+      : 'rubbed <b>' + rubs + '</b> ' + (rubs === 1 ? 'time' : 'times') + ' today';
+  }
+  showCount();
+
+  /* ---- the polish layer ------------------------------------------- *
+   * A separate canvas that only ever gets soft white blobs painted on
+   * it where a thumb has been, and fades everywhere at a constant rate.
+   * Composited through the stone's own shape, so it reads as sheen
+   * rather than as paint.                                            */
+  var polish = document.createElement('canvas');
+  var pctx = polish.getContext('2d');
+
+  var texture = document.createElement('canvas');   // stone speckle, drawn once
+  var tctx = texture.getContext('2d');
+
+  function build(){
+    DPR = Math.min(2, window.devicePixelRatio || 1);
+    W = stage.clientWidth; H = stage.clientHeight;
+    if (!W || !H) return;
+    cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    polish.width = cv.width; polish.height = cv.height;
+    pctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+    CX = W / 2; CY = H / 2;
+    RX = W * 0.40; RY = H * 0.31;
+
+    texture.width = cv.width; texture.height = cv.height;
+    tctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    tctx.clearRect(0, 0, W, H);
+    for (var i = 0; i < 1700; i++){
+      var a = Math.random() * Math.PI * 2, r = Math.sqrt(Math.random());
+      var x = CX + Math.cos(a) * RX * r, y = CY + Math.sin(a) * RY * r;
+      tctx.fillStyle = 'rgba(' + (Math.random() < 0.5 ? '255,255,255,' : '0,0,0,') +
+                       (0.015 + Math.random() * 0.05).toFixed(3) + ')';
+      tctx.fillRect(x, y, 1 + Math.random() * 2, 1 + Math.random() * 2);
+    }
+  }
+
+  function stonePath(c){
+    c.beginPath();
+    c.ellipse(CX, CY, RX, RY, -0.09, 0, Math.PI * 2);
+  }
+
+  function draw(){
+    ctx.clearRect(0, 0, W, H);
+
+    // the shadow it sits in
+    ctx.save();
+    ctx.filter = 'blur(' + Math.round(RY * 0.22) + 'px)';
+    ctx.fillStyle = 'rgba(0,0,0,.55)';
+    ctx.beginPath();
+    ctx.ellipse(CX + RX * 0.05, CY + RY * 0.42, RX * 0.92, RY * 0.5, -0.09, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    stonePath(ctx);
+    ctx.clip();
+
+    // body: lit from the upper left
+    var g = ctx.createRadialGradient(CX - RX * 0.42, CY - RY * 0.55, RX * 0.06,
+                                     CX, CY, RX * 1.25);
+    g.addColorStop(0, '#9FAEA0');
+    g.addColorStop(0.42, '#788676');
+    g.addColorStop(1, '#414B44');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.drawImage(texture, 0, 0, W, H);
+
+    // The thumb dent. A hollow lit from the upper left is shadowed on the
+    // upper-left wall and catches the light on the lower-right one — the
+    // exact opposite of a bump, and the only thing that stops it reading
+    // as one. The gradient therefore runs along the light, not down.
+    var dx0 = CX - RX * 0.46, dy0 = CY - RY * 0.46;
+    var dx1 = CX + RX * 0.46, dy1 = CY + RY * 0.46;
+    var dg = ctx.createLinearGradient(dx0, dy0, dx1, dy1);
+    dg.addColorStop(0,    'rgba(16,22,18,.62)');
+    dg.addColorStop(0.42, 'rgba(16,22,18,.10)');
+    dg.addColorStop(0.72, 'rgba(206,220,206,.10)');
+    dg.addColorStop(1,    'rgba(216,230,216,.34)');
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(CX, CY + RY * 0.03, RX * 0.53, RY * 0.51, -0.09, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.fillStyle = dg;
+    ctx.fillRect(0, 0, W, H);
+    // a soft lip where the dent meets the face, so the edge is not a cut
+    ctx.filter = 'blur(' + Math.max(2, RY * 0.05).toFixed(1) + 'px)';
+    ctx.strokeStyle = 'rgba(12,18,14,.5)';
+    ctx.lineWidth = Math.max(2, RY * 0.09);
+    ctx.beginPath();
+    ctx.ellipse(CX, CY + RY * 0.03, RX * 0.53, RY * 0.51, -0.09, Math.PI * 0.86, Math.PI * 1.9);
+    ctx.stroke();
+    ctx.restore();
+
+    // the sheen you have rubbed into it
+    ctx.globalCompositeOperation = 'screen';
+    ctx.drawImage(polish, 0, 0, W, H);
+    ctx.globalCompositeOperation = 'source-over';
+
+    // A soft sheen along the top-left rim. Drawn hard it clipped against the
+    // stone's edge and read as a scratch, so it is blurred and faint.
+    ctx.filter = 'blur(' + Math.max(2, RY * 0.06).toFixed(1) + 'px)';
+    ctx.strokeStyle = 'rgba(226,236,226,.34)';
+    ctx.lineWidth = Math.max(2, RY * 0.07);
+    ctx.beginPath();
+    ctx.ellipse(CX, CY, RX * 0.93, RY * 0.9, -0.09, Math.PI * 0.98, Math.PI * 1.62);
+    ctx.stroke();
+    ctx.filter = 'none';
+    ctx.restore();
+
+    // the rim, all the way round, so it does not float
+    ctx.strokeStyle = 'rgba(0,0,0,.4)';
+    ctx.lineWidth = 1.2;
+    stonePath(ctx);
+    ctx.stroke();
+  }
+
+  /* ---- rubbing ----------------------------------------------------- */
+  var down = false, lastX = 0, lastY = 0, travel = 0;
+  var RUB_DISTANCE = 58;              // pixels of thumb travel that make one rub
+
+  function local(e){
+    var r = cv.getBoundingClientRect();
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  }
+  function onStone(p){
+    var dx = (p.x - CX) / RX, dy = (p.y - CY) / RY;
+    return dx * dx + dy * dy <= 1;
+  }
+
+  function smudge(x, y, strength){
+    var r = Math.max(12, RX * 0.20);
+    var g = pctx.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, 'rgba(210,228,212,' + (0.11 * strength).toFixed(3) + ')');
+    g.addColorStop(1, 'rgba(210,228,212,0)');
+    pctx.fillStyle = g;
+    pctx.beginPath(); pctx.arc(x, y, r, 0, Math.PI * 2); pctx.fill();
+  }
+
+  stage.addEventListener('pointerdown', function(e){
+    var p = local(e);
+    if (!onStone(p)) return;
+    down = true;
+    stage.setPointerCapture(e.pointerId);
+    lastX = p.x; lastY = p.y;
+    hintEl.classList.add('gone');
+    e.preventDefault();
+  });
+
+  stage.addEventListener('pointermove', function(e){
+    if (!down) return;
+    var p = local(e);
+    var d = Math.hypot(p.x - lastX, p.y - lastY);
+    lastX = p.x; lastY = p.y;
+    if (!onStone(p)) return;
+    smudge(p.x, p.y, Math.min(1, d / 14));
+    travel += d;
+    while (travel >= RUB_DISTANCE){
+      travel -= RUB_DISTANCE;
+      rubs++;
+      showCount();
+      save();
+    }
+  });
+
+  function release(e){
+    if (!down) return;
+    down = false;
+    try { stage.releasePointerCapture(e.pointerId); } catch (err) {}
+  }
+  stage.addEventListener('pointerup', release);
+  stage.addEventListener('pointercancel', release);
+
+  // A stone you can only use with a mouse is not much of a worry stone, so
+  // the keyboard gets a rub too.
+  stage.addEventListener('keydown', function(e){
+    if (e.key !== ' ' && e.key !== 'Enter') return;
+    e.preventDefault();
+    var a = Math.random() * Math.PI * 2;
+    smudge(CX + Math.cos(a) * RX * 0.3, CY + Math.sin(a) * RY * 0.3, 1);
+    rubs++; showCount(); save();
+    hintEl.classList.add('gone');
+  });
+
+  /* ---- the loop: fade the sheen, redraw ---------------------------- */
+  var last = performance.now();
+  function frame(now){
+    var dt = Math.min(0.1, (now - last) / 1000); last = now;
+    // the polish never lasts; it goes back to being a stone
+    pctx.save();
+    pctx.globalCompositeOperation = 'destination-out';
+    pctx.fillStyle = 'rgba(0,0,0,' + (dt * 0.42).toFixed(4) + ')';
+    pctx.fillRect(0, 0, W, H);
+    pctx.restore();
+    draw();
+    requestAnimationFrame(frame);
+  }
+
+  function boot(){ build(); draw(); }
+  window.addEventListener('resize', boot);
+  boot();
+  if (!calm) requestAnimationFrame(frame);
+
+  window.__stone = function(){ return { rubs: rubs, w: W, h: H }; };
+  window.__rub = function(n){
+    for (var i = 0; i < n; i++){ rubs++; }
+    showCount(); save();
+  };
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Exactly As Old As You</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23E8E0CC'/><rect x='7' y='6' width='18' height='21' fill='%23FBF7EC' stroke='%23A89878'/><path d='M10 12h12M10 16h12M10 20h8' stroke='%23B24A3A' stroke-width='1.4'/></svg>">
+<style>
+:root{ color-scheme: light; }
+:root{
+  --paper:#F6F1E2;
+  --paper-2:#EDE5D0;
+  --ink:#2B2620;
+  --ink-2:#5E564A;
+  --rule:#C3B698;
+  --red:#A83A2C;
+  --stamp:#3D5A80;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --type:"Courier New",Courier,var(--mono);
+  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:#241F19;
+  color:var(--ink);font-family:var(--serif);min-height:100vh;
+  padding:26px 14px 74px;display:flex;flex-direction:column;align-items:center;
+}
+
+.sheet{
+  width:100%;max-width:660px;background:var(--paper);
+  background-image:
+    repeating-linear-gradient(180deg, transparent 0 27px, rgba(195,182,152,.32) 27px 28px);
+  box-shadow:0 20px 50px rgba(0,0,0,.5);
+  padding:34px 30px 40px;position:relative;
+  border-top:5px solid var(--red);
+}
+.sheet::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(120% 100% at 50% 0%, transparent 62%, rgba(90,72,40,.13) 100%);
+}
+.masthead{ text-align:center;border-bottom:2px solid var(--ink);padding-bottom:14px }
+h1{
+  font-family:var(--type);font-size:clamp(15px,3.6vw,20px);margin:0;
+  letter-spacing:.28em;text-transform:uppercase;font-weight:700;
+}
+.masthead p{
+  font-family:var(--type);font-size:10px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--ink-2);margin:9px 0 0;
+}
+
+/* ---------- the ask ---------- */
+.ask{ margin:24px 0 6px;display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px;justify-content:center }
+label{ font-family:var(--type);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2) }
+.field{ display:flex;flex-direction:column;gap:7px }
+input[type=number]{
+  font-family:var(--type);font-size:30px;font-weight:700;width:150px;text-align:center;
+  background:transparent;border:0;border-bottom:2px solid var(--ink);
+  color:var(--ink);padding:2px 6px 4px;letter-spacing:.08em;
+}
+input[type=number]:focus{ outline:none;border-bottom-color:var(--red) }
+input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{ -webkit-appearance:none;margin:0 }
+input[type=number]{ -moz-appearance:textfield }
+button.go{
+  font-family:var(--type);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  background:var(--ink);color:var(--paper);border:0;padding:13px 20px;cursor:pointer;font-weight:700;
+}
+button.go:hover{ background:var(--red) }
+button.go:focus-visible{ outline:2px solid var(--red);outline-offset:3px }
+
+.decades{ display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:16px }
+.decades button{
+  font-family:var(--type);font-size:10px;letter-spacing:.1em;
+  background:transparent;border:1px solid var(--rule);color:var(--ink-2);
+  padding:5px 9px;cursor:pointer;
+}
+.decades button:hover{ border-color:var(--ink);color:var(--ink) }
+.decades button:focus-visible{ outline:2px solid var(--red);outline-offset:2px }
+
+/* ---------- the register ---------- */
+.result{ margin-top:30px }
+.result[hidden]{ display:none }
+.year-line{
+  display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+  border-bottom:1px solid var(--ink);padding-bottom:8px;margin-bottom:4px;flex-wrap:wrap;
+}
+.year-line b{ font-family:var(--type);font-size:26px;letter-spacing:.1em }
+.year-line span{ font-family:var(--type);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2) }
+
+ol.entries{ list-style:none;margin:0;padding:0 }
+ol.entries li{
+  display:grid;grid-template-columns:22px 1fr;gap:10px;
+  padding:13px 0;border-bottom:1px dotted var(--rule);
+  opacity:0;transform:translateY(5px);
+  animation:in .34s ease forwards;
+}
+@keyframes in{ to{ opacity:1;transform:none } }
+.mark{
+  font-family:var(--type);font-size:9px;font-weight:700;letter-spacing:.04em;
+  border:1px solid currentColor;width:20px;height:20px;
+  display:flex;align-items:center;justify-content:center;margin-top:2px;
+}
+.m-w{ color:#8A5A18 } .m-s{ color:#2F6B4F } .m-t{ color:#3D5A80 }
+.m-c{ color:#8A3560 } .m-b{ color:#6B5A2A }
+.entries h3{ font-family:var(--serif);font-size:16.5px;margin:0 0 3px;font-weight:600;line-height:1.3 }
+.entries p{ margin:0;font-size:13.5px;line-height:1.55;color:var(--ink-2) }
+
+.stamp{
+  margin-top:26px;border:2px solid var(--stamp);color:var(--stamp);
+  padding:11px 14px;transform:rotate(-1.1deg);
+  font-family:var(--type);font-size:11.5px;line-height:1.5;letter-spacing:.04em;
+  max-width:420px;
+}
+.miss{
+  margin-top:24px;font-family:var(--type);font-size:12.5px;line-height:1.6;
+  border-left:3px solid var(--red);padding-left:13px;color:var(--ink-2);
+}
+.miss[hidden]{ display:none }
+
+footer{
+  margin-top:30px;padding-top:16px;border-top:1px solid var(--rule);
+  font-family:var(--type);font-size:10.5px;line-height:1.7;color:var(--ink-2);
+}
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } .sheet{ padding:26px 18px 32px } }
+@media print{ #lc-back{ display:none } }
+@media (prefers-reduced-motion: reduce){
+  #lc-back{ transition:none }
+  ol.entries li{ animation:none;opacity:1;transform:none }
+}
+</style>
+</head>
+<body>
+
+<div class="sheet">
+  <div class="masthead">
+    <h1>Register of Things Begun</h1>
+    <p>A record of what else started the year you did</p>
+  </div>
+
+  <form class="ask" id="ask">
+    <div class="field">
+      <label for="year">Year of birth</label>
+      <input id="year" type="number" inputmode="numeric" min="1900" max="2100"
+             placeholder="1987" autocomplete="off">
+    </div>
+    <button class="go" type="submit">Look it up</button>
+  </form>
+  <div class="decades" id="decades"></div>
+
+  <div class="result" id="result" hidden>
+    <div class="year-line">
+      <b id="r-year">—</b>
+      <span id="r-age">—</span>
+    </div>
+    <ol class="entries" id="entries"></ol>
+    <div class="stamp" id="stamp"></div>
+  </div>
+
+  <div class="miss" id="miss" hidden></div>
+
+  <footer id="foot">
+    Every line is the year the thing first appeared, opened, launched, aired or was published.
+    Where a &ldquo;first&rdquo; is genuinely disputed — and a surprising number are — the entry was
+    left out rather than a side taken. Nothing here is an estimate.
+  </footer>
+</div>
+
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<script src="data.js"></script>
+<script>
+(function(){
+  'use strict';
+  var R = window.REGISTER || {};
+  var years = Object.keys(R).map(Number).sort(function(a, b){ return a - b; });
+  var FIRST = years[0], LAST = years[years.length - 1];
+  var THIS_YEAR = new Date().getFullYear();
+
+  var KIND = {
+    w: ['W', 'the world'], s: ['S', 'science'], t: ['T', 'technology'],
+    c: ['C', 'culture'],  b: ['B', 'business']
+  };
+
+  var form = document.getElementById('ask');
+  var input = document.getElementById('year');
+  var result = document.getElementById('result');
+  var list = document.getElementById('entries');
+  var miss = document.getElementById('miss');
+  var rYear = document.getElementById('r-year');
+  var rAge = document.getElementById('r-age');
+  var stamp = document.getElementById('stamp');
+
+  // decade shortcuts, built from whatever the register actually holds
+  var dec = document.getElementById('decades');
+  for (var d = Math.floor(FIRST / 10) * 10; d <= LAST; d += 10){
+    (function(dd){
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = "'" + String(dd).slice(2) + 's';
+      b.addEventListener('click', function(){
+        // middle of the decade, clamped to what the register covers
+        var y = Math.min(LAST, Math.max(FIRST, dd + 5));
+        input.value = y;
+        show(y);
+      });
+      dec.appendChild(b);
+    })(d);
+  }
+
+  function esc(t){
+    return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function show(year){
+    var entries = R[year];
+    if (!entries){
+      result.hidden = true;
+      miss.hidden = false;
+      miss.textContent = year < FIRST
+        ? 'The register starts at ' + FIRST + '. Anything earlier than that is in a different ledger, ' +
+          'and it is not this one.'
+        : year > THIS_YEAR
+          ? 'That year has not happened yet. Come back when it has.'
+          : 'The register stops at ' + LAST + '. Nothing after that has settled down enough to file.';
+      return;
+    }
+    miss.hidden = true;
+    result.hidden = false;
+    rYear.textContent = year;
+    var age = THIS_YEAR - year;
+    rAge.textContent = age + (age === 1 ? ' year old' : ' years old') + ', give or take a birthday';
+
+    list.innerHTML = entries.map(function(e, i){
+      var p = e.split('|');
+      var k = KIND[p[2]] || ['?', ''];
+      return '<li style="animation-delay:' + (i * 70) + 'ms">' +
+             '<span class="mark m-' + p[2] + '" title="' + esc(k[1]) + '">' + k[0] + '</span>' +
+             '<div><h3>' + esc(p[0]) + '</h3><p>' + esc(p[1]) + '</p></div></li>';
+    }).join('');
+
+    stamp.textContent = 'All of the above turned ' + age + ' this year, or will. ' +
+      'They have had exactly as long as you have and, on the whole, have made more of it.';
+    result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    var y = parseInt(input.value, 10);
+    if (!y || y < 1000 || y > 3000){
+      miss.hidden = false;
+      result.hidden = true;
+      miss.textContent = 'That is not a year.';
+      return;
+    }
+    show(y);
+  });
+
+  window.__register = { first: FIRST, last: LAST, years: years.length, show: show };
+})();
+</script>
+</body>
+</html>
