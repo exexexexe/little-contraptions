@@ -1,0 +1,686 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Nostalgia Snow Globe</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23141A26'/><circle cx='16' cy='14' r='10' fill='%232A4A66'/><circle cx='16' cy='14' r='10' fill='none' stroke='%23BFD6E8' stroke-width='1.4'/><rect x='9' y='24' width='14' height='5' rx='1.5' fill='%236B4A34'/><circle cx='12' cy='11' r='1' fill='%23FFF'/><circle cx='20' cy='16' r='1' fill='%23FFF'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --bg:#141A26;
+  --panel:#1D2534;
+  --edge:#2E3A4E;
+  --ink:#E2EAF4;
+  --dim:#8FA0B6;
+  --brass:#C9A46B;
+  --glass:#BFD6E8;
+  --wood:#6B4A34;
+  --wood-2:#4E3624;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --serif:"Iowan Old Style","Palatino Linotype",Georgia,serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);
+  background-image:
+    radial-gradient(70% 46% at 50% 0%, rgba(191,214,232,.09), transparent 64%),
+    radial-gradient(50% 34% at 50% 96%, rgba(201,164,107,.10), transparent 62%);
+  color:var(--ink);font-family:var(--serif);font-size:16px;
+  min-height:100vh;padding:22px 16px 84px;
+  display:flex;flex-direction:column;align-items:center;
+}
+.wrap{ max-width:700px;width:100% }
+
+header{ text-align:center }
+h1{ margin:0;font-family:var(--mono);font-size:clamp(15px,3.8vw,21px);letter-spacing:.24em;text-transform:uppercase;color:var(--glass);font-weight:700 }
+.sub{ margin-top:8px;font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim) }
+
+/* ---------- the globe ---------- */
+.stand{ display:flex;flex-direction:column;align-items:center;margin-top:16px;user-select:none }
+.globe{
+  position:relative;width:min(400px,86vw);aspect-ratio:1;
+  border-radius:50%;overflow:hidden;
+  cursor:grab;touch-action:none;
+  box-shadow:0 0 0 5px rgba(191,214,232,.16), 0 0 0 7px rgba(20,26,38,.9),
+             0 26px 60px rgba(0,0,0,.6), inset 0 0 60px rgba(10,16,26,.6);
+  background:#0A1018;
+}
+.globe.grabbing{ cursor:grabbing }
+.globe canvas{ position:absolute;inset:0;width:100%;height:100%;display:block }
+#diorama{ image-rendering:pixelated }
+/* the glass: a highlight, a rim, and the fact you are looking through something */
+.globe .glass{
+  position:absolute;inset:0;pointer-events:none;border-radius:50%;
+  background:
+    radial-gradient(38% 30% at 30% 20%, rgba(255,255,255,.26), transparent 62%),
+    radial-gradient(24% 18% at 74% 76%, rgba(255,255,255,.10), transparent 64%),
+    radial-gradient(120% 120% at 50% 50%, transparent 62%, rgba(10,16,26,.5) 92%);
+  box-shadow:inset 0 0 0 1px rgba(191,214,232,.32);
+}
+.base{
+  width:min(300px,66vw);height:52px;margin-top:-10px;
+  background:linear-gradient(180deg,var(--wood) 0%,var(--wood-2) 100%);
+  border-radius:8px 8px 14px 14px;
+  box-shadow:0 12px 26px rgba(0,0,0,.5), inset 0 2px 0 rgba(255,255,255,.14);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  position:relative;
+}
+.base::before{
+  content:'';position:absolute;left:8%;right:8%;top:8px;height:2px;
+  background:linear-gradient(90deg,transparent,var(--brass),transparent);opacity:.7;
+}
+.base .plaque{
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;
+  color:#F0DDB8;text-shadow:0 1px 0 rgba(0,0,0,.5);text-align:center;padding:0 12px;
+}
+.base .plaque small{ display:block;letter-spacing:.1em;text-transform:none;opacity:.6;margin-top:3px;font-size:9px }
+
+.shakebar{
+  width:min(400px,86vw);height:5px;margin-top:14px;background:#1A2130;border-radius:3px;overflow:hidden;
+}
+.shakebar i{ display:block;height:100%;width:0;background:linear-gradient(90deg,#4E7A9E,var(--glass));transition:width .12s linear }
+
+/* ---------- controls ---------- */
+.presets{ display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:18px }
+.presets button{
+  background:var(--panel);border:1px solid var(--edge);color:var(--ink);
+  padding:12px 13px;cursor:pointer;text-align:left;font-family:var(--serif);font-size:15px;
+}
+.presets button:hover{ border-color:var(--glass) }
+.presets button[aria-pressed="true"]{ border-color:var(--brass);background:#252F42 }
+.presets button b{ display:block;font-weight:600 }
+.presets button span{
+  display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;color:var(--dim);margin-top:3px;
+}
+.presets button:focus-visible{ outline:2px solid var(--brass);outline-offset:2px }
+
+.row{ display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center }
+.row button{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;
+  background:var(--glass);color:#101822;border:1px solid var(--glass);
+  padding:12px 20px;cursor:pointer;font-weight:700;
+}
+.row button:hover{ background:#DCEAF6 }
+.row button.sec{ background:transparent;color:var(--ink);border-color:var(--edge);font-weight:400 }
+.row button.sec:hover{ border-color:var(--glass);color:var(--glass) }
+.row button[aria-pressed="true"]{ background:var(--brass);border-color:var(--brass);color:#171208 }
+.row button:focus-visible{ outline:2px solid var(--brass);outline-offset:2px }
+.row .m{ margin-left:auto;font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;color:var(--dim) }
+
+.note{
+  margin-top:14px;font-family:var(--mono);font-size:11px;line-height:1.8;color:var(--dim);
+  border-left:2px solid var(--edge);padding-left:12px;min-height:1.8em;
+}
+
+/* egg #4 */
+.found{
+  margin-top:12px;background:#101722;border:2px solid var(--brass);padding:16px 18px;
+  font-size:16px;line-height:1.7;
+}
+.found .k{
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--brass);margin-bottom:9px;
+}
+.found[hidden]{ display:none }
+
+footer{
+  max-width:700px;width:100%;margin:22px auto 0;padding-top:14px;border-top:1px solid var(--edge);
+  font-family:var(--mono);font-size:10.5px;line-height:1.85;color:var(--dim);
+}
+footer a{ color:var(--glass) }
+
+/* ---------- shared: back to the cabinet ---------- */
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 var(--mono);
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } }
+</style>
+</head>
+<body>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
+
+<div class="wrap">
+  <header>
+    <h1>The Nostalgia Snow Globe</h1>
+    <div class="sub">pick it up &middot; shake it &middot; put it down again</div>
+  </header>
+
+  <div class="stand">
+    <div class="globe" id="globe" role="img" aria-label="A snow globe you can shake">
+      <canvas id="diorama"></canvas>
+      <canvas id="fall"></canvas>
+      <canvas id="settled"></canvas>
+      <div class="glass"></div>
+    </div>
+    <div class="base">
+      <div class="plaque" id="plaque">—<small id="plaqueSub"></small></div>
+    </div>
+    <div class="shakebar" aria-hidden="true"><i id="shakebar"></i></div>
+  </div>
+
+  <div class="presets" id="presets" role="group" aria-label="Which globe"></div>
+
+  <div class="row">
+    <button id="shake" type="button">Shake it</button>
+    <button id="sound" class="sec" type="button" aria-pressed="false">Room tone</button>
+    <button id="music" class="sec" type="button" aria-pressed="false">A carol</button>
+    <span class="m" id="flakes"></span>
+  </div>
+
+  <div class="note" id="note"></div>
+  <div class="found" id="found" hidden></div>
+</div>
+
+<footer>
+  Three things in here were built somewhere else in this cabinet and are borrowed rather than rewritten:
+  the falling snow is the Elsewhere Almanac's particle field, the ambience is Room Tone's Web Audio
+  engine, and the snow that settles at the bottom and gets thrown up when you shake is real rigid-body
+  physics under Matter.js. The dioramas are drawn a pixel at a time into a 128&times;128 buffer and
+  scaled by a whole number, so nothing inside the glass can be smooth by accident.
+  The carol is <b>Jingle Bells</b> (1857) or <b>Silent Night</b> (1818), both long out of copyright,
+  arranged here for four oscillators and played live &mdash; there is no recording of anything on this
+  page, and no performance by anybody has been sampled.
+  <a href="/">&larr; back to the cabinet</a>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+<script src="/shared/lc-weather-fx.js"></script>
+<script src="/shared/lc-audio.js"></script>
+<script src="scenes.js"></script>
+<script>
+'use strict';
+const $ = (id) => document.getElementById(id);
+const SCENES = window.GLOBE_SCENES;
+const S = window.GLOBE_SIZE;
+
+let scene = SCENES[0];
+let px = 0;                    // device pixels per globe pixel
+
+/* ------------------------------------------------------------------ *
+ *  1. The diorama, drawn once per preset into a 128x128 buffer.
+ * ------------------------------------------------------------------ */
+const buf = document.createElement('canvas');
+buf.width = S; buf.height = S;
+const bufCtx = buf.getContext('2d');
+
+const dio = $('diorama');
+const dioCtx = dio.getContext('2d');
+
+function drawScene(){
+  bufCtx.clearRect(0, 0, S, S);
+  scene.draw(bufCtx, scene.seed);
+  blit();
+}
+function blit(){
+  dioCtx.imageSmoothingEnabled = false;
+  dioCtx.clearRect(0, 0, dio.width, dio.height);
+  dioCtx.drawImage(buf, 0, 0, dio.width, dio.height);
+}
+
+/* ------------------------------------------------------------------ *
+ *  2. The falling snow — the almanac's field, scaled down.
+ * ------------------------------------------------------------------ */
+let fx = null;
+
+/* ------------------------------------------------------------------ *
+ *  3. The settled snow — Matter.js.
+ *
+ *  This is the half that makes a globe a globe: a couple of hundred
+ *  little bodies that lie in a drift at the bottom, get thrown into the
+ *  air when you shake it, and take their time coming down. Gravity is
+ *  rotated by how you are dragging the globe, so tipping it really does
+ *  pour the snow to one side.
+ * ------------------------------------------------------------------ */
+const M = window.Matter;
+let engine = null, world = null, flakes = [], walls = [];
+/* Sized in globe units — the 128-pixel buffer — not in screen pixels.
+   The first pass used a radius of up to 4 units, which is three per cent
+   of the globe's diameter EACH, and 190 of them buried the diorama in a
+   white blob. At 0.7–1.7 the drift covers about six per cent of the
+   glass, which is a drift rather than a snowfield. */
+const FLAKE_N = 170;
+const FLAKE_MIN = 0.7, FLAKE_MAX = 1.7;
+
+const set = $('settled');
+const setCtx = set.getContext('2d');
+
+function buildPhysics(w, h){
+  if (engine) M.Engine.clear(engine);
+  engine = M.Engine.create({ gravity: { x: 0, y: 1, scale: 0.0009 } });
+  world = engine.world;
+
+  // The globe is a circle, so the container is a ring of small static
+  // bodies rather than four walls — otherwise the snow piles into the
+  // corners of a box you cannot see.
+  walls = [];
+  const R = w / 2 - 4;
+  const seg = 44;
+  for (let i = 0; i < seg; i++){
+    const a = (i / seg) * Math.PI * 2;
+    const bx = w / 2 + Math.cos(a) * R;
+    const by = h / 2 + Math.sin(a) * R;
+    const b = M.Bodies.rectangle(bx, by, (2 * Math.PI * R) / seg + 6, 10,
+      { isStatic: true, angle: a + Math.PI / 2, restitution: 0.1, friction: 0.6 });
+    walls.push(b);
+  }
+  M.Composite.add(world, walls);
+
+  flakes = [];
+  for (let i = 0; i < FLAKE_N; i++){
+    const r = FLAKE_MIN + Math.random() * (FLAKE_MAX - FLAKE_MIN);
+    const b = M.Bodies.circle(
+      w / 2 + (Math.random() - 0.5) * R * 1.3,
+      h / 2 + R * 0.62 + Math.random() * R * 0.3,
+      r,
+      { restitution: 0.12, friction: 0.28, frictionAir: 0.055,
+        density: 0.0008, render: { visible: false } });
+    flakes.push(b);
+  }
+  M.Composite.add(world, flakes);
+}
+
+function stepPhysics(dt){
+  if (!engine) return;
+  M.Engine.update(engine, Math.min(32, dt * 1000));
+  contain();
+}
+
+/* The wall is a ring of thin static segments, and a fast enough body can
+   still slip between two of them on a single step. Rather than make the
+   wall thicker and the drift smaller, anything found outside the glass is
+   put back on the inside with its speed cut — a hard guarantee that
+   nothing leaves the globe, whatever the physics does. */
+const R_IN = S / 2 - 5;
+function contain(){
+  for (const b of flakes){
+    const dx = b.position.x - S / 2, dy = b.position.y - S / 2;
+    const d = Math.hypot(dx, dy);
+    if (d <= R_IN) continue;
+    const k = (R_IN - 1) / (d || 1);
+    M.Body.setPosition(b, { x: S / 2 + dx * k, y: S / 2 + dy * k });
+    M.Body.setVelocity(b, { x: b.velocity.x * -0.25, y: b.velocity.y * -0.25 });
+  }
+}
+
+function drawFlakes(){
+  const w = set.width, h = set.height;
+  setCtx.clearRect(0, 0, w, h);
+  setCtx.fillStyle = 'rgba(244,250,255,.95)';
+  for (const b of flakes){
+    // drawn as a square on the pixel grid, so the settled snow matches
+    // the diorama's resolution rather than being a smooth circle over it
+    const d = Math.max(1, Math.round(b.circleRadius * 2 * px));
+    setCtx.fillRect(Math.round(b.position.x * px - d / 2),
+                    Math.round(b.position.y * px - d / 2), d, d);
+  }
+  if (hidden.shown > 0) drawHidden();
+}
+
+/* ------------------------------------------------------------------ *
+ *  Sizing. Everything is laid out in "globe units" — the 128-pixel
+ *  buffer — and multiplied up, so the physics and the art agree.
+ * ------------------------------------------------------------------ */
+function fit(){
+  const r = $('globe').getBoundingClientRect();
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const size = Math.max(1, Math.round(r.width));
+  px = (size * dpr) / S;
+
+  [dio, set].forEach((c) => {
+    c.width = Math.round(size * dpr);
+    c.height = Math.round(size * dpr);
+    c.style.width = size + 'px';
+    c.style.height = size + 'px';
+  });
+
+  blit();
+  buildPhysics(S, S);
+  if (fx) fx.resize(size, size);
+  else {
+    fx = LCWeatherFX.attach($('fall'), { w: size, h: size, density: 2.2 });
+    fx.set(scene.weather);
+    fx.start();
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ *  The shake.
+ *
+ *  Dragging the globe rotates gravity and, once you are moving fast
+ *  enough, kicks every flake. `energy` is a decaying measure of how hard
+ *  it has been shaken, and it is what the hidden figure watches.
+ * ------------------------------------------------------------------ */
+let energy = 0, lastPt = null, dragging = false;
+
+/* Force is scaled BY MASS, which the first version did not do. A flake
+   has a mass of about 0.0036, so a flat force of 0.0084 was an
+   acceleration of over two units per step and the whole snowfall left
+   the globe on the first shake — measured, not guessed: the average
+   flake ended up at y = -3316 in a 128-unit world. Multiplying by mass
+   makes the number below an acceleration, which is what it should have
+   been. */
+function kick(strength){
+  if (!engine) return;
+  const a = Math.min(1, strength / 30) * 0.055;
+  for (const b of flakes){
+    M.Body.applyForce(b, b.position, {
+      x: b.mass * (Math.random() - 0.5) * a,
+      y: b.mass * (Math.random() - 0.7) * a
+    });
+  }
+  if (fx) fx.disturb(strength * 0.4, strength * 0.25);
+  energy = Math.min(100, energy + strength * 0.9);
+  chime(strength);
+}
+
+$('globe').addEventListener('pointerdown', (e) => {
+  dragging = true; lastPt = { x: e.clientX, y: e.clientY };
+  $('globe').classList.add('grabbing');
+  $('globe').setPointerCapture(e.pointerId);
+});
+$('globe').addEventListener('pointermove', (e) => {
+  if (!dragging || !lastPt) return;
+  const dx = e.clientX - lastPt.x, dy = e.clientY - lastPt.y;
+  lastPt = { x: e.clientX, y: e.clientY };
+  const speed = Math.hypot(dx, dy);
+  if (engine){
+    // tip the world the way you are pulling it
+    engine.gravity.x = Math.max(-1, Math.min(1, -dx * 0.05));
+    engine.gravity.y = 1;
+  }
+  if (speed > 6) kick(Math.min(30, speed));
+});
+function release(e){
+  if (!dragging) return;
+  dragging = false; lastPt = null;
+  $('globe').classList.remove('grabbing');
+  if (engine){ engine.gravity.x = 0; engine.gravity.y = 1; }
+  try { $('globe').releasePointerCapture(e.pointerId); } catch (err){}
+}
+$('globe').addEventListener('pointerup', release);
+$('globe').addEventListener('pointercancel', release);
+$('shake').addEventListener('click', () => {
+  for (let i = 0; i < 4; i++) setTimeout(() => kick(26), i * 90);
+});
+
+/* ------------------------------------------------------------------ *
+ *  Egg #4: the figure in the snow.
+ *
+ *  Shake it hard, and keep shaking it. Once the energy has been over the
+ *  threshold for a couple of continuous seconds, something small that is
+ *  not part of the diorama stands in the drift for a moment and then is
+ *  covered again. It does not appear from a gentle shake and it does not
+ *  stay.
+ * ------------------------------------------------------------------ */
+const hidden = { charge: 0, shown: 0, seenEver: false };
+const FIGURE = [
+  '..1..',
+  '.111.',
+  '..1..',
+  '.2.2.',
+  '.2.2.'
+];
+function drawHidden(){
+  const w = set.width;
+  const scale = px * 1.6;
+  const fx0 = w / 2 - (FIGURE[0].length * scale) / 2;
+  const fy0 = (S * 0.80) * px;
+  const alpha = Math.min(1, hidden.shown / 0.6);
+  for (let y = 0; y < FIGURE.length; y++){
+    for (let x = 0; x < FIGURE[y].length; x++){
+      const c = FIGURE[y][x];
+      if (c === '.') continue;
+      setCtx.fillStyle = c === '1'
+        ? 'rgba(232,200,120,' + (alpha * 0.95) + ')'
+        : 'rgba(60,48,40,' + (alpha * 0.9) + ')';
+      setCtx.fillRect((fx0 + x * scale) | 0, (fy0 + y * scale) | 0,
+                      Math.max(1, scale | 0), Math.max(1, scale | 0));
+    }
+  }
+}
+
+function watchHidden(dt){
+  if (energy > 42){
+    hidden.charge += dt;
+    if (hidden.charge > 2.2 && hidden.shown <= 0){
+      hidden.shown = 3.2;
+      hidden.charge = 0;
+      if (!hidden.seenEver){
+        hidden.seenEver = true;
+        $('found').hidden = false;
+        $('found').innerHTML = '<div class="k">something in the drift</div>' +
+          'You shook it hard enough, and for long enough, that the snow came off the bottom — and ' +
+          'there is somebody down there. They have been in every one of these globes the whole time. ' +
+          'Give it a moment and the snow will cover them again.';
+      }
+    }
+  } else {
+    hidden.charge = Math.max(0, hidden.charge - dt * 0.7);
+  }
+  if (hidden.shown > 0) hidden.shown -= dt;
+}
+
+/* ------------------------------------------------------------------ *
+ *  Sound. Room Tone's bench, doing the ambience and the carol.
+ * ------------------------------------------------------------------ */
+let bed = null, bedOn = false;
+
+const TONES = {
+  city:    (A, out) => {
+    A.chain(out.noise('brown'), A.filt('lowpass', 190), A.gain(0.12), out);
+    A.chain(out.noise('pink'), A.filt('bandpass', 900, .6), A.gain(0.018), out);
+  },
+  village: (A, out) => {
+    A.chain(out.noise('pink'), A.filt('lowpass', 520), A.gain(0.05), out);
+    const hum = out.osc('sine', 62); A.chain(hum, A.gain(0.012), out);
+  },
+  street:  (A, out) => {
+    A.chain(out.noise('pink'), A.filt('bandpass', 640, .5), A.gain(0.045), out);
+    A.chain(out.noise('brown'), A.filt('lowpass', 140), A.gain(0.08), out);
+  },
+  lake:    (A, out) => {
+    A.chain(out.noise('white'), A.filt('highpass', 2600), A.gain(0.014), out);
+    A.chain(out.noise('brown'), A.filt('lowpass', 110), A.gain(0.09), out);
+  }
+};
+
+function startBed(){
+  LCAudio.sting((A) => {
+    if (bed) bed.stopAll();
+    bed = A.bus(0.0001);
+    (TONES[scene.tone] || TONES.village)(A, bed);
+    const t = A.ctx.currentTime;
+    bed.gain.setValueAtTime(0.0001, t);
+    bed.gain.exponentialRampToValueAtTime(0.7, t + 1.2);
+  });
+}
+function stopBed(){
+  if (!bed) return;
+  const A = LCAudio.get();
+  if (A){
+    const t = A.ctx.currentTime;
+    try {
+      bed.gain.cancelScheduledValues(t);
+      bed.gain.setValueAtTime(bed.gain.value, t);
+      bed.gain.exponentialRampToValueAtTime(0.0001, t + 0.7);
+    } catch (e){}
+  }
+  const dying = bed; bed = null;
+  setTimeout(() => { try { dying.stopAll(); } catch (e){} }, 900);
+}
+
+$('sound').addEventListener('click', () => {
+  bedOn = !bedOn;
+  $('sound').setAttribute('aria-pressed', String(bedOn));
+  if (bedOn) startBed(); else stopBed();
+});
+
+/* the little glass chime when it is shaken */
+function chime(strength){
+  if (!bedOn && !musicOn) return;
+  if (Math.random() > 0.10) return;
+  LCAudio.sting((A) => {
+    A.blip(1400 + Math.random() * 1400, {
+      type: 'sine', dur: .5, level: .02 * Math.min(1, strength / 24),
+      filter: 'highpass', filterFreq: 900, reverb: true
+    });
+  });
+}
+
+/* ---- the carol ----------------------------------------------------- *
+ *  Two melodies, both comfortably out of copyright: Jingle Bells (James
+ *  Lord Pierpont, 1857) and Silent Night (Gruber and Mohr, 1818). What
+ *  is played is the MELODY, arranged here as a music-box lead over a
+ *  simple bass, generated by oscillators at the moment you press the
+ *  button. Nothing is sampled and no particular recording is involved.
+ *
+ *  Notes are semitones from A4, so -9 is middle C.
+ * ------------------------------------------------------------------ */
+const CAROLS = {
+  jingle: {
+    name: 'Jingle Bells',
+    year: '1857',
+    bpm: 132,
+    lead: [
+      [-5,1],[-5,1],[-5,2], [-5,1],[-5,1],[-5,2],
+      [-5,1],[-2,1],[-9,1.5],[-7,.5],[-5,4],
+      [-4,1],[-4,1],[-4,1.5],[-4,.5],
+      [-4,1],[-5,1],[-5,1],[-5,.5],[-5,.5],
+      [-5,1],[-7,1],[-7,1],[-5,1],[-2,4]
+    ],
+    bass: [ [-21,4],[-21,4],[-14,4],[-21,4],[-16,4],[-21,4],[-19,4],[-21,4] ]
+  },
+  silent: {
+    name: 'Silent Night',
+    year: '1818',
+    bpm: 84,
+    lead: [
+      [-2,.75],[0,.25],[-2,1],[-5,2],
+      [-2,.75],[0,.25],[-2,1],[-5,2],
+      [5,2],[5,1],[2,3],
+      [3,2],[3,1],[-2,3],
+      [0,2],[0,1],[3,.75],[2,.25],[0,1],
+      [-2,.75],[0,.25],[-2,1],[-5,2],
+      [5,2],[5,1],[8,.75],[5,.25],[2,1],
+      [3,3],[7,3],
+      [3,1],[-2,1],[-5,1],[-2,.75],[-4,.25],[-7,1],[-9,3]
+    ],
+    bass: [ [-21,3],[-21,3],[-21,3],[-21,3],[-14,3],[-14,3],[-16,3],[-16,3],
+            [-21,3],[-21,3],[-14,3],[-16,3],[-21,3],[-21,3] ]
+  }
+};
+let musicOn = false, musicTimer = 0, carolKey = 'jingle';
+
+function playCarol(){
+  const c = CAROLS[carolKey];
+  LCAudio.sting((A) => {
+    // the lead: a short bell-like sine, the way a music box sounds
+    const secs = A.melody(c.lead, {
+      bpm: c.bpm, type: 'sine', level: .085, legato: .55,
+      filter: 'highpass', filterFreq: 260, reverb: true
+    });
+    // and a plain bass under it
+    A.melody(c.bass, {
+      bpm: c.bpm, type: 'triangle', level: .05, legato: .9,
+      filter: 'lowpass', filterFreq: 420, reverb: false
+    });
+    // loop it, with a bar of quiet in between
+    clearTimeout(musicTimer);
+    if (musicOn) musicTimer = setTimeout(playCarol, (secs + 1.6) * 1000);
+  });
+}
+
+$('music').addEventListener('click', () => {
+  musicOn = !musicOn;
+  $('music').setAttribute('aria-pressed', String(musicOn));
+  if (musicOn){
+    // alternate, so it is not the same carol every time
+    carolKey = carolKey === 'jingle' ? 'silent' : 'jingle';
+    $('note').textContent = CAROLS[carolKey].name + ' (' + CAROLS[carolKey].year +
+      '), arranged here for oscillators. Nothing is sampled.';
+    playCarol();
+  } else {
+    clearTimeout(musicTimer);
+  }
+});
+
+/* ------------------------------------------------------------------ *
+ *  The presets, and the loop.
+ * ------------------------------------------------------------------ */
+function paintPresets(){
+  $('presets').innerHTML = SCENES.map((s) =>
+    '<button type="button" data-id="' + s.id + '" aria-pressed="' + (s.id === scene.id) + '">' +
+    '<b>' + s.name + '</b><span>' + s.note + '</span></button>').join('');
+}
+$('presets').addEventListener('click', (e) => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  scene = SCENES.find((s) => s.id === b.dataset.id);
+  paintPresets();
+  drawScene();
+  if (fx) fx.set(scene.weather);
+  $('plaque').innerHTML = scene.name + '<small id="plaqueSub">' + scene.note + '</small>';
+  if (bedOn) startBed();
+  kick(14);
+});
+
+let last = performance.now();
+function loop(now){
+  requestAnimationFrame(loop);
+  if (document.hidden) { last = now; return; }
+  const dt = Math.min(0.05, (now - last) / 1000);
+  last = now;
+
+  /* The particle field drops its own loop when the tab is hidden and does
+     not restart itself. Without this line, opening the globe in a
+     background tab — or switching away and back — leaves the snow
+     permanently stopped, which is exactly what happened the first time
+     this page was measured. start() is idempotent. */
+  if (fx) fx.start();
+
+  energy = Math.max(0, energy - dt * 22);
+  $('shakebar').style.width = energy + '%';
+
+  stepPhysics(dt);
+  watchHidden(dt);
+  drawFlakes();
+}
+
+paintPresets();
+drawScene();
+$('plaque').innerHTML = scene.name + '<small>' + scene.note + '</small>';
+fit();
+$('flakes').textContent = FLAKE_N + ' flakes on the floor';
+$('note').textContent = 'Drag the glass to tip it, or press Shake. The snow at the bottom is real ' +
+  'physics — it piles up where you leave it.';
+requestAnimationFrame(loop);
+
+window.addEventListener('resize', fit);
+
+window.__globe = {
+  kick, get energy(){ return energy; }, hidden, scenes: SCENES,
+  get fx(){ return fx; },
+  set: (id) => { scene = SCENES.find((s) => s.id === id) || scene; paintPresets(); drawScene(); if (fx) fx.set(scene.weather); },
+  flakes: () => flakes, carols: CAROLS,
+  forceEgg: () => { energy = 100; hidden.charge = 3; }
+};
+</script>
+</body>
+</html>
