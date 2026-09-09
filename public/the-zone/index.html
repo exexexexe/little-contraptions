@@ -173,6 +173,18 @@ body.vault .crt.sweeping::after{ background:linear-gradient(180deg,transparent,r
 .meter i{ transition:width .6s cubic-bezier(.2,.7,.3,1) }
 
 /* ---------- the other mode ---------- */
+/* The line warden's set is older than either of the others: a cold
+   filament green-white on a dirtier tube, because it has been running
+   underground on station power since before anybody now alive was born. */
+body.metro{ --green:#BFD8D0;--green-dim:#6E8A84; }
+body.metro .crt, body.metro .crt *{ color:#BFD8D0 }
+body.metro .crt{ background:#0A100F;box-shadow:inset 0 0 90px rgba(0,0,0,.8) }
+body.metro .sectors button[aria-pressed="true"]{ background:#6E8A84;border-color:#6E8A84;color:#060B0A }
+body.metro .key.scan{ background:#BFD8D0;color:#0A100F }
+body.metro .plate h1{ color:#BFD8D0 }
+body.metro .meter i{ background:#BFD8D0 }
+body.metro .crt.sweeping::after{ background:linear-gradient(180deg,transparent,rgba(191,216,208,.14),transparent) }
+
 body.vault{ --green:#FFB53C;--green-dim:#A9761F; }
 body.vault .crt, body.vault .crt *{ color:#FFB53C }
 body.vault .crt{
@@ -467,6 +479,75 @@ const VAULT_CLOSERS = [
   'Battery projection assumes you stop walking soon.',
 ];
 
+/* ------------------------------------------------------------------ *
+ *  A third handset: the line warden's.
+ *
+ *  Same idea as the two above — a place that has gone wrong, catalogued
+ *  by somebody whose job it is. This one is underground: stations held
+ *  as settlements, tunnels between them that nobody crosses casually,
+ *  and a surface you can only visit in a suit. The setting is referenced
+ *  by name only; every line of description here was written for this
+ *  cabinet and nothing is quoted or adapted.
+ *
+ *  The units change with the mode, because a warden underground does not
+ *  care about roentgens on a wall — they care about what is in the air
+ *  and how long the filter has left.
+ * ------------------------------------------------------------------ */
+const METRO_SECTORS = [
+  { k:'exhibition', n:'Exhibition',      rad:[0.02,0.4], flavour:'northern outpost, one barricade, good tea' },
+  { k:'alekseev',   n:'Alekseevskaya',   rad:[0.05,0.7], flavour:'trading post, everything weighed twice' },
+  { k:'prospekt',   n:'Prospekt Mira',   rad:[0.08,1.1], flavour:'junction station, three lines, no authority' },
+  { k:'riga',       n:'Rizhskaya',       rad:[0.1,1.4],  flavour:'mushroom farms under lamps that flicker' },
+  { k:'sukharev',   n:'Sukharevskaya',   rad:[0.3,2.6],  flavour:'half-collapsed platform, permanent draught' },
+  { k:'turgenev',   n:'Turgenevskaya',   rad:[0.4,3.4],  flavour:'the crossing everybody uses and nobody likes' },
+  { k:'kitay',      n:'Kitay-Gorod',     rad:[0.2,1.8],  flavour:'two platforms, two factions, one water pump' },
+  { k:'polis',      n:'Polis',           rad:[0.02,0.3], flavour:'four stations joined, a library, and rules' },
+  { k:'ring',       n:'The Ring Line',   rad:[0.15,1.6], flavour:'the wealthy end, patrolled and taxed' },
+  { k:'tunnel',     n:'Unlit Tunnel 14', rad:[1.2,9.0],  flavour:'no lights, no rail, walk in the middle' },
+  { k:'depot',      n:'Rolling Stock Depot', rad:[0.6,4.8], flavour:'forty carriages, one of them lived in' },
+  { k:'ventshaft',  n:'Ventilation Shaft 6', rad:[2.4,16.0], flavour:'the only honest air in the system, and it comes down' },
+  { k:'flooded',    n:'The Flooded Level', rad:[1.8,12.5], flavour:'waist-deep, the pumps went first' },
+  { k:'surface',    n:'The Surface',     rad:[8.0,48.0], flavour:'suit and filter, and be back before the light goes' },
+  { k:'library',    n:'The Great Library', rad:[3.2,22.0], flavour:'above ground, still standing, still occupied' },
+  { k:'d6',         n:'Facility D-6',    rad:[1.4,11.0], flavour:'sealed from the inside, which is the interesting part' },
+];
+
+const METRO_ANOM = [
+  'Draught Reversal — the tunnel air changes direction for about forty seconds, roughly hourly. Nobody has found the far end.',
+  'Whisper Bend — voices in the curve at 3.1 km. They repeat what was said eleven seconds earlier, at the same volume.',
+  'The Warm Section — ninety metres of tunnel eleven degrees above ambient, with no plant behind the wall.',
+  'Filter Rot — cartridges lose half their life in this stretch and no test has explained it. Carry double.',
+  'Standing Water, Clear — the flooded level is drinkable at one specific point and lethal four metres either side.',
+  'Lamp Failure — every electric light fails between markers 12 and 14 and works again on the other side.',
+  'The Count — anybody walking this section arrives having counted more sleepers than they walked over.',
+  'Pressure Step — a metre-wide band where the ears pop going either way. Survey found no gradient.',
+  'Rail Song — the rail hums at a fixed pitch with nothing on the line for eight kilometres.',
+  'The Second Torch — one more light than there are people in the party, consistently, at the rear.',
+];
+
+const METRO_FINDS = [
+  'a sealed filter cartridge, four hours',
+  'a hand-loaded magazine, mixed heads',
+  'pre-war rounds, kept as money and not fired',
+  'a working torch with a wind-up dynamo',
+  'a gas mask with one intact lens and a cracked strap',
+  'half a kilo of station mushrooms, dried',
+  'a pressure gauge, still calibrated',
+  'a paper map annotated by somebody who knew',
+  'a child’s toy, cleaned and kept',
+  'a bulb, unbroken, which is worth more than the torch',
+  'a letter addressed to a station that no longer answers',
+  'a length of good rope, forty metres',
+];
+
+const METRO_CLOSERS = [
+  'Filters logged. Do not open the outer door until the inner is shut.',
+  'Report timed and sealed. Next patrol in six hours, weather on the surface permitting.',
+  'Recorded. The warden notes that the party returned one member short and does not elaborate.',
+  'Filed. Trade value of the above has been set at the Ring Line rate and disputed already.',
+  'Entered. Anyone going beyond marker 14 signs for it themselves.',
+];
+
 const MODES = {
   zone: {
     title: 'Zone Survey Terminal',
@@ -477,6 +558,15 @@ const MODES = {
               : s.special === 'alice' ? pick(ALICE_ANOM) : pick(ANOMALIES),
     find: () => pick(ARTIFACTS), findLabel: 'artefact',
     closers: () => CLOSERS, scale: 18,
+  },
+  metro: {
+    title: 'Line Warden Terminal',
+    plate: 'LINE HANDSET', id: 'warden set 6 · station issue',
+    unit: 'ppm', hazard: 'air quality',
+    sectors: () => METRO_SECTORS,
+    anom: () => pick(METRO_ANOM),
+    find: () => pick(METRO_FINDS), findLabel: 'salvage',
+    closers: () => METRO_CLOSERS, scale: 24,
   },
   vault: {
     title: 'Personal Information Processor',
@@ -494,6 +584,7 @@ const M = () => MODES[modeKey];
 function applyMode(){
   const m = M();
   document.body.classList.toggle('vault', modeKey === 'vault');
+  document.body.classList.toggle('metro', modeKey === 'metro');
   $('plate-name').textContent = m.plate;
   $('unit-id').textContent = m.id;
   sector = m.sectors()[0];
@@ -516,7 +607,10 @@ function bindCatch(){
   const commit = (dx) => {
     if (Math.abs(dx) < 26) { c.style.transform = ''; return; }
     c.style.transform = '';
-    modeKey = modeKey === 'zone' ? 'vault' : 'zone';
+    // three handsets now, so the catch cycles rather than toggling
+    const order = ['zone', 'vault', 'metro'];
+    const at = order.indexOf(modeKey);
+    modeKey = order[(at + (dx < 0 ? order.length - 1 : 1)) % order.length];
     $('crt').classList.add('switching');
     setTimeout(() => { applyMode(); $('crt').classList.remove('switching'); }, 340);
   };
