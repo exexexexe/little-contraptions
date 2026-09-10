@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Two Knobs and a Screen</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='5' fill='%23C0281E'/><rect x='4' y='5' width='24' height='17' rx='2' fill='%23A9AFA6'/><circle cx='7' cy='26' r='3.6' fill='%23F2F0E6'/><circle cx='25' cy='26' r='3.6' fill='%23F2F0E6'/><path d='M8 17h6l3-6 4 8' stroke='%23484C46' stroke-width='1.6' fill='none'/></svg>">
+<style>
+:root{ color-scheme: light; }
+:root{
+  --red:#C0281E;
+  --red-2:#8E1A13;
+  --screen:#A9AFA6;
+  --screen-2:#949B91;
+  --line:#484C46;
+  --knob:#F2F0E6;
+  --knob-2:#CFCCBE;
+  --ink:#2E2A24;
+  --dim:#6E675B;
+  --sans:"Avenir Next","Segoe UI",system-ui,-apple-system,"Helvetica Neue",sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;min-height:100%}
+body{
+  background:linear-gradient(180deg,#E8E2D4,#D2CCBC);
+  color:var(--ink);font-family:var(--sans);
+  min-height:100vh;padding:24px 16px 84px;
+  display:flex;flex-direction:column;align-items:center;
+  -webkit-tap-highlight-color:transparent;
+}
+.wrap{ width:min(720px,100%);display:flex;flex-direction:column;align-items:center }
+
+h1{ font-size:clamp(19px,4.4vw,24px);font-weight:700;margin:0 0 5px;text-align:center }
+.tagline{ font-size:13px;color:var(--dim);margin:0 0 20px;text-align:center;max-width:40ch }
+
+/* ---- the toy -------------------------------------------------------- */
+.toy{
+  position:relative;width:100%;border-radius:22px;
+  background:linear-gradient(180deg,#D4382C,#A31E16);
+  padding:20px 20px 0;
+  box-shadow:
+    inset 0 2px 0 rgba(255,255,255,.28),
+    inset 0 -3px 0 rgba(0,0,0,.28),
+    0 18px 44px rgba(90,30,20,.35);
+  touch-action:none;
+  transition:transform .06s;
+}
+.toy.shaking{ animation:shake .42s linear }
+@keyframes shake{
+  0%,100%{ transform:translate(0,0) rotate(0) }
+  15%{ transform:translate(-9px,2px) rotate(-.7deg) }
+  32%{ transform:translate(8px,-2px) rotate(.6deg) }
+  50%{ transform:translate(-7px,1px) rotate(-.5deg) }
+  70%{ transform:translate(6px,-1px) rotate(.4deg) }
+  86%{ transform:translate(-3px,0) rotate(-.2deg) }
+}
+@media (prefers-reduced-motion: reduce){ .toy.shaking{ animation:none } }
+
+.bezel{
+  border-radius:8px;padding:9px;background:linear-gradient(180deg,#7E140E,#A31E16);
+  box-shadow:inset 0 2px 6px rgba(0,0,0,.4);
+}
+.screen{ position:relative;border-radius:3px;overflow:hidden;background:var(--screen) }
+.screen canvas{ display:block;width:100%;height:auto }
+
+.knobs{ display:flex;justify-content:space-between;align-items:center;padding:16px 4px 18px }
+.knob{
+  width:74px;height:74px;border-radius:50%;border:0;padding:0;cursor:grab;
+  background:
+    radial-gradient(circle at 34% 30%, #FFFEF8 0%, var(--knob) 34%, var(--knob-2) 78%, #A9A597 100%);
+  box-shadow:
+    inset 0 -3px 6px rgba(0,0,0,.2), inset 0 3px 5px rgba(255,255,255,.7),
+    0 5px 12px rgba(0,0,0,.32);
+  position:relative;touch-action:none;
+}
+.knob:active{ cursor:grabbing }
+.knob:focus-visible{ outline:3px solid #FFF3B0;outline-offset:4px }
+.knob i{
+  position:absolute;left:50%;top:9px;width:4px;height:20px;margin-left:-2px;border-radius:2px;
+  background:#8A8578;transform-origin:50% 28px;
+}
+.knob::after{
+  content:"";position:absolute;inset:9px;border-radius:50%;
+  background:repeating-conic-gradient(rgba(0,0,0,.07) 0deg 3deg, transparent 3deg 6deg);
+}
+.knob-label{
+  font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;
+  color:rgba(255,235,230,.72);text-align:center;margin-top:7px;
+}
+.plate{
+  flex:1;text-align:center;color:rgba(255,235,230,.78);
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.28em;text-transform:uppercase;
+  padding:0 10px;line-height:1.9;
+}
+.plate b{ display:block;font-size:13px;letter-spacing:.2em;color:#FFF3EE }
+
+/* ---- controls -------------------------------------------------------- */
+.bar{ display:flex;flex-wrap:wrap;gap:8px;margin-top:18px;justify-content:center }
+.bar button{
+  font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;
+  background:#FBF8EE;color:var(--ink);border:1.5px solid #C4BDA9;border-radius:9px;
+  padding:9px 15px;transition:border-color .14s,background .14s;
+}
+.bar button:hover{ border-color:#9C947F }
+.bar button[aria-pressed="true"]{ background:var(--ink);border-color:var(--ink);color:#FBF8EE }
+.bar button:focus-visible{ outline:3px solid var(--red);outline-offset:2px }
+.bar button.shake{ background:var(--red);border-color:var(--red-2);color:#FFF3EE }
+.bar button.shake:hover{ background:#D4382C }
+
+.book{ margin-top:26px;padding-top:18px;border-top:1.5px solid #C4BDA9;font-size:13.5px;line-height:1.85;color:#544D42;width:100% }
+.book p{ margin:0 0 11px } .book p:last-child{ margin:0 }
+.book b{ color:var(--ink) }
+.book kbd{
+  font-family:var(--mono);font-size:11px;background:#FBF8EE;border:1px solid #C4BDA9;
+  border-bottom-width:2px;border-radius:4px;padding:1px 5px;
+}
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:700 11px/1 var(--mono);
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#FFF3EE;background:var(--red);
+  border:2px solid rgba(255,255,255,.5);border-radius:999px;
+  width:40px;height:40px;justify-content:center;
+  box-shadow:0 6px 18px rgba(90,30,20,.4);
+  transition:width .18s ease, background .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:120px;gap:9px;background:var(--red-2) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:3px solid var(--ink);outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Two Knobs and a Screen</h1>
+<p class="tagline">One line, and you can never lift it off the glass.</p>
+
+<div class="toy" id="toy">
+  <div class="bezel">
+    <div class="screen">
+      <canvas id="cv" width="1160" height="820"></canvas>
+    </div>
+  </div>
+  <div class="knobs">
+    <div>
+      <button class="knob" id="k-left" aria-label="Left knob: moves the stylus left and right">
+        <i id="i-left"></i>
+      </button>
+      <div class="knob-label">left &amp; right</div>
+    </div>
+    <div class="plate">
+      <b>Aluminium</b>
+      no. 2
+    </div>
+    <div>
+      <button class="knob" id="k-right" aria-label="Right knob: moves the stylus up and down">
+        <i id="i-right"></i>
+      </button>
+      <div class="knob-label">up &amp; down</div>
+    </div>
+  </div>
+</div>
+
+<div class="bar">
+  <button type="button" class="shake" id="btn-shake">Shake it</button>
+  <button type="button" id="btn-sound" aria-pressed="false">Sound</button>
+  <button type="button" id="btn-fine" aria-pressed="false">Fine control</button>
+  <button type="button" id="btn-demo">Draw me a house</button>
+</div>
+
+<div class="book">
+  <p><b>The constraint is the whole toy.</b> One knob moves the stylus sideways, the other up and
+  down, and the stylus never leaves the glass &mdash; so every drawing is a single unbroken line,
+  and the only way to get to a new place is to draw your way there. Diagonals need both hands at
+  once. That is why a staircase is easy and a circle is a party trick.</p>
+  <p>You can turn the knobs by dragging them round, or use the arrow keys: <kbd>&larr;</kbd> and
+  <kbd>&rarr;</kbd> for the left knob, <kbd>&uarr;</kbd> and <kbd>&darr;</kbd> for the right. Hold
+  two at once for a diagonal.</p>
+  <p>Shaking really does clear it, and it is the only way to clear it. The drawing is kept in this
+  browser between visits, so a shake is a decision.</p>
+</div>
+
+</div>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">&larr;</span><span class="w">cabinet</span></a>
+
+<script src="/shared/lc-audio.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  var KEY = 'lc-two-knobs';
+  var cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+  var W = cv.width, H = cv.height;
+  var calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* The stylus. It starts in the middle, as the real thing does when it
+     comes out of the box. */
+  var x = W / 2, y = H / 2;
+  var lastX = x, lastY = y;
+  var angL = 0, angR = 0;
+  var fine = false, sound = false;
+  var trail = [];                      /* the whole line, so it can be redrawn */
+  var MAX_POINTS = 26000;
+
+  try {
+    var raw = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (raw && Array.isArray(raw.t) && raw.t.length >= 2){
+      trail = raw.t.slice(-MAX_POINTS * 2);
+      x = trail[trail.length - 2]; y = trail[trail.length - 1];
+      lastX = x; lastY = y;
+      fine = !!raw.fine;
+    } else {
+      trail = [x, y];
+    }
+  } catch (e) { trail = [x, y]; }
+
+  var saveTimer = null;
+  function save(){
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(function(){
+      try {
+        localStorage.setItem(KEY, JSON.stringify({
+          t: trail.map(function(v){ return Math.round(v); }), fine: fine
+        }));
+      } catch (e) { /* a very long line may not fit; the screen still works */ }
+    }, 700);
+  }
+
+  /* ---- the screen ------------------------------------------------------ *
+   * The coating is drawn once into its own canvas and reused, because
+   * regenerating a hundred thousand grains of aluminium every frame is
+   * the sort of thing that turns a fan on.
+   * -------------------------------------------------------------------- */
+  var coat = document.createElement('canvas');
+  coat.width = W; coat.height = H;
+  (function makeCoat(){
+    var c = coat.getContext('2d');
+    var g = c.createLinearGradient(0, 0, W, H);
+    g.addColorStop(0, '#B3B8AF'); g.addColorStop(.5, '#A9AFA6'); g.addColorStop(1, '#9CA399');
+    c.fillStyle = g; c.fillRect(0, 0, W, H);
+    var img = c.getImageData(0, 0, W, H), d = img.data;
+    for (var i = 0; i < d.length; i += 4){
+      var n = (Math.random() - .5) * 26;
+      d[i] += n; d[i + 1] += n; d[i + 2] += n;
+    }
+    c.putImageData(img, 0, 0);
+    /* the faint vertical wipe marks a real screen has */
+    c.globalAlpha = .05;
+    for (var k = 0; k < 90; k++){
+      c.fillStyle = k % 2 ? '#fff' : '#7A8078';
+      c.fillRect(Math.random() * W, 0, 1 + Math.random() * 2, H);
+    }
+  })();
+
+  function redraw(){
+    ctx.drawImage(coat, 0, 0);
+    if (trail.length < 4) return;
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    /* two passes: a soft dark bed, then the crisp scraped line on top,
+       which is what the stylus actually leaves behind */
+    ctx.strokeStyle = 'rgba(60,64,58,.35)'; ctx.lineWidth = 7;
+    strokePath();
+    ctx.strokeStyle = '#484C46'; ctx.lineWidth = 3.4;
+    strokePath();
+  }
+  function strokePath(){
+    ctx.beginPath();
+    for (var i = 0; i < trail.length; i += 2){
+      i ? ctx.lineTo(trail[i], trail[i + 1]) : ctx.moveTo(trail[i], trail[i + 1]);
+    }
+    ctx.stroke();
+  }
+
+  /* Adding to the line only ever draws the new segment, so a long drawing
+     costs the same per frame as a short one. The full redraw is kept for
+     loading and for the shake. */
+  function extend(nx, ny){
+    nx = Math.max(6, Math.min(W - 6, nx));
+    ny = Math.max(6, Math.min(H - 6, ny));
+    if (Math.abs(nx - x) < .35 && Math.abs(ny - y) < .35) return false;
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(nx, ny);
+    ctx.strokeStyle = 'rgba(60,64,58,.35)'; ctx.lineWidth = 7; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(nx, ny);
+    ctx.strokeStyle = '#484C46'; ctx.lineWidth = 3.4; ctx.stroke();
+    x = nx; y = ny;
+    trail.push(x, y);
+    if (trail.length > MAX_POINTS * 2) trail = trail.slice(-MAX_POINTS * 2);
+    save();
+    rasp();
+    return true;
+  }
+
+  /* ---- the knobs -------------------------------------------------------- *
+   * A knob is turned, not dragged: the pointer's angle about the knob's
+   * centre is what counts, so it behaves like a real dial however you
+   * grab it. The stylus moves by the angle turned, which is why turning
+   * faster draws faster.
+   * --------------------------------------------------------------------- */
+  function knob(el, needle, apply){
+    var dragging = false, prev = 0, acc = 0;
+    function ang(e){
+      var r = el.getBoundingClientRect();
+      return Math.atan2(e.clientY - (r.top + r.height / 2), e.clientX - (r.left + r.width / 2));
+    }
+    el.addEventListener('pointerdown', function(e){
+      e.preventDefault(); el.setPointerCapture(e.pointerId);
+      dragging = true; prev = ang(e);
+    });
+    el.addEventListener('pointermove', function(e){
+      if (!dragging) return;
+      var a = ang(e), d = a - prev;
+      while (d > Math.PI) d -= Math.PI * 2;
+      while (d < -Math.PI) d += Math.PI * 2;
+      prev = a;
+      acc += d;
+      apply(d * (fine ? 26 : 78));
+      needle.style.transform = 'rotate(' + (acc * 180 / Math.PI) + 'deg)';
+    });
+    ['pointerup','pointercancel'].forEach(function(t){
+      el.addEventListener(t, function(){ dragging = false; });
+    });
+    return { turn: function(d){ acc += d; needle.style.transform = 'rotate(' + (acc * 180 / Math.PI) + 'deg)'; } };
+  }
+
+  var kl = knob(document.getElementById('k-left'), document.getElementById('i-left'),
+                function(d){ extend(x + d, y); });
+  var kr = knob(document.getElementById('k-right'), document.getElementById('i-right'),
+                function(d){ extend(x, y + d); });
+
+  /* ---- keys ------------------------------------------------------------- *
+   * Held rather than repeated, so two arrows at once really do give a
+   * diagonal — which is the hard trick on the real toy and should be the
+   * hard trick here.
+   * --------------------------------------------------------------------- */
+  var held = {};
+  window.addEventListener('keydown', function(e){
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.isContentEditable)) return;
+    if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].indexOf(e.key) < 0) return;
+    e.preventDefault();
+    held[e.key] = true;
+  });
+  window.addEventListener('keyup', function(e){ delete held[e.key]; });
+  window.addEventListener('blur', function(){ held = {}; });
+
+  (function drive(){
+    requestAnimationFrame(drive);
+    var step = fine ? 1.1 : 3.4;
+    var dx = (held.ArrowRight ? step : 0) - (held.ArrowLeft ? step : 0);
+    var dy = (held.ArrowDown ? step : 0) - (held.ArrowUp ? step : 0);
+    if (dx || dy){
+      extend(x + dx, y + dy);
+      if (dx) kl.turn(dx / 40);
+      if (dy) kr.turn(dy / 40);
+    }
+  })();
+
+  /* ---- sound: a gritty knob and a rattle ---------------------------------- */
+  var lastRasp = 0;
+  function rasp(){
+    if (!sound) return;
+    var now = performance.now();
+    if (now - lastRasp < 40) return;
+    lastRasp = now;
+    LCAudio.sting(function(A){
+      A.burst('white', { freq: 1400 + Math.random() * 900, q: .9, dur: .04, level: .028, reverb:false });
+    });
+  }
+  function rattle(){
+    if (!sound) return;
+    LCAudio.sting(function(A){
+      for (var i = 0; i < 16; i++){
+        A.burst('white', { at: i * .026, freq: 900 + Math.random() * 2200, q: 1.1,
+                           dur: .05, level: .07 * (1 - i / 18), reverb:false });
+      }
+    });
+  }
+
+  /* ---- shake ------------------------------------------------------------- */
+  function shake(){
+    var toy = document.getElementById('toy');
+    toy.classList.remove('shaking');
+    void toy.offsetWidth;
+    toy.classList.add('shaking');
+    rattle();
+    /* the powder settles back over the line rather than the line simply
+       vanishing, so the clear takes as long as a real shake does */
+    var t0 = performance.now();
+    var dur = calm ? 1 : 420;
+    (function fade(now){
+      var p = Math.min(1, (now - t0) / dur);
+      redraw();
+      ctx.save();
+      ctx.globalAlpha = p;
+      ctx.drawImage(coat, 0, 0);
+      ctx.restore();
+      if (p < 1) requestAnimationFrame(fade);
+      else {
+        trail = [x, y];
+        ctx.drawImage(coat, 0, 0);
+        save();
+      }
+    })(performance.now());
+    setTimeout(function(){ toy.classList.remove('shaking'); }, 460);
+  }
+
+  /* ---- the demonstration --------------------------------------------------- *
+   * Drawn the only way this toy can draw: one unbroken line, laid down at
+   * knob speed, so it takes as long as it would take you.
+   * ------------------------------------------------------------------------ */
+  var demoTimer = null;
+
+  /* ---- the demonstration ------------------------------------------------- *
+   * Drawn the only way this toy can draw: one unbroken line, at knob
+   * speed, so it takes as long as it would take you — including the walk
+   * back along the bottom wall to get to the door.
+   * ---------------------------------------------------------------------- */
+  function demo2(){
+    clearInterval(demoTimer);
+    var L = W * .24, R = W * .76, T = H * .34, B = H * .82, PEAK = H * .14;
+    var w = R - L, h = B - T;
+    var path = [
+      [x, y], [L, B], [L, T], [(L + R) / 2, PEAK], [R, T], [R, B], [L, B],
+      [L + w * .18, B], [L + w * .18, B - h * .42], [L + w * .38, B - h * .42], [L + w * .38, B],
+      [L + w * .60, B], [L + w * .60, B - h * .55], [L + w * .84, B - h * .55],
+      [L + w * .84, B - h * .22], [L + w * .60, B - h * .22], [L + w * .60, B]
+    ];
+    var seg = 0, t = 0;
+    demoTimer = setInterval(function(){
+      if (seg >= path.length - 1){ clearInterval(demoTimer); demoTimer = null; return; }
+      var a = path[seg], b = path[seg + 1];
+      var d = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+      t += 11 / d;
+      if (t >= 1){ t = 0; seg++; extend(b[0], b[1]); return; }
+      extend(a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t);
+    }, 14);
+  }
+
+  /* ---- buttons ------------------------------------------------------------ */
+  document.getElementById('btn-shake').addEventListener('click', shake);
+  document.getElementById('btn-sound').addEventListener('click', function(){
+    sound = !sound; this.setAttribute('aria-pressed', sound);
+  });
+  document.getElementById('btn-fine').addEventListener('click', function(){
+    fine = !fine; this.setAttribute('aria-pressed', fine); save();
+  });
+  document.getElementById('btn-demo').addEventListener('click', demo2);
+  document.getElementById('btn-fine').setAttribute('aria-pressed', fine);
+
+  redraw();
+
+  window.__knobs = {
+    pos: function(){ return { x: Math.round(x), y: Math.round(y) }; },
+    points: function(){ return trail.length / 2; },
+    move: function(dx, dy){ return extend(x + dx, y + dy); },
+    shake: shake, demo: demo2,
+    busy: function(){ return demoTimer != null; }
+  };
+})();
+</script>
+</body>
+</html>

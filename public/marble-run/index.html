@@ -1,0 +1,690 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Marble Run</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23F0E4CE'/><path d='M4 10h16' stroke='%23E2483C' stroke-width='3.4' stroke-linecap='round' transform='rotate(12 12 10)'/><path d='M12 21h16' stroke='%232E7BD6' stroke-width='3.4' stroke-linecap='round' transform='rotate(-14 20 21)'/><circle cx='9' cy='6' r='3.4' fill='%23F2B22E'/></svg>">
+<style>
+:root{ color-scheme: light; }
+:root{
+  --board:#F0E4CE;
+  --board-2:#E4D5B9;
+  --peg:#C9B594;
+  --ink:#3A2E20;
+  --dim:#8A7A62;
+  --dimmer:#A99madeup;
+  --red:#E2483C;
+  --blue:#2E7BD6;
+  --yellow:#F2B22E;
+  --green:#2FA86B;
+  --plum:#7A4FB5;
+  --sans:"Avenir Next","Segoe UI",system-ui,-apple-system,"Helvetica Neue",sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+:root{ --dimmer:#A99madeup }
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;min-height:100%}
+body{
+  background:#E8DAC0;
+  background-image:radial-gradient(circle at 12px 12px, rgba(0,0,0,.055) 2.1px, transparent 2.4px);
+  background-size:24px 24px;
+  color:var(--ink);font-family:var(--sans);
+  min-height:100vh;padding:22px 16px 84px;
+  display:flex;flex-direction:column;align-items:center;
+}
+.wrap{ width:min(1000px,100%) }
+
+header{ display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:14px }
+h1{ font-size:clamp(20px,4.6vw,26px);font-weight:800;letter-spacing:-.01em;margin:0 }
+.tagline{ font-size:13.5px;color:var(--dim);margin:4px 0 0 }
+.score{
+  font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--dim);text-align:right;line-height:1.9;
+}
+.score b{ color:var(--ink);font-size:15px }
+
+.board{
+  position:relative;border-radius:14px;overflow:hidden;
+  background:var(--board);
+  border:8px solid #C7A87C;
+  box-shadow:0 16px 40px rgba(80,60,30,.28), inset 0 0 0 2px rgba(255,255,255,.5);
+}
+.board canvas{ display:block;width:100%;height:auto;cursor:crosshair;touch-action:none }
+.board.tool-peg canvas{ cursor:copy }
+.board.tool-erase canvas{ cursor:cell }
+.board.tool-drop canvas{ cursor:pointer }
+
+.bar{ display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;align-items:center }
+.bar button, .bar .seg{
+  font:inherit;font-size:13px;font-weight:600;cursor:pointer;
+  background:#fff;color:var(--ink);border:2px solid #D3C0A0;border-radius:10px;
+  padding:9px 15px;transition:border-color .14s,background .14s,transform .1s;
+}
+.bar button:hover{ border-color:#B79E76 }
+.bar button:active{ transform:translateY(1px) }
+.bar button[aria-pressed="true"]{ background:var(--ink);border-color:var(--ink);color:#FFF6E6 }
+.bar button:focus-visible{ outline:3px solid var(--blue);outline-offset:2px }
+.bar button.drop{ background:var(--red);border-color:#C2382E;color:#fff }
+.bar button.drop:hover{ background:#F0554A }
+.bar .spacer{ flex:1 }
+.bar .swatch{
+  width:26px;height:26px;border-radius:50%;border:2px solid rgba(0,0,0,.15);cursor:pointer;padding:0;
+}
+.bar .swatch[aria-pressed="true"]{ box-shadow:0 0 0 3px var(--ink) }
+
+.rows{ display:grid;grid-template-columns:1fr;gap:14px;margin-top:16px }
+@media (min-width:760px){ .rows{ grid-template-columns:1fr 1fr } }
+.card{ background:#fff;border:2px solid #D9C8A8;border-radius:12px;padding:14px 15px 16px }
+.card h2{ font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin:0 0 11px;font-weight:700 }
+.card p{ font-size:13.5px;line-height:1.75;color:#5C4E3C;margin:0 0 9px }
+.card p:last-child{ margin:0 }
+.presets{ display:flex;flex-wrap:wrap;gap:8px }
+.presets button{
+  font:inherit;font-size:12.5px;font-weight:600;background:#F6EFE1;border:2px solid #E0D0B2;
+  border-radius:9px;padding:8px 13px;cursor:pointer;color:var(--ink);
+}
+.presets button:hover{ border-color:#B79E76 }
+.presets button:focus-visible{ outline:3px solid var(--blue);outline-offset:2px }
+
+.said{ font-size:14px;line-height:1.7;color:var(--ink);font-weight:600;min-height:2.6em;margin:0 }
+
+.book{ margin-top:26px;padding-top:18px;border-top:2px solid #D9C8A8;font-size:14px;line-height:1.85;color:#5C4E3C }
+.book p{ margin:0 0 11px }
+.book p:last-child{ margin:0 }
+.book b{ color:var(--ink) }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:700 11px/1 var(--mono);
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#FFF6E6;background:var(--ink);
+  border:2px solid rgba(255,255,255,.5);border-radius:999px;
+  width:40px;height:40px;justify-content:center;
+  box-shadow:0 6px 18px rgba(80,60,30,.35);
+  transition:width .18s ease, background .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:120px;gap:9px;background:#54432F }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:3px solid var(--blue);outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div>
+    <h1>The Marble Run</h1>
+    <p class="tagline">Draw the ramps. Drop the marble. Try to get it into the bucket.</p>
+  </div>
+  <div class="score">
+    in the bucket <b id="s-in">0</b><br>
+    dropped <b id="s-out">0</b>
+  </div>
+</header>
+
+<div class="board" id="board">
+  <canvas id="cv" width="1760" height="1500"></canvas>
+</div>
+
+<div class="bar">
+  <button type="button" id="t-ramp" aria-pressed="true">Draw a ramp</button>
+  <button type="button" id="t-peg" aria-pressed="false">Drop a peg</button>
+  <button type="button" id="t-erase" aria-pressed="false">Rub out</button>
+  <button type="button" id="btn-undo">Undo</button>
+  <button type="button" id="btn-clear">Clear the board</button>
+  <span class="spacer"></span>
+  <button type="button" class="swatch" data-col="red"   style="background:#E2483C" aria-pressed="true"  aria-label="red ramps"></button>
+  <button type="button" class="swatch" data-col="blue"  style="background:#2E7BD6" aria-pressed="false" aria-label="blue ramps"></button>
+  <button type="button" class="swatch" data-col="green" style="background:#2FA86B" aria-pressed="false" aria-label="green ramps"></button>
+  <button type="button" class="swatch" data-col="plum"  style="background:#7A4FB5" aria-pressed="false" aria-label="purple ramps"></button>
+  <span class="spacer"></span>
+  <button type="button" class="drop" id="btn-drop">Drop a marble</button>
+  <button type="button" id="btn-sound" aria-pressed="false">Sound</button>
+</div>
+
+<div class="rows">
+  <div class="card">
+    <h2>Ready-made runs</h2>
+    <div class="presets">
+      <button type="button" data-preset="zigzag">Zigzag</button>
+      <button type="button" data-preset="pins">The pin field</button>
+      <button type="button" data-preset="loop">The long way round</button>
+      <button type="button" data-preset="empty">Nothing at all</button>
+    </div>
+    <p style="margin-top:12px">Any of these can be edited &mdash; rub bits out, draw over them, add
+      a peg where it needs one.</p>
+  </div>
+  <div class="card">
+    <h2>What happened</h2>
+    <p class="said" id="said">Draw a ramp under the funnel, then drop a marble on it.</p>
+  </div>
+</div>
+
+<div class="book">
+  <p><b>The marbles are not following your ramps &mdash; they are bouncing off them.</b> Each one is
+  a circle with mass, spin and a bit of bounce, rolling under gravity; each ramp is a solid bar
+  standing exactly where you drew it. Nothing is on rails, so a marble can hop a ramp, ride the
+  wrong side of it, or sit in a corner and refuse to move, all of which a real one does too.</p>
+  <p>A shallow ramp keeps the marble; a steep one lets it build up speed and jump. Pegs are for
+  slowing it down and for sending it somewhere you did not intend. Every drop leaves a faint trail
+  behind, so you can see where the last one actually went rather than where you thought it went.</p>
+  <p>Whatever you build stays in this browser until you clear it.</p>
+</div>
+
+</div>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">&larr;</span><span class="w">cabinet</span></a>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+<script src="/shared/lc-audio.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  var HAVE = typeof Matter !== 'undefined';
+  var KEY = 'lc-marble-run';
+  var cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+  var W = cv.width, H = cv.height;
+  var boardEl = document.getElementById('board');
+
+  var COLOURS = { red:'#E2483C', blue:'#2E7BD6', green:'#2FA86B', plum:'#7A4FB5', yellow:'#F2B22E' };
+  var RAMP_T = 30, PEG_R = 24, MARBLE_R = 24;
+  var SUBSTEPS = 3;                  /* see the note by the loop */
+  var FUNNEL_X = W * .16, FUNNEL_Y = 122;
+  var BUCKET_X = W * .82, BUCKET_Y = H - 165, BUCKET_W = 260, BUCKET_H = 130;
+
+  var tool = 'ramp', colour = 'red', sound = false;
+  var made = 0, dropped = 0;
+
+  var engine, world, parts = [], marbles = [], statics = [];
+  var trails = [];        /* the last few paths a marble actually took */
+
+  /* ---- what the visitor built, saved as plain numbers -------------- */
+  var built = [];
+  try {
+    var raw = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (raw && Array.isArray(raw.built)) built = raw.built.slice(0, 200);
+    if (raw && typeof raw.made === 'number') made = raw.made;
+    if (raw && typeof raw.dropped === 'number') dropped = raw.dropped;
+  } catch (e) {}
+  function save(){
+    try { localStorage.setItem(KEY, JSON.stringify({ built: built, made: made, dropped: dropped })); } catch (e) {}
+  }
+
+  /* ================================================================== */
+  function setup(){
+    engine = Matter.Engine.create();
+    engine.gravity.y = 2.6;
+    engine.positionIterations = 6;
+    world = engine.world;
+    statics = [];
+
+    /* the frame */
+    statics.push(wall(W / 2, -30, W, 60));
+    statics.push(wall(-30, H / 2, 60, H));
+    statics.push(wall(W + 30, H / 2, 60, H));
+    statics.push(wall(W / 2, H + 30, W, 60));
+
+    /* the funnel the marbles come out of */
+    /* The throat has to clear a marble with room to spare — at exactly two
+       radii it jams, and a jammed funnel reads as a broken toy. */
+    statics.push(bar(FUNNEL_X - 110, FUNNEL_Y - 66, FUNNEL_X - 42, FUNNEL_Y, 16, '#8A7A62'));
+    statics.push(bar(FUNNEL_X + 110, FUNNEL_Y - 66, FUNNEL_X + 42, FUNNEL_Y, 16, '#8A7A62'));
+
+    /* the bucket */
+    statics.push(bar(BUCKET_X - BUCKET_W / 2, BUCKET_Y - 60, BUCKET_X - BUCKET_W / 2, BUCKET_Y + BUCKET_H, 18, '#2FA86B'));
+    statics.push(bar(BUCKET_X + BUCKET_W / 2, BUCKET_Y - 60, BUCKET_X + BUCKET_W / 2, BUCKET_Y + BUCKET_H, 18, '#2FA86B'));
+    statics.push(bar(BUCKET_X - BUCKET_W / 2, BUCKET_Y + BUCKET_H, BUCKET_X + BUCKET_W / 2, BUCKET_Y + BUCKET_H, 18, '#2FA86B'));
+
+    Matter.Composite.add(world, statics);
+    rebuildParts();
+  }
+
+  function wall(x, y, w, h){
+    return Matter.Bodies.rectangle(x, y, w, h, { isStatic:true, friction:.4, frictionStatic:0, restitution:.2, isFrame:true });
+  }
+
+  /* A ramp is a rounded bar between two points. Rounded, because a square
+     end catches a marble and holds it there, which reads as a bug. */
+  function bar(x1, y1, x2, y2, t, col){
+    var len = Math.hypot(x2 - x1, y2 - y1);
+    var b = Matter.Bodies.rectangle((x1 + x2) / 2, (y1 + y2) / 2, Math.max(len, t), t, {
+      /* A marble on a hard ramp barely bounces. Anything springy here and
+         it leaves the track on the first join and the whole run is a
+         lottery — which was exactly what the first version did. */
+      isStatic:true, friction:.06, frictionStatic:0, restitution:.06,
+      chamfer:{ radius: t / 2 }
+    });
+    Matter.Body.setAngle(b, Math.atan2(y2 - y1, x2 - x1));
+    b.col = col || COLOURS[colour];
+    b.a = { x:x1, y:y1 }; b.b = { x:x2, y:y2 }; b.t = t;
+    return b;
+  }
+
+  function peg(x, y, col){
+    var b = Matter.Bodies.circle(x, y, PEG_R, {
+      isStatic:true, friction:.15, frictionStatic:0, restitution:.34
+    });
+    b.col = col || COLOURS[colour];
+    b.isPeg = true;
+    return b;
+  }
+
+  function rebuildParts(){
+    if (parts.length) Matter.Composite.remove(world, parts);
+    parts = built.map(function(p){
+      return p[0] === 'r' ? bar(p[1], p[2], p[3], p[4], RAMP_T, COLOURS[p[5]] || COLOURS.red)
+                          : peg(p[1], p[2], COLOURS[p[3]] || COLOURS.red);
+    });
+    Matter.Composite.add(world, parts);
+  }
+
+  /* ================================================================== *
+   *  Marbles.
+   * ================================================================== */
+  var MARBLE_COLS = ['#E2483C','#2E7BD6','#F2B22E','#2FA86B','#7A4FB5','#E77BB0'];
+  function drop(){
+    var m = Matter.Bodies.circle(FUNNEL_X + (Math.random() - .5) * 16, 22, MARBLE_R, {
+      /* frictionStatic is the one that matters here. Matter takes the
+         LARGER of the pair's two values, and a body's default is 0.5 —
+         which is enough to pin a marble to a one-in-five slope and leave
+         it sitting there. It has to be zero on the marble itself. */
+      restitution:.10, friction:.045, frictionStatic:0, frictionAir:.0003,
+      density:.0035, slop:.02
+    });
+    m.col = MARBLE_COLS[Math.floor(Math.random() * MARBLE_COLS.length)];
+    m.trail = [];
+    m.born = performance.now();
+    m.counted = false;
+    marbles.push(m);
+    Matter.Composite.add(world, m);
+    dropped++; score(); save();
+    say('');
+    if (marbles.length > 12){                    /* keep the board from silting up */
+      var old = marbles.shift();
+      Matter.Composite.remove(world, old);
+    }
+    clack(.5, 1400);
+  }
+
+  function inBucket(m){
+    return m.position.x > BUCKET_X - BUCKET_W / 2 &&
+           m.position.x < BUCKET_X + BUCKET_W / 2 &&
+           m.position.y > BUCKET_Y + 30;
+  }
+
+  function checkMarbles(now){
+    for (var i = marbles.length - 1; i >= 0; i--){
+      var m = marbles[i];
+      if (now - (m.lastTrail || 0) > 40){
+        m.trail.push({ x:m.position.x, y:m.position.y });
+        if (m.trail.length > 220) m.trail.shift();
+        m.lastTrail = now;
+      }
+      if (!m.counted && inBucket(m) && Math.hypot(m.velocity.x, m.velocity.y) < 1.6){
+        m.counted = true; made++; score(); save();
+        say('In the bucket. ' + made + ' of ' + dropped + ' have made it.');
+        ding();
+      }
+      /* a marble that has come to rest somewhere useless is retired, and
+         its path is kept as a faint trail */
+      if (now - m.born > 2200 && Math.hypot(m.velocity.x, m.velocity.y) < .22 && !inBucket(m)){
+        if (!m.counted && !m.reported){
+          m.reported = true;
+          say(m.position.y > H - 200 ? 'It reached the floor, but not the bucket.'
+                                     : 'It has come to rest halfway. Something needs more slope.');
+        }
+      }
+    }
+  }
+
+  /* ================================================================== *
+   *  Drawing.
+   * ================================================================== */
+  function draw(){
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#F0E4CE'; ctx.fillRect(0, 0, W, H);
+
+    /* pegboard holes */
+    ctx.fillStyle = 'rgba(120,96,60,.14)';
+    for (var y = 44; y < H; y += 48){
+      for (var x = 44; x < W; x += 48){
+        ctx.beginPath(); ctx.arc(x, y, 3.6, 0, 6.284); ctx.fill();
+      }
+    }
+
+    /* the trails of the last few marbles */
+    marbles.forEach(function(m){
+      if (m.trail.length < 2) return;
+      ctx.beginPath();
+      m.trail.forEach(function(p, i){ i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y); });
+      ctx.strokeStyle = 'rgba(120,96,60,.22)'; ctx.lineWidth = 3; ctx.stroke();
+    });
+
+    /* the fixed furniture */
+    statics.forEach(function(b){ if (!b.isFrame) drawBar(b); });
+    drawFunnel();
+    drawBucket();
+
+    parts.forEach(function(b){ b.isPeg ? drawPeg(b) : drawBar(b); });
+
+    /* the ramp being drawn right now */
+    if (drawing){
+      ctx.save();
+      ctx.strokeStyle = COLOURS[colour]; ctx.globalAlpha = .55;
+      ctx.lineWidth = RAMP_T; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(drawing.x1, drawing.y1); ctx.lineTo(drawing.x2, drawing.y2); ctx.stroke();
+      ctx.restore();
+    }
+
+    marbles.forEach(drawMarble);
+  }
+
+  function drawBar(b){
+    if (!b.a) return;
+    ctx.save();
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = 'rgba(0,0,0,.14)'; ctx.lineWidth = b.t + 6;
+    ctx.beginPath(); ctx.moveTo(b.a.x, b.a.y + 5); ctx.lineTo(b.b.x, b.b.y + 5); ctx.stroke();
+    ctx.strokeStyle = b.col; ctx.lineWidth = b.t;
+    ctx.beginPath(); ctx.moveTo(b.a.x, b.a.y); ctx.lineTo(b.b.x, b.b.y); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,255,255,.36)'; ctx.lineWidth = b.t * .3;
+    ctx.beginPath(); ctx.moveTo(b.a.x, b.a.y - b.t * .26); ctx.lineTo(b.b.x, b.b.y - b.t * .26); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawPeg(b){
+    ctx.beginPath(); ctx.arc(b.position.x, b.position.y + 4, PEG_R, 0, 6.284);
+    ctx.fillStyle = 'rgba(0,0,0,.14)'; ctx.fill();
+    ctx.beginPath(); ctx.arc(b.position.x, b.position.y, PEG_R, 0, 6.284);
+    ctx.fillStyle = b.col; ctx.fill();
+    ctx.beginPath(); ctx.arc(b.position.x - PEG_R * .3, b.position.y - PEG_R * .32, PEG_R * .32, 0, 6.284);
+    ctx.fillStyle = 'rgba(255,255,255,.45)'; ctx.fill();
+  }
+
+  function drawMarble(m){
+    var p = m.position;
+    ctx.beginPath(); ctx.arc(p.x, p.y + 5, MARBLE_R, 0, 6.284);
+    ctx.fillStyle = 'rgba(0,0,0,.16)'; ctx.fill();
+    var g = ctx.createRadialGradient(p.x - MARBLE_R * .35, p.y - MARBLE_R * .4, 2, p.x, p.y, MARBLE_R);
+    g.addColorStop(0, '#fff'); g.addColorStop(.28, m.col); g.addColorStop(1, shade(m.col, .62));
+    ctx.beginPath(); ctx.arc(p.x, p.y, MARBLE_R, 0, 6.284);
+    ctx.fillStyle = g; ctx.fill();
+    /* a mark that turns with the marble, so you can see it is really rolling */
+    ctx.save();
+    ctx.translate(p.x, p.y); ctx.rotate(m.angle);
+    ctx.strokeStyle = 'rgba(255,255,255,.65)'; ctx.lineWidth = 3.4; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(-MARBLE_R * .45, 0); ctx.lineTo(MARBLE_R * .45, 0); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawFunnel(){
+    ctx.fillStyle = '#8A7A62';
+    ctx.beginPath();
+    ctx.moveTo(FUNNEL_X - 120, FUNNEL_Y - 82);
+    ctx.lineTo(FUNNEL_X + 120, FUNNEL_Y - 82);
+    ctx.lineTo(FUNNEL_X + 50, FUNNEL_Y + 6);
+    ctx.lineTo(FUNNEL_X + 50, FUNNEL_Y + 18);
+    ctx.lineTo(FUNNEL_X - 50, FUNNEL_Y + 18);
+    ctx.lineTo(FUNNEL_X - 50, FUNNEL_Y + 6);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.22)';
+    ctx.fillRect(FUNNEL_X - 114, FUNNEL_Y - 76, 228, 8);
+  }
+
+  function drawBucket(){
+    ctx.fillStyle = 'rgba(47,168,107,.13)';
+    ctx.fillRect(BUCKET_X - BUCKET_W / 2, BUCKET_Y - 60, BUCKET_W, BUCKET_H + 60);
+    ctx.fillStyle = '#2FA86B';
+    ctx.font = '700 30px "Avenir Next",system-ui,sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('bucket', BUCKET_X, BUCKET_Y - 80);
+  }
+
+  function shade(hex, k){
+    var n = parseInt(hex.slice(1), 16);
+    return 'rgb(' + Math.round(((n >> 16) & 255) * k) + ',' +
+                    Math.round(((n >> 8) & 255) * k) + ',' +
+                    Math.round((n & 255) * k) + ')';
+  }
+
+  /* ================================================================== *
+   *  Sound.
+   * ================================================================== */
+  var lastClack = 0;
+  function clack(level, freq){
+    if (!sound) return;
+    LCAudio.sting(function(A){
+      A.blip(freq || 1100, { type:'sine', dur:.05, level:.08 * level, reverb:false });
+      A.burst('white', { freq: (freq || 1100) * 1.4, q:5, dur:.02, level:.05 * level, reverb:false });
+    });
+  }
+  function ding(){
+    if (!sound) return;
+    LCAudio.sting(function(A){
+      A.blip(A.note(7), { dur:.2, level:.09 });
+      A.blip(A.note(16), { at:.09, dur:.4, level:.08 });
+    });
+  }
+  function onHit(e){
+    if (!sound) return;
+    var now = performance.now();
+    if (now - lastClack < 32) return;
+    for (var i = 0; i < e.pairs.length; i++){
+      var a = e.pairs[i].bodyA, b = e.pairs[i].bodyB;
+      var m = a.trail ? a : (b.trail ? b : null);
+      if (!m) continue;
+      var v = Math.hypot(m.velocity.x, m.velocity.y);
+      if (v < 2) continue;
+      lastClack = now;
+      clack(Math.min(1, v / 14), 700 + Math.random() * 500);
+      break;
+    }
+  }
+  function setSound(on){
+    sound = on;
+    document.getElementById('btn-sound').setAttribute('aria-pressed', on);
+    Matter.Events.off(engine, 'collisionStart', onHit);
+    if (on) Matter.Events.on(engine, 'collisionStart', onHit);
+  }
+
+  /* ================================================================== *
+   *  Loop.
+   * ================================================================== */
+  /* Three physics steps per frame, not one.
+   *
+   *  Matter has no continuous collision detection: a body only ever tests
+   *  where it IS, never the line between where it was and where it is. A
+   *  marble coming off a long ramp moves about thirty pixels in a
+   *  sixtieth of a second, which is wider than a ramp — so it passed
+   *  clean through and landed on the floor, every time, and no amount of
+   *  friction or slope tuning was ever going to fix that. Stepping three
+   *  times at a third of the interval cuts the jump to ten pixels and the
+   *  ramps start catching marbles instead of waving them past. */
+  function tick(now){
+    requestAnimationFrame(tick);
+    if (!HAVE || document.hidden) return;
+    for (var i = 0; i < SUBSTEPS; i++) Matter.Engine.update(engine, 1000 / (60 * SUBSTEPS));
+    checkMarbles(now);
+    draw();
+  }
+
+  /* ================================================================== *
+   *  Drawing ramps with the pointer.
+   * ================================================================== */
+  var drawing = null;
+  function pt(e){
+    var r = cv.getBoundingClientRect();
+    return { x:(e.clientX - r.left) / r.width * W, y:(e.clientY - r.top) / r.height * H };
+  }
+
+  cv.addEventListener('pointerdown', function(e){
+    e.preventDefault(); cv.setPointerCapture(e.pointerId);
+    var p = pt(e);
+    if (tool === 'peg'){ built.push(['p', p.x, p.y, colour]); rebuildParts(); save(); return; }
+    if (tool === 'erase'){ eraseAt(p); return; }
+    drawing = { x1:p.x, y1:p.y, x2:p.x, y2:p.y };
+  });
+  cv.addEventListener('pointermove', function(e){
+    if (!drawing) return;
+    var p = pt(e);
+    drawing.x2 = p.x; drawing.y2 = p.y;
+  });
+  ['pointerup','pointercancel'].forEach(function(t){
+    cv.addEventListener(t, function(){
+      if (!drawing) return;
+      var len = Math.hypot(drawing.x2 - drawing.x1, drawing.y2 - drawing.y1);
+      if (len > 26){
+        built.push(['r', drawing.x1, drawing.y1, drawing.x2, drawing.y2, colour]);
+        rebuildParts(); save();
+      }
+      drawing = null;
+    });
+  });
+
+  function eraseAt(p){
+    for (var i = built.length - 1; i >= 0; i--){
+      var b = parts[i];
+      if (!b) continue;
+      if (b.isPeg){
+        if (Math.hypot(b.position.x - p.x, b.position.y - p.y) < PEG_R + 8){
+          built.splice(i, 1); rebuildParts(); save(); return;
+        }
+      } else if (distToSeg(p, b.a, b.b) < RAMP_T){
+        built.splice(i, 1); rebuildParts(); save(); return;
+      }
+    }
+  }
+  function distToSeg(p, a, b){
+    var dx = b.x - a.x, dy = b.y - a.y;
+    var t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / (dx * dx + dy * dy || 1);
+    t = Math.max(0, Math.min(1, t));
+    return Math.hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy));
+  }
+
+  /* ================================================================== *
+   *  Presets.
+   * ================================================================== */
+  function preset(name){
+    /* Marbles left over from the last layout would be sitting on ramps that
+       no longer exist, so they go with it. */
+    if (marbles.length){ Matter.Composite.remove(world, marbles); marbles = []; }
+    built = [];
+    var cols = ['red','blue','green','plum'];
+    if (name === 'zigzag'){
+      /* Three things had to be right here, and none of them was obvious
+         until the marble was watched doing it:
+           - every ramp runs at about one in five, because anything
+             shallower and it stops halfway;
+           - every catching ramp runs PAST the side wall rather than up to
+             it, because a ramp that ends at the wall leaves a little
+             pocket between its rounded cap and the wall, and a marble that
+             lands in that pocket sits there for ever;
+           - and the physics runs three times a frame, or the marble is
+             moving further per step than a ramp is thick and goes
+             straight through it.                                      */
+      built.push(['r', -60, 240, 1400, 530, 'red']);
+      built.push(['r', W + 60, 560, 250, 880, 'blue']);
+      built.push(['r', -60, 915, BUCKET_X - 90, BUCKET_Y - 130, 'green']);
+      say('Three crossings, each at about one in five, ending over the bucket.');
+    } else if (name === 'pins'){
+      for (var row = 0; row < 5; row++){
+        for (var c = 0; c < 7; c++){
+          built.push(['p', W * .16 + c * W * .11 + (row % 2 ? W * .055 : 0), 330 + row * 140, cols[(row + c) % 4]]);
+        }
+      }
+      built.push(['r', -60, 1000, BUCKET_X - BUCKET_W / 2 - 10, BUCKET_Y - 30, 'green']);
+      say('A field of pegs and a floor that slopes towards the bucket. Where a marble lands is genuinely up for grabs.');
+    } else if (name === 'loop'){
+      /* Steeper than the zigzag on purpose: four crossings at one in five
+         would take the best part of half a minute, and nobody is watching
+         a marble for half a minute. */
+      built.push(['r', -60, 180, 1600, 520, 'red']);
+      built.push(['r', W + 60, 560, 160, 900, 'blue']);
+      built.push(['r', -60, 940, 1620, 1230, 'green']);
+      built.push(['r', W + 60, 1250, BUCKET_X - 20, BUCKET_Y - 40, 'plum']);
+      say('The long way round: four crossings of the board, steeper than the zigzag so it does not take all evening.');
+    } else {
+      say('A clean board. Draw something.');
+    }
+    rebuildParts(); save();
+  }
+
+  /* ================================================================== *
+   *  Interface.
+   * ================================================================== */
+  function say(s){ if (s !== '') document.getElementById('said').textContent = s; }
+  function score(){
+    document.getElementById('s-in').textContent = made;
+    document.getElementById('s-out').textContent = dropped;
+  }
+
+  function setTool(t){
+    tool = t;
+    ['ramp','peg','erase'].forEach(function(k){
+      document.getElementById('t-' + k).setAttribute('aria-pressed', k === t);
+    });
+    boardEl.className = 'board tool-' + t;
+  }
+  document.getElementById('t-ramp').addEventListener('click', function(){ setTool('ramp'); });
+  document.getElementById('t-peg').addEventListener('click', function(){ setTool('peg'); });
+  document.getElementById('t-erase').addEventListener('click', function(){ setTool('erase'); });
+  document.getElementById('btn-undo').addEventListener('click', function(){
+    if (!built.length) return say('There is nothing to undo.');
+    built.pop(); rebuildParts(); save();
+  });
+  document.getElementById('btn-clear').addEventListener('click', function(){
+    built = [];
+    if (marbles.length){ Matter.Composite.remove(world, marbles); marbles = []; }
+    rebuildParts(); save(); say('Board cleared.');
+  });
+  document.getElementById('btn-drop').addEventListener('click', drop);
+  document.getElementById('btn-sound').addEventListener('click', function(){ setSound(!sound); });
+  [].forEach.call(document.querySelectorAll('.swatch'), function(b){
+    b.addEventListener('click', function(){
+      colour = b.dataset.col;
+      [].forEach.call(document.querySelectorAll('.swatch'), function(o){
+        o.setAttribute('aria-pressed', o === b);
+      });
+    });
+  });
+  [].forEach.call(document.querySelectorAll('[data-preset]'), function(b){
+    b.addEventListener('click', function(){ preset(b.dataset.preset); });
+  });
+
+  if (!HAVE){
+    ctx.fillStyle = '#F0E4CE'; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#3A2E20'; ctx.font = '700 44px system-ui,sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('The physics library did not load,', W / 2, H / 2 - 26);
+    ctx.fillText('so there is nothing for a marble to roll down.', W / 2, H / 2 + 34);
+    document.getElementById('btn-drop').disabled = true;
+  } else {
+    setup();
+    score();
+    if (!built.length) preset('zigzag');
+    requestAnimationFrame(tick);
+  }
+
+  window.__marbles = {
+    drop: drop, preset: preset, setTool: setTool,
+    made: function(){ return made; }, dropped: function(){ return dropped; },
+    live: function(){ return marbles.length; },
+    parts: function(){ return built.length; },
+    inBucket: function(){ return marbles.filter(inBucket).length; },
+    resting: function(){ return marbles.filter(function(m){ return Math.hypot(m.velocity.x, m.velocity.y) < .3; }).length; },
+    probe: function(){
+      var m = marbles[marbles.length - 1];
+      if (!m) return null;
+      return { x: Math.round(m.position.x), y: Math.round(m.position.y),
+               v: +Math.hypot(m.velocity.x, m.velocity.y).toFixed(2),
+               w: +m.angularVelocity.toFixed(3) };
+    }
+  };
+})();
+</script>
+</body>
+</html>

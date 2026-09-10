@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Roll That Does Not End</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23A8845A'/><circle cx='10' cy='10' r='6' fill='%23DCEDF0' opacity='.85'/><circle cx='23' cy='11' r='6' fill='%23DCEDF0' opacity='.85'/><circle cx='10' cy='23' r='6' fill='%23DCEDF0' opacity='.5'/><circle cx='23' cy='23' r='6' fill='%23DCEDF0' opacity='.85'/><circle cx='8' cy='8' r='2' fill='%23fff'/></svg>">
+<style>
+:root{ color-scheme: light; }
+:root{
+  --card:#A8845A;
+  --card-2:#8E6E48;
+  --wrap:#D8E9EC;
+  --wrap-2:#B7D3D8;
+  --ink:#3B2E1E;
+  --dim:#7A6448;
+  --dimmer:#9C8567;
+  --sans:"Avenir Next","Segoe UI",system-ui,-apple-system,"Helvetica Neue",sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%;overflow:hidden}
+body{
+  background:
+    repeating-linear-gradient(93deg, rgba(0,0,0,.03) 0 2px, transparent 2px 9px),
+    linear-gradient(180deg,#B08C61,#8E6E48);
+  color:var(--ink);font-family:var(--sans);
+  height:100%;display:flex;flex-direction:column;align-items:center;
+  padding:16px 14px 0;
+  -webkit-tap-highlight-color:transparent;
+}
+
+header{ width:min(760px,100%);display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:10px }
+h1{ font-size:clamp(17px,4vw,22px);font-weight:700;margin:0;color:#FFF6E8;text-shadow:0 1px 0 rgba(0,0,0,.25) }
+.tagline{ font-size:12.5px;color:rgba(255,246,232,.72);margin:2px 0 0 }
+.tally{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:rgba(255,246,232,.7);text-align:right;line-height:1.8;
+}
+.tally b{ color:#FFF6E8;font-size:15px }
+
+.roll{
+  position:relative;width:min(760px,100%);flex:1 1 auto;min-height:0;
+  border-radius:5px;overflow:hidden;
+  background:#9C7A52;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.16), 0 14px 34px rgba(50,34,16,.4);
+  cursor:pointer;touch-action:none;
+}
+.roll canvas{ display:block;width:100%;height:100% }
+/* the two cut edges of the roll, so it reads as a strip and not a field */
+.roll::before, .roll::after{
+  content:"";position:absolute;left:0;right:0;height:26px;pointer-events:none;z-index:2;
+}
+.roll::before{ top:0;background:linear-gradient(180deg,rgba(90,64,34,.55),transparent) }
+.roll::after{ bottom:0;background:linear-gradient(0deg,rgba(90,64,34,.55),transparent) }
+
+.depth{
+  position:absolute;right:9px;bottom:9px;z-index:3;pointer-events:none;
+  font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+  color:rgba(255,246,232,.8);background:rgba(60,42,22,.5);padding:5px 10px;border-radius:4px;
+  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+}
+
+.bar{
+  width:min(760px,100%);display:flex;gap:7px;align-items:center;flex-wrap:wrap;
+  padding:11px 0 13px;
+}
+.bar button{
+  font:inherit;font-size:12px;font-weight:600;cursor:pointer;
+  background:rgba(255,246,232,.14);color:#FFF6E8;border:1px solid rgba(255,246,232,.32);
+  border-radius:8px;padding:8px 13px;transition:background .14s,border-color .14s;
+}
+.bar button:hover{ background:rgba(255,246,232,.24) }
+.bar button[aria-pressed="true"]{ background:#FFF6E8;color:var(--ink);border-color:#FFF6E8 }
+.bar button:focus-visible{ outline:2px solid #FFF6E8;outline-offset:2px }
+.bar .note{ font-size:11.5px;color:rgba(255,246,232,.62);flex:1 1 200px;min-width:0 }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:700 11px/1 var(--mono);
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#3B2E1E;background:#FFF6E8;
+  border:1px solid rgba(0,0,0,.2);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  box-shadow:0 6px 18px rgba(50,34,16,.4);
+  transition:width .18s ease, background .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:#fff }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #3B2E1E;outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>The Roll That Does Not End</h1>
+    <p class="tagline">Scroll to unroll more. There is always more.</p>
+  </div>
+  <div class="tally">
+    popped <b id="t-pops">0</b><br>
+    unrolled <b id="t-metres">0.0</b> m
+  </div>
+</header>
+
+<div class="roll" id="roll">
+  <canvas id="cv"></canvas>
+  <div class="depth" id="depth">0.00 m down the roll</div>
+</div>
+
+<div class="bar">
+  <button type="button" id="btn-size">Smaller bubbles</button>
+  <button type="button" id="btn-sound" aria-pressed="true">Sound</button>
+  <button type="button" id="btn-top">Back to the start</button>
+  <span class="note" id="note">Drag across it to run a whole line of them.</span>
+</div>
+
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">&larr;</span><span class="w">cabinet</span></a>
+
+<script src="/shared/lc-audio.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  var KEY = 'lc-bubblewrap';
+  var cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+  var rollEl = document.getElementById('roll');
+  var calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---- the roll ------------------------------------------------------ *
+   * The sheet is not stored. Every bubble's size, its little imperfection
+   * and whether it is a stubborn one are worked out from its row and
+   * column by a hash, so the roll is the same every time you scroll back
+   * up it, and it costs nothing to be endless.
+   * ------------------------------------------------------------------- */
+  function hash(r, c, salt){
+    var h = (r * 73856093) ^ (c * 19349663) ^ ((salt || 0) * 83492791);
+    h = (h ^ (h >>> 13)) * 1274126177;
+    h = h ^ (h >>> 16);
+    return ((h >>> 0) % 100000) / 100000;
+  }
+
+  var SIZES = [ { n:'large', d:58 }, { n:'small', d:34 } ];
+  var size = 0;
+  var popped = Object.create(null);      /* "r|c" -> the moment it went */
+  var pops = 0, deepest = 0;
+  var scroll = 0;                        /* pixels down the roll */
+  var soundOn = true;
+  var W = 0, Hgt = 0, DPR = 1;
+
+  try {
+    var raw = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (raw){
+      pops = raw.pops | 0;
+      deepest = +raw.deepest || 0;
+      if (raw.size === 0 || raw.size === 1) size = raw.size;
+      if (raw.sound === false) soundOn = false;
+    }
+  } catch (e) {}
+  function save(){
+    try { localStorage.setItem(KEY, JSON.stringify({
+      pops: pops, deepest: deepest, size: size, sound: soundOn
+    })); } catch (e) {}
+  }
+
+  function resize(){
+    var r = rollEl.getBoundingClientRect();
+    DPR = Math.min(2, window.devicePixelRatio || 1);
+    W = r.width; Hgt = r.height;
+    cv.width = Math.round(W * DPR); cv.height = Math.round(Hgt * DPR);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    draw();
+  }
+  new ResizeObserver(resize).observe(rollEl);
+
+  /* ---- geometry ------------------------------------------------------ */
+  function pitch(){ return SIZES[size].d; }
+  function cols(){ return Math.max(3, Math.floor(W / pitch())); }
+  function inset(){ return (W - cols() * pitch()) / 2; }
+
+  function bubbleAt(px, py){
+    var p = pitch();
+    var y = py + scroll;
+    var r = Math.floor(y / (p * 0.87));
+    var odd = r % 2 !== 0;
+    var x = px - inset() - (odd ? p / 2 : 0);
+    var c = Math.floor(x / p);
+    if (c < 0 || c >= cols() - (odd ? 1 : 0)) return null;
+    /* the click has to be inside the dome, not just inside its cell */
+    var cx = inset() + (odd ? p / 2 : 0) + c * p + p / 2;
+    var cy = r * (p * 0.87) + p / 2;
+    var rad = p * .44 * (0.88 + hash(r, c, 1) * .18);
+    if (Math.hypot(px - cx, y - cy) > rad) return null;
+    return { r: r, c: c, cx: cx, cy: cy - scroll, rad: rad };
+  }
+
+  function key(b){ return b.r + '|' + b.c; }
+
+  /* Some bubbles are stubborn. Real wrap has them, and the second push is
+     the satisfying one. */
+  function stubborn(r, c){ return hash(r, c, 7) < 0.08; }
+
+  /* ---- popping -------------------------------------------------------- */
+  var half = Object.create(null);
+  function pop(b){
+    var k = key(b);
+    if (popped[k]) return false;
+    if (stubborn(b.r, b.c) && !half[k]){
+      half[k] = 1;
+      squelch(b);
+      return false;
+    }
+    popped[k] = performance.now();
+    pops++;
+    document.getElementById('t-pops').textContent = pops.toLocaleString();
+    bang(b);
+    save();
+    return true;
+  }
+
+  /* ---- sound ---------------------------------------------------------- *
+   * A pop is a very short resonant burst with the pitch falling away, plus
+   * a click of the film letting go. Nothing sampled.                     */
+  function bang(b){
+    if (!soundOn) return;
+    var f = 900 + (1 - b.rad / 30) * 700 + Math.random() * 260;
+    LCAudio.sting(function(A){
+      A.burst('white', { freq: f * 2.1, q: 8, dur: .028, level: .16, reverb: false });
+      A.blip(f, { type:'triangle', dur:.055, glide: f * .35, level:.10, reverb:false });
+    });
+  }
+  function squelch(b){
+    if (!soundOn) return;
+    LCAudio.sting(function(A){
+      A.burst('pink', { freq: 420, q: 1.2, dur: .07, level: .07, reverb:false });
+    });
+  }
+
+  /* ---- drawing --------------------------------------------------------- */
+  function draw(){
+    if (!W) return;
+    ctx.clearRect(0, 0, W, Hgt);
+
+    /* the backing film */
+    ctx.fillStyle = '#C4DDE1';
+    ctx.fillRect(0, 0, W, Hgt);
+    ctx.globalAlpha = .12;
+    for (var s = 0; s < 60; s++){
+      ctx.fillStyle = s % 2 ? '#fff' : '#7FA6AC';
+      ctx.fillRect(0, ((s * 137 + Math.floor(scroll * .3)) % Hgt), W, 1);
+    }
+    ctx.globalAlpha = 1;
+
+    var p = pitch(), rowH = p * 0.87;
+    var r0 = Math.floor(scroll / rowH) - 1;
+    var r1 = Math.ceil((scroll + Hgt) / rowH) + 1;
+    var now = performance.now();
+
+    for (var r = r0; r <= r1; r++){
+      if (r < 0) continue;
+      var odd = r % 2 !== 0;
+      var n = cols() - (odd ? 1 : 0);
+      for (var c = 0; c < n; c++){
+        var cx = inset() + (odd ? p / 2 : 0) + c * p + p / 2;
+        var cy = r * rowH + p / 2 - scroll;
+        var rad = p * .44 * (0.88 + hash(r, c, 1) * .18);
+        var k = r + '|' + c;
+        drawBubble(cx, cy, rad, popped[k] ? (now - popped[k]) : -1, half[k] ? 1 : 0, hash(r, c, 3));
+      }
+    }
+
+    /* a paper label every so often, so the metres feel like a real roll */
+    var labelEvery = 900;
+    var first = Math.floor(scroll / labelEvery);
+    for (var L = first; L <= first + 2; L++){
+      var ly = L * labelEvery - scroll;
+      if (ly < -40 || ly > Hgt + 40) continue;
+      ctx.save();
+      ctx.fillStyle = 'rgba(255,246,232,.9)';
+      ctx.fillRect(0, ly - 12, W, 24);
+      ctx.fillStyle = 'rgba(59,46,30,.6)';
+      ctx.font = '600 11px ui-monospace,monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText((L * labelEvery / 300).toFixed(1) + ' m  ·  do not stack  ·  fragile',
+                   W / 2, ly + 4);
+      ctx.restore();
+    }
+  }
+
+  function drawBubble(cx, cy, rad, popAge, halfDone, tint){
+    if (cy < -rad * 2 || cy > Hgt + rad * 2) return;
+
+    if (popAge >= 0){
+      /* a dimple, and for the first moment after it went, a wrinkle */
+      ctx.beginPath(); ctx.arc(cx, cy, rad * .92, 0, 6.284);
+      var dg = ctx.createRadialGradient(cx, cy - rad * .2, 1, cx, cy, rad);
+      dg.addColorStop(0, 'rgba(120,155,162,.5)');
+      dg.addColorStop(1, 'rgba(196,221,225,.15)');
+      ctx.fillStyle = dg; ctx.fill();
+      ctx.strokeStyle = 'rgba(120,155,162,.35)'; ctx.lineWidth = 1; ctx.stroke();
+      var t = popAge / 260;
+      if (t < 1 && !calm){
+        ctx.save();
+        ctx.globalAlpha = 1 - t;
+        ctx.strokeStyle = 'rgba(255,255,255,.8)';
+        ctx.lineWidth = 2 * (1 - t);
+        ctx.beginPath(); ctx.arc(cx, cy, rad * (1 + t * .5), 0, 6.284); ctx.stroke();
+        ctx.restore();
+      }
+      return;
+    }
+
+    /* an unpopped dome */
+    var squash = halfDone ? .88 : 1;
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.scale(1, squash);
+
+    ctx.beginPath(); ctx.arc(2, 3, rad, 0, 6.284);
+    ctx.fillStyle = 'rgba(90,125,132,.22)'; ctx.fill();
+
+    var g = ctx.createRadialGradient(-rad * .3, -rad * .38, rad * .1, 0, 0, rad);
+    g.addColorStop(0, 'rgba(255,255,255,.95)');
+    g.addColorStop(.35, 'rgba(226,242,244,' + (0.86 + tint * .1) + ')');
+    g.addColorStop(1, 'rgba(160,196,203,.82)');
+    ctx.beginPath(); ctx.arc(0, 0, rad, 0, 6.284);
+    ctx.fillStyle = g; ctx.fill();
+
+    ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.ellipse(-rad * .3, -rad * .36, rad * .3, rad * .19, -.6, 0, 6.284);
+    ctx.fillStyle = 'rgba(255,255,255,.9)'; ctx.fill();
+
+    ctx.restore();
+  }
+
+  /* ---- input ----------------------------------------------------------- */
+  var dragging = false, lastPopped = null;
+
+  function local(e){
+    var r = rollEl.getBoundingClientRect();
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  }
+  function tryPop(e){
+    var p = local(e);
+    var b = bubbleAt(p.x, p.y);
+    if (!b) return;
+    var k = key(b);
+    if (k === lastPopped) return;
+    lastPopped = k;
+    pop(b);
+    if (scroll + p.y > deepest){ deepest = scroll + p.y; }
+  }
+
+  rollEl.addEventListener('pointerdown', function(e){
+    e.preventDefault(); rollEl.setPointerCapture(e.pointerId);
+    dragging = true; lastPopped = null; tryPop(e);
+  });
+  rollEl.addEventListener('pointermove', function(e){ if (dragging) tryPop(e); });
+  ['pointerup','pointercancel'].forEach(function(t){
+    rollEl.addEventListener(t, function(){ dragging = false; lastPopped = null; });
+  });
+
+  rollEl.addEventListener('wheel', function(e){
+    e.preventDefault();
+    scroll = Math.max(0, scroll + e.deltaY);
+    onScroll();
+  }, { passive:false });
+
+  /* touch: a two-finger or edge drag scrolls; the single finger pops. A
+     phone gets a scroll gesture on the right-hand strip. */
+  var touchScroll = null;
+  rollEl.addEventListener('touchstart', function(e){
+    if (e.touches.length === 2){ touchScroll = { y: e.touches[0].clientY, s: scroll }; }
+  }, { passive:true });
+  rollEl.addEventListener('touchmove', function(e){
+    if (touchScroll && e.touches.length === 2){
+      scroll = Math.max(0, touchScroll.s + (touchScroll.y - e.touches[0].clientY));
+      onScroll();
+    }
+  }, { passive:true });
+  rollEl.addEventListener('touchend', function(){ touchScroll = null; }, { passive:true });
+
+  window.addEventListener('keydown', function(e){
+    if (e.key === 'ArrowDown' || e.key === 'PageDown'){ e.preventDefault(); scroll += Hgt * .6; onScroll(); }
+    else if (e.key === 'ArrowUp' || e.key === 'PageUp'){ e.preventDefault(); scroll = Math.max(0, scroll - Hgt * .6); onScroll(); }
+  });
+
+  function onScroll(){
+    if (scroll + Hgt > deepest) deepest = scroll + Hgt;
+    document.getElementById('depth').textContent = (scroll / 300).toFixed(2) + ' m down the roll';
+    document.getElementById('t-metres').textContent = (deepest / 300).toFixed(1);
+    save();
+  }
+
+  /* ---- buttons ---------------------------------------------------------- */
+  document.getElementById('btn-size').addEventListener('click', function(){
+    size = size ? 0 : 1;
+    this.textContent = size ? 'Bigger bubbles' : 'Smaller bubbles';
+    save(); draw();
+  });
+  document.getElementById('btn-sound').addEventListener('click', function(){
+    soundOn = !soundOn; this.setAttribute('aria-pressed', soundOn); save();
+  });
+  document.getElementById('btn-top').addEventListener('click', function(){
+    scroll = 0; onScroll();
+  });
+
+  document.getElementById('t-pops').textContent = pops.toLocaleString();
+  document.getElementById('btn-size').textContent = size ? 'Bigger bubbles' : 'Smaller bubbles';
+  document.getElementById('btn-sound').setAttribute('aria-pressed', soundOn);
+  onScroll();
+  resize();
+
+  /* The pop wrinkle animates, so the page draws while any are still fresh
+     and sits perfectly still the rest of the time. */
+  (function loop(){
+    requestAnimationFrame(loop);
+    if (document.hidden) return;
+    draw();
+  })();
+
+  window.__bubbles = {
+    pops: function(){ return pops; },
+    popAt: function(x, y){ var b = bubbleAt(x, y); return b ? pop(b) : null; },
+    bubbleAt: bubbleAt,
+    scrollTo: function(v){ scroll = v; onScroll(); },
+    scroll: function(){ return scroll; }
+  };
+})();
+</script>
+</body>
+</html>

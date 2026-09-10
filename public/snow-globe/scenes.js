@@ -331,6 +331,241 @@
     p.rect(98, 102, 12, 2, '#7E5A44');
   }
 
+  /* ================= 5. a lighthouse in the weather ================= */
+  function lighthouse(ctx, seed) {
+    var p = pen(ctx), r = rng(seed);
+    p.sky(['#0A1220', '#16283C', '#2A4458', '#4A6470'], 20);
+
+    // the sea: bands that get lighter and choppier towards the front
+    for (var y = 84; y < S; y++) {
+      var t = (y - 84) / (S - 84);
+      p.rect(0, y, S, 1, mix(['#132638', '#1E3A50', '#2E5468'], t));
+      if (r() < 0.5) {
+        var wx = Math.floor(r() * S), ww = 2 + Math.floor(r() * 5);
+        p.rect(wx, y, ww, 1, '#5A8296');
+      }
+    }
+
+    // the rock it stands on
+    p.rect(38, 92, 52, 12, '#2A2A2E');
+    p.rect(44, 88, 40, 6, '#33333A');
+    p.rect(50, 84, 28, 5, '#3A3A42');
+    for (var k = 0; k < 22; k++) p.px(40 + Math.floor(r() * 48), 86 + Math.floor(r() * 16), '#22222A');
+
+    // the tower, tapering, with the classic bands
+    for (var i = 0; i < 46; i++) {
+      var ty = 84 - i;
+      var half = Math.round(7 - i * 0.075);
+      var band = Math.floor(i / 7) % 2 === 0;
+      p.rect(64 - half, ty, half * 2, 1, band ? '#E8E4DC' : '#C6483C');
+      p.px(64 - half, ty, '#9A9490');
+    }
+    // the gallery and the lamp room
+    p.rect(56, 38, 16, 3, '#2E3238');
+    p.rect(58, 30, 12, 8, '#F2E8B4');
+    p.rect(58, 30, 12, 2, '#3A3E44');
+    p.rect(57, 26, 14, 4, '#2E3238');
+    p.rect(63, 22, 2, 4, '#2E3238');
+    // the beam, thrown out to one side in a wedge of light
+    for (var b = 0; b < 40; b++) {
+      var by = 34 - Math.round(b * 0.28);
+      var spread = Math.round(1 + b * 0.22);
+      p.rect(70 + b, by - spread, 1, spread * 2, 'rgba(242,232,180,0.10)');
+    }
+    // a keeper's cottage tucked behind
+    p.rect(84, 74, 18, 12, '#3E3A42');
+    p.rect(83, 72, 20, 3, '#5A5460');
+    p.rect(88, 78, 3, 4, '#F2C86A');
+    p.rect(95, 78, 3, 4, '#2C2A34');
+  }
+
+  /* ================= 6. a terrace in fog ============================ */
+  function terrace(ctx, seed) {
+    var p = pen(ctx), r = rng(seed);
+    p.sky(['#2A2A32', '#3C3A42', '#4E4A52', '#5E5A60'], 18);
+
+    // three receding rows, each paler than the last — the fog is doing
+    // the perspective, so the drawing does not have to
+    var rows = [
+      { base: 86,  h: 34, wall: '#3A3840', roof: '#2E2C34', lit: '#6A6470', w: 13 },
+      { base: 100, h: 40, wall: '#4A4650', roof: '#3A3842', lit: '#C6A868', w: 15 },
+      { base: 118, h: 46, wall: '#5A5560', roof: '#46424E', lit: '#F2CE86', w: 17 }
+    ];
+    rows.forEach(function (row, ri) {
+      var x = -8 + ri * 4;
+      while (x < S + 8) {
+        p.rect(x, row.base - row.h, row.w, row.h, row.wall);
+        // the pitched roof, as a stepped triangle
+        for (var i = 0; i < 6; i++) {
+          p.rect(x + i, row.base - row.h - 6 + i, row.w - i * 2, 1, row.roof);
+        }
+        // a chimney with two pots
+        p.rect(x + row.w - 4, row.base - row.h - 10, 3, 5, row.roof);
+        p.rect(x + row.w - 4, row.base - row.h - 12, 1, 2, '#6E6874');
+        // windows: two up, one down and a door
+        for (var wy = 0; wy < 2; wy++) {
+          for (var wx = 0; wx < 2; wx++) {
+            var on = r() < (ri === 2 ? 0.5 : 0.3);
+            p.rect(x + 3 + wx * 6, row.base - row.h + 6 + wy * 12, 3, 5, on ? row.lit : '#2A2830');
+          }
+        }
+        if (ri === 2) p.rect(x + 6, row.base - 10, 4, 10, '#33303A');
+        x += row.w + 1;
+      }
+      // the fog bank sitting on each row
+      p.rect(0, row.base - 3, S, 3, 'rgba(150,146,156,0.22)');
+    });
+
+    // the pavement, and one streetlamp with its cone
+    p.rect(0, 118, S, 10, '#4A4650');
+    p.rect(0, 118, S, 1, '#6A6470');
+    p.rect(30, 88, 2, 32, '#2E2C34');
+    p.rect(28, 84, 6, 5, '#F2CE86');
+    for (var c = 0; c < 16; c++) {
+      p.rect(31 - c, 89 + c * 2, 2 + c * 2, 2, 'rgba(242,206,134,0.05)');
+    }
+  }
+
+  /* ================= 7. a country halt ============================== */
+  function halt(ctx, seed) {
+    var p = pen(ctx), r = rng(seed);
+    p.sky(['#0E1428', '#1C2440', '#32365C', '#4A4468'], 20);
+
+    // hills behind, with snow on the tops
+    for (var hx = -10; hx < S + 10; hx += 26) {
+      var hh = 22 + Math.floor(r() * 14);
+      for (var i = 0; i < hh; i++) {
+        var half = Math.round((16) * (1 - i / hh));
+        p.rect(hx - half, 80 - i, half * 2, 1, i > hh - 5 ? '#D8E2F2' : '#242C48');
+      }
+    }
+    // trees along the back
+    for (var t = 4; t < S; t += 11) conifer(p, t, 82, 12 + Math.floor(r() * 6), '#1A2A22', '#263A2E');
+
+    // the ground, and the platform
+    p.rect(0, 82, S, 46, '#E4EAF6');
+    p.rect(0, 96, S, 32, '#C8D2E4');
+    p.rect(0, 96, S, 2, '#F2F6FF');
+
+    // the track: two rails and sleepers, running off to one side
+    p.rect(0, 108, S, 14, '#3A3038');
+    for (var sx = 0; sx < S; sx += 7) p.rect(sx, 110, 5, 2, '#4E4038');
+    p.rect(0, 112, S, 1, '#8A94A6');
+    p.rect(0, 118, S, 1, '#8A94A6');
+
+    // the little shelter
+    p.rect(20, 66, 34, 30, '#5A3A2E');
+    p.rect(18, 62, 38, 5, '#3E2A22');
+    p.rect(18, 60, 38, 2, '#F2F6FF');
+    p.rect(26, 74, 8, 10, '#F2CE86');
+    p.rect(40, 74, 8, 10, '#F2CE86');
+    p.rect(34, 84, 6, 12, '#3A2820');
+    // the running-in board, unreadable at this size on purpose
+    p.rect(64, 74, 26, 8, '#1E3A2E');
+    p.rect(65, 76, 24, 1, '#8AB49A');
+    p.rect(65, 79, 16, 1, '#8AB49A');
+    p.rect(70, 82, 2, 14, '#2A2A2E');
+    p.rect(82, 82, 2, 14, '#2A2A2E');
+    // a lamp on the platform, and a bench
+    p.rect(100, 72, 2, 24, '#2A2A2E');
+    p.rect(98, 68, 6, 5, '#F2DC9A');
+    p.rect(106, 88, 14, 2, '#4A3A30');
+    p.rect(107, 90, 2, 5, '#4A3A30');
+    p.rect(117, 90, 2, 5, '#4A3A30');
+  }
+
+  /* ================= 8. an orchard in blossom ======================= */
+  function orchard(ctx, seed) {
+    var p = pen(ctx), r = rng(seed);
+    p.sky(['#F2D8C6', '#F6E4CE', '#E8E2D2', '#CFE0D2'], 18);
+
+    // a low sun sitting in the haze
+    p.rect(94, 34, 12, 12, '#F8E6C0');
+    p.rect(96, 32, 8, 16, '#F8E6C0');
+    p.rect(92, 36, 16, 8, '#F8E6C0');
+
+    // the grass, in three bands
+    p.rect(0, 84, S, 44, '#7E9A62');
+    p.rect(0, 96, S, 32, '#6E8C54');
+    p.rect(0, 112, S, 16, '#5E7C46');
+
+    // a drystone wall along the back
+    p.rect(0, 80, S, 6, '#A8A296');
+    for (var wx = 0; wx < S; wx += 5) {
+      p.rect(wx, 80 + (wx % 10 ? 0 : 2), 4, 2, '#8E8A80');
+      p.px(wx + 2, 83, '#7E7A72');
+    }
+
+    // the trees: trunk, a scribble of branches, and blossom in clumps
+    var rows = [ { y: 92, sc: 0.72 }, { y: 104, sc: 0.86 }, { y: 118, sc: 1 } ];
+    rows.forEach(function (row, ri) {
+      for (var i = 0; i < 4 - ri * 0; i++) {
+        var x = 16 + i * 32 + (ri % 2 ? 12 : 0);
+        var h = Math.round(30 * row.sc);
+        p.rect(x, row.y - h, Math.max(2, Math.round(3 * row.sc)), h, '#4E3A2C');
+        for (var b = 0; b < 3; b++) {
+          p.rect(x - 5 + b * 4, row.y - h + 4 + b * 3, 5, 1, '#4E3A2C');
+        }
+        var rad = Math.round(11 * row.sc);
+        for (var k = 0; k < 34; k++) {
+          var a = r() * 6.283, d = r() * rad;
+          var px2 = Math.round(x + 1 + Math.cos(a) * d);
+          var py2 = Math.round(row.y - h - 2 + Math.sin(a) * d * 0.8);
+          p.px(px2, py2, r() < 0.35 ? '#FFFFFF' : (r() < 0.6 ? '#F6D6DE' : '#EEC4D0'));
+        }
+      }
+    });
+
+    // fallen blossom on the grass
+    for (var f = 0; f < 40; f++) p.px(Math.floor(r() * S), 96 + Math.floor(r() * 32), '#F2DCE2');
+  }
+
+  /* ================= 9. a hilltop observatory ======================= */
+  function observatory(ctx, seed) {
+    var p = pen(ctx), r = rng(seed);
+    p.sky(['#05060F', '#0A0E1E', '#121A34', '#1E2A46'], 22);
+
+    // a scatter of stars, fixed by the seed so they do not crawl
+    for (var i = 0; i < 90; i++) {
+      var sx = Math.floor(r() * S), sy = Math.floor(r() * 88);
+      var b = r();
+      p.px(sx, sy, b < 0.6 ? '#8A96B4' : (b < 0.9 ? '#C8D2E8' : '#FFFFFF'));
+    }
+    // and a band of the galaxy across one corner
+    for (var g = 0; g < 220; g++) {
+      var t = r();
+      var gx = Math.round(t * S), gy = Math.round(16 + t * 46 + (r() - 0.5) * 14);
+      p.px(gx, gy, r() < 0.5 ? '#3A4468' : '#5A6490');
+    }
+
+    // the hill
+    for (var y = 88; y < S; y++) {
+      var w = Math.round((y - 84) * 2.6);
+      p.rect(64 - w, y, w * 2, 1, y < 96 ? '#1A2030' : '#141A28');
+    }
+    // the dome: a stepped hemisphere with a shutter open to the sky
+    var cx = 64, base = 92;
+    for (var d = 0; d < 16; d++) {
+      var half = Math.round(Math.sqrt(Math.max(0, 256 - d * d)));
+      p.rect(cx - half, base - d, half * 2, 1, d > 11 ? '#3E4658' : '#2E3644');
+    }
+    p.rect(cx - 18, base, 36, 4, '#242A36');
+    p.rect(cx - 20, base + 4, 40, 8, '#1E2430');
+    // the shutter, and the tube looking out of it
+    p.rect(cx - 3, base - 16, 6, 16, '#0A0E18');
+    p.rect(cx - 2, base - 15, 4, 14, '#141A28');
+    for (var t2 = 0; t2 < 12; t2++) {
+      p.rect(cx - 2 + t2, base - 14 - t2, 3, 3, '#5A6478');
+    }
+    // a door with a light on behind it
+    p.rect(cx - 3, base + 4, 6, 8, '#F2C86A');
+    // a fence of aerials down the slope
+    for (var a2 = 0; a2 < 4; a2++) {
+      p.rect(30 + a2 * 24, 104 - a2 % 2 * 2, 1, 8, '#2A3040');
+      p.rect(29 + a2 * 24, 103 - a2 % 2 * 2, 3, 1, '#2A3040');
+    }
+  }
+
   window.GLOBE_SCENES = [
     { id:'rooftop',    name:'A city rooftop',      note:'the good roof, the one with the tank on it',
       draw: rooftop,    seed: 0x51A7, weather:'snow', tone:'city' },
@@ -339,7 +574,17 @@
     { id:'mainstreet', name:'A small-town main street', note:'shops still lit, nobody about',
       draw: mainstreet, seed: 0x2E90, weather:'snow', tone:'street' },
     { id:'cabin',      name:'A lakeside cabin',    note:'half the lake has gone over',
-      draw: cabin,      seed: 0x9B44, weather:'snow', tone:'lake' }
+      draw: cabin,      seed: 0x9B44, weather:'snow', tone:'lake' },
+    { id:'lighthouse', name:'A lighthouse in the weather', note:'the light is on and the sea is not having it',
+      draw: lighthouse, seed: 0x3F17, weather:'rain', tone:'sea' },
+    { id:'terrace',    name:'A terrace in fog',    note:'three rows deep and you can only see one',
+      draw: terrace,    seed: 0x6D22, weather:'fog', tone:'street' },
+    { id:'halt',       name:'A country halt',      note:'two rails, one lamp, no train due',
+      draw: halt,       seed: 0x8A5E, weather:'snow', tone:'village' },
+    { id:'orchard',    name:'An orchard in blossom', note:'the one week a year it does this',
+      draw: orchard,    seed: 0x24C9, weather:'spore', tone:'lake' },
+    { id:'observatory',name:'A hilltop observatory', note:'shutter open, nobody about, everything visible',
+      draw: observatory, seed: 0xB30D, weather:'starfield', tone:'city' }
   ];
   window.GLOBE_SIZE = S;
 })();

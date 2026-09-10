@@ -1,0 +1,785 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Standing Tank</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230A2430'/><ellipse cx='14' cy='16' rx='7' ry='4.2' fill='%23F0A04B'/><path d='M21 16l5-3.4v6.8z' fill='%23E07B2E'/><circle cx='10' cy='15' r='1.1' fill='%230A2430'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --deep:#04202B;
+  --water:#0B3A4C;
+  --glass:#0A2C3A;
+  --foam:#DFF1F4;
+  --pale:#B4D6DE;
+  --dim:#6D95A0;
+  --dimmer:#4A6D78;
+  --sand:#C9B58C;
+  --kelp:#3E8A63;
+  --line:#12414F;
+  --sans:"Avenir Next","Segoe UI",system-ui,-apple-system,"Helvetica Neue",sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;min-height:100%}
+body{
+  background:linear-gradient(180deg,#061A22 0%,#03151C 100%);
+  color:var(--pale);font-family:var(--sans);
+  min-height:100vh;padding:22px 16px 84px;
+  display:flex;flex-direction:column;align-items:center;
+}
+.wrap{ width:min(880px,100%) }
+
+header{ display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin-bottom:14px;flex-wrap:wrap }
+h1{ font-size:19px;font-weight:600;letter-spacing:.015em;margin:0;color:var(--foam) }
+#tank-name{
+  font:inherit;font-size:19px;font-weight:600;color:var(--foam);
+  background:transparent;border:0;border-bottom:1px dashed transparent;padding:0 2px;
+  max-width:min(340px,60vw);
+}
+#tank-name:hover{ border-bottom-color:var(--dimmer) }
+#tank-name:focus{ outline:none;border-bottom-color:var(--kelp) }
+.stat{ font-family:var(--mono);font-size:10px;letter-spacing:.17em;text-transform:uppercase;color:var(--dimmer) }
+
+/* ---- the tank ------------------------------------------------------ */
+.tank{
+  position:relative;width:100%;aspect-ratio:16/9;min-height:250px;
+  border-radius:6px;overflow:hidden;
+  background:var(--water);
+  border:6px solid #0A2029;
+  box-shadow:
+    0 0 0 1px #16414F,
+    inset 0 0 60px rgba(0,0,0,.45),
+    0 26px 60px rgba(0,0,0,.5);
+  cursor:crosshair;
+}
+.tank canvas{ position:absolute;inset:0;width:100%;height:100% }
+/* the glass: a highlight down one edge and a faint reflection band */
+.tank::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:
+    linear-gradient(100deg,rgba(255,255,255,.10) 0%,rgba(255,255,255,0) 18%),
+    linear-gradient(260deg,rgba(255,255,255,.06) 0%,rgba(255,255,255,0) 14%);
+}
+.stand{
+  height:16px;width:calc(100% - 26px);margin:0 auto;
+  background:linear-gradient(180deg,#0A2029,#06161C);
+  border-radius:0 0 8px 8px;box-shadow:0 12px 24px rgba(0,0,0,.5);
+}
+
+/* ---- the shelf of controls ----------------------------------------- */
+.shelf{ margin-top:22px;display:grid;grid-template-columns:1fr;gap:16px }
+@media (min-width:720px){ .shelf{ grid-template-columns:1.35fr 1fr } }
+
+.panel{
+  background:rgba(9,38,49,.72);border:1px solid var(--line);border-radius:10px;padding:14px 14px 15px;
+}
+.panel h2{
+  font-family:var(--mono);font-size:9px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--dimmer);margin:0 0 11px;font-weight:600;
+}
+.stock{ display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:7px }
+.pick{
+  font:inherit;font-size:11.5px;cursor:pointer;text-align:left;
+  background:#0A2E3C;border:1px solid var(--line);border-radius:8px;
+  padding:7px 8px 8px;color:var(--pale);
+  display:flex;flex-direction:column;gap:5px;
+  transition:border-color .15s,transform .15s,background .15s;
+}
+.pick:hover{ border-color:#2A6A7C;transform:translateY(-1px) }
+.pick:focus-visible{ outline:2px solid var(--kelp);outline-offset:2px }
+.pick svg{ width:100%;height:26px;display:block }
+.pick .nm{ line-height:1.25;color:var(--foam) }
+.pick .ct{ font-family:var(--mono);font-size:9px;color:var(--dimmer);letter-spacing:.1em }
+
+.tools{ display:flex;flex-wrap:wrap;gap:7px }
+.tools button{
+  font:inherit;font-size:12px;cursor:pointer;
+  background:#0A2E3C;border:1px solid var(--line);border-radius:999px;
+  padding:8px 14px;color:var(--pale);transition:border-color .15s,color .15s,background .15s;
+}
+.tools button:hover{ border-color:#2A6A7C;color:var(--foam) }
+.tools button[aria-pressed="true"]{ background:#12586B;border-color:#2A87A0;color:var(--foam) }
+.tools button:focus-visible{ outline:2px solid var(--kelp);outline-offset:2px }
+.tools button.quiet{ background:transparent;color:var(--dimmer) }
+.tools button.quiet:hover{ color:var(--pale) }
+
+.note{ font-size:12.5px;line-height:1.75;color:var(--dim);margin:13px 0 0 }
+.note b{ color:var(--pale);font-weight:600 }
+
+.book{
+  margin-top:26px;padding-top:18px;border-top:1px solid var(--line);
+  font-size:13.5px;line-height:1.85;color:var(--dim);
+}
+.book p{ margin:0 0 11px }
+.book p:last-child{ margin:0 }
+.book b{ color:var(--pale);font-weight:600 }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 var(--mono);
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <input id="tank-name" value="The Standing Tank" maxlength="42" aria-label="Name of your tank" spellcheck="false">
+  <span class="stat" id="stat">&mdash;</span>
+</header>
+
+<div class="tank" id="tank">
+  <canvas id="cv"></canvas>
+</div>
+<div class="stand"></div>
+
+<div class="shelf">
+  <div class="panel">
+    <h2>The shop</h2>
+    <div class="stock" id="stock"></div>
+    <p class="note">Click the glass to drop a pinch of food. Nothing here is hungry &mdash; they come
+      over because food is interesting, and the tank is exactly as well as it was before.</p>
+  </div>
+
+  <div class="panel">
+    <h2>The tank</h2>
+    <div class="tools">
+      <button type="button" id="btn-light" aria-pressed="true">Hood light</button>
+      <button type="button" id="btn-air" aria-pressed="true">Air pump</button>
+      <button type="button" id="btn-sound" aria-pressed="false">Sound</button>
+      <button type="button" id="btn-feed">Feed</button>
+    </div>
+    <div class="tools" style="margin-top:9px">
+      <button type="button" class="quiet" id="btn-undo">Remove the last thing</button>
+      <button type="button" class="quiet" id="btn-empty">Empty the tank</button>
+    </div>
+    <p class="note" id="mood">&nbsp;</p>
+  </div>
+</div>
+
+<div class="book">
+  <p><b>There is nothing to keep alive here.</b> No hunger bar, no water quality, no fish that dies
+  if you close the tab for a fortnight. Every real aquarium is a small unpaid job; this one is only
+  the good part &mdash; the standing in front of it.</p>
+  <p>The six species are invented, and so are their names. They swim by steering rather than by
+  animation: each fish wants to keep a comfortable distance from the glass, drifts towards whatever
+  is interesting, and is nudged along by its neighbours if it is the sort that shoals. That is why
+  they never quite repeat themselves.</p>
+  <p>Your tank lives in this browser and nowhere else. It will be here when you come back, and it
+  will look exactly as you left it.</p>
+</div>
+
+</div>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">&larr;</span><span class="w">cabinet</span></a>
+
+<script src="/shared/lc-audio.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  var KEY = 'lc-aquarium';
+  var cv = document.getElementById('cv');
+  var ctx = cv.getContext('2d');
+  var tankEl = document.getElementById('tank');
+  var calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ================================================================== *
+   *  The stock list. Six fish, three plants, three ornaments. Every one
+   *  invented — the names are made up and so are the animals, which is
+   *  the honest way to draw a fish you have not photographed.
+   * ================================================================== */
+  var SPECIES = {
+    lantern: { kind:'fish', name:'Paper Lantern', size:16, body:.62, speed:.42, shoal:0,
+               a:'#F0A04B', b:'#E4762A', fin:'#FFD9A0', pattern:'none', depth:.5 },
+    ribbon:  { kind:'fish', name:'Ribbonfin',     size:22, body:.34, speed:.30, shoal:0,
+               a:'#7FD8E8', b:'#3E9CB4', fin:'#CFF2F8', pattern:'none', depth:.35 },
+    sixpence:{ kind:'fish', name:'Sixpence',      size:9,  body:.72, speed:.55, shoal:1,
+               a:'#E8DCA0', b:'#B9A65C', fin:'#FFF4C8', pattern:'spot', depth:.4 },
+    inkling: { kind:'fish', name:'Inkling',       size:12, body:.55, speed:.48, shoal:1,
+               a:'#5C6FD8', b:'#2F3C8C', fin:'#9AA8F0', pattern:'stripe', depth:.55 },
+    tiller:  { kind:'fish', name:'Bottom Tiller', size:18, body:.44, speed:.24, shoal:0,
+               a:'#9C7A56', b:'#6B4F34', fin:'#C4A47C', pattern:'spot', depth:.9 },
+    ember:   { kind:'fish', name:'Ember Tail',    size:13, body:.60, speed:.50, shoal:0,
+               a:'#D8464C', b:'#8E2026', fin:'#FF9A7A', pattern:'none', depth:.45 },
+
+    kelp:    { kind:'plant', name:'Ribbon Kelp',  h:.62, w:26, c:'#3E8A63', blades:7 },
+    fern:    { kind:'plant', name:'Water Fern',   h:.34, w:38, c:'#2F7A56', blades:11 },
+    grass:   { kind:'plant', name:'Hairgrass',    h:.22, w:44, c:'#57A070', blades:16 },
+
+    rock:    { kind:'deco', name:'Round Stone',   shape:'rock' },
+    log:     { kind:'deco', name:'Sunken Branch', shape:'log' },
+    jar:     { kind:'deco', name:'Lost Jar',      shape:'jar' }
+  };
+  var ORDER = ['lantern','ribbon','sixpence','inkling','tiller','ember','kelp','fern','grass','rock','log','jar'];
+
+  /* ---- state ------------------------------------------------------- */
+  var tank = { name:'The Standing Tank', light:true, air:true, items:[] };
+  var sound = false;
+  var food = [];         /* pellets, transient, never saved */
+  var bubbles = [];
+  var W = 0, H = 0, DPR = 1;
+
+  try {
+    var raw = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (raw && Array.isArray(raw.items)){
+      tank.name  = typeof raw.name === 'string' ? raw.name.slice(0, 42) : tank.name;
+      tank.light = raw.light !== false;
+      tank.air   = raw.air !== false;
+      tank.items = raw.items.filter(function(it){ return it && SPECIES[it.s]; }).slice(0, 60);
+    }
+  } catch (e) {}
+
+  function save(){
+    try {
+      localStorage.setItem(KEY, JSON.stringify({
+        name: tank.name, light: tank.light, air: tank.air,
+        items: tank.items.map(function(it){
+          return { s: it.s, x: +it.x.toFixed(3), y: +it.y.toFixed(3), f: it.f ? 1 : 0 };
+        })
+      }));
+    } catch (e) {}
+  }
+
+  /* ================================================================== *
+   *  Sizing. The tank is drawn in normalised coordinates (0..1 across,
+   *  0..1 down) so a saved tank looks the same on a phone as on a
+   *  desktop — a fish parked at 0.7 of the way across is still there.
+   * ================================================================== */
+  function resize(){
+    var r = tankEl.getBoundingClientRect();
+    DPR = Math.min(2, window.devicePixelRatio || 1);
+    W = r.width; H = r.height;
+    cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  new ResizeObserver(resize).observe(tankEl);
+  resize();
+
+  /* ================================================================== *
+   *  Adding things.
+   * ================================================================== */
+  function add(key){
+    var sp = SPECIES[key];
+    if (!sp) return;
+    if (tank.items.length >= 60){ mood('The tank is full. Sixty is plenty.'); return; }
+    var it = { s:key, x:0, y:0, f:Math.random() < .5 };
+    if (sp.kind === 'fish'){
+      it.x = .2 + Math.random() * .6;
+      it.y = Math.max(.12, Math.min(.86, sp.depth + (Math.random() - .5) * .3));
+      it.vx = (it.f ? 1 : -1) * sp.speed * .01;
+      it.vy = 0;
+      it.wob = Math.random() * 6.28;
+    } else {
+      it.x = .08 + Math.random() * .84;
+      it.y = 1;                         /* on the sand */
+    }
+    tank.items.push(it);
+    live(it);
+    save(); stats();
+    ping(sp.kind === 'fish' ? 'in' : 'set');
+    mood(sp.kind === 'fish' ? 'A ' + sp.name + ' goes in.' : 'The ' + sp.name.toLowerCase() + ' settles into the sand.');
+  }
+
+  /* Runtime-only fields (velocity, wobble) never go to storage, so a
+     restored tank has to be given them back. */
+  function live(it){
+    var sp = SPECIES[it.s];
+    if (sp.kind !== 'fish') return;
+    if (it.vx === undefined) it.vx = (it.f ? 1 : -1) * sp.speed * .01;
+    if (it.vy === undefined) it.vy = 0;
+    if (it.wob === undefined) it.wob = Math.random() * 6.28;
+    if (it.tgt === undefined) it.tgt = null;
+  }
+  tank.items.forEach(live);
+
+  /* ================================================================== *
+   *  Steering. Wander, avoid the glass, hold your depth band, follow
+   *  food, and — if you shoal — drift towards the others of your kind.
+   * ================================================================== */
+  function step(dt){
+    var fish = tank.items.filter(function(it){ return SPECIES[it.s].kind === 'fish'; });
+
+    fish.forEach(function(it){
+      var sp = SPECIES[it.s];
+      var ax = 0, ay = 0;
+
+      it.wob += dt * (.7 + sp.speed);
+      ax += Math.cos(it.wob * .43) * .00006;
+      ay += Math.sin(it.wob) * .00007;
+
+      /* the glass */
+      if (it.x < .07) ax += (.07 - it.x) * .004;
+      if (it.x > .93) ax -= (it.x - .93) * .004;
+      if (it.y < .09) ay += (.09 - it.y) * .006;
+      if (it.y > .93) ay -= (it.y - .93) * .006;
+
+      /* the depth this species prefers, loosely held */
+      ay += (sp.depth - it.y) * .00028;
+
+      /* food is the only thing that overrides the drift */
+      var near = null, nd = 1e9;
+      for (var i = 0; i < food.length; i++){
+        var d = Math.hypot(food[i].x - it.x, food[i].y - it.y);
+        if (d < nd && d < .42){ nd = d; near = food[i]; }
+      }
+      if (near){
+        ax += (near.x - it.x) * .0022;
+        ay += (near.y - it.y) * .0022;
+        if (nd < .022){ near.eaten = true; ping('eat'); }
+      }
+
+      /* shoaling: the two nearest of the same species, gently */
+      if (sp.shoal){
+        var cx = 0, cy = 0, n = 0;
+        for (var j = 0; j < fish.length; j++){
+          var o = fish[j];
+          if (o === it || o.s !== it.s) continue;
+          var dd = Math.hypot(o.x - it.x, o.y - it.y);
+          if (dd < .3){ cx += o.x; cy += o.y; n++;
+            if (dd < .035){ ax -= (o.x - it.x) * .003; ay -= (o.y - it.y) * .003; } }
+        }
+        if (n){ ax += (cx / n - it.x) * .0009; ay += (cy / n - it.y) * .0009; }
+      }
+
+      /* the hood light off means a slower, lower tank */
+      var mul = tank.light ? 1 : .38;
+      it.vx = (it.vx + ax * dt * 60) * .985;
+      it.vy = (it.vy + ay * dt * 60) * .975;
+
+      var sp2 = sp.speed * .0016 * mul;
+      var v = Math.hypot(it.vx, it.vy);
+      if (v > sp2){ it.vx = it.vx / v * sp2; it.vy = it.vy / v * sp2; }
+      if (v < sp2 * .22 && !near){ it.vx += (it.f ? 1 : -1) * sp2 * .1; }
+
+      it.x += it.vx * dt * 60;
+      it.y += it.vy * dt * 60;
+      it.x = Math.max(.03, Math.min(.97, it.x));
+      it.y = Math.max(.05, Math.min(.97, it.y));
+      if (Math.abs(it.vx) > sp2 * .12) it.f = it.vx > 0;
+    });
+
+    /* pellets sink and are forgotten */
+    for (var k = food.length - 1; k >= 0; k--){
+      var p = food[k];
+      p.y += .00022 * dt * 60;
+      p.x += Math.sin(p.y * 26 + p.seed) * .00035;
+      p.life -= dt;
+      if (p.eaten || p.life <= 0 || p.y > .96) food.splice(k, 1);
+    }
+
+    /* the air pump */
+    if (tank.air && !calm){
+      if (Math.random() < dt * 9) bubbles.push({ x:.955 + Math.random()*.012, y:.96, r:.6+Math.random()*1.9, s:.1+Math.random()*.09 });
+      for (var b = bubbles.length - 1; b >= 0; b--){
+        bubbles[b].y -= bubbles[b].s * dt * .55;
+        bubbles[b].x += Math.sin(bubbles[b].y * 34) * .0006;
+        if (bubbles[b].y < .02) bubbles.splice(b, 1);
+      }
+    } else if (!tank.air) { bubbles.length = 0; }
+  }
+
+  /* ================================================================== *
+   *  Drawing.
+   * ================================================================== */
+  var t0 = performance.now() / 1000;
+
+  function draw(now){
+    var t = now / 1000;
+    ctx.clearRect(0, 0, W, H);
+
+    /* water: lighter at the surface, and darker with the hood off */
+    var g = ctx.createLinearGradient(0, 0, 0, H);
+    if (tank.light){
+      g.addColorStop(0, '#177A93'); g.addColorStop(.45, '#0D4A61'); g.addColorStop(1, '#062836');
+    } else {
+      g.addColorStop(0, '#0A2E44'); g.addColorStop(.5, '#061F2E'); g.addColorStop(1, '#03121B');
+    }
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+
+    /* caustics: three slow sine bands, only with the light on */
+    if (tank.light){
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      for (var c = 0; c < 3; c++){
+        ctx.beginPath();
+        var ph = t * (.12 + c * .05) + c * 2.2;
+        for (var x = 0; x <= W; x += 8){
+          var y = H * (.06 + c * .07) + Math.sin(x * .012 + ph) * (7 + c * 4) + Math.sin(x * .031 - ph * 1.7) * 4;
+          x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = 'rgba(150,230,255,' + (0.05 - c * .012).toFixed(3) + ')';
+        ctx.lineWidth = 10 - c * 2;
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    drawSand();
+
+    /* plants and ornaments sit behind the fish */
+    tank.items.forEach(function(it){ if (SPECIES[it.s].kind === 'plant') drawPlant(it, t); });
+    tank.items.forEach(function(it){ if (SPECIES[it.s].kind === 'deco') drawDeco(it); });
+
+    food.forEach(function(p){
+      ctx.fillStyle = 'rgba(220,170,90,' + Math.min(1, p.life / 2) + ')';
+      ctx.beginPath(); ctx.arc(p.x * W, p.y * H, 1.7, 0, 6.284); ctx.fill();
+    });
+
+    tank.items.forEach(function(it){ if (SPECIES[it.s].kind === 'fish') drawFish(it, t); });
+
+    bubbles.forEach(function(b){
+      ctx.beginPath(); ctx.arc(b.x * W, b.y * H, b.r, 0, 6.284);
+      ctx.strokeStyle = 'rgba(220,245,255,.45)'; ctx.lineWidth = .8; ctx.stroke();
+      ctx.fillStyle = 'rgba(200,240,255,.14)'; ctx.fill();
+    });
+
+    /* the hood light itself: a warm wash down the top of the glass */
+    if (tank.light){
+      var lg = ctx.createLinearGradient(0, 0, 0, H * .3);
+      lg.addColorStop(0, 'rgba(255,246,210,.16)'); lg.addColorStop(1, 'rgba(255,246,210,0)');
+      ctx.fillStyle = lg; ctx.fillRect(0, 0, W, H * .3);
+    }
+  }
+
+  function drawSand(){
+    var sy = H * .9;
+    ctx.fillStyle = tank.light ? '#C4AE83' : '#5E5540';
+    ctx.beginPath();
+    ctx.moveTo(0, H);
+    ctx.lineTo(0, sy + 6);
+    for (var x = 0; x <= W; x += 18){
+      ctx.lineTo(x, sy + Math.sin(x * .021) * 4 + Math.sin(x * .007) * 3);
+    }
+    ctx.lineTo(W, H); ctx.closePath(); ctx.fill();
+    /* grains */
+    ctx.fillStyle = tank.light ? 'rgba(255,240,200,.3)' : 'rgba(180,170,140,.16)';
+    for (var i = 0; i < 90; i++){
+      var gx = (i * 97.3) % W, gy = sy + 8 + ((i * 53.7) % (H - sy - 8));
+      ctx.fillRect(gx, gy, 1, 1);
+    }
+  }
+
+  function drawPlant(it, t){
+    var sp = SPECIES[it.s];
+    var bx = it.x * W, by = H * .905;
+    var hh = sp.h * H;
+    for (var i = 0; i < sp.blades; i++){
+      var off = (i / (sp.blades - 1) - .5) * sp.w;
+      var sway = Math.sin(t * .55 + i * .7 + it.x * 9) * (6 + hh * .04);
+      var len = hh * (.55 + .45 * Math.sin(i * 2.3 + it.x * 11) * .5 + .3);
+      ctx.beginPath();
+      ctx.moveTo(bx + off * .3, by);
+      ctx.quadraticCurveTo(bx + off * .8 + sway * .4, by - len * .55, bx + off + sway, by - len);
+      ctx.strokeStyle = tank.light ? sp.c : shade(sp.c, .45);
+      ctx.lineWidth = Math.max(1.4, hh * .022);
+      ctx.lineCap = 'round';
+      ctx.stroke();
+    }
+  }
+
+  function drawDeco(it){
+    var sp = SPECIES[it.s];
+    var bx = it.x * W, by = H * .905;
+    var s = Math.max(16, H * .085);
+    ctx.save();
+    ctx.translate(bx, by);
+    var lit = tank.light;
+    if (sp.shape === 'rock'){
+      ctx.fillStyle = lit ? '#6E7480' : '#3A3E46';
+      ctx.beginPath();
+      ctx.moveTo(-s * .9, 4); ctx.quadraticCurveTo(-s * .8, -s * .55, -s * .1, -s * .62);
+      ctx.quadraticCurveTo(s * .75, -s * .55, s * .85, 4); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = lit ? 'rgba(255,255,255,.14)' : 'rgba(255,255,255,.05)';
+      ctx.beginPath(); ctx.ellipse(-s * .3, -s * .35, s * .26, s * .11, -.4, 0, 6.284); ctx.fill();
+    } else if (sp.shape === 'log'){
+      ctx.fillStyle = lit ? '#6B4F34' : '#382A1E';
+      ctx.save(); ctx.rotate(-.18);
+      ctx.fillRect(-s * 1.05, -s * .3, s * 2.1, s * .38);
+      ctx.fillStyle = lit ? '#8A6845' : '#463523';
+      ctx.beginPath(); ctx.ellipse(s * 1.05, -s * .11, s * .1, s * .19, 0, 0, 6.284); ctx.fill();
+      ctx.restore();
+      ctx.fillStyle = lit ? 'rgba(62,138,99,.75)' : 'rgba(40,80,60,.5)';
+      for (var i = 0; i < 4; i++){
+        ctx.beginPath(); ctx.arc(-s * .7 + i * s * .45, -s * .34, s * .1, 0, 6.284); ctx.fill();
+      }
+    } else {
+      ctx.fillStyle = lit ? 'rgba(150,200,190,.55)' : 'rgba(80,110,105,.4)';
+      ctx.beginPath();
+      ctx.moveTo(-s * .3, -s * .95); ctx.lineTo(-s * .34, -s * .72);
+      ctx.quadraticCurveTo(-s * .58, -s * .5, -s * .55, 2);
+      ctx.lineTo(s * .55, 2);
+      ctx.quadraticCurveTo(s * .58, -s * .5, s * .34, -s * .72);
+      ctx.lineTo(s * .3, -s * .95); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = 'rgba(230,255,250,.32)'; ctx.lineWidth = 1; ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function shade(hex, k){
+    var n = parseInt(hex.slice(1), 16);
+    var r = Math.round(((n >> 16) & 255) * k), g2 = Math.round(((n >> 8) & 255) * k), b = Math.round((n & 255) * k);
+    return 'rgb(' + r + ',' + g2 + ',' + b + ')';
+  }
+
+  function drawFish(it, t){
+    var sp = SPECIES[it.s];
+    var s = Math.max(7, sp.size * (H / 320));
+    var x = it.x * W, y = it.y * H;
+    var speed = Math.hypot(it.vx, it.vy) * 1000;
+    var wag = Math.sin(t * (5 + speed * 2.4) + it.wob) * (.35 + Math.min(.5, speed * .3));
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(it.f ? 1 : -1, 1);
+    ctx.rotate(Math.max(-.5, Math.min(.5, it.vy * 260 * (it.f ? 1 : -1))));
+
+    var dim = tank.light ? 1 : .5;
+    var A = tank.light ? sp.a : shade(sp.a, .5);
+    var B = tank.light ? sp.b : shade(sp.b, .5);
+    var F = tank.light ? sp.fin : shade(sp.fin, .5);
+
+    /* tail, hinged at the back of the body and wagging with speed */
+    ctx.save();
+    ctx.translate(-s * .78, 0);
+    ctx.rotate(wag * .5);
+    ctx.fillStyle = F;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.quadraticCurveTo(-s * .5, -s * sp.body * 1.25, -s * .8, -s * sp.body * .95);
+    ctx.quadraticCurveTo(-s * .6, 0, -s * .8, s * sp.body * .95);
+    ctx.quadraticCurveTo(-s * .5, s * sp.body * 1.25, 0, 0);
+    ctx.fill();
+    ctx.restore();
+
+    /* dorsal */
+    ctx.fillStyle = F;
+    ctx.beginPath();
+    ctx.moveTo(-s * .3, -s * sp.body * .9);
+    ctx.quadraticCurveTo(0, -s * sp.body * 2.0, s * .34, -s * sp.body * .8);
+    ctx.closePath(); ctx.fill();
+
+    /* body */
+    var bg = ctx.createLinearGradient(0, -s * sp.body, 0, s * sp.body);
+    bg.addColorStop(0, A); bg.addColorStop(1, B);
+    ctx.fillStyle = bg;
+    ctx.beginPath();
+    ctx.moveTo(s, 0);
+    ctx.quadraticCurveTo(s * .3, -s * sp.body, -s * .78, -s * sp.body * .5);
+    ctx.quadraticCurveTo(-s * .95, 0, -s * .78, s * sp.body * .5);
+    ctx.quadraticCurveTo(s * .3, s * sp.body, s, 0);
+    ctx.fill();
+
+    /* pattern */
+    ctx.save();
+    ctx.clip();
+    if (sp.pattern === 'stripe'){
+      ctx.fillStyle = 'rgba(0,0,0,.22)';
+      for (var i = -1; i < 3; i++) ctx.fillRect(-s * .5 + i * s * .42, -s, s * .16, s * 2);
+    } else if (sp.pattern === 'spot'){
+      ctx.fillStyle = 'rgba(0,0,0,.16)';
+      for (var j = 0; j < 5; j++){
+        ctx.beginPath();
+        ctx.arc(-s * .5 + j * s * .34, Math.sin(j * 2.1) * s * sp.body * .4, s * .1, 0, 6.284);
+        ctx.fill();
+      }
+    }
+    ctx.restore();
+
+    /* pectoral fin, and an eye */
+    ctx.fillStyle = 'rgba(255,255,255,' + (.28 * dim) + ')';
+    ctx.beginPath();
+    ctx.ellipse(s * .1, s * sp.body * .3, s * .26, s * .12, .5 + wag * .3, 0, 6.284);
+    ctx.fill();
+
+    ctx.fillStyle = tank.light ? '#FFF' : '#9AB';
+    ctx.beginPath(); ctx.arc(s * .58, -s * sp.body * .22, s * .13, 0, 6.284); ctx.fill();
+    ctx.fillStyle = '#111';
+    ctx.beginPath(); ctx.arc(s * .60, -s * sp.body * .22, s * .07, 0, 6.284); ctx.fill();
+
+    ctx.restore();
+  }
+
+  /* ---- the loop ---------------------------------------------------- */
+  var last = performance.now();
+  function frame(now){
+    var dt = Math.min(.05, (now - last) / 1000);
+    last = now;
+    if (!document.hidden){ step(dt); draw(now); }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  /* ================================================================== *
+   *  Sound: a filter hum and the bubbles, generated not sampled.
+   * ================================================================== */
+  var bed = null;
+  function setSound(on){
+    sound = on;
+    document.getElementById('btn-sound').setAttribute('aria-pressed', on);
+    if (!on){ if (bed){ bed.stopAll(); bed = null; } return; }
+    LCAudio.sting(function(A){
+      if (bed) return;
+      bed = A.bus(.5);
+      A.chain(bed.noise('brown'), A.filt('lowpass', 420, .7), A.gain(.05), bed);
+      A.chain(bed.osc('sine', 58), A.gain(.012), bed);
+    });
+  }
+  function ping(kind){
+    if (!sound) return;
+    LCAudio.sting(function(A){
+      if (kind === 'eat') A.burst('white', { freq: 2600, q: 5, dur: .02, level: .05, reverb:false });
+      else if (kind === 'in') A.burst('white', { freq: 700, q: .8, dur: .16, level: .09 });
+      else A.burst('brown', { freq: 260, q: 1, dur: .1, level: .1 });
+    });
+  }
+
+  /* ================================================================== *
+   *  Interface.
+   * ================================================================== */
+  var stock = document.getElementById('stock');
+  stock.innerHTML = ORDER.map(function(k){
+    return '<button type="button" class="pick" data-k="' + k + '">' +
+           thumb(k) + '<span class="nm">' + SPECIES[k].name + '</span>' +
+           '<span class="ct">' + SPECIES[k].kind + '</span></button>';
+  }).join('');
+  stock.addEventListener('click', function(e){
+    var b = e.target.closest('.pick'); if (b) add(b.dataset.k);
+  });
+
+  /* Little SVG thumbnails, drawn from the same numbers the canvas uses so
+     the shop and the tank cannot drift apart. */
+  function thumb(k){
+    var sp = SPECIES[k];
+    if (sp.kind === 'fish'){
+      var by = 13, bh = 11 * sp.body * 1.6;
+      return '<svg viewBox="0 0 60 26" aria-hidden="true">' +
+        '<path d="M14 ' + by + ' q-4 -' + bh + ' -8 -' + (bh*.7).toFixed(1) + ' q2 ' + (bh*.7).toFixed(1) +
+        ' 0 ' + (bh*1.4).toFixed(1) + ' q4 ' + (bh*.3).toFixed(1) + ' 8 -' + (bh*.7).toFixed(1) + 'z" fill="' + sp.fin + '"/>' +
+        '<ellipse cx="30" cy="' + by + '" rx="16" ry="' + bh.toFixed(1) + '" fill="' + sp.a + '"/>' +
+        '<circle cx="40" cy="' + (by - 1.5) + '" r="1.7" fill="#fff"/><circle cx="40.4" cy="' + (by - 1.5) + '" r="1" fill="#111"/>' +
+        '</svg>';
+    }
+    if (sp.kind === 'plant'){
+      var blades = '';
+      for (var i = 0; i < 6; i++){
+        var x = 12 + i * 7, h = 6 + ((i * 5) % 12);
+        blades += '<path d="M' + x + ' 25 q' + (i % 2 ? 5 : -5) + ' -' + h + ' ' + (i % 2 ? 3 : -3) + ' -' + (h + 6) +
+                  '" stroke="' + sp.c + '" stroke-width="2" fill="none" stroke-linecap="round"/>';
+      }
+      return '<svg viewBox="0 0 60 26" aria-hidden="true">' + blades + '</svg>';
+    }
+    var body = sp.shape === 'rock'
+      ? '<path d="M14 24 q0 -12 16 -12 q16 0 16 12z" fill="#6E7480"/>'
+      : sp.shape === 'log'
+      ? '<rect x="12" y="12" width="36" height="9" rx="3" fill="#6B4F34"/><circle cx="18" cy="10" r="3" fill="#3E8A63"/><circle cx="28" cy="9" r="3" fill="#3E8A63"/>'
+      : '<path d="M26 6 h8 v3 q6 4 6 15 h-20 q0 -11 6 -15z" fill="rgba(150,200,190,.6)" stroke="rgba(230,255,250,.5)"/>';
+    return '<svg viewBox="0 0 60 26" aria-hidden="true">' + body + '</svg>';
+  }
+
+  function pinch(x, y){
+    for (var i = 0; i < 6; i++){
+      food.push({ x: x + (Math.random() - .5) * .03, y: y, life: 14, seed: Math.random() * 6.28 });
+    }
+    ping('set');
+  }
+
+  tankEl.addEventListener('pointerdown', function(e){
+    var r = tankEl.getBoundingClientRect();
+    pinch((e.clientX - r.left) / r.width, Math.max(.04, (e.clientY - r.top) / r.height));
+  });
+
+  document.getElementById('btn-feed').addEventListener('click', function(){
+    pinch(.3 + Math.random() * .4, .08);
+    mood('A pinch of food goes in at the surface.');
+  });
+
+  document.getElementById('btn-light').addEventListener('click', function(){
+    tank.light = !tank.light;
+    this.setAttribute('aria-pressed', tank.light);
+    mood(tank.light ? 'The hood light comes on.' : 'Lights out. Everything slows down and settles lower.');
+    save();
+  });
+  document.getElementById('btn-air').addEventListener('click', function(){
+    tank.air = !tank.air;
+    this.setAttribute('aria-pressed', tank.air);
+    mood(tank.air ? 'The pump starts up.' : 'The pump is off. The tank goes very still.');
+    save();
+  });
+  document.getElementById('btn-sound').addEventListener('click', function(){ setSound(!sound); });
+
+  document.getElementById('btn-undo').addEventListener('click', function(){
+    if (!tank.items.length) return mood('There is nothing in it yet.');
+    var gone = tank.items.pop();
+    mood('The ' + SPECIES[gone.s].name + ' is taken out again.');
+    save(); stats();
+  });
+  document.getElementById('btn-empty').addEventListener('click', function(){
+    if (!tank.items.length) return mood('Already empty.');
+    tank.items = []; food = [];
+    mood('Emptied. Start again whenever you like.');
+    save(); stats();
+  });
+
+  /* The markup carries the default state; a restored tank has to push its
+     own back onto the buttons or the toggles lie about the tank. */
+  document.getElementById('btn-light').setAttribute('aria-pressed', tank.light);
+  document.getElementById('btn-air').setAttribute('aria-pressed', tank.air);
+
+  var nameEl = document.getElementById('tank-name');
+  nameEl.value = tank.name;
+  nameEl.addEventListener('input', function(){ tank.name = nameEl.value.slice(0, 42); save(); });
+
+  var moodTimer = null;
+  function mood(s){
+    var el = document.getElementById('mood');
+    el.textContent = s;
+    clearTimeout(moodTimer);
+    moodTimer = setTimeout(function(){ el.innerHTML = '&nbsp;'; }, 5200);
+  }
+
+  function stats(){
+    var f = 0, p = 0, d = 0;
+    tank.items.forEach(function(it){
+      var k = SPECIES[it.s].kind;
+      if (k === 'fish') f++; else if (k === 'plant') p++; else d++;
+    });
+    document.getElementById('stat').textContent =
+      f + (f === 1 ? ' fish' : ' fish') + ' · ' + p + ' plant' + (p === 1 ? '' : 's') +
+      ' · ' + d + ' ornament' + (d === 1 ? '' : 's');
+  }
+  stats();
+
+  /* A tank that starts empty is a sad first impression, so a new visitor
+     gets a small one already going. Anyone who empties it keeps it empty. */
+  if (!tank.items.length && localStorage.getItem(KEY) === null){
+    ['kelp','kelp','fern','rock','sixpence','sixpence','sixpence','sixpence','lantern','ember','tiller']
+      .forEach(function(k){ add(k); });
+    mood('A starter tank, already going. Change any of it.');
+  }
+
+  window.__aquarium = {
+    count: function(){ return tank.items.length; },
+    fish: function(){ return tank.items.filter(function(i){ return SPECIES[i.s].kind === 'fish'; }).length; },
+    food: function(){ return food.length; },
+    state: function(){ return tank; }
+  };
+})();
+</script>
+</body>
+</html>

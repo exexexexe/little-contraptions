@@ -1,0 +1,851 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Room of Things That Are Not There</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23F4F3F0'/><rect x='4' y='6' width='24' height='4' fill='%23222'/><rect x='4' y='13' width='24' height='4' fill='%23222'/><rect x='4' y='20' width='24' height='4' fill='%23222'/><rect x='7' y='6' width='3' height='4' fill='%23F4F3F0'/><rect x='16' y='13' width='3' height='4' fill='%23F4F3F0'/><rect x='11' y='20' width='3' height='4' fill='%23F4F3F0'/></svg>">
+<style>
+:root{ color-scheme: light; }
+:root{
+  --gallery:#F4F3F0;
+  --plinth:#FFFFFF;
+  --ink:#141414;
+  --ink-2:#3A3A3A;
+  --dim:#6E6E6E;
+  --dimmer:#9A9A9A;
+  --line:#E0DFDB;
+  --accent:#8A1F1A;
+  --sans:"Helvetica Neue",Helvetica,Arial,"Segoe UI",system-ui,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;min-height:100%}
+body{
+  background:var(--gallery);
+  color:var(--ink);font-family:var(--sans);
+  min-height:100vh;padding:40px 20px 96px;
+  display:flex;flex-direction:column;align-items:center;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{ width:min(880px,100%) }
+
+header{ margin-bottom:44px;max-width:60ch }
+h1{ font-size:clamp(24px,5vw,34px);font-weight:400;letter-spacing:-.02em;margin:0 0 14px;line-height:1.15 }
+.intro{ font-size:15px;line-height:1.75;color:var(--ink-2);margin:0 0 10px }
+.intro:last-child{ margin:0 }
+.intro b{ font-weight:600;color:var(--ink) }
+
+/* ---- an exhibit --------------------------------------------------------- */
+.exhibit{ margin-bottom:64px }
+.plate{
+  display:flex;gap:14px;align-items:baseline;margin-bottom:14px;
+  border-bottom:1px solid var(--line);padding-bottom:11px;flex-wrap:wrap;
+}
+.plate .no{
+  font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--dimmer);
+  flex:0 0 auto;padding-top:3px;
+}
+.plate h2{ font-size:18px;font-weight:600;margin:0;letter-spacing:-.01em;flex:1 1 200px;min-width:0 }
+.plate .year{ font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--dimmer) }
+
+.stage{
+  background:var(--plinth);border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;
+  padding:22px;min-height:180px;position:relative;overflow:hidden;
+}
+.stage canvas, .stage svg{ display:block;max-width:100%;height:auto }
+.stage.dark{ background:#111 }
+.stage.flat{ padding:0 }
+
+.tools{ display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;align-items:center }
+.tools button{
+  font:inherit;font-size:12.5px;cursor:pointer;
+  background:transparent;color:var(--ink);border:1px solid var(--ink);border-radius:0;
+  padding:7px 14px;transition:background .14s,color .14s;
+}
+.tools button:hover{ background:var(--ink);color:var(--gallery) }
+.tools button[aria-pressed="true"]{ background:var(--ink);color:var(--gallery) }
+.tools button:focus-visible{ outline:2px solid var(--accent);outline-offset:2px }
+.tools .slider{ display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:10.5px;color:var(--dim) }
+.tools input[type=range]{ width:130px;accent-color:#141414 }
+.tools .live{ font-family:var(--mono);font-size:11px;color:var(--accent) }
+
+.caption{ margin-top:14px;font-size:14px;line-height:1.8;color:var(--ink-2);max-width:62ch }
+.caption p{ margin:0 0 10px } .caption p:last-child{ margin:0 }
+.caption b{ font-weight:600;color:var(--ink) }
+.why{
+  margin-top:12px;padding-top:12px;border-top:1px dotted var(--line);
+  font-size:13px;line-height:1.75;color:var(--dim);max-width:62ch;
+}
+.why b{ color:var(--ink-2);font-weight:600 }
+
+.closing{
+  margin-top:20px;padding-top:24px;border-top:1px solid var(--line);
+  font-size:14px;line-height:1.85;color:var(--ink-2);max-width:64ch;
+}
+.closing p{ margin:0 0 12px } .closing p:last-child{ margin:0 }
+.closing b{ font-weight:600;color:var(--ink) }
+
+@media (prefers-reduced-motion: reduce){ .stage *{ animation:none !important } }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 var(--mono);
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F3F0;background:#141414;
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  box-shadow:0 5px 16px rgba(0,0,0,.2);
+  transition:width .18s ease, background .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:#000 }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid var(--accent);outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>The Room of Things That Are Not There</h1>
+  <p class="intro">Ten well-documented perceptual effects, each drawn here from its own rules rather
+    than copied from anybody&rsquo;s picture. Every one of them comes with a way of proving to
+    yourself that the thing you are seeing is not on the screen &mdash; a ruler, a mask, a switch
+    that turns the trick off.</p>
+  <p class="intro"><b>Where the explanation is still argued about, it says so.</b> Several of these
+    have been known for a century and a half and are still not fully settled, which is a more
+    interesting fact than any of the tidy explanations that get repeated about them.</p>
+</header>
+
+<div id="gallery"></div>
+
+<div class="closing">
+  <p><b>Nothing here is anybody&rsquo;s artwork.</b> These are the underlying constructions &mdash; a
+  grid, a set of gradients, a pair of arrows &mdash; drawn to their own published rules with this
+  page&rsquo;s own numbers. Many of them exist in famous versions by particular artists and
+  researchers; none of those versions is reproduced here.</p>
+  <p>If any of them does nothing for you, that is worth knowing rather than a failure. The
+  peripheral drift effect in particular does not work for everybody, is much weaker on a static
+  screen at close range, and stops entirely if you look straight at it &mdash; which is the effect,
+  not a fault.</p>
+</div>
+
+</div>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">&larr;</span><span class="w">cabinet</span></a>
+
+<script>
+(function(){
+  'use strict';
+
+  var gallery = document.getElementById('gallery');
+  var n = 0;
+
+  function exhibit(o){
+    n++;
+    var id = 'ex' + n;
+    var el = document.createElement('section');
+    el.className = 'exhibit';
+    el.innerHTML =
+      '<div class="plate"><span class="no">' + String(n).padStart(2, '0') + '</span>' +
+      '<h2>' + o.title + '</h2><span class="year">' + o.year + '</span></div>' +
+      '<div class="stage' + (o.dark ? ' dark' : '') + (o.flat ? ' flat' : '') + '" id="' + id + '-stage"></div>' +
+      '<div class="tools" id="' + id + '-tools"></div>' +
+      '<div class="caption">' + o.caption + '</div>' +
+      '<div class="why"><b>Why, as far as anyone knows:</b> ' + o.why + '</div>';
+    gallery.appendChild(el);
+    o.build(document.getElementById(id + '-stage'), document.getElementById(id + '-tools'));
+  }
+
+  function button(tools, label, fn, pressed){
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = label;
+    if (pressed !== undefined) b.setAttribute('aria-pressed', pressed);
+    b.addEventListener('click', function(){ fn(b); });
+    tools.appendChild(b);
+    return b;
+  }
+  function slider(tools, label, min, max, val, step, fn){
+    var wrap = document.createElement('span');
+    wrap.className = 'slider';
+    var id = 'sl' + Math.random().toString(36).slice(2, 7);
+    wrap.innerHTML = '<label for="' + id + '">' + label + '</label>' +
+                     '<input type="range" id="' + id + '" min="' + min + '" max="' + max +
+                     '" step="' + step + '" value="' + val + '">' +
+                     '<output class="live"></output>';
+    tools.appendChild(wrap);
+    var input = wrap.querySelector('input'), out = wrap.querySelector('output');
+    function go(){ out.textContent = fn(+input.value); }
+    input.addEventListener('input', go);
+    go();
+    return input;
+  }
+  function svg(w, h, inner){
+    return '<svg viewBox="0 0 ' + w + ' ' + h + '" width="' + w + '" height="' + h + '" role="img">' + inner + '</svg>';
+  }
+
+  /* ================================================================== *
+   *  01 — The café wall
+   * ================================================================== */
+  exhibit({
+    title: 'Parallel lines that will not lie flat',
+    year: 'described 1898, named 1979',
+    flat: true,
+    caption:
+      '<p>Every long horizontal line here is exactly parallel to every other. The rows of tiles are ' +
+      'offset by half a tile each time, and the thin line of mortar between them is a mid grey.</p>' +
+      '<p>Take the mortar away and the wedges vanish; put it back and they return. Change its ' +
+      'brightness and there is a point where the effect is strongest &mdash; roughly when the mortar ' +
+      'sits between the two tile shades rather than matching either.</p>',
+    why:
+      'The usual account is that small receptive fields in early vision pool the dark tile, the ' +
+      'light tile and the grey mortar together, and the result at each junction is shifted slightly ' +
+      'along the line. Because the rows are offset, neighbouring shifts go opposite ways and the ' +
+      'row appears to tilt. The detail is still argued over; what is not in doubt is the ' +
+      'dependence on the mortar, which you can test above.',
+    build: function(stage, tools){
+      var cv = document.createElement('canvas');
+      cv.width = 760; cv.height = 300;
+      stage.appendChild(cv);
+      var ctx = cv.getContext('2d');
+      var mortar = 128, showMortar = true, offset = 0.5;
+
+      function draw(){
+        var t = 46, rows = Math.ceil(cv.height / t), cols = Math.ceil(cv.width / t) + 2;
+        ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height);
+        for (var r = 0; r < rows; r++){
+          var shift = ((r % 2) ? offset : 0) * t;
+          for (var c = -1; c < cols; c++){
+            ctx.fillStyle = (c % 2) ? '#111' : '#f2f2f2';
+            ctx.fillRect(c * t + shift, r * t, t, t);
+          }
+          if (showMortar){
+            ctx.strokeStyle = 'rgb(' + mortar + ',' + mortar + ',' + mortar + ')';
+            ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.moveTo(0, r * t); ctx.lineTo(cv.width, r * t); ctx.stroke();
+          }
+        }
+        if (showMortar){
+          ctx.strokeStyle = 'rgb(' + mortar + ',' + mortar + ',' + mortar + ')';
+          ctx.lineWidth = 3;
+          ctx.beginPath(); ctx.moveTo(0, rows * t); ctx.lineTo(cv.width, rows * t); ctx.stroke();
+        }
+      }
+      button(tools, 'Take the mortar away', function(b){
+        showMortar = !showMortar;
+        b.textContent = showMortar ? 'Take the mortar away' : 'Put the mortar back';
+        draw();
+      });
+      slider(tools, 'mortar', 0, 255, 128, 1, function(v){ mortar = v; draw(); return v; });
+      slider(tools, 'row offset', 0, 100, 50, 1, function(v){ offset = v / 100; draw(); return (v / 100).toFixed(2); });
+      draw();
+    }
+  });
+
+  /* ================================================================== *
+   *  02 — Peripheral drift
+   * ================================================================== */
+  exhibit({
+    title: 'A still picture that will not hold still',
+    year: 'peripheral drift, 1999 onwards',
+    caption:
+      '<p>Nothing on this panel moves. Not one pixel changes. Let your eyes wander around the edge ' +
+      'of it and the rings will creep; stare hard at the black dot in the middle of one and that ring ' +
+      'stops dead.</p>' +
+      '<p>The arrangement is the whole trick: each ring is made of repeating blocks that run ' +
+      'black &rarr; dark grey &rarr; white &rarr; light grey, always in the same order round the ring. ' +
+      'Reverse that order with the switch and the drift reverses with it. Flatten the four tones to ' +
+      'two and it stops.</p>',
+    why:
+      'The leading account is that the visual system responds to a sharp step in luminance faster ' +
+      'than to a gradual one, so the four tones in a fixed order are registered at slightly different ' +
+      'times, and motion detectors read that time difference as movement. It depends on small eye ' +
+      'movements, which is why fixing your gaze kills it. It is genuinely not settled, and it does ' +
+      'not work for everyone.',
+    build: function(stage, tools){
+      var cv = document.createElement('canvas');
+      cv.width = 760; cv.height = 380;
+      stage.appendChild(cv);
+      var ctx = cv.getContext('2d');
+      var reversed = false, flat = false;
+
+      function draw(){
+        ctx.fillStyle = '#8A8A8A'; ctx.fillRect(0, 0, cv.width, cv.height);
+        var centres = [[190,120],[520,120],[300,280],[630,280]];
+        centres.forEach(function(c, i){
+          rings(c[0], c[1], 26 + (i % 2) * 6);
+        });
+      }
+      function rings(cx, cy, unit){
+        for (var ring = 1; ring <= 3; ring++){
+          var r = unit * ring * 1.15;
+          var count = 8 + ring * 4;
+          for (var k = 0; k < count; k++){
+            var a0 = (k / count) * 6.2832, a1 = ((k + 1) / count) * 6.2832;
+            var order = flat ? ['#111','#fff'] : ['#111','#3E3E3E','#fff','#C6C6C6'];
+            if (reversed) order = order.slice().reverse();
+            for (var s = 0; s < order.length; s++){
+              var b0 = a0 + (a1 - a0) * (s / order.length);
+              var b1 = a0 + (a1 - a0) * ((s + 1) / order.length);
+              ctx.beginPath();
+              ctx.arc(cx, cy, r, b0, b1);
+              ctx.arc(cx, cy, r - unit * .78, b1, b0, true);
+              ctx.closePath();
+              ctx.fillStyle = order[s];
+              ctx.fill();
+            }
+          }
+        }
+        ctx.beginPath(); ctx.arc(cx, cy, 3.5, 0, 6.2832);
+        ctx.fillStyle = '#111'; ctx.fill();
+      }
+      button(tools, 'Reverse the order of the tones', function(b){
+        reversed = !reversed; b.setAttribute('aria-pressed', reversed); draw();
+      }, false);
+      button(tools, 'Flatten to two tones', function(b){
+        flat = !flat; b.setAttribute('aria-pressed', flat); draw();
+      }, false);
+      draw();
+    }
+  });
+
+  /* ================================================================== *
+   *  03 — Simultaneous contrast
+   * ================================================================== */
+  exhibit({
+    title: 'Two greys that are the same grey',
+    year: 'simultaneous contrast, long known',
+    caption:
+      '<p>The left square and the right square are filled with exactly the same value. The page will ' +
+      'tell you what it is. Press the button and a bar of that same value runs between them &mdash; ' +
+      'the moment it touches both, the difference collapses.</p>',
+    why:
+      'Vision does not measure light, it measures ratios: a patch is judged against what surrounds ' +
+      'it. This is a good thing almost all of the time, because it is what lets you recognise a sheet ' +
+      'of paper as white indoors and outdoors under wildly different amounts of light. Here it is ' +
+      'being fed two different surrounds and reports two different greys.',
+    build: function(stage, tools){
+      var cv = document.createElement('canvas');
+      cv.width = 700; cv.height = 240;
+      stage.appendChild(cv);
+      var ctx = cv.getContext('2d');
+      var GREY = 128, bridge = false;
+      function draw(){
+        ctx.fillStyle = '#2A2A2A'; ctx.fillRect(0, 0, 350, 240);
+        ctx.fillStyle = '#DCDCDC'; ctx.fillRect(350, 0, 350, 240);
+        var g = 'rgb(' + GREY + ',' + GREY + ',' + GREY + ')';
+        ctx.fillStyle = g;
+        ctx.fillRect(110, 70, 100, 100);
+        ctx.fillRect(490, 70, 100, 100);
+        if (bridge) ctx.fillRect(110, 105, 480, 30);
+        ctx.fillStyle = '#DCDCDC'; ctx.font = '12px ui-monospace,monospace';
+        ctx.fillText('rgb ' + GREY, 14, 226);
+        ctx.fillStyle = '#2A2A2A';
+        ctx.fillText('rgb ' + GREY, 620, 226);
+      }
+      button(tools, 'Join them up', function(b){
+        bridge = !bridge; b.setAttribute('aria-pressed', bridge);
+        b.textContent = bridge ? 'Separate them again' : 'Join them up';
+        draw();
+      }, false);
+      slider(tools, 'both squares', 40, 220, 128, 1, function(v){ GREY = v; draw(); return 'rgb ' + v; });
+      draw();
+    }
+  });
+
+  /* ================================================================== *
+   *  04 — Müller-Lyer
+   * ================================================================== */
+  exhibit({
+    title: 'Two lines of exactly the same length',
+    year: '1889',
+    caption:
+      '<p>The shafts are the same length to the pixel. Drag the slider and you are changing only the ' +
+      'angle of the fins &mdash; the lines themselves never move. The readout is measuring the actual ' +
+      'shafts, not guessing.</p>',
+    why:
+      'The oldest explanation is that the fins read as the near and far corners of a room, and the ' +
+      'brain corrects for distance. That account has trouble: the effect survives on people who have ' +
+      'never seen a rectangular room, and works with fins that look nothing like corners. A simpler ' +
+      'competitor is that vision judges the whole figure&rsquo;s extent rather than the shaft alone. ' +
+      'After a hundred and thirty years there is still no agreed answer.',
+    build: function(stage, tools){
+      var holder = document.createElement('div');
+      stage.appendChild(holder);
+      var angle = 40, len = 260;
+      function fins(x, y, dir, a){
+        var rad = a * Math.PI / 180, f = 34;
+        var pts = [];
+        [-1, 1].forEach(function(s){
+          pts.push('M' + x + ' ' + y + 'l' + (dir * f * Math.cos(rad)) + ' ' + (s * f * Math.sin(rad)));
+        });
+        return '<path d="' + pts.join(' ') + '" stroke="#141414" stroke-width="3" fill="none"/>';
+      }
+      function draw(){
+        var cx = 350;
+        holder.innerHTML = svg(700, 200,
+          '<line x1="' + (cx - len / 2) + '" y1="60" x2="' + (cx + len / 2) + '" y2="60" stroke="#141414" stroke-width="3"/>' +
+          fins(cx - len / 2, 60, 1, angle) + fins(cx + len / 2, 60, -1, angle) +
+          '<line x1="' + (cx - len / 2) + '" y1="140" x2="' + (cx + len / 2) + '" y2="140" stroke="#141414" stroke-width="3"/>' +
+          fins(cx - len / 2, 140, -1, angle) + fins(cx + len / 2, 140, 1, angle) +
+          '<text x="14" y="64" font-size="11" font-family="ui-monospace,monospace" fill="#9A9A9A">' + len + 'px</text>' +
+          '<text x="14" y="144" font-size="11" font-family="ui-monospace,monospace" fill="#9A9A9A">' + len + 'px</text>');
+      }
+      slider(tools, 'fin angle', 0, 80, 40, 1, function(v){ angle = v; draw(); return v + '°'; });
+      button(tools, 'Measure them', function(b){
+        var on = b.getAttribute('aria-pressed') === 'true';
+        b.setAttribute('aria-pressed', !on);
+        holder.querySelectorAll('line').forEach(function(l, i){
+          l.setAttribute('stroke', on ? '#141414' : '#8A1F1A');
+          l.setAttribute('stroke-width', on ? 3 : 7);
+        });
+      }, false);
+      draw();
+    }
+  });
+
+  /* ================================================================== *
+   *  05 — Ebbinghaus
+   * ================================================================== */
+  exhibit({
+    title: 'Two circles of exactly the same size',
+    year: '1890s',
+    caption:
+      '<p>The two orange circles are identical. The slider changes only the rings around them.</p>' +
+      '<p>Watch what happens as the surrounding circles get closer to the middle one in size: the ' +
+      'effect is not really about big versus small neighbours at all, it is about how different they ' +
+      'are and how close they sit.</p>',
+    why:
+      'Size is judged in context, like brightness. The classic reading is that a circle is compared ' +
+      'against its neighbours, so small company makes it look large. There is good evidence that the ' +
+      'distance to the neighbours matters as much as their size, which the slider lets you test ' +
+      'directly.',
+    build: function(stage, tools){
+      var holder = document.createElement('div');
+      stage.appendChild(holder);
+      var ringR = 16, dist = 62;
+      function cluster(cx, cy, r, count, d){
+        var out = '';
+        for (var i = 0; i < count; i++){
+          var a = (i / count) * 6.2832 - 1.57;
+          out += '<circle cx="' + (cx + Math.cos(a) * d).toFixed(1) + '" cy="' + (cy + Math.sin(a) * d).toFixed(1) +
+                 '" r="' + r + '" fill="none" stroke="#8A8A8A" stroke-width="2.5"/>';
+        }
+        return out;
+      }
+      function draw(){
+        holder.innerHTML = svg(700, 260,
+          cluster(180, 130, ringR, 6, dist) +
+          cluster(520, 130, 8, 8, 42) +
+          '<circle cx="180" cy="130" r="26" fill="#D9622B"/>' +
+          '<circle cx="520" cy="130" r="26" fill="#D9622B"/>' +
+          '<text x="180" y="238" text-anchor="middle" font-size="11" font-family="ui-monospace,monospace" fill="#9A9A9A">r = 26</text>' +
+          '<text x="520" y="238" text-anchor="middle" font-size="11" font-family="ui-monospace,monospace" fill="#9A9A9A">r = 26</text>');
+      }
+      slider(tools, 'left neighbours', 8, 40, 16, 1, function(v){ ringR = v; draw(); return 'r ' + v; });
+      slider(tools, 'how close', 44, 100, 62, 1, function(v){ dist = v; draw(); return v + 'px'; });
+      button(tools, 'Take the neighbours away', function(b){
+        var on = b.getAttribute('aria-pressed') === 'true';
+        b.setAttribute('aria-pressed', !on);
+        holder.querySelectorAll('circle[fill="none"]').forEach(function(c){
+          c.style.display = on ? '' : 'none';
+        });
+      }, false);
+      draw();
+    }
+  });
+
+  /* ================================================================== *
+   *  06 — The scintillating grid
+   * ================================================================== */
+  exhibit({
+    title: 'Dots that appear only where you are not looking',
+    year: 'Hermann 1870; the scintillating version 1994',
+    dark: true,
+    caption:
+      '<p>Every intersection has a white disc on it, and every disc is the same white. Dark blobs ' +
+      'flicker in the ones at the edge of your vision, and any disc you look straight at is plainly ' +
+      'white.</p>' +
+      '<p>Widen the bars and the effect weakens; make the discs bigger than the bars and it goes ' +
+      'entirely. Both are worth doing, because they are what tell you the effect lives in the ' +
+      'relationship between the two and not in either one.</p>',
+    why:
+      'The textbook explanation for the original grid &mdash; centre-surround cells in the retina ' +
+      'seeing more surround at a crossroads &mdash; is now known to be wrong, or at least badly ' +
+      'incomplete: it predicts the effect should survive if the grid is bent into wavy lines, and it ' +
+      'does not. Later accounts appeal to orientation-selective cells in cortex. Nobody has a ' +
+      'complete answer.',
+    build: function(stage, tools){
+      var cv = document.createElement('canvas');
+      cv.width = 620; cv.height = 380;
+      stage.appendChild(cv);
+      var ctx = cv.getContext('2d');
+      var bar = 14, disc = 9, pitch = 62;
+      function draw(){
+        ctx.fillStyle = '#111'; ctx.fillRect(0, 0, cv.width, cv.height);
+        ctx.fillStyle = '#7A7A7A';
+        for (var x = pitch; x < cv.width; x += pitch) ctx.fillRect(x - bar / 2, 0, bar, cv.height);
+        for (var y = pitch; y < cv.height; y += pitch) ctx.fillRect(0, y - bar / 2, cv.width, bar);
+        ctx.fillStyle = '#fff';
+        for (var i = pitch; i < cv.width; i += pitch){
+          for (var j = pitch; j < cv.height; j += pitch){
+            ctx.beginPath(); ctx.arc(i, j, disc, 0, 6.2832); ctx.fill();
+          }
+        }
+      }
+      slider(tools, 'bar width', 4, 34, 14, 1, function(v){ bar = v; draw(); return v + 'px'; });
+      slider(tools, 'disc size', 3, 26, 9, 1, function(v){ disc = v; draw(); return 'r ' + v; });
+      draw();
+    }
+  });
+
+  /* ================================================================== *
+   *  07 — Impossible figures
+   * ================================================================== */
+  exhibit({
+    title: 'Three objects that cannot be built',
+    year: 'the triangle and the staircase, 1958',
+    caption:
+      '<p>A triangle whose three corners are each perfectly sensible and whose whole is not. A ' +
+      'staircase that climbs four flights back to where it started. A fork with three prongs at one ' +
+      'end and two at the other.</p>' +
+      '<p>Cover any one corner of the triangle with a finger and the rest of it becomes an ordinary ' +
+      'bent bar. That is the entire mechanism: local honesty, global nonsense.</p>',
+    why:
+      'A drawing throws away depth, and vision puts it back by making a local guess at every junction. ' +
+      'Each junction here has a perfectly good answer. The visual system has no stage that checks ' +
+      'whether all the local answers can be true at once, so it never notices &mdash; you have to ' +
+      'reason your way to the contradiction, which is why these take a moment to bite.',
+    build: function(stage, tools){
+      var holder = document.createElement('div');
+      stage.appendChild(holder);
+      var which = 'tri';
+
+      /* The tribar, computed rather than written out by hand.
+         Three identical bent beams, each wrapping one corner and ending in
+         a flush tip. The impossibility is entirely in the drawing ORDER:
+         beam 1 over beam 2, 2 over 3, and then 3 over 1 — a cycle no
+         painter's-algorithm scene can have. Redrawing beam one's tip last
+         is what closes the loop. */
+      function tri(){
+        var A = [150, 40], B = [30, 246], C = [270, 246];
+        var G = [(A[0]+B[0]+C[0])/3, (A[1]+B[1]+C[1])/3];
+        var t = 0.56;                       /* inset, as a fraction toward the centroid */
+        function inset(P){ return [G[0] + (P[0]-G[0])*t, G[1] + (P[1]-G[1])*t]; }
+        var Ai = inset(A), Bi = inset(B), Ci = inset(C);
+        var O = [A, B, C], I = [Ai, Bi, Ci];
+        var TIP = 78;
+
+        function unit(P, Q){
+          var dx = Q[0]-P[0], dy = Q[1]-P[1], L = Math.hypot(dx, dy) || 1;
+          return [dx/L, dy/L];
+        }
+        function beam(k){
+          var o0 = O[k], o1 = O[(k+1)%3], o2 = O[(k+2)%3];
+          var i0 = I[k], i1 = I[(k+1)%3], i2 = I[(k+2)%3];
+          var uo = unit(o1, o2), ui = unit(i1, i2);
+          var oTip = [o1[0] + uo[0]*TIP, o1[1] + uo[1]*TIP];
+          var iTip = [i1[0] + ui[0]*TIP, i1[1] + ui[1]*TIP];
+          /* a second, narrower face along the outer edge, so each beam
+             reads as a solid bar in three dimensions rather than as a
+             flat band — without it the whole thing is just a triangle */
+          function lerp(P, Q, f){ return [P[0] + (Q[0]-P[0])*f, P[1] + (Q[1]-P[1])*f]; }
+          var f = 0.40;
+          var m0 = lerp(o0, i0, f), m1 = lerp(o1, i1, f), mTip = lerp(oTip, iTip, f);
+          return { body: [o0, o1, oTip, iTip, i1, i0],
+                   face: [o0, o1, oTip, mTip, m1, m0],
+                   tip:  [o1, oTip, iTip, i1],
+                   tipFace: [o1, oTip, mTip, m1] };
+        }
+        function poly(pts, fill){
+          return '<path d="M' + pts.map(function(p){ return p[0].toFixed(1) + ' ' + p[1].toFixed(1); }).join(' L') +
+                 ' Z" fill="' + fill + '" stroke="#141414" stroke-width="3" stroke-linejoin="round"/>';
+        }
+        var beams = [beam(0), beam(1), beam(2)];
+        var lit  = ['#FFFFFF', '#F0F0F0', '#E4E4E4'];
+        var dark = ['#B8B8B8', '#A2A2A2', '#8E8E8E'];
+        var out = '';
+        beams.forEach(function(b, i){
+          out += poly(b.body, lit[i]);
+          out += poly(b.face, dark[i]);
+        });
+        out += poly(beams[0].tip, lit[0]);          /* and the loop closes */
+        out += poly(beams[0].tipFace, dark[0]);
+        return svg(300, 300, out);
+      }
+
+      /* The staircase, and why it can be drawn at all.
+
+         The plan is an honest parallelogram: four sides whose screen
+         vectors sum to zero. Every step then also rises, and the whole
+         accumulated rise is pushed into the near flight, which is given
+         more steps and much deeper treads so it can swallow it. That is
+         the cheat, it is always in the same place, and it is exactly the
+         tell in every hand-drawn version of this figure — the front
+         flight has treads you could park on. */
+      function stairs(){
+        /* A long loop rather than a square one: on a square plan the near
+           flight comes out nearly vertical and stops reading as stairs. */
+        var R = 9, DEPTH = [-26, 13], WALL = 44;
+        var n = [4, 7, 4, 7];
+        var plan = [[110, 62], [190, -128], [-110, -62], [-190, 128]];
+        /* No correction is needed, and adding one was the mistake in the
+           first two attempts. The rise cancels inside each step — tread
+           down-and-along, riser back up — so the zig-zag closes exactly
+           whenever the four plan vectors sum to zero. The impossibility
+           is not a gap that has been papered over; it is that every one
+           of the twenty-eight steps has a riser going up and the path
+           still comes back to where it started. */
+
+        var pts = [], p = [0, 0];
+        for (var f = 0; f < 4; f++){
+          var step = [plan[f][0] / n[f], plan[f][1] / n[f]];
+          for (var k = 0; k < n[f]; k++){
+            pts.push([p[0], p[1]]);
+            p = [p[0] + step[0], p[1] + step[1] + R];       /* the tread */
+            pts.push([p[0], p[1]]);
+            p = [p[0], p[1] - R];                            /* and the riser */
+          }
+        }
+        pts.push([p[0], p[1]]);
+
+        /* fit it to the plate rather than guessing at a start point */
+        var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        pts.forEach(function(q){
+          minX = Math.min(minX, q[0]); maxX = Math.max(maxX, q[0]);
+          minY = Math.min(minY, q[1]); maxY = Math.max(maxY, q[1]);
+        });
+        var ox = 30 - minX - DEPTH[0], oy = 24 - minY;
+        pts = pts.map(function(q){ return [q[0] + ox, q[1] + oy]; });
+
+        function list(a){ return a.map(function(q){ return q[0].toFixed(1) + ' ' + q[1].toFixed(1); }).join(' L'); }
+        var inner = pts.map(function(q){ return [q[0] + DEPTH[0], q[1] + DEPTH[1]]; });
+        var below = pts.map(function(q){ return [q[0], q[1] + WALL]; });
+
+        var out = '<g stroke="#141414" stroke-width="2" stroke-linejoin="round">';
+        out += '<path d="M' + list(pts) + ' L' + list(below.slice().reverse()) + ' Z" fill="#C6C6C6"/>';
+        out += '<path d="M' + list(pts) + ' L' + list(inner.slice().reverse()) + ' Z" fill="#F6F6F6"/>';
+        for (var j = 1; j < pts.length - 1; j += 2){
+          var a = pts[j], b = pts[j + 1];
+          out += '<path d="M' + a[0].toFixed(1) + ' ' + a[1].toFixed(1) +
+                 ' L' + b[0].toFixed(1) + ' ' + b[1].toFixed(1) +
+                 ' L' + (b[0] + DEPTH[0]).toFixed(1) + ' ' + (b[1] + DEPTH[1]).toFixed(1) +
+                 ' L' + (a[0] + DEPTH[0]).toFixed(1) + ' ' + (a[1] + DEPTH[1]).toFixed(1) +
+                 ' Z" fill="#E2E2E2"/>';
+        }
+        out += '</g>';
+        var w = Math.ceil(maxX - minX) + 80, h = Math.ceil(maxY - minY) + WALL + 50;
+        return svg(w, h, out);
+      }
+
+      /* The fork. Three round prongs at the left, and at the right a
+         two-pronged U — where the middle prong ends is the back wall of
+         the slot between the other two, which is a perfectly sensible
+         line and an impossible object. */
+      function fork(){
+        var L = 44, M = 210, R = 330;
+        var y = [56, 78, 100, 122, 144, 166];   /* six edges, three prongs */
+        function cap(y0, y1){
+          return 'M' + L + ' ' + y0 + ' A' + ((y1 - y0) / 2) + ' ' + ((y1 - y0) / 2) +
+                 ' 0 0 0 ' + L + ' ' + y1;
+        }
+        var d = [
+          'M' + L + ' ' + y[0] + ' H' + R,                       /* the top, all the way */
+          'M' + L + ' ' + y[5] + ' H' + R,                       /* the bottom, all the way */
+          'M' + L + ' ' + y[1] + ' H' + R,                       /* top prong inner / slot top */
+          'M' + L + ' ' + y[4] + ' H' + R,                       /* bottom prong inner / slot bottom */
+          'M' + L + ' ' + y[2] + ' H' + M,                       /* the middle prong, which stops */
+          'M' + L + ' ' + y[3] + ' H' + M,
+          'M' + M + ' ' + y[1] + ' V' + y[4],                    /* the back of the slot */
+          'M' + R + ' ' + y[0] + ' V' + y[1],                    /* the two end faces */
+          'M' + R + ' ' + y[4] + ' V' + y[5],
+          cap(y[0], y[1]), cap(y[2], y[3]), cap(y[4], y[5])      /* three round prongs */
+        ].join(' ');
+        return svg(380, 220,
+          '<path d="' + d + '" stroke="#141414" stroke-width="3" fill="none" stroke-linecap="round"/>');
+      }
+
+      function draw(){
+        holder.innerHTML = which === 'tri' ? tri() : (which === 'stairs' ? stairs() : fork());
+      }
+      var bs = [];
+      [['tri','The triangle'],['stairs','The staircase'],['fork','The fork']].forEach(function(p){
+        bs.push(button(tools, p[1], function(b){
+          which = p[0];
+          bs.forEach(function(o){ o.setAttribute('aria-pressed', o === b); });
+          draw();
+        }, p[0] === 'tri'));
+      });
+      draw();
+    }
+  });
+
+  /* ================================================================== *
+   *  08 — The Necker cube
+   * ================================================================== */
+  exhibit({
+    title: 'A cube with two fronts',
+    year: '1832',
+    caption:
+      '<p>Which face is nearer, the lower-left one or the upper-right? Hold the question and the ' +
+      'answer will change on you, and go on changing whether you want it to or not.</p>' +
+      '<p>The switch below adds the shading a real drawing would have. Once the occlusion is there ' +
+      'the flipping stops immediately, which is a demonstration of what was missing.</p>',
+    why:
+      'The drawing is genuinely ambiguous: two different three-dimensional objects project to exactly ' +
+      'this set of lines, and nothing in the picture decides between them. Perception is not a passive ' +
+      'reading but a best guess, and with two equally good guesses available it will not sit still; ' +
+      'the switching is roughly periodic and cannot be entirely suppressed by trying.',
+    build: function(stage, tools){
+      var holder = document.createElement('div');
+      stage.appendChild(holder);
+      var solid = false;
+      function draw(){
+        var a = 'M70 90 L190 90 L190 210 L70 210 Z';
+        var b = 'M130 40 L250 40 L250 160 L130 160 Z';
+        holder.innerHTML = svg(320, 250,
+          (solid ? '<path d="' + b + '" fill="#EAEAEA" stroke="#141414" stroke-width="3"/>' : '') +
+          '<g stroke="#141414" stroke-width="3" fill="none">' +
+          (solid ? '' : '<path d="' + b + '"/>') +
+          '<path d="M70 90 L130 40"/><path d="M190 90 L250 40"/>' +
+          '<path d="M190 210 L250 160"/><path d="M70 210 L130 160"/>' +
+          (solid ? '<path d="' + a + '" fill="#FFFFFF"/>' : '<path d="' + a + '"/>') +
+          '</g>');
+      }
+      button(tools, 'Make one face solid', function(b){
+        solid = !solid; b.setAttribute('aria-pressed', solid);
+        b.textContent = solid ? 'Back to wireframe' : 'Make one face solid';
+        draw();
+      }, false);
+      draw();
+    }
+  });
+
+  /* ================================================================== *
+   *  09 — Afterimage
+   * ================================================================== */
+  exhibit({
+    title: 'A colour that is only in your eyes',
+    year: 'known since antiquity, explained 1860s onwards',
+    caption:
+      '<p>Stare at the dot in the middle of the coloured shape without moving your eyes. When the ' +
+      'countdown ends the shape vanishes and a blank field takes its place. Keep staring at the dot ' +
+      'and the shape will come back in the opposite colours, and then fade.</p>' +
+      '<p>It works best if you really do keep still. Any large eye movement smears it and the ' +
+      'afterimage falls apart at once.</p>',
+    why:
+      'The receptors and the colour-opponent channels behind them adapt: hold a strong green on one ' +
+      'patch of retina and that patch&rsquo;s response to green falls off. Move to a white field, ' +
+      'which stimulates everything equally, and the adapted channel now under-reports &mdash; so ' +
+      'white minus green reads as magenta. The complementary pairs you get out of this are one of ' +
+      'the original pieces of evidence for opponent-process colour vision.',
+    build: function(stage, tools){
+      var holder = document.createElement('div');
+      holder.style.cssText = 'width:100%;max-width:520px';
+      stage.appendChild(holder);
+      var COLS = [
+        { on:'#00A85A', off:'#FFFFFF', n:'green' },
+        { on:'#D42A2A', off:'#FFFFFF', n:'red' },
+        { on:'#1D4ED8', off:'#FFFFFF', n:'blue' },
+        { on:'#F5C400', off:'#FFFFFF', n:'yellow' }
+      ];
+      var pick = 0, running = false, t = 0, timer = null;
+
+      function draw(){
+        var c = COLS[pick];
+        holder.innerHTML = svg(520, 300,
+          '<rect width="520" height="300" fill="' + (running ? c.off : '#FFFFFF') + '" stroke="#E0DFDB"/>' +
+          (running ? '' :
+            '<circle cx="260" cy="150" r="96" fill="' + c.on + '"/>' +
+            '<rect x="150" y="132" width="220" height="36" fill="' + c.on + '"/>') +
+          '<circle cx="260" cy="150" r="4" fill="#141414"/>' +
+          '<text x="16" y="288" font-size="11" font-family="ui-monospace,monospace" fill="#9A9A9A">' +
+          (running ? 'keep looking at the dot' : (t ? t + '…' : 'stare at the dot, then press start')) +
+          '</text>');
+      }
+      button(tools, 'Start the twenty seconds', function(b){
+        if (timer) return;
+        t = 20; running = false; draw();
+        timer = setInterval(function(){
+          t--; draw();
+          if (t <= 0){
+            clearInterval(timer); timer = null;
+            running = true; draw();
+            setTimeout(function(){ running = false; t = 0; draw(); }, 12000);
+          }
+        }, 1000);
+      });
+      var bs = [];
+      COLS.forEach(function(c, i){
+        bs.push(button(tools, c.n, function(b){
+          pick = i; bs.forEach(function(o){ o.setAttribute('aria-pressed', o === b); });
+          clearInterval(timer); timer = null; running = false; t = 0; draw();
+        }, i === 0));
+      });
+      draw();
+    }
+  });
+
+  /* ================================================================== *
+   *  10 — Motion aftereffect
+   * ================================================================== */
+  exhibit({
+    title: 'A stopped thing that goes on moving',
+    year: 'reported 1834',
+    dark: true,
+    caption:
+      '<p>Watch the drifting bars for half a minute without following any one bar &mdash; let them ' +
+      'pass under your gaze. Then press stop, and keep looking at the same spot.</p>' +
+      '<p>The stationary pattern will appear to creep the other way for several seconds. It really is ' +
+      'stationary; the frame counter underneath stops when it stops.</p>',
+    why:
+      'Direction is coded by populations of neurons tuned to opposite motions, and what you perceive ' +
+      'depends on the balance between them. Watch one direction for long enough and those cells adapt, ' +
+      'so when the motion stops the unadapted opposite population is momentarily the louder of the ' +
+      'two, and reports movement where there is none.',
+    build: function(stage, tools){
+      var cv = document.createElement('canvas');
+      cv.width = 620; cv.height = 260;
+      stage.appendChild(cv);
+      var ctx = cv.getContext('2d');
+      var running = true, phase = 0, frames = 0, speed = 1.1;
+      var readout = document.createElement('span');
+      readout.className = 'live';
+
+      function frame(){
+        requestAnimationFrame(frame);
+        if (document.hidden) return;
+        if (running){ phase += speed; frames++; }
+        ctx.fillStyle = '#111'; ctx.fillRect(0, 0, cv.width, cv.height);
+        var w = 26;
+        for (var y = -w * 2; y < cv.height + w * 2; y += w * 2){
+          ctx.fillStyle = '#C8C8C8';
+          ctx.fillRect(0, y + (phase % (w * 2)), cv.width, w);
+        }
+        ctx.fillStyle = '#8A1F1A';
+        ctx.beginPath(); ctx.arc(cv.width / 2, cv.height / 2, 4, 0, 6.2832); ctx.fill();
+        readout.textContent = (running ? 'moving · ' : 'stopped · ') + frames + ' frames drawn';
+      }
+      button(tools, 'Stop', function(b){
+        running = !running;
+        b.textContent = running ? 'Stop' : 'Start again';
+      });
+      slider(tools, 'speed', 2, 30, 11, 1, function(v){ speed = v / 10; return (v / 10).toFixed(1); });
+      tools.appendChild(readout);
+      frame();
+    }
+  });
+
+  window.__illusions = {
+    count: n,
+    titles: [].map.call(document.querySelectorAll('.exhibit h2'), function(h){ return h.textContent; })
+  };
+})();
+</script>
+</body>
+</html>

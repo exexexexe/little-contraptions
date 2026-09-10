@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Night, Counted in Cycles</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230D1024'/><path d='M21 8a9 9 0 1 0 3 8.6A7 7 0 0 1 21 8z' fill='%23D9DCF2'/><circle cx='8' cy='9' r='1' fill='%238E93C8'/><circle cx='24' cy='24' r='.9' fill='%238E93C8'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --night:#0A0C1C;
+  --night-2:#141833;
+  --violet:#2A2350;
+  --moon:#EDEEF8;
+  --pale:#C3C7E4;
+  --dim:#7D82AA;
+  --dimmer:#575C82;
+  --line:#242945;
+  --rem:#8FA9F0;
+  --deep:#4E3F86;
+  --warm:#E8C98A;
+  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;min-height:100%}
+body{
+  background:
+    radial-gradient(1100px 780px at 74% -8%, #262046 0%, transparent 62%),
+    radial-gradient(760px 620px at 12% 108%, #16203C 0%, transparent 60%),
+    var(--night);
+  color:var(--pale);font-family:var(--serif);
+  min-height:100vh;padding:34px 18px 84px;
+  display:flex;flex-direction:column;align-items:center;
+}
+/* a very quiet star field, painted once */
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:
+    radial-gradient(circle at 12% 18%, rgba(255,255,255,.55) .8px, transparent 1.1px),
+    radial-gradient(circle at 78% 12%, rgba(255,255,255,.4) .8px, transparent 1.1px),
+    radial-gradient(circle at 43% 31%, rgba(255,255,255,.3) .7px, transparent 1px),
+    radial-gradient(circle at 88% 44%, rgba(255,255,255,.45) .8px, transparent 1.1px),
+    radial-gradient(circle at 24% 62%, rgba(255,255,255,.3) .7px, transparent 1px),
+    radial-gradient(circle at 61% 78%, rgba(255,255,255,.35) .8px, transparent 1.1px),
+    radial-gradient(circle at 8% 88%, rgba(255,255,255,.28) .7px, transparent 1px);
+}
+.wrap{ position:relative;z-index:1;width:min(640px,100%) }
+
+header{ text-align:center;margin-bottom:26px }
+h1{ font-size:clamp(23px,5.6vw,31px);font-weight:400;letter-spacing:.012em;margin:0 0 8px;color:var(--moon) }
+.tagline{ font-size:14px;line-height:1.7;color:var(--dim);margin:0;font-style:italic }
+
+/* ---- the two questions ------------------------------------------- */
+.ask{
+  background:linear-gradient(180deg,rgba(28,32,62,.82),rgba(16,19,40,.82));
+  border:1px solid var(--line);border-radius:12px;padding:18px 18px 20px;
+  box-shadow:0 18px 46px rgba(0,0,0,.42);
+}
+.modes{ display:flex;gap:6px;margin-bottom:17px;background:#101331;padding:4px;border-radius:9px;border:1px solid var(--line) }
+.modes button{
+  flex:1;font:inherit;font-size:13px;padding:9px 6px;border:0;border-radius:6px;cursor:pointer;
+  background:transparent;color:var(--dim);transition:background .16s,color .16s;
+}
+.modes button[aria-pressed="true"]{ background:var(--violet);color:var(--moon) }
+.modes button:focus-visible{ outline:2px solid var(--rem);outline-offset:1px }
+
+.row{ display:flex;flex-wrap:wrap;align-items:flex-end;gap:14px }
+.field{ flex:1 1 150px;min-width:0 }
+label{
+  display:block;font-family:var(--mono);font-size:9px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--dimmer);margin-bottom:6px;
+}
+input[type=time], input[type=number], select{
+  width:100%;font:inherit;font-size:17px;color:var(--moon);
+  background:#0C0F26;border:1px solid var(--line);border-radius:7px;padding:9px 11px;
+}
+input:focus-visible, select:focus-visible{ outline:2px solid var(--rem);outline-offset:1px }
+.now{
+  font:inherit;font-size:12px;background:none;border:0;color:var(--rem);cursor:pointer;
+  padding:0;margin-top:8px;text-decoration:underline;text-underline-offset:3px;
+}
+.now:focus-visible{ outline:2px solid var(--rem);outline-offset:2px;border-radius:3px }
+
+.latency{ margin-top:16px;padding-top:15px;border-top:1px solid var(--line) }
+.latency .hint{ font-size:12.5px;line-height:1.65;color:var(--dimmer);margin:8px 0 0;font-style:italic }
+.slide{ display:flex;align-items:center;gap:12px }
+input[type=range]{ flex:1;accent-color:#7E86D8 }
+.slide output{ font-family:var(--mono);font-size:13px;color:var(--pale);min-width:6ch;text-align:right }
+
+/* ---- the answers -------------------------------------------------- */
+h2{
+  font-family:var(--mono);font-size:9px;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--dimmer);font-weight:600;margin:32px 0 12px;
+}
+.cards{ display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:9px }
+.opt{
+  font:inherit;text-align:left;cursor:pointer;
+  background:linear-gradient(180deg,rgba(26,30,58,.7),rgba(15,18,38,.7));
+  border:1px solid var(--line);border-radius:10px;padding:13px 12px;
+  transition:border-color .16s, transform .16s, background .16s;
+}
+.opt:hover{ border-color:#3B4272;transform:translateY(-2px) }
+.opt:focus-visible{ outline:2px solid var(--rem);outline-offset:2px }
+.opt[aria-pressed="true"]{ border-color:#7E86D8;background:linear-gradient(180deg,rgba(46,42,92,.85),rgba(24,26,58,.85)) }
+.opt .t{ font-size:22px;color:var(--moon);letter-spacing:.01em;display:block;font-variant-numeric:tabular-nums }
+.opt .c{ font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);display:block;margin-top:7px }
+.opt .h{ font-size:12.5px;color:var(--dimmer);display:block;margin-top:3px }
+.opt.rec{ box-shadow:inset 0 0 0 1px rgba(232,201,138,.22) }
+.opt.rec .c{ color:var(--warm) }
+
+/* ---- the schematic night ------------------------------------------ */
+.night-box{
+  margin-top:26px;background:rgba(10,12,30,.62);
+  border:1px solid var(--line);border-radius:11px;padding:15px 14px 12px;
+}
+.hyp-wrap{ display:flex;gap:9px }
+.hyp-keys{
+  display:flex;flex-direction:column;justify-content:space-between;
+  font-family:var(--mono);font-size:8.5px;letter-spacing:.12em;color:var(--dimmer);
+  text-transform:uppercase;padding:2px 0 15px;flex:0 0 auto;text-align:right;
+}
+svg.hyp{ flex:1 1 0;min-width:0;display:block;height:132px;overflow:hidden }
+.hyp-foot{
+  display:flex;justify-content:space-between;margin-top:7px;
+  font-family:var(--mono);font-size:9px;letter-spacing:.13em;color:var(--dimmer);text-transform:uppercase;
+}
+.caption{ font-size:12.5px;line-height:1.7;color:var(--dimmer);margin:12px 0 0;font-style:italic }
+
+/* ---- the plain truth ---------------------------------------------- */
+.truth{ margin-top:34px;padding-top:20px;border-top:1px solid var(--line);font-size:14px;line-height:1.85;color:var(--dim) }
+.truth p{ margin:0 0 13px }
+.truth p:last-child{ margin-bottom:0 }
+.truth b{ color:var(--pale);font-weight:600 }
+.truth .src{ font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;color:var(--dimmer);line-height:2 }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 var(--mono);
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid var(--rem);outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media (prefers-reduced-motion: reduce){ .opt{ transition:none } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>The Night, Counted in Cycles</h1>
+  <p class="tagline">Sleep does not run out evenly. It comes in rounds, and it is kinder to be woken between them than in the middle of one.</p>
+</header>
+
+<div class="ask">
+  <div class="modes" role="group" aria-label="Which question are you asking">
+    <button type="button" id="m-wake" aria-pressed="true">I am going to bed &mdash; wake me when?</button>
+    <button type="button" id="m-bed" aria-pressed="false">I must be up at &mdash; bed when?</button>
+  </div>
+
+  <div class="row">
+    <div class="field">
+      <label for="t" id="t-label">Lights out at</label>
+      <input type="time" id="t">
+      <button type="button" class="now" id="btn-now">use the time it is now</button>
+    </div>
+  </div>
+
+  <div class="latency">
+    <div class="slide">
+      <div style="flex:1">
+        <label for="lat">How long you take to actually fall asleep</label>
+        <input type="range" id="lat" min="0" max="45" step="5" value="15">
+      </div>
+      <output for="lat" id="lat-out">15 min</output>
+    </div>
+    <p class="hint">Healthy adults typically take somewhere in the region of ten to twenty minutes. If you know your own honest number, use that instead of the default.</p>
+  </div>
+</div>
+
+<h2 id="answers-head">Good moments to be woken</h2>
+<div class="cards" id="cards"></div>
+
+<div class="night-box">
+  <div class="hyp-wrap">
+    <div class="hyp-keys" aria-hidden="true">
+      <span>awake</span><span>rem</span><span>n1</span><span>n2</span><span>n3</span>
+    </div>
+    <svg class="hyp" id="hyp" viewBox="0 0 600 116" preserveAspectRatio="none" role="img" aria-labelledby="hyp-title"></svg>
+  </div>
+  <div class="hyp-foot"><span id="f-start">&mdash;</span><span id="f-len">&mdash;</span><span id="f-end">&mdash;</span></div>
+  <p class="caption" id="hyp-cap">A schematic of the shape a night tends to take &mdash; not a recording of yours, and not a
+    prediction. Deep sleep clusters in the early cycles; the dreaming stretches get longer towards morning.</p>
+</div>
+
+<div class="truth">
+  <p><b>Where the ninety minutes comes from.</b> A sleep cycle runs from light sleep down through
+  deep, slow-wave sleep and back up into REM. In adults it averages roughly ninety minutes, but the
+  honest figure is a range &mdash; commonly given as about seventy to a hundred and twenty &mdash;
+  and it varies between people and across a single night. Early cycles carry more deep sleep and
+  later ones more REM, so they are not even interchangeable with each other.</p>
+  <p><b>Why the end of a cycle is the kind place to wake.</b> The grogginess of being hauled out of
+  slow-wave sleep is a real, named thing: sleep inertia. It is worst when you wake from deep sleep
+  and mildest from the light sleep that ends a cycle. That is the whole idea behind this arithmetic.</p>
+  <p><b>What this page cannot do.</b> It has no idea when your cycles actually turn over. It is
+  multiplying a population average by a whole number and adding it to a clock. Treat it as a nudge
+  towards a sensible bedtime, not as a measurement &mdash; and if you are reliably exhausted, the
+  answer is a doctor, not a calculator.</p>
+  <p class="src">Sleep-stage architecture and the ninety-minute average are standard sleep-medicine
+  description; the seven-to-nine-hour figure for adults is the common public health recommendation.
+  Nothing on this page is measured, and nothing you type here leaves your browser.</p>
+</div>
+
+</div>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">&larr;</span><span class="w">cabinet</span></a>
+
+<script>
+(function(){
+  'use strict';
+
+  var CYCLE = 90;                    /* minutes, the population average */
+  var COUNTS = [3, 4, 5, 6, 7];      /* four-and-a-half to ten-and-a-half hours */
+  var KEY = 'lc-sleep-cycles';
+
+  var input   = document.getElementById('t');
+  var lat     = document.getElementById('lat');
+  var latOut  = document.getElementById('lat-out');
+  var cards   = document.getElementById('cards');
+  var head    = document.getElementById('answers-head');
+  var tLabel  = document.getElementById('t-label');
+  var mWake   = document.getElementById('m-wake');
+  var mBed    = document.getElementById('m-bed');
+  var hyp     = document.getElementById('hyp');
+
+  var mode = 'wake';        /* 'wake' = going to bed now; 'bed' = must be up at */
+  var chosen = 1;           /* index into COUNTS, defaults to five cycles */
+
+  try {
+    var saved = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (saved){
+      if (saved.mode === 'bed' || saved.mode === 'wake') mode = saved.mode;
+      if (typeof saved.lat === 'number' && saved.lat >= 0 && saved.lat <= 45) lat.value = saved.lat;
+    }
+  } catch (e) {}
+  function save(){
+    try { localStorage.setItem(KEY, JSON.stringify({ mode: mode, lat: +lat.value })); } catch (e) {}
+  }
+
+  /* ---- time helpers ------------------------------------------------ */
+  function nowHM(){
+    var d = new Date();
+    return pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+  function pad(n){ return (n < 10 ? '0' : '') + n; }
+  function parseHM(v){
+    var m = /^(\d{1,2}):(\d{2})/.exec(v || '');
+    if (!m) return null;
+    var h = +m[1], mi = +m[2];
+    if (h > 23 || mi > 59) return null;
+    return h * 60 + mi;
+  }
+  function fmt(mins){
+    mins = ((mins % 1440) + 1440) % 1440;
+    var d = new Date();
+    d.setHours(Math.floor(mins / 60), mins % 60, 0, 0);
+    return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  }
+  function dur(mins){
+    var h = Math.floor(mins / 60), m = mins % 60;
+    return h + ' h' + (m ? ' ' + m + ' m' : '');
+  }
+
+  /* ---- the arithmetic ---------------------------------------------- *
+   * Forwards: asleep at (lights out + latency), then n whole cycles.
+   * Backwards: from the alarm, subtract n cycles and the latency, which
+   * is the part people forget and the part that makes the answer wrong
+   * by a quarter of an hour every time.
+   * ------------------------------------------------------------------ */
+  function options(){
+    var t = parseHM(input.value);
+    if (t === null) return null;
+    var L = +lat.value;
+    return COUNTS.map(function(n){
+      var sleep = n * CYCLE;
+      return mode === 'wake'
+        ? { n: n, at: t + L + sleep, sleep: sleep, asleepAt: t + L }
+        : { n: n, at: t - L - sleep, sleep: sleep, asleepAt: t - sleep };
+    });
+  }
+
+  /* Seven to nine hours is the usual adult recommendation, so five and
+     six cycles (7.5 h and 9 h) are the two that land inside it. Marked,
+     not enforced — a short night is sometimes the only night available. */
+  function recommended(n){ return n === 5 || n === 6; }
+
+  function render(){
+    latOut.textContent = lat.value + ' min';
+    tLabel.textContent = mode === 'wake' ? 'Lights out at' : 'The alarm goes at';
+    head.textContent   = mode === 'wake' ? 'Good moments to be woken' : 'Good moments to turn in';
+    mWake.setAttribute('aria-pressed', mode === 'wake');
+    mBed.setAttribute('aria-pressed', mode === 'bed');
+
+    var opts = options();
+    if (!opts){
+      cards.innerHTML = '<p class="caption" style="grid-column:1/-1;margin:0">Put a time in above and the night works itself out.</p>';
+      drawNight(null);
+      return;
+    }
+
+    cards.innerHTML = opts.map(function(o, i){
+      return '<button type="button" class="opt' + (recommended(o.n) ? ' rec' : '') + '" data-i="' + i + '"' +
+             ' aria-pressed="' + (i === chosen) + '">' +
+             '<span class="t">' + fmt(o.at) + '</span>' +
+             '<span class="c">' + o.n + ' cycles</span>' +
+             '<span class="h">' + dur(o.sleep) + ' asleep</span>' +
+             '</button>';
+    }).join('');
+
+    [].forEach.call(cards.querySelectorAll('.opt'), function(b){
+      b.addEventListener('click', function(){ chosen = +b.dataset.i; render(); });
+    });
+
+    drawNight(opts[chosen]);
+    save();
+  }
+
+  /* ---- the schematic hypnogram -------------------------------------- *
+   * Five bands, awake at the top. The shape is the textbook one: a fast
+   * descent into slow-wave sleep, deep sleep shallower with every cycle,
+   * REM absent from the first and lengthening towards morning. It is
+   * drawn from the chosen number of cycles, so the picture and the
+   * number above it always agree.
+   * -------------------------------------------------------------------- */
+  var LEVEL = { awake: 6, rem: 30, n1: 54, n2: 78, n3: 102 };
+
+  function drawNight(o){
+    if (!o){ hyp.innerHTML = ''; return; }
+    var n = o.n, W = 600, pts = [];
+    var per = W / n;
+
+    /* Depth of the deep-sleep trough eases up over the night; REM's share
+       of each cycle grows. Both are schematic, and the caption says so. */
+    for (var i = 0; i < n; i++){
+      var x0 = i * per;
+      var deepPull = Math.max(0, 1 - i * 0.34);                 /* n3 fades after cycle 3 */
+      var trough = LEVEL.n2 + (LEVEL.n3 - LEVEL.n2) * deepPull;
+      var remShare = 0.10 + i * 0.075;                          /* 10% of cycle one, more later */
+      var remLen = per * Math.min(0.38, remShare);
+      pts.push([x0, LEVEL.n1]);
+      pts.push([x0 + per * 0.10, LEVEL.n2]);
+      pts.push([x0 + per * 0.22, trough]);
+      pts.push([x0 + per * 0.52, trough]);
+      pts.push([x0 + per * 0.62, LEVEL.n2]);
+      if (i === 0){
+        pts.push([x0 + per - remLen, LEVEL.n2]);                /* first cycle: little or no REM */
+        pts.push([x0 + per - remLen * 0.4, LEVEL.rem]);
+      } else {
+        pts.push([x0 + per - remLen, LEVEL.n1]);
+        pts.push([x0 + per - remLen * 0.92, LEVEL.rem]);
+      }
+      pts.push([x0 + per - 1, LEVEL.rem]);
+      if (i < n - 1) pts.push([x0 + per, LEVEL.n1]);            /* the brief near-waking between cycles */
+    }
+    pts.unshift([0, LEVEL.awake]);
+    pts.push([W, LEVEL.awake]);
+
+    var d = pts.map(function(p, i){ return (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1); }).join(' ');
+
+    /* REM stretches shaded, because that is the half of the night people
+       are usually surprised to learn they have. */
+    var shade = '';
+    for (var k = 0; k < n; k++){
+      var xs = k * per, remShare2 = 0.10 + k * 0.075;
+      var rl = per * Math.min(0.38, remShare2);
+      shade += '<rect x="' + (xs + per - rl).toFixed(1) + '" y="' + (LEVEL.rem - 7) +
+               '" width="' + rl.toFixed(1) + '" height="14" fill="rgba(143,169,240,.16)" rx="3"/>';
+    }
+
+    var grid = ['awake','rem','n1','n2','n3'].map(function(k){
+      return '<line x1="0" y1="' + LEVEL[k] + '" x2="600" y2="' + LEVEL[k] +
+             '" stroke="rgba(255,255,255,.07)" stroke-width="1"/>';
+    }).join('');
+
+    var ticks = '';
+    for (var c = 1; c < n; c++){
+      ticks += '<line x1="' + (c * per).toFixed(1) + '" y1="0" x2="' + (c * per).toFixed(1) +
+               '" y2="110" stroke="rgba(255,255,255,.06)" stroke-width="1" stroke-dasharray="2 4"/>';
+    }
+
+    hyp.innerHTML =
+      '<title id="hyp-title">A schematic night of ' + n + ' sleep cycles, ' + dur(o.sleep) + ' asleep.</title>' +
+      grid + ticks + shade +
+      '<path d="' + d + '" fill="none" stroke="#9AA3E8" stroke-width="2" ' +
+      'stroke-linejoin="round" vector-effect="non-scaling-stroke"/>';
+
+    var start = mode === 'wake' ? o.asleepAt : o.asleepAt;
+    document.getElementById('f-start').textContent = 'asleep ' + fmt(start);
+    document.getElementById('f-len').textContent = n + ' cycles &middot; ' + dur(o.sleep);
+    document.getElementById('f-len').innerHTML = n + ' cycles &middot; ' + dur(o.sleep);
+    document.getElementById('f-end').textContent = 'awake ' + fmt(mode === 'wake' ? o.at : start + o.sleep);
+  }
+
+  /* ---- wiring ------------------------------------------------------- */
+  mWake.addEventListener('click', function(){ mode = 'wake'; render(); });
+  mBed.addEventListener('click', function(){ mode = 'bed'; render(); });
+  input.addEventListener('input', render);
+  lat.addEventListener('input', render);
+  document.getElementById('btn-now').addEventListener('click', function(){
+    input.value = nowHM(); mode = 'wake'; render();
+  });
+
+  input.value = nowHM();
+  render();
+
+  window.__sleep = { options: options, cycle: CYCLE };
+})();
+</script>
+</body>
+</html>
