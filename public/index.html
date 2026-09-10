@@ -6008,6 +6008,8 @@ footer{
       if (!dragging) return;
       var t = progress(e);
       apply(t);
+      // the note is legible well before the corner is fully over
+      if (t >= 0.45 && window.LCAch) LCAch.fire('card.note');
       if (t >= 0.98) armMark(); else disarmMark();
     });
     function release(e){
@@ -6064,7 +6066,11 @@ footer{
     ghost.addEventListener('click', function(){
       taps++;
       if (!p) return;
-      if (taps < LINES.length){ p.innerHTML = LINES[taps]; }
+      if (taps < LINES.length){
+        p.innerHTML = LINES[taps];
+        // the last line is the admission; getting there is the egg
+        if (taps === LINES.length - 1 && window.LCAch) LCAch.fire('ghost.nodrawer');
+      }
       else if (taps === LINES.length){
         p.innerHTML = 'Go on then. Something will<br>go in here eventually.';
       } else if (taps > LINES.length + 4){

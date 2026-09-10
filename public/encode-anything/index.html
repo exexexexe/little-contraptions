@@ -167,6 +167,7 @@ footer a{ color:var(--green) }
   <a href="/">&larr; back to the cabinet</a>
 </footer>
 
+<script src="/shared/lc-achievements.js"></script>
 <script>
 'use strict';
 const $ = (id) => document.getElementById(id);
@@ -306,6 +307,7 @@ function panel(name, meta, body, copyText, cls){
  *  they are simply laid out on an ellipse instead of in a line.
  * ------------------------------------------------------------------ */
 function eggShape(code){
+if (window.LCAch) LCAch.fire('morse.egg');
   const marks = code.replace(/[^.\-]/g, '').split('');
   const W = 150, H = 190, cx = W / 2, cy = H / 2 + 6;
   const rx = 52, ry = 72;

@@ -320,6 +320,7 @@ body.e13 #menu{ border:1px solid #E0DDD5;background:#fff;box-shadow:0 12px 30px 
 </div>
 <div id="menu" role="menu"></div>
 
+<script src="/shared/lc-achievements.js"></script>
 <script>
 'use strict';
 
@@ -795,6 +796,7 @@ openAbout();
   function close(){ ctx.hidden = true; }
 
   desk.addEventListener('contextmenu', function(e){
+  if (window.LCAch) LCAch.fire('retroos.rightclick');
     e.preventDefault();
     ctx.hidden = false;
     // keep the whole menu on screen even at the very edge

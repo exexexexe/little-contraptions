@@ -168,6 +168,7 @@ footer a{ color:var(--lilac) }
 </footer>
 
 <script src="/shared/lc-generate.js"></script>
+<script src="/shared/lc-achievements.js"></script>
 <script>
 'use strict';
 const $ = (id) => document.getElementById(id);
@@ -372,6 +373,7 @@ function oldBook(why){
       'The book requires a dream. It is very firm about this.</div></div></div>';
     return;
   }
+  if (window.LCAch) LCAch.fire('dream.thissite');
   if (SELF.test(t)){ selfReading(); return; }
 
   const hits = [];

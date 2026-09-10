@@ -283,6 +283,7 @@ body{ padding-bottom:64px }
 </section>
 
 
+<script src="/shared/lc-achievements.js"></script>
 <script>
 'use strict';
 
@@ -850,6 +851,7 @@ addEventListener('scroll', () => {
   var el = document.getElementById('beyond');
   if (!el) return;
   function light(){
+    if (window.LCAch) LCAch.fire('civ.onemore');
     el.classList.add('lit');
     el.removeAttribute('aria-hidden');
   }

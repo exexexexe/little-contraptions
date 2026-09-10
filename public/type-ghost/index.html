@@ -222,6 +222,7 @@ h1{ font-family:var(--display) }
   </footer>
 </div>
 
+<script src="/shared/lc-achievements.js"></script>
 <script>
 'use strict';
 
@@ -362,6 +363,7 @@ function finish(){
       // Nobody improves by forty words a minute between two runs of the same
       // passage. The page is not going to accuse anyone. It is going to ask.
       if (d >= 40 && s.acc >= 90){
+        if (window.LCAch) LCAch.fire('ghostrace.forty');
         title = 'Beat it by ' + d + ' wpm...';
         body = 'New ghost recorded at ' + s.wpm + ' wpm, up from ' + prev.wpm + '. ' +
                'That is a forty word a minute improvement on the same passage, at ' +

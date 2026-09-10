@@ -3055,3 +3055,64 @@ the egg already does its own thing, plus the script tag. The four done here are 
 - The loot desk's egg was forced onto its real branch by pinning the generated name, and recorded.
 - Full cabinet sweep: **150 pages, zero page errors, zero horizontal overflow.**
 
+---
+
+# Phase 6, finished — all forty-three eggs report
+
+The retrofit the last entry left undone. **43 of 43 catalogued achievements now fire**, so
+`complete()` is reachable and the hall of fame has an unlock condition that can actually be met.
+
+## Two errors in my own catalogue, found while wiring
+
+- **`paradox.overflow` and `dream.thissite` were filed under `generator`.** They are not: the
+  paradox machine and the dream decoder were given a language model in Phase 1 and were never on
+  the merge list. Only three of the eggs really moved into the Generator — the ship's log's 15
+  April, the advisors' too-long reign, and the talking gun's one sincere line. Corrected.
+- **The Stockholm street egg fired for every street name.** `stockholmMatch()` returns `null` for
+  anything it does not recognise and the call went in on the line below it, so naming a road
+  anything at all counted. It now fires only on a real match, checked both ways: *Drottninggatan*
+  fires and *Cooper Street* does not.
+
+## Four toys were left with a syntax error, briefly
+
+Inserting a statement "before" an anchor line is only safe when that line begins a statement. Four
+anchors were continuation lines — inside a multi-line string concatenation in the snow globe, the
+type ghost and the apocalypse quiz, and inside an object literal in what-beats-this — so the
+insert landed mid-expression and broke the page outright.
+
+Caught by the full-cabinet sweep reporting `Unexpected token 'if'` on three of them, and by then
+parsing every inline script of every toy that had been touched, which found the fourth. All four
+moved to real statement boundaries; every touched file's script now parses.
+
+The lesson is worth keeping for the next batch of these: a mechanical wiring pass needs a syntax
+check per edited file, not a smoke test at the end. Three of the four would have shipped otherwise
+— the fourth toy's error did not surface as a page error in the shape the sweep was watching for.
+
+## Where each egg reports from
+
+Mostly one line at the point the egg already does its own thing. The exceptions are worth noting:
+
+- **The five arrow codes** report from inside `open()`, not from the matchers, because a code can
+  arrive by key, by swipe or through the public API.
+- **The arcade's shield** reports from `games/invaders.js`, since the unlock lives in the game
+  module rather than the page; the arcade now loads the registry for it.
+- **Three eggs report from Generator voices** and needed the shell to load the registry.
+- **The card note** reports at 45% of a peel, where the note becomes legible, rather than at the
+  full turn that arms the tracker mark.
+
+## Verified
+
+- Every catalogue id has a call site: **43 of 43, none missing.**
+- Eggs driven for real through their own controls, not stubbed: the library of Babel, the dream
+  about this website, the machine declining to imagine away the internet, the morse egg, the
+  Stockholm street with a negative control, and the hundredth fortune cookie reached by cracking a
+  hundred of them.
+- The loot desk's egg forced onto its real branch by pinning the generated name.
+- The hub's own five driven through the real handlers, and the panel read correctly.
+- **Full cabinet sweep: 150 pages, zero page errors, zero horizontal overflow.**
+
+## Still not done
+
+The hall of fame itself. It needs the shared cross-visitor store the guestbook and the bottle use
+— a server change, and its own sitting. The unlock condition it depends on now works.
+

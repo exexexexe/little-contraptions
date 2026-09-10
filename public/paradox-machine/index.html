@@ -172,6 +172,7 @@ footer a{ color:var(--teal) }
 </footer>
 
 <script src="/shared/lc-generate.js"></script>
+<script src="/shared/lc-achievements.js"></script>
 <script>
 'use strict';
 const $ = (id) => document.getElementById(id);
@@ -244,6 +245,7 @@ let lastFed = null;
 function normalise(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); }
 
 function crash(p){
+if (window.LCAch) LCAch.fire('paradox.overflow');
   const depth = 4096;
   const frames = [];
   for (let i = 0; i < 7; i++){

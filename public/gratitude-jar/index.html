@@ -149,6 +149,7 @@ body{ padding-bottom:64px }
   and never leave the device. <a href="/">← back to the cabinet</a>
 </footer>
 
+<script src="/shared/lc-achievements.js"></script>
 <script>
 'use strict';
 
@@ -356,6 +357,7 @@ let neckWalls = [], shake = 0, spilling = false, lastShake = 0;
 const SPILL_AT = 2600;
 
 function spill(){
+if (window.LCAch) LCAch.fire('jar.lid');
   if (spilling || !slips.length) return;
   spilling = true;
   shake = 0;

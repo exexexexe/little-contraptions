@@ -161,6 +161,7 @@ footer a{ color:var(--old) }
 </footer>
 
 <script src="data.js"></script>
+<script src="/shared/lc-achievements.js"></script>
 <script>
 'use strict';
 const $ = (id) => document.getElementById(id);
@@ -290,6 +291,7 @@ function unlock(n){
     : (mins / 60).toFixed(1) + ' hours';
 
   el.hidden = false;
+  if (window.LCAch) LCAch.fire('closer.zanzibar');
   el.innerHTML = '<div class="k">twenty comparisons in</div>' +
     '<p>You have looked at <b>' + n + '</b> of these now, which means it is only fair to point ' +
     'the same trick at you.</p>' +

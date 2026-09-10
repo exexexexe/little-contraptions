@@ -168,6 +168,7 @@ footer a{ color:var(--red) }
   <a href="/">&larr; back to the cabinet</a>
 </footer>
 
+<script src="/shared/lc-achievements.js"></script>
 <script>
 'use strict';
 const $ = (id) => document.getElementById(id);
@@ -264,6 +265,7 @@ function isSelfErasing(text){
 }
 
 function selfErase(text){
+if (window.LCAch) LCAch.fire('whatif.nointernet');
   $('out').innerHTML =
     '<div class="void"><div class="k">the machine declines</div>' +
     '<p>Right. Let us follow that one properly.</p>' +
