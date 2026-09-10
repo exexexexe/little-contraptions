@@ -442,6 +442,12 @@ footer{
 /* the moment before an icon lifts, so a hold looks like it is doing
    something rather than like a tap that did not register */
 .w98 .w98-icon.holding{ transform:scale(.9);transition:transform .18s ease }
+/* A knocked-askew icon still has to shrink when it is held and fade
+   when it is dragged, so the tilt goes through a custom property and
+   every transform that can land on an icon composes with it rather
+   than replacing it. */
+.w98 #w98-icons.messy .w98-icon{ transform:rotate(var(--tilt,0deg)) }
+.w98 #w98-icons.messy .w98-icon.holding{ transform:rotate(var(--tilt,0deg)) scale(.9) }
 .w98 .w98-icon.dragging{ opacity:.4 }
 @media (prefers-reduced-motion: reduce){ .w98 .w98-icon.holding{ transition:none } }
 .w98-icon{
@@ -1096,6 +1102,43 @@ footer{
 #w98-list a:focus-visible{ outline:1px dotted currentColor;outline-offset:-2px }
 #w98-list .none{ padding:8px 6px;color:#808080 }
 .w98-count{ color:#404040;font-size:11px;padding:0 2px }
+/* The three that are not drawers. Separated by a rule, the way the
+   real menu separated the things that end a session from the things
+   that start one. */
+/* A physical switch, not a tickbox: a plate with a travelling knob and a
+   printed legend either side, the way a real one is labelled. The knob is
+   the only thing that moves. */
+.w98-lever{
+  display:flex;align-items:center;gap:9px;padding:5px 7px;font:inherit;cursor:pointer;
+  background:var(--w98-face,#c0c0c0);color:var(--w98-text,#000);
+  border:2px solid;border-color:var(--w98-lite,#dfdfdf) var(--w98-dark,#404040)
+    var(--w98-dark,#404040) var(--w98-lite,#dfdfdf);
+}
+.w98-lever i{
+  flex:none;width:38px;height:20px;position:relative;display:block;
+  background:var(--w98-win,#fff);
+  border:2px solid;border-color:var(--w98-dark,#404040) var(--w98-lite,#dfdfdf)
+    var(--w98-lite,#dfdfdf) var(--w98-dark,#404040);
+}
+.w98-lever i b{
+  position:absolute;top:0;left:0;width:16px;height:100%;display:block;
+  background:var(--w98-face,#c0c0c0);
+  border:2px solid;border-color:var(--w98-lite,#dfdfdf) var(--w98-dark,#404040)
+    var(--w98-dark,#404040) var(--w98-lite,#dfdfdf);
+  transition:left .13s steps(3, end);
+}
+.w98-lever[aria-pressed="true"] i b{ left:18px }
+.w98-lever span{ display:flex;flex-direction:column;line-height:1.15;text-align:left }
+.w98-lever em{ font-style:normal;opacity:.45 }
+.w98-lever[aria-pressed="false"] em:first-child,
+.w98-lever[aria-pressed="true"] em:last-child{ opacity:1;font-weight:700 }
+.w98-note{ margin:6px 2px 0;font-size:11px;color:var(--w98-text,#000);opacity:.72 }
+@media (pointer:coarse){ .w98-lever{ min-height:44px } }
+@media (prefers-reduced-motion: reduce){ .w98-lever i b{ transition:none } }
+.w98-power{ display:flex;gap:4px;padding:5px 2px 1px;margin-top:2px;
+  border-top:1px solid var(--w98-dark,#404040) }
+.w98-power button{ flex:1;font:inherit;padding:4px 2px;min-height:24px;cursor:pointer }
+@media (pointer:coarse){ .w98-power button{ min-height:40px } }
 
 /* ---- the toggle, present in both modes ---- */
 #lc-mode{
@@ -2826,6 +2869,11 @@ footer{
       </div>
       <div id="w98-list" class="sunken-panel"></div>
       <div class="w98-count" id="w98-count"></div>
+      <div class="w98-power">
+        <button type="button" id="w98-rest">Rest</button>
+        <button type="button" id="w98-restart">Restart</button>
+        <button type="button" id="w98-shutdown">Shut Down</button>
+      </div>
     </div>
   </div>
 
@@ -2888,6 +2936,18 @@ footer{
           </fieldset>
           <fieldset><legend>Sound</legend>
             <div class="w98-row" id="w98-sounds" role="group" aria-label="Sound"></div>
+          </fieldset>
+          <fieldset><legend>Desktop</legend>
+            <button type="button" class="w98-lever" id="w98-messy" aria-pressed="false">
+              <i aria-hidden="true"><b></b></i>
+              <span><em>Tidy</em><em>Messy</em></span>
+            </button>
+            <p class="w98-note">Knocks every icon askew, near where it already was.
+              Auto Arrange puts them back.</p>
+          </fieldset>
+          <fieldset><legend>Desktop music</legend>
+            <div class="w98-row" id="w98-music" role="group" aria-label="Desktop music"></div>
+            <p class="w98-note" id="w98-musicnote"></p>
           </fieldset>
         </div>
       </div>
@@ -3557,7 +3617,7 @@ footer{
     iconWrap.style.setProperty('--w98-cell-w', CELL_W + 'px');
   }
 
-  var desk = { free: false, pos: {}, folders: [] };
+  var desk = { free: false, messy: false, pos: {}, folders: [] };
   var deskTop = 300;                 // z-index counter for folder windows
 
   function deskLoad(){
@@ -3565,6 +3625,7 @@ footer{
       var j = JSON.parse(localStorage.getItem(DESK_KEY) || 'null');
       if (!j || typeof j !== 'object') return;
       desk.free = !!j.free;
+      desk.messy = !!j.messy;
       desk.pos = (j.pos && typeof j.pos === 'object') ? j.pos : {};
       desk.folders = Array.isArray(j.folders) ? j.folders.filter(function(f){
         return f && typeof f.id === 'string' && typeof f.name === 'string';
@@ -3585,7 +3646,7 @@ footer{
   function deskSave(){
     try {
       localStorage.setItem(DESK_KEY, JSON.stringify({
-        free: desk.free, pos: desk.pos, folders: desk.folders
+        free: desk.free, messy: desk.messy, pos: desk.pos, folders: desk.folders
       }));
     } catch (e) { /* storage refused: the desktop still works, it just forgets */ }
   }
@@ -3652,6 +3713,8 @@ footer{
     // left to measure — so this has to happen while it is still a grid.
     if (!desk.free) measureCell();
     if (desk.free) applyFree();
+    // after applyFree, which sets the positions the tilt sits on top of
+    if (desk.messy) applyMessy(); else iconWrap.classList.remove('messy');
   }
 
   /* Every icon on the desktop, in DOM order. */
@@ -3776,6 +3839,75 @@ footer{
     deskIcons().forEach(function(el){ el.style.left = el.style.top = ''; });
     deskSave();
   }
+
+  /* ---- the messy desktop ---------------------------------------------- *
+   *  Not a random arrangement: a disturbed one. Every icon stays near the
+   *  cell it came from and is knocked askew, which is what a desk that has
+   *  been used looks like. Scattering to genuinely random coordinates
+   *  reads as a bug — things end up in piles, three deep in one corner and
+   *  a bare stretch beside them, and nobody believes it.
+   *
+   *  It is built on free mode rather than beside it: scattering is
+   *  enterFree() plus an offset, so a scattered icon can be picked up and
+   *  put somewhere on purpose like any other, and Auto Arrange is still
+   *  the way out.
+   * ------------------------------------------------------------------- */
+  var TILT = 7;                       // degrees either way, at most
+
+  /* The lean is a function of which icon it is, not of when you asked.
+     Storing a tilt per icon would mean a second record that has to stay in
+     step with the positions, and a reload that re-rolled them would make
+     the desk rearrange itself behind your back every time. */
+  function tiltFor(el){
+    var k = posKey(el) || '';
+    var h = 0;
+    for (var i = 0; i < k.length; i++) h = ((h << 5) - h + k.charCodeAt(i)) | 0;
+    return (((h >>> 0) % 2001) / 1000 - 1) * TILT;      // -TILT..+TILT
+  }
+
+  /* Put the lean back on after a re-render, which throws away inline
+     styles along with everything else. */
+  function applyMessy(){
+    iconWrap.classList.add('messy');
+    document.documentElement.dataset.w98Messy = '1';
+    deskIcons().forEach(function(el){
+      el.style.setProperty('--tilt', tiltFor(el).toFixed(2) + 'deg');
+    });
+  }
+
+  function scatterIcons(){
+    enterFree();                      // photographs the grid; nothing moves yet
+    var maxX = Math.max(0, iconWrap.clientWidth - CELL_W);
+    var maxY = Math.max(0, iconWrap.scrollHeight - CELL_H);
+    deskIcons().forEach(function(el){
+      var x = parseFloat(el.style.left) || 0;
+      var y = parseFloat(el.style.top) || 0;
+      // bounded by the cell, so two neighbours can lean together without
+      // one ending up on top of the other
+      x += (Math.random() - 0.5) * CELL_W * 0.62;
+      y += (Math.random() - 0.5) * CELL_H * 0.42;
+      place(el, Math.max(0, Math.min(maxX, x)), Math.max(0, Math.min(maxY, y)));
+    });
+    desk.messy = true;
+    applyMessy();
+    deskSave();
+  }
+
+  function tidyIcons(){
+    deskIcons().forEach(function(el){ el.style.removeProperty('--tilt'); });
+    iconWrap.classList.remove('messy');
+    document.documentElement.dataset.w98Messy = '';
+    desk.messy = false;
+    arrangeIcons();                   // clears free mode and every remembered spot
+  }
+
+  /* The switch lives in Display Properties, which is a different closure.
+     An event is the whole contract between them. */
+  document.addEventListener('w98:messy', function(e){
+    var want = !!(e.detail && e.detail.on);
+    if (want === desk.messy) return;
+    want ? scatterIcons() : tidyIcons();
+  });
 
   /* Line Up Icons: keep the arrangement, snap it to the grid. The
      difference from Auto Arrange is the one Windows drew, and it is worth
@@ -4603,6 +4735,52 @@ footer{
   startBtn.addEventListener('click', function(e){
     e.stopPropagation();
     menu.hidden ? openMenu() : closeMenu();
+  });
+
+  /* ---- the three that end a session ---------------------------------- *
+   *  All three live in /shared/, because none of them is really about the
+   *  hub: a self test, a dimmed screen and a bed of noise are the same
+   *  three things wherever they are asked for. This file only decides
+   *  when.
+   *
+   *  The menu closes first in every case. A shutdown screen with the
+   *  start menu still hanging open underneath it is a machine that has
+   *  not finished the thought.
+   * ------------------------------------------------------------------ */
+  function drawerCount(){
+    return document.querySelectorAll('a.card').length;
+  }
+
+  /* The bed the current colour scheme picked, if the soundtrack is on.
+     Published on the root element rather than a global, so the two
+     closures share one string and neither has to know the other exists. */
+  function tone(){
+    return document.documentElement.dataset.w98Tone || 'underwater';
+  }
+
+  var restBtn = document.getElementById('w98-rest');
+  var restartBtn = document.getElementById('w98-restart');
+  var shutBtn = document.getElementById('w98-shutdown');
+
+  if (restBtn) restBtn.addEventListener('click', function(){
+    closeMenu();
+    if (window.LCW98Rest) LCW98Rest.enter({ scene: tone() });
+  });
+
+  if (restartBtn) restartBtn.addEventListener('click', function(){
+    closeMenu();
+    if (window.LCW98Power) LCW98Power.restart({ drawers: drawerCount() });
+  });
+
+  if (shutBtn) shutBtn.addEventListener('click', function(){
+    closeMenu();
+    if (!window.LCW98Power) return;
+    // Switching it back on is a reload, which is the only honest way to
+    // do it: everything the desktop is holding came from storage and the
+    // server, so coming back up is the same job as coming up.
+    LCW98Power.shutdown({ onPowerOn: function(){
+      try { location.reload(); } catch (e) {}
+    } });
   });
   q.addEventListener('input', renderList);
   q.addEventListener('keydown', function(e){
@@ -5787,6 +5965,10 @@ footer{
 </script>
 
 <script src="/shared/lc-swipe.js"></script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-roomtone.js"></script>
+<script src="/shared/lc-w98-power.js"></script>
+<script src="/shared/lc-w98-rest.js"></script>
 <script>
 /* ==================================================================== *
  *  Undocumented things.
@@ -6322,9 +6504,36 @@ footer{
   ];
   var TASKPOS = [ { id:'bottom', n:'Bottom' }, { id:'top', n:'Top' } ];
   var SOUNDS  = [ { id:'off', n:'Off' }, { id:'on', n:'On' } ];
+  var MUSIC   = [ { id:'off', n:'Off' }, { id:'on', n:'On' } ];
+
+  /* ---- what each scheme sounds like ---------------------------------- *
+   *  The brief asked for four moods — an office, something warm and
+   *  acoustic, gentle noise, and the underwater one. Room Tone already
+   *  had beds for all four, so this is a mapping and not a fifth engine:
+   *  library is the office (air handling and distant paper), campfire is
+   *  the warm one, rain is the gentle noise, underwater is underwater.
+   *
+   *  Keyed by scheme name rather than index, so inserting a scheme into
+   *  the list above cannot silently shift twenty of these by one.
+   *  Anything unlisted falls back to the office.
+   * ------------------------------------------------------------------- */
+  var TONES = {
+    'Teal':'library', 'Storm':'library', 'Slate':'library',
+    'Pewter':'library', 'Ink':'library',
+    'Wheat':'campfire', 'Desert':'campfire', 'Pumpkin':'campfire',
+    'Brick':'campfire', 'Maple':'campfire', 'Copper':'campfire',
+    'Plum':'rain', 'Eggplant':'rain', 'Rose':'rain',
+    'Lilac':'rain', 'Rainy Day':'rain',
+    'Marine':'underwater', 'Spruce':'underwater',
+    'Celery':'underwater', 'Arctic':'underwater'
+  };
+  var TONE_NAMES = { library:'an office, late', campfire:'something warm',
+                     rain:'gentle noise', underwater:'the underwater one' };
+  var MUSIC_VOL = 0.22;               // background is background
 
   var DEFAULTS = { scheme:0, wall:'teal', layout:'normal', font:'sans',
-                   cursor:'system', task:'bottom', sound:'off', icons:'pixel' };
+                   cursor:'system', task:'bottom', sound:'off', icons:'pixel',
+                   music:'off' };
   var prefs = {};
 
   function load(){
@@ -6348,6 +6557,7 @@ footer{
     if (!byId(CURSORS, prefs.cursor)) prefs.cursor = DEFAULTS.cursor;
     if (!byId(TASKPOS, prefs.task)) prefs.task = DEFAULTS.task;
     if (!byId(SOUNDS, prefs.sound)) prefs.sound = DEFAULTS.sound;
+    if (!byId(MUSIC, prefs.music)) prefs.music = DEFAULTS.music;
   }
   function save(){
     try { localStorage.setItem(KEY, JSON.stringify(prefs)); } catch (e) {}
@@ -6419,6 +6629,60 @@ footer{
     shell.classList.toggle('tb-top', prefs.task === 'top');
     shell.classList.toggle('cur-arrow', prefs.cursor === 'arrow');
     shell.classList.toggle('cur-wait', prefs.cursor === 'wait');
+    applyMusic();
+  }
+
+  /* ---- the soundtrack ------------------------------------------------ *
+   *  Room Tone's engine, at a background level. Nothing here is sampled
+   *  and no audio file is involved — same six beds the Room Tone drawer
+   *  plays, four of which are wired to the twenty schemes above.
+   *
+   *  It cannot start on load and should not: a Web Audio context will not
+   *  begin without a gesture, and a page that started playing at you the
+   *  moment it opened would deserve the reputation. So when the pref is
+   *  already on from a previous visit, the bed is armed and waits for the
+   *  first thing the visitor does.
+   * ------------------------------------------------------------------- */
+  function toneKey(){
+    var sc = SCHEMES[prefs.scheme];
+    return (sc && TONES[sc.n]) || 'library';
+  }
+
+  /* Has this visitor done anything yet? Until they have, a Web Audio
+     context cannot start, so there is no point pretending otherwise. */
+  var gestured = false;
+  function noteGesture(){
+    if (gestured) return;
+    gestured = true;
+    document.removeEventListener('pointerdown', noteGesture, true);
+    document.removeEventListener('keydown', noteGesture, true);
+    if (prefs.music === 'on' && !(window.LCW98Rest && LCW98Rest.resting)) startMusic();
+  }
+  document.addEventListener('pointerdown', noteGesture, true);
+  document.addEventListener('keydown', noteGesture, true);
+
+  function startMusic(){
+    if (!window.LCRoomTone || !LCRoomTone.available()) return;
+    LCRoomTone.setVolume(MUSIC_VOL);
+    LCRoomTone.play(toneKey());
+  }
+
+  function applyMusic(){
+    // published for the Rest button, which is in another closure and only
+    // needs to know which bed the room is currently in
+    document.documentElement.dataset.w98Tone = toneKey();
+    if (!window.LCRoomTone || !LCRoomTone.available()) return;
+    if (prefs.music !== 'on'){
+      if (LCRoomTone.running) LCRoomTone.stop();
+      return;
+    }
+    // Resting borrows the engine and hands it back; changing scheme while
+    // it is dimmed must not yank the room out from under it.
+    if (window.LCW98Rest && LCW98Rest.resting) return;
+    // On a fresh load with the pref already on there has been no gesture
+    // yet: noteGesture() above starts it at the first thing they do.
+    if (!gestured) return;
+    startMusic();
   }
 
   /* ---- sound. Synthesised here; nothing sampled from anywhere ---- */
@@ -6516,6 +6780,18 @@ footer{
       TASKPOS.map(function(o){ return chip(o, o.id === prefs.task); }).join('');
     document.getElementById('w98-sounds').innerHTML =
       SOUNDS.map(function(o){ return chip(o, o.id === prefs.sound); }).join('');
+    document.getElementById('w98-music').innerHTML =
+      MUSIC.map(function(o){ return chip(o, o.id === prefs.music); }).join('');
+    var note = document.getElementById('w98-musicnote');
+    if (note){
+      note.textContent = window.LCRoomTone && LCRoomTone.available()
+        ? 'Follows the colour scheme. ' + SCHEMES[prefs.scheme].n + ' is ' +
+          (TONE_NAMES[toneKey()] || 'an office, late') + '.'
+        : 'This browser has no Web Audio, so there is nothing to play.';
+    }
+    var lever = document.getElementById('w98-messy');
+    if (lever) lever.setAttribute('aria-pressed',
+      document.documentElement.dataset.w98Messy === '1' ? 'true' : 'false');
   }
 
   function wire(id, key, isIndex){
@@ -6533,6 +6809,19 @@ footer{
   wire('w98-fonts', 'font', false);
   wire('w98-cursors', 'cursor', false);
   wire('w98-taskpos', 'task', false);
+  wire('w98-music', 'music', false);
+
+  /* The switch reports; it does not reach across and move icons itself.
+     Whether the desk is messy is the desktop's fact to keep, so the
+     button asks and then reads the answer back rather than assuming. */
+  var lever = document.getElementById('w98-messy');
+  if (lever) lever.addEventListener('click', function(){
+    var on = lever.getAttribute('aria-pressed') !== 'true';
+    document.dispatchEvent(new CustomEvent('w98:messy', { detail: { on: on } }));
+    lever.setAttribute('aria-pressed',
+      document.documentElement.dataset.w98Messy === '1' ? 'true' : 'false');
+    beep('tick');
+  });
   wire('w98-sounds', 'sound', false);
 
   /* ---- tabs ---- */

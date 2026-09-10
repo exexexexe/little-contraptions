@@ -59,6 +59,12 @@ what it is.
 
 (The table above stops at 29; the hub itself is at 149. Bringing it up to date is on the list.)
 
+The desktop has a Start menu with **Rest**, **Restart** and **Shut Down**, a **messy desktop**
+switch in Display Properties → Settings, and an ambient soundtrack that follows the colour scheme.
+The soundtrack is Room Tone's engine (`shared/lc-roomtone.js`) at a background level — four of its
+six beds mapped across the twenty schemes. Nothing is sampled and there is still no audio file in
+this repo. Sound cannot start on load: the bed is armed and waits for the visitor's first gesture.
+
 `/api/keys` reports which optional keys are configured — `nasa`, `tmdb`, `groq`, `pexels` — plus
 `store`, which is not a key but says whether the shared database is open. `pexels` gates
 `/atmosphere/`; `tmdb` gates `/movie-night/`; `store` gates `/message-in-a-bottle/` and
