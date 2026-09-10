@@ -65,6 +65,12 @@ The soundtrack is Room Tone's engine (`shared/lc-roomtone.js`) at a background l
 six beds mapped across the twenty schemes. Nothing is sampled and there is still no audio file in
 this repo. Sound cannot start on load: the bed is armed and waits for the visitor's first gesture.
 
+`/api/hall` is the hall of fame: a shared wall signed only by visitors who have found all
+forty-three hidden things. The completeness claim comes from the browser and is not verifiable
+server-side — checking it properly would mean keeping a per-visitor record of which eggs each
+person found, which is the surveillance the tracker exists to avoid. Text cleaning, the write gate
+and one-row-per-browser are enforced; the count is taken on trust.
+
 `/api/keys` reports which optional keys are configured — `nasa`, `tmdb`, `groq`, `pexels` — plus
 `store`, which is not a key but says whether the shared database is open. `pexels` gates
 `/atmosphere/`; `tmdb` gates `/movie-night/`; `store` gates `/message-in-a-bottle/` and

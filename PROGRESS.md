@@ -3116,3 +3116,59 @@ Mostly one line at the point the egg already does its own thing. The exceptions 
 The hall of fame itself. It needs the shared cross-visitor store the guestbook and the bottle use
 — a server change, and its own sitting. The unlock condition it depends on now works.
 
+---
+
+# The hall of fame
+
+The last thing on the backlog. A shared, permanent wall that only somebody who has found all
+forty-three hidden things can sign — on the same infrastructure as the guestbook and the bottle,
+because other people have to be able to see it.
+
+## The honest bit about verification
+
+**The server cannot check that you actually found everything, and it does not pretend to.** The
+count arrives from the browser, where the tracker keeps it, and anybody who can open a console
+could send `43` without having found anything.
+
+That is a decision rather than an oversight. Verifying it properly would mean the server keeping a
+per-visitor record of which eggs each person had found — which is exactly the surveillance the
+tracker was built to avoid, and the reason its progress lives in `localStorage` and never leaves
+the browser. The wall is a nice thing at the end of a long game, not a security boundary, and it is
+not worth watching everybody to protect it.
+
+What the server *does* enforce is everything that protects other people: the text goes through the
+same cleaner as every other shared board, the write gate is the guestbook's, the claimed count has
+to be internally consistent rather than whatever was in the request, and there is one row per
+browser. Verified: a visitor with 1 of 43 is refused with `not_finished`.
+
+## One row per browser, not one per signing
+
+The token is the primary key and a second signing replaces the first. The wall is a record of who
+got to the end, not a conversation — letting people write on it repeatedly would make it a
+guestbook with a harder door. Replacing rather than appending also means nobody has to live
+forever with the first thing they typed.
+
+## It is not fetched until it is earned
+
+The wall is only requested once the list is complete. Asking earlier would tell the server that
+somebody had opened the tracker, which is not its business. Verified by counting requests:
+**zero calls to `/api/hall` with the tracker open at 1 of 43, exactly one at 43 of 43.**
+
+## Verified
+
+- Incomplete: no wall in the panel at all, just the private-copy footer.
+- Complete: the wall appears, loads, and offers the form.
+- Signing works and the wall goes from one name to two, with your own row marked.
+- **A second browser sees both names** and is correctly not marked as having signed.
+- A visitor at 1 of 43 attempting to sign is refused.
+- Rate-limited signing degrades to the house wording rather than failing silently — seen for real,
+  because the earlier tests had used the hour's budget up.
+- Full cabinet sweep: 150 pages, zero page errors, zero horizontal overflow.
+- Test rows removed from the local database. Production keeps its own on the Railway volume.
+
+## The backlog is now empty of the six phases
+
+Phase 1 through Phase 6 are all done. What remains is what those phases explicitly deferred: the
+other three consolidations (Design Studio, Sound Lab, History Desk), and the 97 toys that still
+make no sound and 59 that have no animation.
+
