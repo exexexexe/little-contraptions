@@ -1643,6 +1643,22 @@ async function handleApi(req, res, url) {
       url.searchParams.get('t') || '', url.searchParams.get('before') || 0));
   }
 
+  // --- the hall of fame ---------------------------------------------
+  if (path === '/api/hall') {
+    if (!store.ready()) return sendJson(res, 200, { ok: false, why: 'no_store' });
+
+    if (req.method === 'POST') {
+      const gate = castCheck(clientIp(req));      // same gate as the guestbook
+      if (!gate.ok) return sendJson(res, 429, { ok: false, why: 'too_many', retryAfter: gate.retryAfter });
+      let body = {};
+      try { body = JSON.parse(await readBody(req) || '{}'); }
+      catch (e) { return sendJson(res, 400, { ok: false, why: 'bad_body' }); }
+      const out = store.hallSign(body.token, body.handle, body.text, body.found, body.total);
+      return sendJson(res, out.ok ? 200 : 400, out);
+    }
+    return sendJson(res, 200, store.hall(url.searchParams.get('t') || ''));
+  }
+
   // --- the collaborative canvas -------------------------------------
   if (path === '/api/pixels') {
     if (!store.ready()) return sendJson(res, 200, { ok: false, why: 'no_store' });
@@ -1697,7 +1713,8 @@ const server = http.createServer((req, res) => {
   // POST is allowed for the one route that takes a body; everything else
   // is still read-only, as it was.
   const WRITABLE = ['/api/generate', '/api/presence', '/api/bottle', '/api/bottle/found',
-                   '/api/scores', '/api/guestbook', '/api/pixels', '/api/story'];
+                   '/api/scores', '/api/guestbook', '/api/pixels', '/api/story',
+                   '/api/hall'];
   const writable = req.method === 'POST' && WRITABLE.includes(parsed.pathname);
   if (req.method !== 'GET' && req.method !== 'HEAD' && !writable) {
     res.writeHead(405).end('Method not allowed');

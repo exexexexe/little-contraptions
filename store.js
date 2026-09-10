@@ -128,6 +128,22 @@ function open() {
         PRIMARY KEY (x, y)
       );
 
+      /* The hall of fame.
+         One row per browser, not per signing: the wall is a record of who
+         got to the end, and letting somebody write on it repeatedly would
+         make it a guestbook with a harder door. The token is the primary
+         key, so a second signing replaces the first rather than adding to
+         it — people change their minds about what to put, and nobody
+         should have to live with the first thing they typed forever. */
+      CREATE TABLE IF NOT EXISTS hall (
+        token TEXT    PRIMARY KEY,
+        handle TEXT   NOT NULL DEFAULT '',
+        text  TEXT    NOT NULL DEFAULT '',
+        found INTEGER NOT NULL,
+        at    INTEGER NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS hall_at ON hall(at ASC);
+
       CREATE TABLE IF NOT EXISTS story (
         n     INTEGER PRIMARY KEY AUTOINCREMENT,
         text  TEXT    NOT NULL,
@@ -450,6 +466,71 @@ function guestbook(token, before) {
   };
 }
 
+/* ---- the hall of fame ---------------------------------------------- *
+ *  Signed only by somebody who has found every hidden thing in the
+ *  cabinet. The server cannot verify that and does not pretend to: the
+ *  count arrives from the browser, where the tracker keeps it, and a
+ *  determined person could obviously send any number they liked.
+ *
+ *  That is a deliberate choice rather than an oversight. Verifying it
+ *  properly would mean the server keeping a per-visitor record of which
+ *  eggs each person had found, which is exactly the surveillance the
+ *  tracker was built to avoid — a record of how each visitor plays. The
+ *  wall is a nice thing at the end of a long game, not a security
+ *  boundary, and it is not worth watching everybody to protect it.
+ *
+ *  What the server does enforce is everything that protects other
+ *  people: the text is cleaned the same way every other shared board is,
+ *  one row per browser, and the claimed count has to be a plausible
+ *  number rather than whatever was in the request.
+ * ------------------------------------------------------------------- */
+const HALL_PAGE = 200;
+
+function hallSign(token, handle, text, found, total) {
+  if (!ready()) return { ok: false, why: 'no_store' };
+  if (!okToken(token)) return { ok: false, why: 'bad_token' };
+
+  const f = Number(found), t = Number(total);
+  if (!Number.isFinite(f) || !Number.isFinite(t) || t < 1 || t > 10000 ||
+      f < t || f > t) {
+    return { ok: false, why: 'not_finished' };
+  }
+
+  // The text is optional here, unlike the guestbook: getting to the end
+  // is the message, and somebody may not want to add to it.
+  let clean = '';
+  if (String(text || '').trim()) {
+    const c = cleanText(text);
+    if (!c.ok) return { ok: false, why: c.why };
+    clean = c.text;
+  }
+
+  db.prepare(
+    'INSERT INTO hall (token, handle, text, found, at) VALUES (?, ?, ?, ?, ?) ' +
+    'ON CONFLICT(token) DO UPDATE SET handle = excluded.handle, ' +
+    'text = excluded.text, found = excluded.found, at = excluded.at'
+  ).run(token, cleanHandle(handle), clean, f, Date.now());
+
+  return hall(token);
+}
+
+function hall(token) {
+  if (!ready()) return { ok: false, why: 'no_store' };
+  const rows = db.prepare(
+    'SELECT handle, text, found, at, token FROM hall ORDER BY at ASC LIMIT ' + HALL_PAGE
+  ).all();
+  const total = db.prepare('SELECT COUNT(*) AS n FROM hall').get().n;
+  return {
+    ok: true, total,
+    signed: okToken(token) &&
+            !!db.prepare('SELECT 1 FROM hall WHERE token = ?').get(token),
+    entries: rows.map((r) => ({
+      handle: r.handle || 'anon', text: r.text, found: r.found, at: r.at,
+      you: okToken(token) && r.token === token,
+    })),
+  };
+}
+
 /* ---- the pixel canvas --------------------------------------------- */
 
 const CANVAS_W = 96, CANVAS_H = 64;
@@ -586,6 +667,7 @@ module.exports = {
   seen, roster,
   BOARDS, boardList, submitScore, leaderboard,
   sign, guestbook,
+  hallSign, hall,
   place, canvas, CANVAS_W, CANVAS_H, PALETTE_N,
   addSentence, story, SENTENCE_MAX,
 };

@@ -66,6 +66,28 @@
       '.lcach .done{margin:0 11px 11px;padding:8px 10px;background:var(--w98-win,#fff);',
       '  border:1px solid var(--w98-dark,#404040);font-weight:700}',
       '@media (max-width:420px){.lcach .wh{display:none}}',
+      /* the wall, which only exists once everything has been found */
+      '.lcach .wall{margin:0 11px 11px;padding:9px 10px;background:var(--w98-win,#fff);',
+      '  border:1px solid;border-color:var(--w98-dark,#404040) var(--w98-lite,#dfdfdf)',
+      '  var(--w98-lite,#dfdfdf) var(--w98-dark,#404040)}',
+      '.lcach .wall h3{margin:0 0 6px;font-size:12px}',
+      '.lcach .wall .names{max-height:132px;overflow:auto;margin:0 0 8px}',
+      '.lcach .wall .who{padding:3px 0;border-bottom:1px dotted rgba(128,128,128,.4)}',
+      '.lcach .wall .who:last-child{border-bottom:0}',
+      '.lcach .wall .who b{font-weight:700}',
+      '.lcach .wall .who.you b{text-decoration:underline}',
+      '.lcach .wall .who span{opacity:.7}',
+      '.lcach .wall form{display:flex;gap:5px;flex-wrap:wrap;align-items:center}',
+      '.lcach .wall input{font:inherit;padding:3px 5px;min-width:0;',
+      '  border:1px solid;border-color:var(--w98-dark,#404040) var(--w98-lite,#dfdfdf)',
+      '  var(--w98-lite,#dfdfdf) var(--w98-dark,#404040)}',
+      '.lcach .wall input.h{width:8ch}.lcach .wall input.t{flex:1 1 12ch}',
+      '.lcach .wall button{font:inherit;padding:3px 9px;min-height:22px;cursor:pointer;',
+      '  background:var(--w98-face,#c0c0c0);color:var(--w98-text,#000);',
+      '  border:1px solid;border-color:var(--w98-lite,#dfdfdf) var(--w98-dark,#404040)',
+      '  var(--w98-dark,#404040) var(--w98-lite,#dfdfdf)}',
+      '.lcach .wall .say{margin:6px 0 0;font-size:11px;opacity:.8}',
+      '@media (pointer:coarse){.lcach .wall button,.lcach .wall input{min-height:38px}}',
     ].join('');
     document.head.appendChild(s);
   }
@@ -109,9 +131,84 @@
            '<div class="meter" role="img" aria-label="' + p.earned + ' of ' + p.total + '">' + pips + '</div>' +
            '<div class="list">' + rows() + '</div>' +
            (done
-             ? '<div class="done">Everything on this list has been found.</div>'
+             ? '<div class="done">Everything on this list has been found.</div>' +
+               '<div class="wall" id="lcach-wall"><h3>The wall</h3>' +
+               '<p class="say">Loading the wall&hellip;</p></div>'
              : '<div class="foot">The rest are still out there. Nothing here is on the server &mdash; ' +
                'this is your copy and nobody else can see it.</div>');
+  }
+
+  /* ---- the wall ------------------------------------------------------ *
+   *  The one part of this that other people can see. Everything else in
+   *  the tracker is private to the browser it happens in; this is a
+   *  shared board, on the same infrastructure as the guestbook.
+   *
+   *  It is only fetched once the list is complete. Asking the server for
+   *  it earlier would tell the server that somebody had opened the
+   *  tracker, which is not its business.
+   * ------------------------------------------------------------------- */
+  function paintWall(data){
+    var el = panel && panel.querySelector('#lcach-wall');
+    if (!el) return;
+    if (!data || !data.ok){
+      var why = (window.LCId && LCId.why) ? LCId.why(data && data.why) : null;
+      el.innerHTML = '<h3>The wall</h3><p class="say">' +
+        esc(why || 'The wall is not reachable just now.') + '</p>';
+      return;
+    }
+    var names = data.entries.length
+      ? data.entries.map(function(e){
+          return '<div class="who' + (e.you ? ' you' : '') + '"><b>' + esc(e.handle) + '</b>' +
+                 (e.text ? ' <span>&mdash; ' + esc(e.text) + '</span>' : '') + '</div>';
+        }).join('')
+      : '<div class="who"><span>Nobody has signed it yet. You would be first.</span></div>';
+
+    el.innerHTML =
+      '<h3>The wall &mdash; ' + data.total + ' ' + (data.total === 1 ? 'name' : 'names') + '</h3>' +
+      '<div class="names">' + names + '</div>' +
+      (data.signed
+        ? '<p class="say">You are on it. Signing again replaces what you wrote.</p>' +
+          '<form id="lcach-sign"><input class="h" id="lcach-h" maxlength="12" placeholder="name" ' +
+          'aria-label="Your name"><input class="t" id="lcach-t" maxlength="140" ' +
+          'placeholder="say something (optional)" aria-label="Something to say">' +
+          '<button type="submit">Change it</button></form>'
+        : '<form id="lcach-sign"><input class="h" id="lcach-h" maxlength="12" placeholder="name" ' +
+          'aria-label="Your name"><input class="t" id="lcach-t" maxlength="140" ' +
+          'placeholder="say something (optional)" aria-label="Something to say">' +
+          '<button type="submit">Sign it</button></form>');
+
+    var h = el.querySelector('#lcach-h');
+    if (h && window.LCId && LCId.handle) { try { h.value = LCId.handle() || ''; } catch (e) {} }
+
+    var form = el.querySelector('#lcach-sign');
+    if (form) form.addEventListener('submit', function(e){
+      e.preventDefault();
+      if (!window.LCId || !window.LCAch) return;
+      var p = LCAch.progress();
+      var btn = form.querySelector('button');
+      btn.disabled = true; btn.textContent = 'Signing\u2026';
+      LCId.post('/api/hall', {
+        handle: el.querySelector('#lcach-h').value,
+        text: el.querySelector('#lcach-t').value,
+        found: p.earned, total: p.total
+      }).then(function(out){
+        if (out && out.ok) paintWall(out);
+        else {
+          btn.disabled = false; btn.textContent = 'Sign it';
+          var say = document.createElement('p');
+          say.className = 'say';
+          say.textContent = (window.LCId && LCId.why(out && out.why)) ||
+                            'That did not go through.';
+          form.appendChild(say);
+        }
+      });
+    });
+  }
+
+  function loadWall(){
+    if (!panel || !window.LCAch || !LCAch.complete()) return;
+    if (!window.LCId){ paintWall({ ok: false, why: 'unreachable' }); return; }
+    LCId.get('/api/hall').then(paintWall);
   }
 
   function open(){
@@ -131,6 +228,7 @@
     panel.addEventListener('click', function(e){ if (e.target === panel) close(); });
     document.addEventListener('keydown', onKey, true);
     box.focus();
+    loadWall();
     return true;
   }
 
@@ -156,6 +254,7 @@
     var box = panel.querySelector('.lcach');
     box.innerHTML = body();
     box.querySelector('.bar button').addEventListener('click', close);
+    loadWall();
   });
 
   window.LCAchUI = {
