@@ -2823,3 +2823,83 @@ Driven in a real browser, both modes, at 1280px and 390px.
 - Phase 5, the four-toy consolidation, is untouched, so `/generator/` still does not exist and the
   Tatu-and-Patu voice pack parked in Phase 1 is still parked.
 - The generator-family ambience pass reached 22 of 49 toys; 21 are still silent.
+
+---
+
+# Phase 4 — the visual differentiation pass
+
+## The premise was already satisfied, and the audit says so
+
+Phase 4 asks for toys "that ended up sharing generic or similar-looking styling". All 149 were
+loaded in a real browser and their computed `background-color` + `background-image` compared:
+
+**Zero shared backgrounds. 149 toys, 149 distinct surrounds, no duplicate pairs at all.**
+
+That is the same check that failed during the generator pass — it caught dungeon-room and
+shanty-ifier sharing a gradient — so it is a check with a track record of finding things, and this
+time there is nothing to find. The retroactive look-and-feel sweep the phase was written for has
+effectively already happened, across the generator pass and the batches before it.
+
+What the audit *did* find was worse and not a styling problem at all.
+
+## Thirty toys made sound and ignored the mute switch
+
+The cabinet-wide mute lived in `LCSound.play()`, which means it only ever muted toys that asked
+their cues *through* LCSound. Thirty toys build their noises straight off the shared bench or
+their own context — the aquarium's bubbles, the dominoes, the marble run, the reaction bench, the
+hourglass — and went on making them with the switch off.
+
+A switch that silences some of the cabinet and not the rest is worse than no switch: it tells you
+it worked and then it does not.
+
+**The fix is one gate, not thirty edits.** `lc-audio.js` now puts a gain between the shared bench
+master and the speakers, and every toy built on that bench passes through it already — twenty-one
+of the thirty were fixed without their files being opened. The preference is read from storage
+rather than from LCSound, because lc-sound.js loads *after* lc-audio.js and calls into it; the
+dependency only runs one way, and `LCSound.set()` pushes changes back through
+`LCAudio.setMuted()`. The change is ramped over 40ms rather than stepped, because cutting a
+running voice to zero is itself a click — a noise made by the mute button.
+
+`LCSound.gate(ctx)` does the same job for a toy that owns its AudioContext outright.
+
+## Where the line is drawn, and why
+
+The gate deliberately does **not** reach anything hung directly off `ctx.destination` rather than
+off the bench master. Room Tone's engine does exactly that, on purpose.
+
+**The mute governs cues played at you. It does not silence an instrument you came to play.** A
+theremin, a Chladni plate, a colour organ, a step sequencer, the Morse key, the radio and Room
+Tone itself are all things you start yourself, with their own stop button and their own level.
+Silencing those from a switch thrown on another page reads as a broken toy, not a respected
+preference. Three of the ten own-context toys are on the other side of that line and are now
+gated: the static channel (static is played *at* you), the Zone's ambience, and the useless
+buttons, whose every noise is a cue on a click.
+
+## The other half: the switch was missing too
+
+The preference applying on a page is no use if there is no way to set it there. Nineteen bench
+toys and the three gated own-context ones had no switch at all, so somebody on the aquarium had
+to go and find another drawer to turn sound off. All twenty-two now mount it.
+
+## Verified
+
+- **Measured, not inferred.** An analyser tapped after the gate: the aquarium peaks at 124
+  unmuted, **0** muted, 116 unmuted again. Whack-a-mole 114 before the switch is clicked, 0 after.
+- **The preference carries across toys in one browser session**: muted on whack-a-mole, marble-run
+  came up with its gate at 0 and its button showing muted and measured 0; unmuted there, it
+  measured 110 and the aquarium agreed.
+- **Honoured at build time**, not just on change: a fresh dominoes with the preference already
+  stored built its gate closed and measured 0.
+- **Room Tone still plays with the mute on** — peak 162 — which is the line above, working.
+- All twenty-two switches present, none overlapping the back button, no overflow.
+- **Full-cabinet sweep after the change: 149 toys, zero page errors, zero horizontal overflow.**
+
+## Not done
+
+- **97 toys still make no sound at all** and 59 have no animation. Both are real gaps against the
+  standing ambience rule, but they are additions rather than differentiation, and roughly a fifth
+  of them are about to be merged away by Phase 5 — doing them first would be work thrown out.
+- The font clusters remain: 40 toys on the system sans, 38 on Iowan Old Style. Unlike the
+  backgrounds these are not byte-identical surrounds, and several are deliberate pairs on toys
+  that look nothing alike otherwise.
+

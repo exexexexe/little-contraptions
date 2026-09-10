@@ -198,6 +198,7 @@ input[type=range]{ width:96px;accent-color:var(--amber) }
   some of them carry the assumptions of the year they were made.
 </div>
 
+<script src="/shared/lc-sound.js"></script>
 <script>
 'use strict';
 
@@ -259,7 +260,9 @@ function audio(){
   // roll the top off so it hisses rather than sizzles
   const lp = ctxAudio.createBiquadFilter();
   lp.type = 'lowpass'; lp.frequency.value = 5200;
-  hiss.connect(lp).connect(hissGain).connect(ctxAudio.destination);
+  // through the cabinet's switch rather than straight at the speakers:
+  // static is played AT you, which is exactly what the mute is for
+  hiss.connect(lp).connect(hissGain).connect(LCSound.gate(ctxAudio));
   hiss.start();
   return ctxAudio;
 }
@@ -474,6 +477,11 @@ setOsd(0, 'no signal');
     holder.setAttribute('aria-pressed', String(held));
   });
 })();
+</script>
+<script>
+/* This toy owns its AudioContext rather than using the shared bench,
+   so its output goes through LCSound.gate() above. The switch. */
+LCSound.mount();
 </script>
 </body>
 </html>

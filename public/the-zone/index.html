@@ -285,6 +285,7 @@ body{ padding-bottom:64px }
   </footer>
 </div>
 
+<script src="/shared/lc-sound.js"></script>
 <script>
 'use strict';
 
@@ -436,7 +437,8 @@ function click(){
   const src = ctx.createBufferSource(); src.buffer = buf;
   const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 1400;
   const g = ctx.createGain(); g.gain.value = 0.13;
-  src.connect(hp); hp.connect(g); g.connect(ctx.destination);
+  // ambience, so it answers to the shared switch
+  src.connect(hp); hp.connect(g); g.connect(LCSound.gate(ctx));
   src.start();
 }
 function scheduleClicks(){
@@ -765,6 +767,11 @@ document.addEventListener('visibilitychange', () => {
 });
 
 renderSectors();
+</script>
+<script>
+/* This toy owns its AudioContext rather than using the shared bench,
+   so its output goes through LCSound.gate() above. The switch. */
+LCSound.mount();
 </script>
 </body>
 </html>

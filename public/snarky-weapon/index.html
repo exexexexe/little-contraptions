@@ -366,5 +366,13 @@ $('snd').checked = true;
 window.__gun = { ask: ask, newWeapon: newWeapon, isBig: (s) => BIG.test(s),
                  get sincere(){ return lastWasSincere; } };
 </script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+/* This toy builds its noises straight off the shared bench, so the
+   cabinet-wide mute already reaches them through lc-audio's gate.
+   What was missing was the switch itself: the preference applied
+   here and there was no way to set it from here. */
+LCSound.mount();
+</script>
 </body>
 </html>

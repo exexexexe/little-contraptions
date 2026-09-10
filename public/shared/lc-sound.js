@@ -33,6 +33,9 @@
   function set(on) {
     enabled = !!on;
     try { localStorage.setItem(KEY, enabled ? 'on' : 'off'); } catch (e) {}
+    // the toys that build their noises straight off the shared bench are
+    // muted at the bench, not here — this is what reaches them
+    if (typeof LCAudio !== 'undefined' && LCAudio.setMuted) LCAudio.setMuted(!enabled);
     listeners.forEach(function (fn) { try { fn(enabled); } catch (e) {} });
     return enabled;
   }
@@ -49,6 +52,29 @@
       fn(A);
     });
     return true;
+  }
+
+  /* A muted output for a toy that builds its own AudioContext rather than
+     using the shared bench. Connect to this instead of ctx.destination and
+     the cabinet's switch reaches it like everything else.
+
+     The bench has its own gate in lc-audio.js; this is the same idea for
+     the handful of toys that predate it and own their context outright.
+     Ramped rather than stepped, because cutting a running voice to zero
+     is itself a click. */
+  function gate(ctx) {
+    var g = ctx.createGain();
+    g.gain.value = enabled ? 1 : 0;
+    g.connect(ctx.destination);
+    listeners.push(function (on) {
+      try {
+        var t = ctx.currentTime;
+        g.gain.cancelScheduledValues(t);
+        g.gain.setValueAtTime(g.gain.value, t);
+        g.gain.linearRampToValueAtTime(on ? 1 : 0, t + 0.04);
+      } catch (e) { /* the toy goes on working; only the fade is lost */ }
+    });
+    return g;
   }
 
   /* ---- the switch --------------------------------------------------- *
@@ -118,6 +144,7 @@
     set: set,
     toggle: function () { return set(!enabled); },
     play: play,
+    gate: gate,
     mount: mount,
     onChange: function (fn) { listeners.push(fn); },
     CEILING: CEILING
