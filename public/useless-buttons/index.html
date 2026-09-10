@@ -135,6 +135,7 @@ h1{
 
 <a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
 
+<script src="/shared/lc-sound.js"></script>
 <script>
 (function(){
   'use strict';
@@ -217,7 +218,7 @@ h1{
   });
 
   /* 5. one synthesised note, never twice running */
-  var ac = null, lastNote = -1;
+  var ac = null, acGate = null, lastNote = -1;
   var SCALE = [0, 2, 4, 7, 9, 12, 14, 16];
   $('b-tone').addEventListener('click', function(){
     var i;
@@ -228,6 +229,8 @@ h1{
     mark('tone', Math.round(f));
     try {
       if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)();
+      // one gate for the life of the page, not one per press
+      if (!acGate) acGate = LCSound.gate(ac);
       if (ac.state === 'suspended') ac.resume();
       var t = ac.currentTime;
       var o = ac.createOscillator(), g = ac.createGain();
@@ -235,7 +238,8 @@ h1{
       g.gain.setValueAtTime(0.0001, t);
       g.gain.exponentialRampToValueAtTime(0.16, t + 0.01);
       g.gain.exponentialRampToValueAtTime(0.0001, t + 0.7);
-      o.connect(g); g.connect(ac.destination);
+      // every noise here is a cue on a click, which is the mute's job
+      o.connect(g); g.connect(acGate);
       o.start(t); o.stop(t + 0.72);
     } catch (e){ $('t-tone').textContent = 'no audio here'; }
   });
@@ -391,6 +395,11 @@ h1{
     }
   };
 })();
+</script>
+<script>
+/* This toy owns its AudioContext rather than using the shared bench,
+   so its output goes through LCSound.gate() above. The switch. */
+LCSound.mount();
 </script>
 </body>
 </html>

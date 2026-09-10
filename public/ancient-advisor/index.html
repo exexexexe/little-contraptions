@@ -407,5 +407,13 @@ window.__realm = { found: found, get realm(){ return realm; },
                    setYears: (y) => { $('years').value = y; years(); },
                    tooLongVisible: () => !$('toolong').hidden };
 </script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+/* This toy builds its noises straight off the shared bench, so the
+   cabinet-wide mute already reaches them through lc-audio's gate.
+   What was missing was the switch itself: the preference applied
+   here and there was no way to set it from here. */
+LCSound.mount();
+</script>
 </body>
 </html>

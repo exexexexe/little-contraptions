@@ -43,7 +43,37 @@
     wet.gain.value = 0.25;
     wet.connect(conv);
     conv.connect(master);
-    master.connect(ctx.destination);
+
+    /* ---- the mute, where every toy passes through ---------------------- *
+     *  The shared switch used to live only in LCSound.play(), so it only
+     *  ever muted toys that asked their cues through it. Twenty-one toys
+     *  build their noises straight off this bench — the aquarium's
+     *  bubbles, the dominoes, the marble run, the reaction bench — and
+     *  went on making them with the switch off, which is worse than not
+     *  having a switch.
+     *
+     *  So the gate is here, between the bench master and the speakers,
+     *  and it costs those toys nothing: they are already connected to it.
+     *
+     *  The preference is read from storage rather than from LCSound,
+     *  because lc-sound.js loads after this file and calls into it —
+     *  the dependency only runs one way. LCSound.set() pushes changes
+     *  back through LCAudio.setMuted().
+     *
+     *  Note what this does NOT reach: anything hung directly off
+     *  ctx.destination rather than off master. Room Tone's engine does
+     *  exactly that, deliberately. An instrument you started yourself,
+     *  with its own stop button and its own level, is not a cue being
+     *  played at you, and silencing it from a switch on another page
+     *  would read as a broken toy rather than a respected preference.
+     * ------------------------------------------------------------------ */
+    var gate = ctx.createGain();
+    var muted = false;
+    try { muted = localStorage.getItem('lc-sound') === 'off'; }
+    catch (e) { /* private mode: sound stays on */ }
+    gate.gain.value = muted ? 0 : 1;
+    master.connect(gate);
+    gate.connect(ctx.destination);
 
     var NOISE = {};
 
@@ -227,6 +257,7 @@
     return {
       ctx: ctx,
       master: master,
+      gate: gate,
       wet: wet,
       NOISE: NOISE,
       resume: function () { if (ctx.state === 'suspended') ctx.resume(); return ctx.state; },
@@ -257,5 +288,23 @@
     } catch (e) { /* no audio here; the rest of the page is unaffected */ }
   }
 
-  window.LCAudio = { get: get, sting: sting, available: function () { return !!get(); } };
+  /* Flip the gate. Called by LCSound.set(); a no-op when no context has
+     been built yet, which is the common case — a page whose visitor has
+     never made a sound has nothing to mute, and building a context here
+     just to silence it would be the one thing the mute is meant to avoid. */
+  function setMuted(on) {
+    if (!instance) return;
+    try {
+      var g = instance.gate;
+      var t = instance.ctx.currentTime;
+      g.gain.cancelScheduledValues(t);
+      g.gain.setValueAtTime(g.gain.value, t);
+      // a short ramp rather than a step: cutting a running voice to zero
+      // instantly is a click, which is a noise made by the mute button
+      g.gain.linearRampToValueAtTime(on ? 0 : 1, t + 0.04);
+    } catch (e) { /* nothing to do about it, and nothing depends on it */ }
+  }
+
+  window.LCAudio = { get: get, sting: sting, setMuted: setMuted,
+                     available: function () { return !!get(); } };
 })();

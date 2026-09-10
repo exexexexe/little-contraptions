@@ -476,5 +476,13 @@ h1{ font-size:clamp(19px,4.4vw,25px);font-weight:600;margin:0;letter-spacing:-.0
   };
 })();
 </script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+/* This toy builds its noises straight off the shared bench, so the
+   cabinet-wide mute already reaches them through lc-audio's gate.
+   What was missing was the switch itself: the preference applied
+   here and there was no way to set it from here. */
+LCSound.mount();
+</script>
 </body>
 </html>
