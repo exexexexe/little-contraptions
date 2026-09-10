@@ -157,6 +157,7 @@ footer a{ color:var(--red) }
   <a href="/">&larr; back to the cabinet</a>
 </footer>
 
+<script src="/shared/lc-achievements.js"></script>
 <script>
 'use strict';
 const $ = (id) => document.getElementById(id);
@@ -348,6 +349,7 @@ setInterval(() => {
     // and the file quietly changes whose it is
     const subj = $('meta').querySelector('div:nth-child(3)');
     if (subj) subj.innerHTML = '<b>Subject</b>whoever left this open';
+    if (window.LCAch) LCAch.fire('declass.leftopen');
   } else if (idle > IDLE_MS - 25000){
     $('idle').textContent = 'the file is still open';
   }

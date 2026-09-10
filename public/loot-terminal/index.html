@@ -215,6 +215,7 @@ body{ padding-bottom:64px }
   </footer>
 </div>
 
+<script src="/shared/lc-achievements.js"></script>
 <script>
 'use strict';
 
@@ -434,6 +435,7 @@ function pullItem(){
   const twice = registry[0] && registry[0].name === current.name;
   if (twice){
     current.rarity = 'Impossible';
+    if (window.LCAch) LCAch.fire('loot.impossible');
     current.flav = 'The desk has appraised this item once already, moments ago, and the entry ' +
       'it wrote then is identical to the entry it is writing now. It has checked. There is ' +
       'no clerical explanation. The valuation has been left blank.';

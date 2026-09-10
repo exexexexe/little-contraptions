@@ -2987,3 +2987,71 @@ change it and this one would have left it reading 149 forever. It counts the car
   built. This phase's Generator was the one blocking Phase 6.
 - 97 toys still make no sound and 59 have no animation, unchanged from the Phase 4 note.
 
+---
+
+# Phase 6 — the achievement tracker
+
+Run last, as the brief asked, so it tracks final toy identities. That mattered: three of the eggs
+below live in toys that Phase 5 merged an hour earlier, and their entries name `generator` rather
+than the drawers they used to be.
+
+## The catalogue is real, and so is the number
+
+**43 achievements**, taken from the egg tables the batches actually wrote down in this log — the
+seventeen from batches 15–20, the nineteen from the easter-egg pass, the five arrow codes and the
+front door's own. Every one has a hint. No placeholder entries and no rounded-up total.
+
+The catalogue lives in `shared/lc-achievements.js`, not in the toys. That is load-bearing and it
+was wrong first: the file said each toy registers its own, while `complete()` — the hall-of-fame
+unlock — measures against whatever is defined on the current page. On a toy page defining three
+eggs, "you have found everything" would go true at three. The catalogue is central so the total is
+the same number on every page, and `define()` only ever adds.
+
+Entries may carry `was`, an old id, so a renamed toy does not cost anyone a find.
+
+## The way in
+
+Peel a card and **keep holding**. At 900ms a small mark appears in the corner of the note; it opens
+the list.
+
+It is there because peeling is already the cabinet's oldest hidden thing, and anybody who has found
+the notes has exactly the habit that finds this. Verified at the threshold rather than assumed: a
+quick flick arms nothing, 400ms arms nothing, 1200ms arms it, and no mark is left behind afterwards.
+
+A locked row shows its hint and withholds its name — silent is a blank, explicit is not an egg any
+more. A test asserts no secret's name appears in the locked list.
+
+## What actually reports
+
+**14 of the 43.** The front door's five (the old code, the reshuffle, the hat-tip, the tracker
+itself, the desktop icon that is not a drawer), all five arrow codes, and four in the drawers:
+the declassified file left open, the bureaucracy that sets you free, the loot desk's *Impossible*,
+and the guestbook signature.
+
+The five arrow codes report from inside `open()` rather than from each matcher, because a code can
+arrive from the keyboard, from a swipe or from the public API, and one call site cannot go out of
+step with the other two.
+
+## What does not report, and what that means
+
+**Twenty-nine of the catalogue's entries are listed but not yet wired.** They are named in the
+registry with their hints, so the tracker tells the truth about how many exist — but they cannot
+currently be earned.
+
+The consequence has to be said plainly: **`complete()` is unreachable today, so the hall of fame
+cannot be unlocked by anybody.** That is not a bug in the unlock; it is the retrofit being
+unfinished. The hall of fame itself is not built at all — it needs the shared cross-visitor store
+the guestbook and the bottle use, which is a server change and its own sitting.
+
+Wiring the rest is mechanical rather than hard: each is one `LCAch.fire('id')` on the line where
+the egg already does its own thing, plus the script tag. The four done here are the pattern.
+
+## Verified
+
+- The registry: first-fire-only, listener isolation, persistence across reload, and **private mode**
+  — with `localStorage` throwing on every access it loads, fires and reports with no page error.
+- Driven through the real handlers on the hub: the Konami code, an arrow code and the hat-tip each
+  recorded exactly once, and the panel read *4 of 43 found* with the right names.
+- The loot desk's egg was forced onto its real branch by pinning the generated name, and recorded.
+- Full cabinet sweep: **150 pages, zero page errors, zero horizontal overflow.**
+

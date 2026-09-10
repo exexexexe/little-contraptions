@@ -203,6 +203,7 @@ footer a{ color:var(--brass-2) }
 </footer>
 
 <script src="/shared/lc-id.js"></script>
+<script src="/shared/lc-achievements.js"></script>
 <script>
 'use strict';
 const $ = (id) => document.getElementById(id);
@@ -287,6 +288,7 @@ function hatTip(){
   const e = $('gb-egg');
   e.innerHTML = 'Signed <b>Neal</b>, is it. This whole cabinet is standing on ' +
                 'the shoulders of <b>neal.fun</b> &mdash; if you have not been, go there instead of here.';
+                if (window.LCAch) LCAch.fire('guestbook.neal');
   e.classList.add('on');
   clearTimeout(hatTip._t);
   hatTip._t = setTimeout(() => e.classList.remove('on'), 6200);

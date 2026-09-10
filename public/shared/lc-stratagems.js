@@ -97,6 +97,10 @@
   var PX = 4, W = 88, H = 72;      /* the art is 88x72 "pixels", shown at 4x */
 
   function open(code) {
+    /* Reported here rather than at each matcher: a code can arrive from
+       the keyboard, from a swipe, or from the public API, and all three
+       end up in this function. One call site cannot go out of step. */
+    if (window.LCAch) LCAch.fire('strat.' + code.id);
     close();
     panel = document.createElement('div');
     panel.className = 'lc-strat';
