@@ -170,6 +170,7 @@ body{ padding-bottom:64px }
 
 <script src="/shared/lc-audio.js"></script>
 <script src="/shared/lc-sound.js"></script>
+<script src="/shared/lc-achievements.js"></script>
 <script>
 'use strict';
 
@@ -263,6 +264,7 @@ function crack(){
   const stage = $('cookie').parentElement;
   if (stage.classList.contains('cracked')) return;
   // The hundredth cookie of a session is not drawn from the pile.
+  if (window.LCAch) LCAch.fire('cookie.hundredth');
   currentFortune = (cracked + 1 === 100)
     ? 'You have opened one hundred of these in a row. There are only so many ' +
       'things a slip of paper can tell you, and you have now had most of them. ' +

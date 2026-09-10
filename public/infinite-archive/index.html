@@ -197,6 +197,7 @@ footer a{ color:var(--gold) }
 </footer>
 
 <script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-achievements.js"></script>
 <script>
 'use strict';
 const $ = (id) => document.getElementById(id);
@@ -335,6 +336,7 @@ function go(){
   const q = $('q').value.trim();
   if (!q){ $('note').textContent = 'Type something. Anything is in here.'; return; }
   pageTurn();
+  if (window.LCAch) LCAch.fire('archive.babel');
   if (SELF.test(q)){ meta(); return; }
   render(q.toLowerCase().replace(/[^a-z0-9 ,.;']/gi, ''));
 }

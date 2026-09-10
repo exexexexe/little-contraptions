@@ -231,6 +231,7 @@ footer a{ color:var(--glass) }
 <script src="/shared/lc-weather-fx.js"></script>
 <script src="/shared/lc-audio.js"></script>
 <script src="scenes.js"></script>
+<script src="/shared/lc-achievements.js"></script>
 <script>
 'use strict';
 const $ = (id) => document.getElementById(id);
@@ -492,6 +493,7 @@ function watchHidden(dt){
       if (!hidden.seenEver){
         hidden.seenEver = true;
         $('found').hidden = false;
+        if (window.LCAch) LCAch.fire('globe.figure');
         $('found').innerHTML = '<div class="k">something in the drift</div>' +
           'You shook it hard enough, and for long enough, that the snow came off the bottom — and ' +
           'there is somebody down there. They have been in every one of these globes the whole time. ' +
@@ -546,6 +548,7 @@ function onOrient(e){
     if (upsideDown > 1.4 && !turnedFound){
       turnedFound = true;
       $('found').hidden = false;
+      if (window.LCAch) LCAch.fire('globe.inverted');
       $('found').innerHTML = '<div class="k">you turned it over</div>' +
         'And the snow went to the top, because that is what snow does. There is no trick here ' +
         'and nothing is being simulated for effect &mdash; the flakes are rigid bodies and you ' +

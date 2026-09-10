@@ -143,6 +143,7 @@ h1{ font-family:var(--display);font-size:clamp(28px,6vw,44px);margin:0;text-tran
 </div>
 
 <script src="/shared/lc-generate.js"></script>
+<script src="/shared/lc-achievements.js"></script>
 <script>
 'use strict';
 
@@ -214,6 +215,7 @@ async function settle(){
   const norm = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
   if (norm(a) === norm(b) && /\b(1000|1,000|a thousand|one thousand)\b/.test(norm(a)) &&
       /\bbees?\b/.test(norm(a))){
+    if (window.LCAch) LCAch.fire('beats.bees');
     render({
       winner: 'the bees',
       confidence: 100,

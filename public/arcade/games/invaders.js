@@ -47,6 +47,7 @@
         this.downHold += dt;
         if (!this.shieldOn && this.downHold > 2) {
           this.shieldOn = true; this.shield = 1;
+          if (window.LCAch) LCAch.fire('arcade.shield');
           this.chargeShimmer = 0.9;
         }
       } else this.downHold = 0;

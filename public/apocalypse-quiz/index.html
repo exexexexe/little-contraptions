@@ -205,6 +205,7 @@ h1, .q h2, .btn{ font-family:var(--display) }
   <a href="/">← back to the cabinet</a>
 </footer>
 
+<script src="/shared/lc-achievements.js"></script>
 <script>
 'use strict';
 
@@ -524,6 +525,7 @@ function finish(){
 
   $('r-pct').textContent = allWorst ? '—' : pct + '%';
   $('r-tier').textContent = allWorst ? 'You caused it' : tier.name;
+  if (allWorst && window.LCAch) LCAch.fire('apoc.intent');
   $('r-verdict').textContent = allWorst
     ? 'You did not answer one of these badly. You answered every one of them as badly as it ' +
       'could be answered, which takes the same care as answering them well. The Department has ' +

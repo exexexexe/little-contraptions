@@ -172,6 +172,7 @@ footer a{ color:var(--accent) }
   <a href="/">&larr; back to the cabinet</a>
 </footer>
 
+<script src="/shared/lc-achievements.js"></script>
 <script>
 'use strict';
 const $ = (id) => document.getElementById(id);
@@ -461,6 +462,8 @@ $('name').addEventListener('click', () => {
   $('said').textContent = '“' + raw + '” has been added to ' + city.name + '.';
 
   const nod = stockholmMatch(raw);
+  // only a real street counts; nod is null for everything else
+  if (nod && window.LCAch) LCAch.fire('city.stockholm');
   $('nod').innerHTML = nod
     ? '<div class="nod">The surveyor pauses over that one. There is a real ' +
       '<b>' + esc(nod.street.replace(/\b\w/g, (m) => m.toUpperCase())) + '</b> ' +

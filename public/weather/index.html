@@ -251,6 +251,7 @@ body{ padding-bottom:64px }
 </div>
 
 <script src="/shared/lc-weather-fx.js"></script>
+<script src="/shared/lc-achievements.js"></script>
 <script>
 'use strict';
 
@@ -620,6 +621,7 @@ function noteVisit(p){
   if (voidFound || p === VOID_PLACE) return;
   visited.add(p.name);
   if (visited.size < PLACES.length) return;
+  if (window.LCAch) LCAch.fire('weather.roomtemp');
   voidFound = true;
   PLACES.push(VOID_PLACE);
   renderPlaces();
@@ -1106,6 +1108,7 @@ function roll(){
     intensity = 1;
     const line = document.createElement('div');
     line.className = 'prose fade extreme';
+    if (window.LCAch) LCAch.fire('weather.offdial');
     line.innerHTML = 'The needle has gone past the end of the dial and stopped there. ' +
       'This reading is not within the range the instrument was built for and the almanac ' +
       'is printing it unaltered, because it does not have a procedure for not printing it.';

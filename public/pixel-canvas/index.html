@@ -170,6 +170,7 @@ footer a{ color:var(--hot) }
 </footer>
 
 <script src="/shared/lc-id.js"></script>
+<script src="/shared/lc-achievements.js"></script>
 <script>
 'use strict';
 const $ = (id) => document.getElementById(id);
@@ -336,6 +337,7 @@ function lookForShapes(){
 }
 
 function celebrate(what, ox, oy, w, h){
+if (window.LCAch) LCAch.fire('pixel.shape');
   celebrated = true;
   const party = $('pc-party');
   $('say').innerHTML = '<b>somebody made a shape</b>' +

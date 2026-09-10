@@ -209,7 +209,7 @@
        than quietly left out. */
     { id:'archive.babel',      toy:'infinite-archive', name:'The library of Babel',
       hint:'Search the archive for the library it is pretending not to be.' },
-    { id:'paradox.overflow',   toy:'generator', name:'Stack overflow',
+    { id:'paradox.overflow',   toy:'paradox-machine', name:'Stack overflow',
       hint:'Give the paradox machine the same paradox twice.' },
     { id:'story.thousand',     toy:'story-chain', name:'The End?',
       hint:'Somebody has to write sentence one thousand.' },
@@ -221,7 +221,7 @@
       hint:'Encode the name of the thing you are looking for.' },
     { id:'closer.zanzibar',    toy:'closer-than-you-think', name:'Shorter than your visit',
       hint:'Keep comparing until it starts comparing you.' },
-    { id:'dream.thissite',     toy:'generator', name:'A dream about this website',
+    { id:'dream.thissite',     toy:'dream-decoder', name:'A dream about this website',
       hint:'Tell the decoder where you are.' },
     { id:'declass.leftopen',   toy:'declassified-search', name:'Whoever left this open',
       hint:'Walk away from it for a minute and a quarter.' },

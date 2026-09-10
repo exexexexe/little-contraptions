@@ -263,6 +263,7 @@ h1{ font-family:var(--display) }
   </footer>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="/shared/lc-achievements.js"></script>
 <script>
 'use strict';
 
@@ -584,6 +585,7 @@ function homeLine(){
   const now = Date.now();
   if (km <= NEAR_KM){
     lastNear = now;
+    if (window.LCAch) LCAch.fire('iss.stockholm');
     return '<div class="homeline near">It is over ' + HOME.name + ' right now &mdash; ' +
            Math.round(km) + ' km from the city, and moving.</div>';
   }

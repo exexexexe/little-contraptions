@@ -366,6 +366,7 @@ footer a{ color:var(--gold-2) }
     
       const el = $('toolong');
       if (y >= TOO_LONG){
+        if (window.LCAch) LCAch.fire('advisor.900');
         el.hidden = false;
         el.innerHTML = '<b>a word from the archivists</b>' +
           'The Realm of ' + (realm ? realm.name : 'nowhere') + ' has now stood for ' +

@@ -313,6 +313,7 @@ footer a{ color:var(--mint) }
         return;
       }
       if (q && BIG.test(q)){
+        if (window.LCAch) LCAch.fire('gun.sincere');
         lastWasSincere = true;
         speak(pick(SINCERE), true);
         return;

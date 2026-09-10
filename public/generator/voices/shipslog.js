@@ -279,7 +279,9 @@ footer a{ color:var(--brass-2) }
     
     function solemnFor(dateStr){
       if (!dateStr || dateStr.length < 10) return null;
-      return SOLEMN[dateStr.slice(5)] || null;
+      var s = SOLEMN[dateStr.slice(5)] || null;
+      if (s && window.LCAch) LCAch.fire('shipslog.april');
+      return s;
     }
     
     /* ---- writing one --------------------------------------------------- */

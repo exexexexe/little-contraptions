@@ -980,6 +980,7 @@ h1{ font-family:var(--display) }
   <div id="sv-content"></div>
 </div>
 
+<script src="/shared/lc-achievements.js"></script>
 <script>
 /* =============================================================================
    THE DATA — 111 inventions across 7 eras
@@ -1702,6 +1703,7 @@ function renderFuture(){
 }
 
 function openFutureTab(){
+if (window.LCAch) LCAch.fire('inventions.notyet');
   renderFuture();
   const el = document.getElementById('future-tab');
   el.classList.add('active');

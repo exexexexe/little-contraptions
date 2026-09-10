@@ -292,6 +292,7 @@ body{ padding-bottom:64px }
   </footer>
 </div>
 
+<script src="/shared/lc-achievements.js"></script>
 <script>
 'use strict';
 
@@ -593,6 +594,7 @@ function numbersTone(){
 }
 
 function startNumbers(){
+if (window.LCAch) LCAch.fire('radio.numbers');
   if (numbersOn) return;
   numbersOn = true;
   $('scale').classList.add('numbers');

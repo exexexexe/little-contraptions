@@ -179,6 +179,7 @@ footer a{ color:var(--gold-2) }
 </footer>
 
 <script src="/shared/lc-id.js"></script>
+<script src="/shared/lc-achievements.js"></script>
 <script>
 'use strict';
 const $ = (id) => document.getElementById(id);
@@ -200,6 +201,7 @@ function note(text, kind){
    marker is drawn from the count, so it is still there tomorrow for
    whoever scrolls back to it. */
 function markerFor(n){
+if (window.LCAch) LCAch.fire('story.thousand');
   return '<span class="mark">The End?<i>One thousand sentences. Nobody has stopped, and ' +
          'there is no reason to. Sentence ' + (n + 1) + ' goes below.</i></span>';
 }
