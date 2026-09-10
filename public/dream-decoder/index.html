@@ -139,6 +139,7 @@ footer a{ color:var(--lilac) }
     <div class="row">
       <button id="go" type="button">Read it</button>
       <button id="rand" class="sec" type="button">Somebody else’s dream</button>
+      <button id="book" class="sec" type="button" aria-pressed="false">Use the old dream book</button>
     </div>
   </div>
 
@@ -146,15 +147,20 @@ footer a{ color:var(--lilac) }
 </div>
 
 <footer>
-  <b style="color:#C4A8F0">This is entertainment.</b> It is not psychology, it is not therapy, and it is
-  not a reading of anything. What it actually does is look for a few dozen words in what you typed and
-  print an invented folklore-flavoured line for each &mdash; the sort of thing a dream book from a
-  jumble sale would say, written for this cabinet. If a dream is genuinely bothering you, a person is
-  better than a web page, and this web page in particular. Nothing you type is stored or sent anywhere;
-  the matching happens in your browser and is thrown away when you close the tab.
+  <b style="color:#C4A8F0">This is not psychology and it is not therapy.</b> There are two readers in
+  here and the page always says which one answered. The first is a language model, told in as many
+  words that it is not a psychic, not a therapist and not a dream dictionary: what it does instead is
+  read the dream as a piece of night-time writing &mdash; what it is built out of, how it is put
+  together, and the exact point where it stopped bothering to be consistent. It never says what
+  anything &ldquo;means&rdquo; about you, because nothing in a dream does. That reading is sent to the
+  generator and is not stored. The second is the old jumble-sale dream book, invented for this
+  cabinet, which takes over if there is no key on the server and which you can ask for on purpose; it
+  runs entirely in your browser. If a dream is genuinely bothering you, a person is better than a web
+  page, and this web page in particular.
   <a href="/">&larr; back to the cabinet</a>
 </footer>
 
+<script src="/shared/lc-generate.js"></script>
 <script>
 'use strict';
 const $ = (id) => document.getElementById(id);
@@ -294,7 +300,64 @@ function selfReading(){
     'production values.</p></div>';
 }
 
-function read(){
+/* ------------------------------------------------------------------ *
+ *  Two readers, and it always says which one read it.
+ *
+ *  The first is a language model, told very firmly what it is NOT: not
+ *  a psychic, not a therapist, not a dream dictionary. What it does
+ *  instead is read the dream as a piece of night-time writing — what it
+ *  is built out of, how it is put together, the exact point where it
+ *  stops bothering to be consistent. That is a more interesting thing to
+ *  do with a dream than telling somebody what their teeth mean, and it
+ *  is the only version of this that is honest.
+ *
+ *  The second is the original jumble-sale dream book below, which takes
+ *  over when there is no key or the model will not answer, and which you
+ *  can ask for deliberately.
+ * ------------------------------------------------------------------ */
+let dreamBusy = false;
+let bookOnly = false;
+
+async function read(){
+  const t = $('q').value.trim();
+  if (!t || SELF.test(t) || bookOnly) return oldBook();
+  if (dreamBusy) return;
+
+  dreamBusy = true;
+  $('go').disabled = true;
+  $('out').innerHTML = '<div class="reading"><div class="body"><div class="verdict">' +
+    '<span class="k">reading it</span>Give it a moment.</div></div></div>';
+
+  const out = await LCGenerate.run('dream-decoder', { dream: t }, { timeout: 32000 });
+  dreamBusy = false;
+  $('go').disabled = false;
+
+  if (!out.ok) return oldBook(out.kind === 'no_key' ? null : out.message);
+  const r = LCGenerate.parseJSON(out.text);
+  if (!r || !r.reading) return oldBook('The reading came back in a shape this page could not read.');
+
+  const inv = (r.inventory || []).map((i) =>
+    '<div class="sym"><div class="i">·</div><div><div class="w">' + esc(i) + '</div></div></div>').join('');
+
+  $('out').innerHTML =
+    '<div class="reading">' +
+      '<div class="top"><b>' + esc(r.title || 'The dream') + '</b>' +
+        '<span class="m">read as writing, not as a sign</span></div>' +
+      '<div class="body">' +
+        (inv ? '<div class="verdict"><span class="k">what it is made of</span></div>' + inv : '') +
+        '<div class="verdict"><span class="k">the reading</span>' + esc(r.reading) + '</div>' +
+        (r.the_join ? '<div class="verdict"><span class="k">where it gives up on being consistent</span>' +
+          esc(r.the_join) + '</div>' : '') +
+        (r.known ? '<div class="verdict"><span class="k">what is actually known</span>' + esc(r.known) + '</div>' : '') +
+        (r.closing ? '<div class="advice">' + esc(r.closing) + '</div>' : '') +
+      '</div>' +
+    '</div>' +
+    '<div class="disc">Read by a language model, which has been told in as many words that it is not a ' +
+    'psychic, not a therapist and not a dream dictionary. It is describing a piece of writing, not you. ' +
+    'What you typed went to the generator to be read and is not stored anywhere.</div>';
+}
+
+function oldBook(why){
   const t = $('q').value.trim();
   if (!t){
     $('out').innerHTML = '<div class="reading"><div class="body">' +
@@ -320,7 +383,12 @@ function read(){
     : '<div class="sym"><div class="i">❔</div><div><div class="w">no entry</div>' +
       '<div class="s">' + esc(pick(NOMATCH)) + '</div></div></div>';
 
-  $('out').innerHTML =
+  const banner = why
+    ? '<div class="disc" style="margin-bottom:12px">' + esc(why) +
+      ' The old dream book has been fetched down off the shelf instead.</div>'
+    : '';
+
+  $('out').innerHTML = banner +
     '<div class="reading"><div class="top"><b>The reading</b>' +
       '<span class="m">' + hits.length + (hits.length === 1 ? ' symbol' : ' symbols') + ' found</span></div>' +
     '<div class="body">' + body +
@@ -333,6 +401,12 @@ function read(){
 
 $('go').addEventListener('click', read);
 $('rand').addEventListener('click', () => { $('q').value = pick(SAMPLES); read(); });
+$('book').addEventListener('click', () => {
+  bookOnly = !bookOnly;
+  $('book').setAttribute('aria-pressed', String(bookOnly));
+  $('book').textContent = bookOnly ? 'Using the old book' : 'Use the old dream book';
+  read();
+});
 $('q').addEventListener('keydown', (e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') read(); });
 
 $('q').value = SAMPLES[0];

@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Corner of the Notebook</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23EFE7D6'/><rect x='7' y='4' width='20' height='24' rx='2' fill='%23FBF7EC' stroke='%23B9AC92'/><circle cx='7' cy='9' r='2' fill='%23C6483C'/><circle cx='7' cy='16' r='2' fill='%23C6483C'/><circle cx='7' cy='23' r='2' fill='%23C6483C'/><path d='M13 20c3-8 6-8 9 0' stroke='%23474038' stroke-width='1.6' fill='none'/></svg>">
+<style>
+:root{ color-scheme: light; }
+:root{
+  --paper:#FBF7EC;
+  --paper-2:#EFE7D6;
+  --desk:#DED3BC;
+  --graphite:#3E3A33;
+  --graphite-2:#6E675B;
+  --ring:#C6483C;
+  --ink:#474038;
+  --dim:#8A8272;
+  --dimmer:#A79E8B;
+  --line:#D6CBB2;
+  --sans:"Avenir Next","Segoe UI",system-ui,-apple-system,"Helvetica Neue",sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;min-height:100%}
+body{
+  background:var(--desk);
+  background-image:
+    repeating-linear-gradient(97deg, rgba(255,255,255,.16) 0 2px, transparent 2px 7px),
+    repeating-linear-gradient(7deg, rgba(120,100,70,.05) 0 1px, transparent 1px 5px);
+  color:var(--ink);font-family:var(--sans);
+  min-height:100vh;padding:22px 16px 84px;
+  display:flex;flex-direction:column;align-items:center;
+}
+.wrap{ width:min(860px,100%) }
+
+header{ display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:14px }
+h1{ font-size:clamp(19px,4.4vw,25px);font-weight:600;margin:0;letter-spacing:-.005em }
+.tagline{ font-size:13px;color:var(--dim);margin:3px 0 0 }
+.count{ font-family:var(--mono);font-size:10.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--dim) }
+.count b{ color:var(--ink) }
+
+/* ---- the book ------------------------------------------------------ */
+.book{
+  position:relative;background:var(--paper);border-radius:3px 8px 8px 3px;
+  padding:14px 14px 14px 46px;
+  box-shadow:
+    0 2px 0 #EDE4D0, 0 4px 0 #E6DCC6, 0 6px 0 #DFD4BC, 0 8px 0 #D8CCB2,
+    0 22px 40px rgba(90,74,44,.3);
+}
+.rings{ position:absolute;left:0;top:0;bottom:0;width:46px;pointer-events:none }
+.rings i{
+  position:absolute;left:9px;width:26px;height:9px;border-radius:9px;
+  background:linear-gradient(180deg,#E06B5D,#A5362C);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.5), 0 1px 2px rgba(0,0,0,.25);
+}
+.sheet{
+  position:relative;background:#FFFDF7;border:1px solid var(--line);border-radius:2px;
+  box-shadow:inset 0 0 22px rgba(150,130,90,.09);
+  overflow:hidden;
+}
+.sheet canvas{ display:block;width:100%;height:auto;touch-action:none;cursor:crosshair }
+.sheet.eraser canvas{ cursor:cell }
+#onion{ position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:.19 }
+.pgno{
+  position:absolute;right:12px;bottom:8px;font-family:var(--mono);font-size:10px;
+  letter-spacing:.16em;color:var(--dimmer);pointer-events:none;
+}
+
+/* ---- controls ------------------------------------------------------ */
+.tools{ display:flex;flex-wrap:wrap;gap:7px;margin-top:14px;align-items:center }
+.tools button{
+  font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;
+  background:var(--paper);color:var(--ink);border:1.5px solid var(--line);border-radius:8px;
+  padding:8px 13px;transition:border-color .14s,background .14s;
+}
+.tools button:hover{ border-color:#B7A98C }
+.tools button[aria-pressed="true"]{ background:var(--ink);border-color:var(--ink);color:var(--paper) }
+.tools button:focus-visible{ outline:3px solid var(--ring);outline-offset:2px }
+.tools button.play{ background:var(--ring);border-color:#A5362C;color:#FFF6F2 }
+.tools button.play:hover{ background:#D9564A }
+.tools button:disabled{ opacity:.4;cursor:default }
+.tools .sep{ width:1px;height:24px;background:var(--line);margin:0 3px }
+.nibs{ display:flex;gap:5px;align-items:center }
+.nib{
+  width:32px;height:32px;border-radius:8px;border:1.5px solid var(--line);background:var(--paper);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;
+}
+.nib i{ display:block;background:var(--graphite);border-radius:50% }
+.nib[aria-pressed="true"]{ border-color:var(--ink);box-shadow:inset 0 0 0 2px var(--ink) }
+.nib:focus-visible{ outline:3px solid var(--ring);outline-offset:2px }
+.rate{ display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;color:var(--dim);text-transform:uppercase }
+.rate input{ width:120px;accent-color:#C6483C }
+
+/* ---- the strip ----------------------------------------------------- */
+.strip-wrap{ margin-top:16px }
+.strip-wrap h2{ font-family:var(--mono);font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin:0 0 8px;font-weight:700 }
+.strip{ display:flex;gap:7px;overflow-x:auto;padding:3px 3px 9px }
+.frame{
+  flex:0 0 auto;width:74px;position:relative;cursor:pointer;padding:0;border-radius:5px;
+  border:2px solid var(--line);background:#FFFDF7;overflow:hidden;
+}
+.frame canvas{ display:block;width:100%;height:auto }
+.frame[aria-pressed="true"]{ border-color:var(--ring);box-shadow:0 0 0 2px rgba(198,72,60,.25) }
+.frame span{
+  position:absolute;left:3px;top:2px;font-family:var(--mono);font-size:8px;color:var(--dimmer);
+}
+.frame:focus-visible{ outline:3px solid var(--ring);outline-offset:2px }
+
+.book-note{ margin-top:24px;padding-top:17px;border-top:1.5px solid var(--line);font-size:13.5px;line-height:1.85;color:#5E5747 }
+.book-note p{ margin:0 0 11px } .book-note p:last-child{ margin:0 }
+.book-note b{ color:var(--ink) }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:700 11px/1 var(--mono);
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#FFF6F2;background:var(--ring);
+  border:2px solid rgba(255,255,255,.5);border-radius:999px;
+  width:40px;height:40px;justify-content:center;
+  box-shadow:0 6px 18px rgba(120,50,40,.35);
+  transition:width .18s ease, background .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:120px;gap:9px;background:#A5362C }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:3px solid var(--ink);outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div>
+    <h1>The Corner of the Notebook</h1>
+    <p class="tagline">Draw a little. Turn the page. Draw it again, slightly moved.</p>
+  </div>
+  <span class="count" id="count">page <b>1</b> of <b>1</b></span>
+</header>
+
+<div class="book">
+  <div class="rings" id="rings" aria-hidden="true"></div>
+  <div class="sheet" id="sheet">
+    <canvas id="onion" width="1120" height="740" aria-hidden="true"></canvas>
+    <canvas id="cv" width="1120" height="740" aria-label="The page you are drawing on"></canvas>
+    <span class="pgno" id="pgno">1</span>
+  </div>
+</div>
+
+<div class="tools">
+  <button type="button" id="t-pencil" aria-pressed="true">Pencil</button>
+  <button type="button" id="t-eraser" aria-pressed="false">Eraser</button>
+  <div class="nibs" id="nibs" role="group" aria-label="Line weight"></div>
+  <span class="sep"></span>
+  <button type="button" id="btn-undo">Undo</button>
+  <button type="button" id="btn-onion" aria-pressed="true">Onion skin</button>
+  <span class="sep"></span>
+  <button type="button" id="btn-prev">&larr; Page</button>
+  <button type="button" id="btn-next">Page &rarr;</button>
+  <button type="button" id="btn-add">New page</button>
+  <button type="button" id="btn-dup">Copy this page</button>
+  <button type="button" id="btn-del">Tear it out</button>
+</div>
+
+<div class="tools" style="margin-top:8px">
+  <button type="button" class="play" id="btn-play">Flip it</button>
+  <div class="rate">
+    <label for="k-fps">speed</label>
+    <input type="range" id="k-fps" min="3" max="24" step="1" value="12">
+    <output for="k-fps" id="v-fps">12 fps</output>
+  </div>
+  <span class="sep"></span>
+  <button type="button" id="btn-sound" aria-pressed="false">Sound</button>
+  <button type="button" id="btn-wipe">Empty the book</button>
+</div>
+
+<div class="strip-wrap">
+  <h2>The pages</h2>
+  <div class="strip" id="strip"></div>
+</div>
+
+<div class="book-note">
+  <p><b>The faint drawing underneath is the page before this one.</b> That is the only trick in
+  animation that matters at this scale &mdash; you are not drawing a picture, you are drawing the
+  difference between two pictures. Turn it off if it gets in the way.</p>
+  <p>Every page is kept as the strokes you made rather than as an image, so the drawing stays crisp
+  at any size, the thumbnails are the real pages, and undo can take back exactly one line. The whole
+  book lives in this browser and is still here tomorrow.</p>
+  <p>Twelve pages a second is the usual working rate for hand-drawn animation on twos. Four is a
+  flick-book on the corner of a school exercise book. Both are on the slider.</p>
+</div>
+
+</div>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">&larr;</span><span class="w">cabinet</span></a>
+
+<script src="/shared/lc-audio.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  var KEY = 'lc-flipbook';
+  var cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+  var on = document.getElementById('onion'), octx = on.getContext('2d');
+  var sheet = document.getElementById('sheet');
+  var W = cv.width, H = cv.height;
+
+  var NIBS = [3, 6, 11];
+  var MAX_PAGES = 60;
+
+  /* ---- the book ----------------------------------------------------- *
+   * A page is a list of strokes; a stroke is {w, e, p:[x,y,x,y,...]} with
+   * coordinates normalised to 0..1 and kept to three places, which is
+   * finer than the eye and small enough to store sixty pages of.        */
+  var pages = [[]];
+  var cur = 0, nib = 1, erasing = false, onionOn = true, sound = false;
+  var fps = 12, playing = false;
+
+  try {
+    var raw = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (raw && Array.isArray(raw.pages) && raw.pages.length){
+      pages = raw.pages.slice(0, MAX_PAGES).map(function(pg){
+        return (pg || []).filter(function(s){ return s && Array.isArray(s.p) && s.p.length >= 2; });
+      });
+      cur = Math.min(raw.cur | 0, pages.length - 1);
+      if (typeof raw.fps === 'number') fps = Math.max(3, Math.min(24, raw.fps));
+    }
+  } catch (e) {}
+  function save(){
+    try {
+      localStorage.setItem(KEY, JSON.stringify({ pages: pages, cur: cur, fps: fps }));
+    } catch (e) { /* a full store just means this book is not remembered */ }
+  }
+
+  /* ---- drawing one page --------------------------------------------- */
+  function paint(c, page, scale){
+    c.clearRect(0, 0, c.canvas.width, c.canvas.height);
+    var w = c.canvas.width, h = c.canvas.height;
+    c.lineCap = 'round'; c.lineJoin = 'round';
+    (page || []).forEach(function(s){
+      c.beginPath();
+      for (var i = 0; i < s.p.length; i += 2){
+        var x = s.p[i] * w, y = s.p[i + 1] * h;
+        i ? c.lineTo(x, y) : c.moveTo(x, y);
+      }
+      if (s.p.length === 2){ c.lineTo(s.p[0] * w + .1, s.p[1] * h + .1); }
+      c.strokeStyle = s.e ? '#FFFDF7' : '#3E3A33';
+      /* a fine line scaled into a 148px thumbnail lands under half a
+         pixel and vanishes, so the thumbnails keep a floor */
+      c.lineWidth = Math.max(0.8, s.w * (scale == null ? 1 : scale) * (w / W));
+      c.globalCompositeOperation = s.e ? 'destination-out' : 'source-over';
+      if (s.e) c.strokeStyle = 'rgba(0,0,0,1)';
+      c.stroke();
+      c.globalCompositeOperation = 'source-over';
+    });
+  }
+
+  function render(){
+    paint(ctx, pages[cur]);
+    octx.clearRect(0, 0, W, H);
+    if (onionOn && cur > 0 && !playing) paint(octx, pages[cur - 1]);
+    document.getElementById('pgno').textContent = (cur + 1);
+    document.getElementById('count').innerHTML =
+      'page <b>' + (cur + 1) + '</b> of <b>' + pages.length + '</b>';
+    document.getElementById('btn-del').disabled = pages.length < 2;
+    rings();
+  }
+
+  /* The spiral: as many rings as fit, so the book looks like a book at
+     any height rather than having a fixed six. */
+  function rings(){
+    var el = document.getElementById('rings');
+    var h = document.querySelector('.book').offsetHeight;
+    var n = Math.max(3, Math.floor(h / 26));
+    if (el.childElementCount === n) return;
+    var out = '';
+    for (var i = 0; i < n; i++){
+      out += '<i style="top:' + (12 + i * ((h - 24) / (n - 1 || 1))) + 'px"></i>';
+    }
+    el.innerHTML = out;
+  }
+
+  /* ---- the thumbnail strip ------------------------------------------ */
+  function strip(){
+    var el = document.getElementById('strip');
+    el.innerHTML = pages.map(function(_, i){
+      return '<button type="button" class="frame" data-i="' + i + '" aria-pressed="' + (i === cur) + '">' +
+             '<canvas width="148" height="98"></canvas><span>' + (i + 1) + '</span></button>';
+    }).join('');
+    [].forEach.call(el.querySelectorAll('.frame'), function(b){
+      var i = +b.dataset.i;
+      paint(b.querySelector('canvas').getContext('2d'), pages[i]);
+      b.addEventListener('click', function(){ goto(i); });
+    });
+    var active = el.querySelector('[aria-pressed="true"]');
+    if (active && active.scrollIntoView) active.scrollIntoView({ block:'nearest', inline:'nearest' });
+  }
+
+  function goto(i){
+    if (i < 0 || i >= pages.length) return;
+    cur = i; save(); render(); strip();
+  }
+
+  /* ---- drawing with the pointer -------------------------------------- */
+  var stroke = null;
+  function pt(e){
+    var r = cv.getBoundingClientRect();
+    return [ +((e.clientX - r.left) / r.width).toFixed(3),
+             +((e.clientY - r.top) / r.height).toFixed(3) ];
+  }
+
+  cv.addEventListener('pointerdown', function(e){
+    if (playing) return;
+    e.preventDefault(); cv.setPointerCapture(e.pointerId);
+    var p = pt(e);
+    stroke = { w: NIBS[nib], e: erasing ? 1 : 0, p: [p[0], p[1]] };
+    pages[cur].push(stroke);
+    render();
+    scratch();
+  });
+  cv.addEventListener('pointermove', function(e){
+    if (!stroke) return;
+    var p = pt(e);
+    var n = stroke.p.length;
+    /* drop points that are practically on top of the last one, which is
+       most of them at a high-rate pointer and all of the storage */
+    if (Math.abs(p[0] - stroke.p[n - 2]) + Math.abs(p[1] - stroke.p[n - 1]) < .004) return;
+    stroke.p.push(p[0], p[1]);
+    render();
+    scratch();
+  });
+  ['pointerup','pointercancel','pointerleave'].forEach(function(t){
+    cv.addEventListener(t, function(){
+      if (!stroke) return;
+      stroke = null; save(); strip();
+    });
+  });
+
+  /* ---- playing ------------------------------------------------------- */
+  var playTimer = null;
+  function play(){
+    if (playing) return stop();
+    if (pages.length < 2) return;
+    playing = true;
+    document.getElementById('btn-play').textContent = 'Stop';
+    octx.clearRect(0, 0, W, H);
+    var i = 0;
+    playTimer = setInterval(function(){
+      i = (i + 1) % pages.length;
+      cur = i;
+      paint(ctx, pages[cur]);
+      document.getElementById('pgno').textContent = (cur + 1);
+      document.getElementById('count').innerHTML =
+        'page <b>' + (cur + 1) + '</b> of <b>' + pages.length + '</b>';
+      riffle();
+    }, 1000 / fps);
+  }
+  function stop(){
+    playing = false;
+    clearInterval(playTimer);
+    document.getElementById('btn-play').textContent = 'Flip it';
+    render(); strip();
+    save();
+  }
+
+  /* ---- sound: a pencil and a page ------------------------------------ */
+  var lastScratch = 0;
+  function scratch(){
+    if (!sound) return;
+    var now = performance.now();
+    if (now - lastScratch < 44) return;
+    lastScratch = now;
+    LCAudio.sting(function(A){
+      A.burst('white', { freq: 2600 + Math.random() * 1800, q: 1.4, dur: .035, level: .022, reverb:false });
+    });
+  }
+  function riffle(){
+    if (!sound) return;
+    LCAudio.sting(function(A){
+      A.burst('pink', { freq: 1700 + Math.random() * 900, q: .9, dur: .05, level: .05, reverb:false });
+    });
+  }
+
+  /* ---- buttons -------------------------------------------------------- */
+  document.getElementById('nibs').innerHTML = NIBS.map(function(w, i){
+    return '<button type="button" class="nib" data-i="' + i + '" aria-pressed="' + (i === nib) + '"' +
+           ' aria-label="' + (i === 0 ? 'fine' : i === 1 ? 'medium' : 'thick') + ' line">' +
+           '<i style="width:' + (w + 2) + 'px;height:' + (w + 2) + 'px"></i></button>';
+  }).join('');
+  [].forEach.call(document.querySelectorAll('.nib'), function(b){
+    b.addEventListener('click', function(){
+      nib = +b.dataset.i;
+      [].forEach.call(document.querySelectorAll('.nib'), function(o){
+        o.setAttribute('aria-pressed', o === b);
+      });
+    });
+  });
+
+  function setTool(er){
+    erasing = er;
+    document.getElementById('t-pencil').setAttribute('aria-pressed', !er);
+    document.getElementById('t-eraser').setAttribute('aria-pressed', er);
+    sheet.className = 'sheet' + (er ? ' eraser' : '');
+  }
+  document.getElementById('t-pencil').addEventListener('click', function(){ setTool(false); });
+  document.getElementById('t-eraser').addEventListener('click', function(){ setTool(true); });
+
+  document.getElementById('btn-undo').addEventListener('click', function(){
+    if (!pages[cur].length) return;
+    pages[cur].pop(); save(); render(); strip();
+  });
+  document.getElementById('btn-onion').addEventListener('click', function(){
+    onionOn = !onionOn; this.setAttribute('aria-pressed', onionOn); render();
+  });
+  document.getElementById('btn-prev').addEventListener('click', function(){ goto(cur - 1); });
+  document.getElementById('btn-next').addEventListener('click', function(){ goto(cur + 1); });
+  document.getElementById('btn-add').addEventListener('click', function(){
+    if (pages.length >= MAX_PAGES) return;
+    pages.splice(cur + 1, 0, []); goto(cur + 1);
+  });
+  document.getElementById('btn-dup').addEventListener('click', function(){
+    if (pages.length >= MAX_PAGES) return;
+    pages.splice(cur + 1, 0, JSON.parse(JSON.stringify(pages[cur])));
+    goto(cur + 1);
+  });
+  document.getElementById('btn-del').addEventListener('click', function(){
+    if (pages.length < 2) return;
+    pages.splice(cur, 1);
+    goto(Math.min(cur, pages.length - 1));
+  });
+  document.getElementById('btn-play').addEventListener('click', play);
+  document.getElementById('btn-wipe').addEventListener('click', function(){
+    pages = [[]]; cur = 0; save(); render(); strip();
+  });
+  document.getElementById('btn-sound').addEventListener('click', function(){
+    sound = !sound; this.setAttribute('aria-pressed', sound);
+  });
+  document.getElementById('k-fps').addEventListener('input', function(){
+    fps = +this.value;
+    document.getElementById('v-fps').textContent = fps + ' fps';
+    if (playing){ stop(); play(); }
+    save();
+  });
+
+  window.addEventListener('keydown', function(e){
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.isContentEditable)) return;
+    if (e.key === 'ArrowLeft'){ e.preventDefault(); goto(cur - 1); }
+    else if (e.key === 'ArrowRight'){ e.preventDefault(); goto(cur + 1); }
+    else if (e.key === ' '){ e.preventDefault(); play(); }
+  });
+
+  document.getElementById('k-fps').value = fps;
+  document.getElementById('v-fps').textContent = fps + ' fps';
+  render(); strip();
+  new ResizeObserver(rings).observe(document.querySelector('.book'));
+
+  window.__flipbook = {
+    pages: function(){ return pages; },
+    add: function(strokes){ pages[cur] = strokes; save(); render(); strip(); },
+    goto: goto, play: play, stop: stop,
+    playing: function(){ return playing; },
+    cur: function(){ return cur; },
+    newPage: function(){ document.getElementById('btn-add').click(); }
+  };
+})();
+</script>
+</body>
+</html>

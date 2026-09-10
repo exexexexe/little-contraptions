@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Put the Colours in Order</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23808080'/><rect x='3' y='11' width='6' height='10' rx='1.5' fill='%23C8676B'/><rect x='10' y='11' width='6' height='10' rx='1.5' fill='%23B8894F'/><rect x='17' y='11' width='6' height='10' rx='1.5' fill='%236F9F63'/><rect x='24' y='11' width='5' height='10' rx='1.5' fill='%235391A8'/></svg>">
+<style>
+:root{ color-scheme: light; }
+/* Everything that is not a chip is a neutral grey on purpose: a coloured
+   surround shifts the appearance of what sits on it, and this page is
+   asking you to judge colour. */
+:root{
+  --grey:#808080;
+  --grey-2:#8C8C8C;
+  --panel:#9A9A9A;
+  --ink:#1E1E1E;
+  --ink-2:#3C3C3C;
+  --dim:#5A5A5A;
+  --paper:#D8D8D8;
+  --sans:"Avenir Next","Segoe UI",system-ui,-apple-system,"Helvetica Neue",sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;min-height:100%}
+body{
+  background:var(--grey);
+  color:var(--ink);font-family:var(--sans);
+  min-height:100vh;padding:26px 16px 84px;
+  display:flex;flex-direction:column;align-items:center;
+  -webkit-tap-highlight-color:transparent;
+}
+.wrap{ width:min(820px,100%) }
+
+header{ text-align:center;margin-bottom:20px }
+h1{ font-size:clamp(19px,4.4vw,25px);font-weight:600;margin:0 0 6px;letter-spacing:-.005em }
+.tagline{ font-size:13.5px;line-height:1.7;color:var(--ink-2);margin:0 auto;max-width:52ch }
+
+/* ---- the rows ---------------------------------------------------------- */
+.rows{ display:flex;flex-direction:column;gap:12px }
+.row{
+  background:var(--panel);border-radius:8px;padding:9px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.22), 0 2px 6px rgba(0,0,0,.16);
+}
+.caps{ display:flex;gap:4px;align-items:stretch }
+.cap{
+  flex:1 1 0;min-width:0;aspect-ratio:1/1.5;border:0;padding:0;border-radius:5px;
+  cursor:pointer;position:relative;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.16);
+  transition:transform .12s, box-shadow .12s;
+}
+.cap:hover{ transform:translateY(-3px) }
+.cap.picked{ transform:translateY(-7px);box-shadow:inset 0 0 0 2px #111, 0 6px 12px rgba(0,0,0,.35) }
+.cap.anchor{ cursor:default;box-shadow:inset 0 0 0 2px rgba(0,0,0,.45) }
+.cap.anchor:hover{ transform:none }
+.cap:focus-visible{ outline:3px solid #111;outline-offset:2px }
+.cap .n{
+  position:absolute;left:50%;bottom:4px;transform:translateX(-50%);
+  font-family:var(--mono);font-size:9px;color:rgba(0,0,0,.5);
+  opacity:0;transition:opacity .2s;
+}
+.row.scored .cap .n{ opacity:1 }
+.cap.wrong{ box-shadow:inset 0 0 0 3px #B4231C }
+.row-label{
+  font-family:var(--mono);font-size:8.5px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--dim);margin:0 0 7px 2px;
+}
+
+/* ---- the bar ------------------------------------------------------------ */
+.bar{ display:flex;flex-wrap:wrap;gap:8px;margin-top:18px;align-items:center }
+.bar button{
+  font:inherit;font-size:13px;font-weight:600;cursor:pointer;
+  background:var(--paper);color:var(--ink);border:1px solid rgba(0,0,0,.25);border-radius:7px;
+  padding:9px 16px;transition:background .14s;
+}
+.bar button:hover{ background:#E6E6E6 }
+.bar button.primary{ background:var(--ink);color:var(--paper);border-color:var(--ink) }
+.bar button.primary:hover{ background:#333 }
+.bar button:focus-visible{ outline:3px solid #111;outline-offset:2px }
+.bar select{
+  font:inherit;font-size:13px;background:var(--paper);color:var(--ink);
+  border:1px solid rgba(0,0,0,.25);border-radius:7px;padding:9px 10px;
+}
+
+/* ---- the result ---------------------------------------------------------- */
+.result{
+  margin-top:18px;background:var(--paper);border-radius:8px;padding:15px 17px;
+  font-size:14px;line-height:1.8;color:var(--ink-2);
+}
+.result h2{ font-family:var(--mono);font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin:0 0 10px;font-weight:700 }
+.result .big{ font-size:30px;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1;display:block;margin-bottom:8px }
+.result b{ color:var(--ink) }
+.result .rows-detail{ font-family:var(--mono);font-size:11.5px;line-height:2;margin-top:10px;color:var(--dim) }
+
+.book{ margin-top:24px;font-size:13.5px;line-height:1.85;color:var(--ink-2) }
+.book p{ margin:0 0 11px } .book p:last-child{ margin:0 }
+.book b{ color:var(--ink) }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:700 11px/1 var(--mono);
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#E6E6E6;background:#1E1E1E;
+  border:1px solid rgba(255,255,255,.35);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  box-shadow:0 5px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:#000 }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:3px solid #E6E6E6;outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Put the Colours in Order</h1>
+  <p class="tagline">Four rows. The two end caps are fixed; everything between them is shuffled.
+    Click one cap and then another to swap them, until each row runs smoothly from one end to the
+    other.</p>
+</header>
+
+<div class="rows" id="rows"></div>
+
+<div class="bar">
+  <button type="button" class="primary" id="btn-score">Score it</button>
+  <button type="button" id="btn-new">Shuffle again</button>
+  <select id="k-count" aria-label="Caps per row">
+    <option value="8">8 caps a row</option>
+    <option value="11" selected>11 caps a row</option>
+    <option value="15">15 caps a row</option>
+  </select>
+</div>
+
+<div class="result" id="result" hidden></div>
+
+<div class="book">
+  <p><b>This is the arrangement format, which is a real one.</b> Clinical hue-arrangement tests work
+  exactly this way: a run of caps of equal lightness and equal saturation, differing only in hue,
+  which you put back into order. The error is not whether you got it right or wrong &mdash; it is how
+  far each cap ended up from where it belongs, added up. Somebody with normal colour vision makes a
+  few small errors spread evenly; a specific weakness shows up as a cluster of large errors in one
+  part of the circle.</p>
+  <p><b>The caps are spaced in CIELAB, not in RGB.</b> Stepping evenly through RGB hue gives you
+  caps that are obviously different in some places and nearly identical in others, which measures
+  the colour space rather than your eyes. These are constant in lightness and chroma and evenly
+  spaced in hue angle, with the chroma chosen as the largest one that keeps every cap inside what
+  the screen can actually show &mdash; the page says which figure it settled on.</p>
+  <p><b>It is not a diagnosis and cannot be one.</b> A real test is done under a standard light
+  source, with real pigment caps, at a fixed distance. This is a screen of unknown calibration in a
+  room of unknown lighting. Take the number as a comparison with your own earlier attempts and
+  nothing more; if you have a real reason to wonder, an optometrist has the real test.</p>
+</div>
+
+</div>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">&larr;</span><span class="w">cabinet</span></a>
+
+<script>
+(function(){
+  'use strict';
+
+  var KEY = 'lc-colour-order';
+
+  /* ================================================================== *
+   *  CIELAB to sRGB, done properly: Lab -> XYZ (D65) -> linear RGB ->
+   *  gamma. Nothing here is an approximation of the transfer function;
+   *  the piecewise sRGB curve is the actual one.
+   * ================================================================== */
+  var D65 = [0.95047, 1.00000, 1.08883];
+
+  function labToXyz(L, a, b){
+    var fy = (L + 16) / 116, fx = fy + a / 500, fz = fy - b / 200;
+    function f(t){ return t > 6 / 29 ? t * t * t : 3 * (6 / 29) * (6 / 29) * (t - 4 / 29); }
+    return [f(fx) * D65[0], f(fy) * D65[1], f(fz) * D65[2]];
+  }
+  function xyzToLinear(x, y, z){
+    return [
+       3.2406 * x - 1.5372 * y - 0.4986 * z,
+      -0.9689 * x + 1.8758 * y + 0.0415 * z,
+       0.0557 * x - 0.2040 * y + 1.0570 * z
+    ];
+  }
+  function gamma(c){
+    return c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1 / 2.4) - 0.055;
+  }
+  function lchToRgb(L, C, h){
+    var a = C * Math.cos(h * Math.PI / 180), b = C * Math.sin(h * Math.PI / 180);
+    var xyz = labToXyz(L, a, b);
+    var lin = xyzToLinear(xyz[0], xyz[1], xyz[2]);
+    var out = [], inGamut = true;
+    for (var i = 0; i < 3; i++){
+      if (lin[i] < -0.0005 || lin[i] > 1.0005) inGamut = false;
+      out.push(Math.max(0, Math.min(255, Math.round(gamma(Math.max(0, Math.min(1, lin[i]))) * 255))));
+    }
+    return { css: 'rgb(' + out[0] + ',' + out[1] + ',' + out[2] + ')', ok: inGamut };
+  }
+
+  /* The largest chroma at this lightness that every hue on the circle can
+     reach on an sRGB screen. Found by trying, not assumed — blue and
+     yellow are the tight ones and they are not tight at the same C. */
+  var L_STAR = 62;
+  function maxChroma(){
+    for (var C = 60; C >= 8; C -= 0.5){
+      var ok = true;
+      for (var h = 0; h < 360; h += 3){
+        if (!lchToRgb(L_STAR, C, h).ok){ ok = false; break; }
+      }
+      if (ok) return C;
+    }
+    return 8;
+  }
+  var CHROMA = maxChroma();
+
+  /* ================================================================== *
+   *  The board.
+   * ================================================================== */
+  var ROWS = 4;
+  var perRow = 11;
+  var board = [];        /* [row][slot] = { h, correct } */
+  var picked = null;     /* { row, slot } */
+  var scored = false;
+
+  try {
+    var raw = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (raw && [8,11,15].indexOf(raw.per) >= 0) perRow = raw.per;
+  } catch (e) {}
+  function save(best){
+    try {
+      var prev = JSON.parse(localStorage.getItem(KEY) || '{}') || {};
+      prev.per = perRow;
+      if (best != null){
+        prev.best = prev.best == null ? best : Math.min(prev.best, best);
+        prev.last = best;
+      }
+      localStorage.setItem(KEY, JSON.stringify(prev));
+    } catch (e) {}
+  }
+  function stored(){
+    try { return JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { return {}; }
+  }
+
+  function deal(){
+    board = [];
+    scored = false;
+    document.getElementById('result').hidden = true;
+    for (var r = 0; r < ROWS; r++){
+      var h0 = r * 90, span = 90;
+      var caps = [];
+      for (var i = 0; i < perRow; i++){
+        caps.push({ h: h0 + span * i / (perRow - 1), correct: i });
+      }
+      /* the two ends are fixed, as they are in the real test; the middle
+         is shuffled until it is definitely not already in order */
+      var mid = caps.slice(1, -1);
+      var tries = 0;
+      do {
+        for (var j = mid.length - 1; j > 0; j--){
+          var k = Math.floor(Math.random() * (j + 1));
+          var t = mid[j]; mid[j] = mid[k]; mid[k] = t;
+        }
+      } while (++tries < 8 && mid.every(function(c, i2){ return c.correct === i2 + 1; }));
+      board.push([caps[0]].concat(mid, [caps[caps.length - 1]]));
+    }
+    picked = null;
+    render();
+  }
+
+  var LABELS = ['red through yellow', 'yellow through green', 'green through blue', 'blue through red'];
+
+  function render(){
+    document.getElementById('rows').innerHTML = board.map(function(row, r){
+      return '<div class="row' + (scored ? ' scored' : '') + '">' +
+        '<p class="row-label">' + LABELS[r] + '</p>' +
+        '<div class="caps">' + row.map(function(cap, i){
+          var anchor = (i === 0 || i === row.length - 1);
+          var wrong = scored && !anchor && cap.correct !== i;
+          return '<button type="button" class="cap' + (anchor ? ' anchor' : '') +
+                 (wrong ? ' wrong' : '') +
+                 (picked && picked.row === r && picked.slot === i ? ' picked' : '') + '"' +
+                 ' data-r="' + r + '" data-i="' + i + '"' +
+                 (anchor ? ' tabindex="-1" aria-disabled="true"' : '') +
+                 ' aria-label="cap ' + (i + 1) + ' of ' + row.length + '"' +
+                 ' style="background:' + lchToRgb(L_STAR, CHROMA, cap.h).css + '">' +
+                 (scored ? '<span class="n">' + (cap.correct - i === 0 ? '·' :
+                    (cap.correct - i > 0 ? '+' : '') + (cap.correct - i)) + '</span>' : '') +
+                 '</button>';
+        }).join('') + '</div></div>';
+    }).join('');
+
+    [].forEach.call(document.querySelectorAll('.cap'), function(b){
+      if (b.classList.contains('anchor')) return;
+      b.addEventListener('click', function(){ tap(+b.dataset.r, +b.dataset.i); });
+    });
+  }
+
+  function tap(r, i){
+    if (!picked){ picked = { row: r, slot: i }; render(); return; }
+    if (picked.row === r && picked.slot === i){ picked = null; render(); return; }
+    if (picked.row !== r){ picked = { row: r, slot: i }; render(); return; }  /* rows do not mix */
+    var row = board[r];
+    var t = row[i]; row[i] = row[picked.slot]; row[picked.slot] = t;
+    picked = null;
+    scored = false;
+    document.getElementById('result').hidden = true;
+    render();
+  }
+
+  /* ================================================================== *
+   *  Scoring.
+   *
+   *  Total displacement: how far every cap is from where it belongs,
+   *  added up. A perfect arrangement is nought. It is deliberately not
+   *  a percentage, because a percentage of what is not a question this
+   *  has an honest answer to.
+   * ================================================================== */
+  function score(){
+    scored = true;
+    var total = 0, perRowErr = [];
+    board.forEach(function(row){
+      var e = 0;
+      row.forEach(function(cap, i){ e += Math.abs(cap.correct - i); });
+      perRowErr.push(e);
+      total += e;
+    });
+    render();
+
+    var s = stored();
+    save(total);
+    var best = stored().best;
+
+    var caps = perRow * ROWS;
+    var worst = perRowErr.indexOf(Math.max.apply(null, perRowErr));
+    var clustered = perRowErr[worst] > total * 0.55 && total > 6;
+
+    var reading;
+    if (total === 0) reading = 'Every cap exactly where it belongs. That is a clean sheet.';
+    else if (total <= caps * 0.25) reading = 'A handful of near-neighbours swapped, which is what a careful arrangement usually looks like.';
+    else if (total <= caps * 0.7) reading = 'A normal spread of small errors. Adjacent caps in a hue run really are very close together.';
+    else if (clustered) reading = 'Most of the error is in one row &mdash; the ' + LABELS[worst] +
+        ' run. In a clinical test that pattern is the interesting one; on an uncalibrated screen it may just be that row rendering poorly.';
+    else reading = 'A lot of movement, spread across all four rows. Worth trying again in better light before reading anything into it.';
+
+    document.getElementById('result').hidden = false;
+    document.getElementById('result').innerHTML =
+      '<h2>Total displacement</h2>' +
+      '<span class="big">' + total + '</span>' +
+      '<p>' + reading + '</p>' +
+      '<p class="rows-detail">' +
+        board.map(function(_, r){ return LABELS[r] + ': ' + perRowErr[r]; }).join('<br>') +
+        '<br>caps: ' + caps + ' &middot; L* ' + L_STAR + ' &middot; chroma ' + CHROMA.toFixed(1) +
+        ' (the most this screen can hold at every hue)' +
+        (best != null && best < total ? '<br>your best at this length: ' + best : '') +
+      '</p>';
+  }
+
+  document.getElementById('btn-score').addEventListener('click', score);
+  document.getElementById('btn-new').addEventListener('click', deal);
+  document.getElementById('k-count').addEventListener('change', function(){
+    perRow = +this.value; save(); deal();
+  });
+  document.getElementById('k-count').value = String(perRow);
+
+  deal();
+
+  window.__colour = {
+    chroma: CHROMA, board: function(){ return board; },
+    solve: function(){
+      board.forEach(function(row){ row.sort(function(a, b){ return a.correct - b.correct; }); });
+      picked = null; render();
+    },
+    scramble: deal, score: score,
+    rgb: function(h){ return lchToRgb(L_STAR, CHROMA, h); }
+  };
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,594 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Beam and the Weights</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23222A2C'/><path d='M4 13l24-4' stroke='%23B08D4F' stroke-width='2.4' stroke-linecap='round'/><path d='M16 11v14M11 27h10' stroke='%23B08D4F' stroke-width='2.2' stroke-linecap='round'/><rect x='3' y='13' width='5' height='4' rx='1' fill='%23C9A86A'/><rect x='24' y='9' width='5' height='4' rx='1' fill='%23C9A86A'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --slate:#1B2124;
+  --slate-2:#252D31;
+  --brass:#B08D4F;
+  --brass-2:#E0C081;
+  --verdigris:#4E8C7A;
+  --chalk:#E6E2D6;
+  --dim:#94978E;
+  --dimmer:#63675F;
+  --line:#333B3E;
+  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;min-height:100%}
+body{
+  background:
+    radial-gradient(800px 620px at 50% 6%, #2A3337 0%, transparent 64%),
+    linear-gradient(180deg,#191F22,#101416);
+  color:var(--chalk);font-family:var(--serif);
+  min-height:100vh;padding:24px 16px 84px;
+  display:flex;flex-direction:column;align-items:center;
+}
+.wrap{ width:min(940px,100%) }
+
+header{ text-align:center;margin-bottom:18px }
+h1{ font-size:clamp(20px,4.6vw,27px);font-weight:400;margin:0 0 6px;letter-spacing:.02em }
+.tagline{ font-size:13.5px;line-height:1.7;color:var(--dim);margin:0;font-style:italic }
+
+/* ---- the bench ----------------------------------------------------- */
+.bench{
+  position:relative;border-radius:8px;overflow:hidden;
+  background:linear-gradient(180deg,#212829,#171C1E);
+  border:1px solid var(--line);
+  box-shadow:0 20px 48px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.05);
+}
+.bench canvas{ display:block;width:100%;height:auto;cursor:pointer;touch-action:manipulation }
+.reading{
+  position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:center;gap:0;
+  pointer-events:none;
+}
+.reading span{
+  font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  padding:7px 16px;color:var(--dim);background:rgba(12,16,18,.72);
+  border-top:1px solid var(--line);border-right:1px solid var(--line);
+}
+.reading span:last-child{ border-right:0 }
+.reading b{ color:var(--brass-2);font-weight:600 }
+.reading .lvl b{ color:var(--verdigris) }
+
+/* ---- the tray ------------------------------------------------------ */
+.tray-wrap{ display:grid;grid-template-columns:1fr;gap:15px;margin-top:16px }
+@media (min-width:720px){ .tray-wrap{ grid-template-columns:1.15fr 1fr } }
+.panel{ background:rgba(30,37,40,.7);border:1px solid var(--line);border-radius:8px;padding:14px 14px 16px }
+.panel h2{
+  font-family:var(--mono);font-size:9px;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--dimmer);margin:0 0 12px;font-weight:600;
+}
+.tray{ display:flex;flex-wrap:wrap;gap:8px }
+.wt{
+  font:inherit;cursor:pointer;position:relative;
+  background:linear-gradient(180deg,#C9A86A,#8A6C38);
+  border:1px solid #6B5228;border-radius:4px 4px 3px 3px;
+  color:#2A2114;font-weight:600;font-size:14px;
+  min-width:46px;padding:11px 10px 9px;text-align:center;
+  box-shadow:0 3px 0 #5A4520, 0 6px 12px rgba(0,0,0,.4);
+  transition:transform .1s, box-shadow .1s;
+}
+.wt small{ display:block;font-family:var(--mono);font-size:8px;letter-spacing:.1em;opacity:.65;margin-top:2px }
+.wt:hover{ transform:translateY(-2px);box-shadow:0 5px 0 #5A4520, 0 9px 16px rgba(0,0,0,.45) }
+.wt[aria-pressed="true"]{ transform:translateY(2px);box-shadow:0 1px 0 #5A4520, inset 0 0 0 2px #F0DCB0 }
+.wt:disabled{ opacity:.3;cursor:default;transform:none;box-shadow:0 3px 0 #5A4520 }
+.wt:focus-visible{ outline:2px solid var(--verdigris);outline-offset:3px }
+.hint{ font-size:12.5px;line-height:1.7;color:var(--dimmer);margin:11px 0 0;font-style:italic }
+
+.task{ font-size:14.5px;line-height:1.75;color:var(--chalk);margin:0 0 12px }
+.task b{ color:var(--brass-2);font-weight:600 }
+.verdict{ font-size:14px;line-height:1.7;color:var(--dim);min-height:3.2em;margin:0 }
+.verdict.win{ color:var(--verdigris) }
+.btns{ display:flex;flex-wrap:wrap;gap:7px;margin-top:13px }
+.btns button{
+  font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+  background:transparent;color:var(--dim);border:1px solid var(--line);
+  border-radius:4px;padding:8px 13px;cursor:pointer;transition:color .15s,border-color .15s;
+}
+.btns button:hover{ color:var(--chalk);border-color:var(--brass) }
+.btns button[aria-pressed="true"]{ color:var(--brass-2);border-color:var(--brass) }
+.btns button:focus-visible{ outline:2px solid var(--verdigris);outline-offset:2px }
+.btns button:disabled{ opacity:.35;cursor:default }
+
+.steps{ display:flex;gap:5px;margin-bottom:13px;flex-wrap:wrap }
+.pip{
+  width:22px;height:22px;border-radius:50%;border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:9px;color:var(--dimmer);
+}
+.pip.done{ background:var(--verdigris);border-color:var(--verdigris);color:#0E1614 }
+.pip.now{ border-color:var(--brass-2);color:var(--brass-2) }
+
+.book{ margin-top:28px;padding-top:19px;border-top:1px solid var(--line);font-size:14px;line-height:1.85;color:var(--dim) }
+.book p{ margin:0 0 12px } .book p:last-child{ margin:0 }
+.book b{ color:var(--chalk);font-weight:600 }
+.book code{ font-family:var(--mono);font-size:12.5px;color:var(--brass-2) }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 var(--mono);
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(20,26,28,.9);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.4);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(20,26,28,.99);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid var(--verdigris);outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>The Beam and the Weights</h1>
+  <p class="tagline">A gram close in is worth less than a gram far out. That is the whole of it.</p>
+</header>
+
+<div class="bench">
+  <canvas id="cv" width="1500" height="500"></canvas>
+  <div class="reading">
+    <span>left <b id="r-left">0</b></span>
+    <span class="lvl" id="r-state">tip it either way</span>
+    <span>right <b id="r-right">0</b></span>
+  </div>
+</div>
+
+<div class="tray-wrap">
+  <div class="panel">
+    <h2>The weights</h2>
+    <div class="tray" id="tray"></div>
+    <p class="hint">Pick one up, then click a notch on the beam. Click a weight already on the beam
+      to take it off again.</p>
+  </div>
+
+  <div class="panel">
+    <h2 id="mode-title">Task</h2>
+    <div class="steps" id="steps"></div>
+    <p class="task" id="task">&nbsp;</p>
+    <p class="verdict" id="verdict">&nbsp;</p>
+    <div class="btns">
+      <button type="button" id="btn-clear">Clear the beam</button>
+      <button type="button" id="btn-next" disabled>Next task</button>
+      <button type="button" id="btn-free" aria-pressed="false">Just play</button>
+      <button type="button" id="btn-sound" aria-pressed="false">Sound</button>
+    </div>
+  </div>
+</div>
+
+<div class="book">
+  <p><b>The beam does not weigh anything &mdash; it measures moments.</b> What each weight
+  contributes is its mass multiplied by how far along the beam it sits: <code>moment = mass &times;
+  distance</code>. Ten grams at notch two and four grams at notch five are the same thing to this
+  beam, which is why a small weight far out can hold down a large one near the pivot, and why a
+  steelyard can weigh a pig with a fist-sized counterweight.</p>
+  <p>The tilt is not decoration either. The beam is integrated as a real pendulum: its own centre of
+  mass hangs a little below the pivot, so it swings back towards level and overshoots, and it settles
+  where the unbalanced moment and that restoring pull cancel out. Load one end heavily and it slams
+  to the stop; load it nearly right and it hunts about for a while before it makes up its mind.</p>
+  <p>Six tasks, then it stays out of your way. Nothing here needs an account or leaves the browser.</p>
+</div>
+
+</div>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">&larr;</span><span class="w">cabinet</span></a>
+
+<script src="/shared/lc-audio.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  var KEY = 'lc-balance-scale';
+  var cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+  var W = cv.width, H = cv.height;
+  var PIVOT = { x: W / 2, y: H * .33 };
+  var NOTCHES = 5;                   /* each side */
+  var SPACING = (W * .30) / NOTCHES;
+  var MAX_TILT = 0.30;               /* radians; the beam hits its stops here */
+
+  /* ---- state -------------------------------------------------------- */
+  var placed = [];                   /* {m, side:-1|1, d:1..5, fixed:bool} */
+  var picked = null;                 /* mass currently in hand */
+  var freePlay = false;
+  var sound = false;
+  var task = 0, solvedCount = 0;
+  var beam = { a: 0, w: 0 };         /* angle, angular velocity */
+
+  /* ================================================================== *
+   *  The tasks. Every one was checked by exhaustive search to have at
+   *  least one solution that uses every weight in its tray AND puts no
+   *  two weights in the same notch, because the beam does not allow that
+   *  either. The fifth one failed that check on the first draft — its
+   *  only solution wanted two weights in one notch — and was replaced.
+   * ================================================================== */
+  var TASKS = [
+    { given:[{m:6, side:-1, d:2}], tray:[3,3],
+      note:'Six grams sit at notch two on the left. Balance it with two threes.' },
+    { given:[{m:10, side:-1, d:3}], tray:[5,5],
+      note:'Ten grams at notch three. You have two fives, and they do not have to go in the same place.' },
+    { given:[{m:8, side:-1, d:4}], tray:[2,3,5],
+      note:'Eight at notch four. Use all three weights.' },
+    { given:[{m:12, side:-1, d:5}], tray:[10,3,2],
+      note:'Twelve grams right out at notch five. Everything in the tray goes on.' },
+    { given:[{m:6, side:-1, d:4}, {m:3, side:1, d:2}], tray:[10,2],
+      note:'Both ends are already loaded. Add the ten and the two.' },
+    { given:[{m:7, side:-1, d:4}], tray:[5,2,1],
+      note:'Seven at notch four, and only eight grams in the tray. It will need the far end.' }
+  ];
+
+  try {
+    var raw = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (raw && typeof raw.task === 'number' && raw.task >= 0 && raw.task <= TASKS.length){
+      task = Math.min(raw.task, TASKS.length - 1);
+      solvedCount = raw.solved | 0;
+    }
+  } catch (e) {}
+  function save(){
+    try { localStorage.setItem(KEY, JSON.stringify({ task: task, solved: solvedCount })); } catch (e) {}
+  }
+
+  /* ---- moments ------------------------------------------------------ */
+  function moments(){
+    var l = 0, r = 0;
+    placed.forEach(function(p){
+      if (p.side < 0) l += p.m * p.d; else r += p.m * p.d;
+    });
+    return { l: l, r: r, net: r - l };
+  }
+
+  function trayLeft(){
+    if (freePlay) return null;
+    var want = TASKS[task].tray.slice();
+    placed.forEach(function(p){
+      if (p.fixed) return;
+      var i = want.indexOf(p.m);
+      if (i >= 0) want.splice(i, 1);
+    });
+    return want;
+  }
+
+  /* ================================================================== *
+   *  The beam as a physical pendulum.
+   *
+   *  I·a'' = -(net moment)·k  -  M·g·h·sin(a)  -  c·a'
+   *
+   *  The second term is the beam's own centre of mass sitting below the
+   *  pivot, which is the only reason a balance returns to level at all.
+   * ================================================================== */
+  function stepBeam(dt){
+    var net = moments().net;
+    var restore = -14 * Math.sin(beam.a);
+    var drive  = net * 0.22;   /* tuned so a net of ~27 puts it on the stop */
+    var damp   = -3.1 * beam.w;
+    var acc = (drive + restore + damp) / 3.2;
+    beam.w += acc * dt;
+    beam.a += beam.w * dt;
+    if (beam.a > MAX_TILT){ beam.a = MAX_TILT; beam.w = Math.min(0, beam.w) * .3; }
+    if (beam.a < -MAX_TILT){ beam.a = -MAX_TILT; beam.w = Math.max(0, beam.w) * .3; }
+  }
+
+  /* ================================================================== *
+   *  Drawing.
+   * ================================================================== */
+  function draw(){
+    ctx.clearRect(0, 0, W, H);
+
+    /* the slab it stands on */
+    var g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, '#222A2C'); g.addColorStop(1, '#151A1C');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+
+    /* the column and its foot */
+    ctx.fillStyle = '#7A6236';
+    ctx.fillRect(PIVOT.x - 13, PIVOT.y, 26, H * .50);
+    var fg = ctx.createLinearGradient(0, H * .78, 0, H * .90);
+    fg.addColorStop(0, '#8A6C38'); fg.addColorStop(1, '#4E3C1E');
+    ctx.fillStyle = fg;
+    rr(PIVOT.x - 150, H * .80, 300, 30, 8); ctx.fill();
+    ctx.fillStyle = '#3A2E18';
+    rr(PIVOT.x - 190, H * .855, 380, 24, 9); ctx.fill();
+
+    /* the beam */
+    ctx.save();
+    ctx.translate(PIVOT.x, PIVOT.y);
+    ctx.rotate(beam.a);
+
+    var half = SPACING * NOTCHES + 40;
+    var bg = ctx.createLinearGradient(0, -13, 0, 13);
+    bg.addColorStop(0, '#E0C081'); bg.addColorStop(.45, '#B08D4F'); bg.addColorStop(1, '#7A6236');
+    ctx.fillStyle = bg;
+    rr(-half, -11, half * 2, 22, 6); ctx.fill();
+
+    /* notches, numbered outwards from the pivot both ways */
+    for (var s = -1; s <= 1; s += 2){
+      for (var d = 1; d <= NOTCHES; d++){
+        var x = s * d * SPACING;
+        ctx.fillStyle = 'rgba(60,45,20,.55)';
+        ctx.fillRect(x - 2, -11, 4, 8);
+        ctx.fillStyle = 'rgba(32,24,10,.9)';
+        ctx.font = '19px ui-monospace,monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(d, x, 34);
+      }
+    }
+
+    /* the weights, sitting on the beam and leaning with it */
+    placed.forEach(function(p){
+      drawWeight(p.side * p.d * SPACING, p.m, p.fixed);
+    });
+
+    ctx.restore();
+
+    /* the knife edge and the pointer */
+    ctx.fillStyle = '#E0C081';
+    ctx.beginPath();
+    ctx.moveTo(PIVOT.x - 20, PIVOT.y + 16);
+    ctx.lineTo(PIVOT.x + 20, PIVOT.y + 16);
+    ctx.lineTo(PIVOT.x, PIVOT.y - 8);
+    ctx.closePath(); ctx.fill();
+
+    /* the level mark and the needle, which is the beam's own angle */
+    ctx.strokeStyle = 'rgba(78,140,122,.55)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(PIVOT.x, PIVOT.y + 34); ctx.lineTo(PIVOT.x, PIVOT.y + 74); ctx.stroke();
+    ctx.save();
+    ctx.translate(PIVOT.x, PIVOT.y + 30);
+    ctx.rotate(beam.a * 1.7);
+    ctx.strokeStyle = Math.abs(moments().net) < .001 ? '#4E8C7A' : '#E0C081';
+    ctx.lineWidth = 4; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, 52); ctx.stroke();
+    ctx.restore();
+
+    /* the weight in hand follows nothing; it is shown in the tray instead */
+  }
+
+  function drawWeight(x, m, fixed){
+    var w = 30 + Math.min(34, m * 2.6), h = 22 + Math.min(40, m * 2.4);
+    ctx.save();
+    ctx.translate(x, -11 - h / 2);
+    var g = ctx.createLinearGradient(0, -h / 2, 0, h / 2);
+    if (fixed){ g.addColorStop(0, '#7E8A86'); g.addColorStop(1, '#3E4744'); }
+    else { g.addColorStop(0, '#D8B87A'); g.addColorStop(1, '#7A5F2E'); }
+    ctx.fillStyle = g;
+    rr(-w / 2, -h / 2, w, h, 4); ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,.35)'; ctx.lineWidth = 1.4; ctx.stroke();
+    /* the little knob on top */
+    ctx.fillStyle = fixed ? '#98A5A0' : '#E6CB92';
+    rr(-6, -h / 2 - 7, 12, 8, 3); ctx.fill();
+    ctx.fillStyle = fixed ? '#1C2220' : '#33280F';
+    ctx.font = '600 20px "Iowan Old Style",Georgia,serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(m, 0, 1);
+    ctx.textBaseline = 'alphabetic';
+    ctx.restore();
+  }
+
+  function rr(x, y, w, h, r){
+    ctx.beginPath();
+    ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+  }
+
+  /* ================================================================== *
+   *  Clicking the beam.
+   * ================================================================== */
+  cv.addEventListener('click', function(e){
+    var r = cv.getBoundingClientRect();
+    var px = (e.clientX - r.left) / r.width * W;
+    var py = (e.clientY - r.top) / r.height * H;
+
+    /* undo the beam's rotation to find which notch was clicked */
+    var dx = px - PIVOT.x, dy = py - PIVOT.y;
+    var ca = Math.cos(-beam.a), sa = Math.sin(-beam.a);
+    var lx = dx * ca - dy * sa, ly = dx * sa + dy * ca;
+    if (ly > 60 || ly < -110) return;
+
+    var side = lx < 0 ? -1 : 1;
+    var d = Math.round(Math.abs(lx) / SPACING);
+    if (d < 1 || d > NOTCHES) return;
+
+    /* a weight already there? take it off, unless it is part of the task */
+    for (var i = 0; i < placed.length; i++){
+      if (placed[i].side === side && placed[i].d === d){
+        if (placed[i].fixed){ verdict('That one is part of the task and cannot be moved.'); return; }
+        placed.splice(i, 1);
+        clink(.5); refresh();
+        return;
+      }
+    }
+
+    if (picked == null){ verdict('Pick a weight out of the tray first.'); return; }
+    if (!freePlay){
+      var left = trayLeft();
+      if (left.indexOf(picked) < 0){ verdict('There are no more of those in the tray.'); return; }
+    }
+    placed.push({ m: picked, side: side, d: d, fixed: false });
+    clink(1); refresh();
+  });
+
+  /* ================================================================== *
+   *  Tray and tasks.
+   * ================================================================== */
+  var FREE_WEIGHTS = [1, 2, 3, 5, 10, 20];
+
+  function drawTray(){
+    var list = freePlay ? FREE_WEIGHTS : TASKS[task].tray;
+    var remaining = trayLeft();
+    var counts = {};
+    list.forEach(function(m){ counts[m] = (counts[m] || 0) + 1; });
+
+    var seen = {};
+    document.getElementById('tray').innerHTML = list.map(function(m){
+      if (seen[m]) return '';
+      seen[m] = true;
+      var have = freePlay ? Infinity : remaining.filter(function(x){ return x === m; }).length;
+      var total = counts[m];
+      return '<button type="button" class="wt" data-m="' + m + '"' +
+             (have === 0 ? ' disabled' : '') +
+             ' aria-pressed="' + (picked === m) + '">' + m +
+             '<small>' + (freePlay ? 'grams' : have + ' of ' + total) + '</small></button>';
+    }).join('');
+
+    [].forEach.call(document.querySelectorAll('.wt'), function(b){
+      b.addEventListener('click', function(){
+        picked = picked === +b.dataset.m ? null : +b.dataset.m;
+        drawTray();
+      });
+    });
+  }
+
+  function drawSteps(){
+    document.getElementById('steps').innerHTML = freePlay ? '' :
+      TASKS.map(function(_, i){
+        return '<span class="pip' + (i < solvedCount ? ' done' : (i === task ? ' now' : '')) + '">' +
+               (i + 1) + '</span>';
+      }).join('');
+  }
+
+  function loadTask(){
+    placed = TASKS[task].given.map(function(g){
+      return { m:g.m, side:g.side, d:g.d, fixed:true };
+    });
+    picked = null;
+    beam.a = 0; beam.w = 0;
+    document.getElementById('mode-title').textContent = 'Task ' + (task + 1) + ' of ' + TASKS.length;
+    document.getElementById('task').textContent = TASKS[task].note;
+    document.getElementById('btn-next').disabled = true;
+    verdict('');
+    refresh();
+  }
+
+  function goFree(){
+    freePlay = true;
+    placed = [];
+    picked = null;
+    beam.a = 0; beam.w = 0;
+    document.getElementById('btn-free').setAttribute('aria-pressed', true);
+    document.getElementById('mode-title').textContent = 'Free play';
+    document.getElementById('task').textContent =
+      'No task. Put anything anywhere and see what the beam makes of it.';
+    document.getElementById('btn-next').disabled = true;
+    verdict('');
+    refresh();
+  }
+
+  var wasBalanced = false;
+  function refresh(){
+    drawTray(); drawSteps();
+    var m = moments();
+    document.getElementById('r-left').textContent = m.l;
+    document.getElementById('r-right').textContent = m.r;
+    var st = document.getElementById('r-state');
+    if (m.l === 0 && m.r === 0) st.innerHTML = 'the beam is empty';
+    else if (m.net === 0) st.innerHTML = '<b>level</b>';
+    else st.innerHTML = (m.net > 0 ? 'right heavier by <b>' : 'left heavier by <b>') + Math.abs(m.net) + '</b>';
+
+    var balanced = (m.l > 0 || m.r > 0) && m.net === 0;
+    if (!freePlay){
+      var left = trayLeft();
+      if (balanced && left.length === 0){
+        if (!wasBalanced){
+          verdict('Level, and everything is on the beam. ' + describe() , true);
+          document.getElementById('btn-next').disabled = false;
+          if (task + 1 > solvedCount) solvedCount = task + 1;
+          save(); drawSteps();
+          chime();
+        }
+      } else if (balanced && left.length){
+        verdict('Level &mdash; but there ' + (left.length === 1 ? 'is still a weight' : 'are still weights') +
+                ' in the tray, and the task is to use all of them.');
+      } else if (!balanced && (m.l || m.r)){
+        verdict('');
+      }
+    }
+    wasBalanced = balanced && (freePlay || trayLeft().length === 0);
+  }
+
+  /* Say the arithmetic out loud, because the point of the toy is that
+     the two sides multiply out to the same number. */
+  function describe(){
+    var l = [], r = [];
+    placed.forEach(function(p){
+      (p.side < 0 ? l : r).push(p.m + '&times;' + p.d);
+    });
+    var m = moments();
+    return '<br>' + l.join(' + ') + ' = ' + m.l + ' &nbsp;and&nbsp; ' + r.join(' + ') + ' = ' + m.r + '.';
+  }
+
+  function verdict(html, win){
+    var el = document.getElementById('verdict');
+    el.innerHTML = html || '&nbsp;';
+    el.className = 'verdict' + (win ? ' win' : '');
+  }
+
+  /* ---- sound -------------------------------------------------------- */
+  function clink(level){
+    if (!sound) return;
+    LCAudio.sting(function(A){
+      A.blip(1500 + Math.random() * 400, { type:'sine', dur:.09, level:.06 * level });
+      A.burst('white', { freq: 4200, q: 6, dur:.02, level:.04 * level, reverb:false });
+    });
+  }
+  function chime(){
+    if (!sound) return;
+    LCAudio.sting(function(A){
+      A.blip(A.note(3), { dur:.4, level:.07 });
+      A.blip(A.note(10), { at:.1, dur:.5, level:.06 });
+      A.blip(A.note(15), { at:.2, dur:.8, level:.05 });
+    });
+  }
+
+  /* ---- loop --------------------------------------------------------- */
+  var last = performance.now();
+  (function tick(now){
+    requestAnimationFrame(tick);
+    var dt = Math.min(.05, (now - last) / 1000); last = now;
+    if (document.hidden) return;
+    stepBeam(dt);
+    draw();
+  })(performance.now());
+
+  /* ---- buttons ------------------------------------------------------ */
+  document.getElementById('btn-clear').addEventListener('click', function(){
+    placed = placed.filter(function(p){ return p.fixed; });
+    picked = null; refresh();
+    verdict('');
+  });
+  document.getElementById('btn-next').addEventListener('click', function(){
+    task = (task + 1) % TASKS.length;
+    save(); loadTask();
+  });
+  document.getElementById('btn-free').addEventListener('click', function(){
+    if (freePlay){ freePlay = false; this.setAttribute('aria-pressed', false); loadTask(); }
+    else goFree();
+  });
+  document.getElementById('btn-sound').addEventListener('click', function(){
+    sound = !sound; this.setAttribute('aria-pressed', sound);
+  });
+
+  loadTask();
+
+  window.__balance = {
+    moments: moments, place: function(m, side, d){ placed.push({m:m, side:side, d:d, fixed:false}); refresh(); },
+    task: function(){ return task; }, tasks: TASKS, trayLeft: trayLeft,
+    setTask: function(i){ task = i; loadTask(); },
+    angle: function(){ return beam.a; },
+    verdict: function(){ return document.getElementById('verdict').textContent; }
+  };
+})();
+</script>
+</body>
+</html>

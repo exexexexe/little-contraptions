@@ -144,6 +144,7 @@ footer a{ color:var(--teal) }
     <div class="row">
       <button id="go" type="button">Feed it in</button>
       <button id="clear" class="sec" type="button">Clear</button>
+      <button id="mode" class="sec" type="button" aria-pressed="false">Machine only</button>
     </div>
     <div class="presets" id="presets"></div>
   </div>
@@ -152,13 +153,18 @@ footer a{ color:var(--teal) }
 </div>
 
 <footer>
-  Every line the machine produces is assembled here from clause lists written for this cabinet; nothing
-  is quoted from any philosopher and nothing is fetched. Whatever you type stays in your browser. This is
-  not an argument and it is not logic: it is a machine for taking a snake that eats its own tail and
-  feeding it a slightly longer tail.
+  <b>Two machines live in here and the page always tells you which one answered.</b> The first is a
+  language model on the server, asked to take your statement seriously: where it forks, where it turns
+  on itself, what older problems it is related to, and whether it is a paradox at all &mdash; because
+  most things typed into this are not, and saying so is the more interesting answer. The second is the
+  original clause machine, assembled from lists written for this cabinet, which takes over when there
+  is no key on the server or the model will not answer, and which you can ask for on purpose with
+  &ldquo;machine only&rdquo;. Nothing is quoted from any philosopher. What you type goes to the
+  generator when the first machine is in use and is not stored anywhere.
   <a href="/">&larr; back to the cabinet</a>
 </footer>
 
+<script src="/shared/lc-generate.js"></script>
 <script>
 'use strict';
 const $ = (id) => document.getElementById(id);
@@ -251,7 +257,64 @@ function crash(p){
   lastFed = null;                  // the restart is real; the next one works
 }
 
-function meditate(){
+/* ------------------------------------------------------------------ *
+ *  Two machines, and it says which one answered.
+ *
+ *  Given a language model, the first thing tried is a real reading of
+ *  the statement: where it forks, where it turns on itself, what family
+ *  of older problems it belongs to, and — the part that matters — whether
+ *  it is a paradox at all, because most things people type at this are
+ *  not. Without a key, or if the model is having a bad minute, the
+ *  original clause machine below takes over and grinds one out. Neither
+ *  is presented as the other.
+ * ------------------------------------------------------------------ */
+let busy = false;
+let machineOnly = false;
+
+async function meditate(){
+  const raw = $('q').value.trim();
+  if (!raw){ return grind(); }
+  const key = normalise(raw);
+  if (lastFed && key === lastFed){ crash(raw); return; }
+
+  /* A second request while one is in flight is dropped rather than run:
+     letting both go meant the older one could land last and answer a
+     question that had already been replaced. */
+  if (busy) return;
+  if (machineOnly) return grind();
+
+  busy = true;
+  $('go').disabled = true;
+  $('out').innerHTML = '<div class="step"><div class="n">considering</div>' +
+    '<p>The machine is turning it over&hellip;</p></div>';
+
+  const out = await LCGenerate.run('paradox-machine', { claim: raw }, { timeout: 30000 });
+  busy = false;
+  $('go').disabled = false;
+
+  if (!out.ok){ return grind(out.kind === 'no_key' ? null : out.message); }
+  const r = LCGenerate.parseJSON(out.text);
+  if (!r || !r.restated || !Array.isArray(r.horns)) return grind('The answer came back in a shape this page could not read.');
+
+  lastFed = key;
+  const horns = r.horns.slice(0, 2).map((h, i) =>
+    '<div class="step" style="animation-delay:' + (0.18 + i * 0.09).toFixed(2) + 's">' +
+    '<div class="n">' + (i ? 'or' : 'if') + ' &mdash; ' + esc(h.if || '') + '</div>' +
+    '<p>' + esc(h.then || '') + '</p></div>').join('');
+
+  $('out').innerHTML =
+    '<div class="step" style="animation-delay:.02s"><div class="n">' + esc(r.name || 'the statement') + '</div>' +
+      '<p>' + esc(r.restated) + '</p></div>' +
+    horns +
+    '<div class="step" style="animation-delay:.40s"><div class="n">and there it turns</div>' +
+      '<p>' + esc(r.turn || '') + '</p></div>' +
+    (r.kin ? '<div class="step" style="animation-delay:.49s"><div class="n">it has relations</div>' +
+      '<p>' + esc(r.kin) + '</p></div>' : '') +
+    '<div class="step final" style="animation-delay:.58s"><div class="n">where it stands</div>' +
+      '<p>' + esc(r.resolution || '') + '</p></div>';
+}
+
+function grind(why){
   const raw = $('q').value.trim();
   if (!raw){
     $('out').innerHTML = '<div class="step"><div class="n">nothing in the hopper</div>' +
@@ -259,11 +322,16 @@ function meditate(){
       'a paradox but not quite enough of one.</p></div>';
     return;
   }
-  const key = normalise(raw);
-  if (lastFed && key === lastFed){ crash(raw); return; }
-  lastFed = key;
+  const key2 = normalise(raw);
+  if (lastFed && key2 === lastFed){ crash(raw); return; }
+  lastFed = key2;
 
-  $('out').innerHTML = RUNGS.map((r, i) => {
+  const banner = why
+    ? '<div class="step"><div class="n">the model is not answering</div><p>' + esc(why) +
+      ' The machine will do it the old way instead.</p></div>'
+    : '';
+
+  $('out').innerHTML = banner + RUNGS.map((r, i) => {
     const text = pick(r.lines).replace('{P}', raw);
     return '<div class="step' + (i === RUNGS.length - 1 ? ' final' : '') + '" data-l="' + i + '" ' +
       'style="animation-delay:' + (i * 0.09).toFixed(2) + 's">' +
@@ -291,6 +359,13 @@ $('presets').addEventListener('click', (e) => {
 });
 
 $('go').addEventListener('click', meditate);
+$('mode').addEventListener('click', () => {
+  machineOnly = !machineOnly;
+  $('mode').setAttribute('aria-pressed', String(machineOnly));
+  $('mode').textContent = machineOnly ? 'Using the machine' : 'Machine only';
+  lastFed = null;
+  meditate();
+});
 $('clear').addEventListener('click', () => { $('q').value = ''; $('out').innerHTML = ''; lastFed = null; });
 $('q').addEventListener('keydown', (e) => {
   if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') meditate();

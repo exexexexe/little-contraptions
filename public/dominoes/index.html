@@ -1,0 +1,629 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Toppling Table</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%231D3A2C'/><rect x='6' y='6' width='6' height='20' rx='1.5' fill='%23F2EBDA'/><rect x='15' y='6' width='6' height='20' rx='1.5' fill='%23F2EBDA' transform='rotate(14 18 16)'/><rect x='24' y='9' width='5' height='17' rx='1.4' fill='%23D9CFB8' transform='rotate(38 26 17)'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --felt:#1D3A2C;
+  --felt-2:#162E23;
+  --wood:#5A3B22;
+  --wood-2:#7A5330;
+  --ivory:#F2EBDA;
+  --ivory-2:#D9CFB8;
+  --cream:#EDE6D4;
+  --dim:#8FA898;
+  --dimmer:#5E7A6B;
+  --gold:#C9A227;
+  --line:#2A4C3B;
+  --slab:"Iowan Old Style",Georgia,"Times New Roman",serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;min-height:100%}
+body{
+  background:radial-gradient(900px 700px at 50% 0%, #16281F 0%, #0C1712 70%);
+  color:var(--cream);font-family:var(--slab);
+  min-height:100vh;padding:24px 16px 84px;
+  display:flex;flex-direction:column;align-items:center;
+}
+.wrap{ width:min(1000px,100%) }
+
+header{ text-align:center;margin-bottom:18px }
+h1{ font-size:clamp(20px,4.6vw,27px);font-weight:600;margin:0 0 6px;letter-spacing:.01em }
+.tagline{ font-size:13.5px;line-height:1.7;color:var(--dim);margin:0;font-style:italic }
+
+/* ---- the table ---------------------------------------------------- */
+.table{
+  position:relative;border:10px solid var(--wood);border-radius:10px;
+  background:var(--felt);overflow:hidden;
+  box-shadow:0 0 0 2px #3A2617, inset 0 0 70px rgba(0,0,0,.45), 0 24px 56px rgba(0,0,0,.55);
+}
+.table canvas{ display:block;width:100%;height:auto;cursor:crosshair;touch-action:none }
+.table.erasing canvas{ cursor:cell }
+.hud{
+  position:absolute;top:9px;left:11px;right:11px;display:flex;justify-content:space-between;
+  gap:10px;pointer-events:none;font-family:var(--mono);font-size:10px;letter-spacing:.16em;
+  text-transform:uppercase;color:rgba(210,232,218,.55);
+}
+.hud b{ color:var(--gold);font-weight:600 }
+
+/* ---- controls ------------------------------------------------------ */
+.rack{ display:grid;grid-template-columns:1fr;gap:14px;margin-top:16px }
+@media (min-width:760px){ .rack{ grid-template-columns:1.1fr 1fr } }
+.panel{
+  background:linear-gradient(180deg,rgba(26,50,39,.75),rgba(17,34,26,.75));
+  border:1px solid var(--line);border-radius:9px;padding:14px 14px 16px;
+}
+.panel h2{
+  font-family:var(--mono);font-size:9px;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--dimmer);margin:0 0 12px;font-weight:600;
+}
+.btns{ display:flex;flex-wrap:wrap;gap:7px }
+.btns button{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
+  background:#1B3A2C;color:var(--dim);border:1px solid var(--line);border-radius:5px;
+  padding:9px 14px;cursor:pointer;transition:color .15s,border-color .15s,background .15s;
+}
+.btns button:hover{ color:var(--cream);border-color:#3E6B54 }
+.btns button[aria-pressed="true"]{ background:#2C5B45;border-color:var(--gold);color:#F6EFD8 }
+.btns button:focus-visible{ outline:2px solid var(--gold);outline-offset:2px }
+.btns button.primary{
+  background:linear-gradient(180deg,#8E6B14,#6B4F0C);border-color:var(--gold);color:#FFF6D8;
+}
+.btns button.primary:hover{ background:linear-gradient(180deg,#A67E1A,#7C5C0F) }
+.btns button:disabled{ opacity:.4;cursor:default }
+
+.knob{ margin-top:14px }
+.knob label{
+  display:flex;justify-content:space-between;font-family:var(--mono);font-size:9.5px;
+  letter-spacing:.15em;text-transform:uppercase;color:var(--dim);margin-bottom:6px;
+}
+.knob label b{ color:var(--gold);font-weight:600 }
+input[type=range]{ width:100%;accent-color:#C9A227 }
+
+.readout{ display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border-radius:7px;overflow:hidden;margin-bottom:13px }
+.readout div{ background:#163024;padding:10px 6px;text-align:center }
+.readout .k{ display:block;font-family:var(--mono);font-size:8.5px;letter-spacing:.17em;text-transform:uppercase;color:var(--dimmer);margin-bottom:5px }
+.readout .v{ font-family:var(--mono);font-size:17px;color:var(--cream);font-variant-numeric:tabular-nums }
+.readout .v small{ font-size:9px;color:var(--dimmer);margin-left:2px }
+.said{ font-size:13.5px;line-height:1.7;color:var(--dim);font-style:italic;min-height:3em;margin:0 }
+
+.book{ margin-top:28px;padding-top:19px;border-top:1px solid var(--line);font-size:14px;line-height:1.85;color:var(--dim) }
+.book p{ margin:0 0 12px }
+.book p:last-child{ margin:0 }
+.book b{ color:var(--cream);font-weight:600 }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 var(--mono);
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(16,32,24,.9);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.4);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(16,32,24,.99);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid var(--gold);outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>The Toppling Table</h1>
+  <p class="tagline">Stand them up, tip the first one, and get out of the way.</p>
+</header>
+
+<div class="table" id="table">
+  <canvas id="cv" width="1900" height="600"></canvas>
+  <div class="hud">
+    <span id="hud-l">click the felt to stand one up &middot; drag to lay a run</span>
+    <span id="hud-r"><b id="hud-n">0</b> standing</span>
+  </div>
+</div>
+
+<div class="rack">
+  <div class="panel">
+    <h2>The hand</h2>
+    <div class="btns" role="group" aria-label="Tool">
+      <button type="button" id="t-place" aria-pressed="true">Stand one up</button>
+      <button type="button" id="t-erase" aria-pressed="false">Take away</button>
+      <button type="button" id="btn-clear">Sweep the table</button>
+    </div>
+    <div class="knob">
+      <label for="k-size">Size of the next one <b><span id="v-size">100</span>%</b></label>
+      <input type="range" id="k-size" min="35" max="260" step="5" value="100">
+    </div>
+    <div class="knob">
+      <label for="k-gap">Spacing when you drag <b><span id="v-gap">70</span>% of height</b></label>
+      <input type="range" id="k-gap" min="30" max="110" step="5" value="70">
+    </div>
+    <h2 style="margin-top:18px">Set pieces</h2>
+    <div class="btns">
+      <button type="button" data-preset="run">A plain run</button>
+      <button type="button" data-preset="grow">The growing chain</button>
+      <button type="button" data-preset="stairs">Down the stairs</button>
+      <button type="button" data-preset="gap">The doubtful gap</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>The cascade</h2>
+    <div class="readout">
+      <div><span class="k">toppled</span><span class="v" id="r-fell">&mdash;</span></div>
+      <div><span class="k">took</span><span class="v" id="r-time">&mdash;</span></div>
+      <div><span class="k">best run</span><span class="v" id="r-best">&mdash;</span></div>
+    </div>
+    <div class="btns" style="margin-bottom:12px">
+      <button type="button" class="primary" id="btn-tip">Tip the first one</button>
+      <button type="button" id="btn-reset">Stand them all back up</button>
+      <button type="button" id="btn-sound" aria-pressed="false">Sound</button>
+    </div>
+    <p class="said" id="said">Nothing has fallen over yet.</p>
+  </div>
+</div>
+
+<div class="book">
+  <p><b>A domino can knock over one about half again its own size.</b> That is the well-known
+  figure, and it is why the growing chain is worth trying: the energy is not coming from your push,
+  it is coming out of every tile that was standing up, one after another. All the first flick had
+  to do was be enough for the smallest one.</p>
+  <p><b>This table cannot manage a half, and the set piece says what it can.</b> Tried rather than
+  assumed: the growing chain carried all fourteen tiles on every run at 1.10 times per tile, stopped
+  at twelve every time at 1.14, and died at the second tile at 1.22. So it is built at 1.10. The
+  shortfall is the simulation&rsquo;s and not the world&rsquo;s &mdash; these tiles are perfectly
+  rigid and meet at a single point with almost no bounce, where a real domino gives a little, grips,
+  and spreads the blow across a face. Spacing turned out to matter as much as the ratio: 0.40 of the
+  pushing tile&rsquo;s height carried the run, and 0.32 and 0.46 both broke it.</p>
+  <p>Everything here is rigid-body physics: real rectangles with real friction, standing on a real
+  floor, falling into each other. Nothing is choreographed, so a run can fail exactly the way a real
+  one does &mdash; too far apart and the chain dies; too close and a tile lands on top of its
+  neighbour instead of pushing it; too big a jump in size and the little one bounces off.</p>
+  <p>Drag across the felt to lay a whole run at the spacing you have chosen. Everything you build
+  stays put until you sweep the table.</p>
+</div>
+
+</div>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">&larr;</span><span class="w">cabinet</span></a>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+<script src="/shared/lc-audio.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  var HAVE = typeof Matter !== 'undefined';
+  var KEY = 'lc-dominoes';
+  var cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+  var W = cv.width, H = cv.height;
+  var FLOOR = H - 56;
+
+  var BASE_W = 26, BASE_H = 118;      /* a 100% domino, in buffer pixels */
+  var GROW_GAP = 0.40;                /* spacing in the growing chain, as a fraction of the pusher */
+  var GROW_K = 1.10;                  /* the largest step this table carries every time */
+  var tool = 'place';
+  var size = 100, gap = 70;
+  var sound = false;
+  var best = 0;
+  try {
+    var raw = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (raw && typeof raw.best === 'number') best = raw.best;
+  } catch (e) {}
+  function save(){ try { localStorage.setItem(KEY, JSON.stringify({ best: best })); } catch (e) {} }
+
+  /* ================================================================== */
+  var engine, world, floors = [], tiles = [];
+  var cascade = { going:false, t0:0, standingAtStart:0, done:0, lastMotion:0 };
+
+  function setup(){
+    engine = Matter.Engine.create();
+    /* Matter's default gravity is one screen-gravity, which for a tile
+       drawn a hundred pixels tall makes a topple take half a second — far
+       slower than a real domino its size. Four puts the fall back on the
+       right side of believable without letting thin bodies tunnel. */
+    engine.gravity.y = 4;
+    engine.positionIterations = 8;
+    engine.velocityIterations = 6;
+    world = engine.world;
+    floors = [];
+    addFloor(0, FLOOR, W, 50);
+    Matter.Composite.add(world, floors);
+
+    if (sound) Matter.Events.on(engine, 'collisionStart', onHit);
+  }
+
+  function addFloor(x, y, w, h){
+    var b = Matter.Bodies.rectangle(x + w / 2, y + h / 2, w, h, {
+      isStatic:true, friction:.7, restitution:0
+    });
+    b.isFloor = true;
+    floors.push(b);
+    return b;
+  }
+
+  function place(x, pct, y){
+    var w = BASE_W * pct / 100, h = BASE_H * pct / 100;
+    var top = (y == null ? FLOOR : y);
+    var b = Matter.Bodies.rectangle(x, top - h / 2 - 1, w, h, {
+      friction:.42, frictionStatic:.62, restitution:.02, density:.0016, slop:.01,
+      chamfer:{ radius: Math.min(3, w * .12) }
+    });
+    b.pct = pct; b.tw = w; b.th = h; b.pips = 1 + Math.floor(Math.random() * 6);
+    b.pips2 = 1 + Math.floor(Math.random() * 6);
+    b.fell = false;
+    tiles.push(b);
+    Matter.Composite.add(world, b);
+    return b;
+  }
+
+  function clearAll(){
+    Matter.Composite.remove(world, tiles);
+    tiles = [];
+    cascade.going = false;
+    hud();
+    say('Table swept.');
+    ['r-fell','r-time'].forEach(function(i){ document.getElementById(i).innerHTML = '&mdash;'; });
+  }
+
+  /* Standing up again is not the same as sweeping and rebuilding: the
+     tiles keep their sizes and their places, which is the whole point of
+     trying a layout twice. */
+  function standUp(){
+    tiles.forEach(function(b){
+      Matter.Body.setAngle(b, 0);
+      Matter.Body.setAngularVelocity(b, 0);
+      Matter.Body.setVelocity(b, { x:0, y:0 });
+      Matter.Body.setPosition(b, { x: b.homeX, y: b.homeY });
+      b.fell = false;
+    });
+    cascade.going = false;
+    hud();
+    say('All back on their feet.');
+  }
+
+  function remember(){ tiles.forEach(function(b){ b.homeX = b.position.x; b.homeY = b.position.y; }); }
+
+  /* ================================================================== *
+   *  Tipping, and counting what falls.
+   * ================================================================== */
+  function tip(){
+    if (!tiles.length) return say('There is nothing standing up to tip.');
+    remember();
+    var first = tiles.slice().sort(function(a, b){ return a.position.x - b.position.x; })[0];
+    /* A flick, not a shove: the first tile is given a spin about its own
+       base, which is what a fingertip actually does. Everything after it
+       is paid for out of the tiles that were standing up. */
+    Matter.Body.setAngularVelocity(first, 0.17);
+    Matter.Body.setVelocity(first, { x: 1.1, y: 0 });
+    cascade.going = true;
+    cascade.t0 = performance.now();
+    cascade.lastMotion = cascade.t0;
+    cascade.standingAtStart = tiles.length;
+    cascade.done = 0;
+    say('Tipped.');
+    knock(1);
+  }
+
+  function isDown(b){ return Math.abs(Math.sin(b.angle)) > 0.55; }
+
+  function settleCheck(now){
+    if (!cascade.going) return;
+    var fell = 0, moving = false;
+    for (var i = 0; i < tiles.length; i++){
+      if (isDown(tiles[i])) fell++;
+      if (Math.abs(tiles[i].angularVelocity) > .02 || Math.hypot(tiles[i].velocity.x, tiles[i].velocity.y) > .4) moving = true;
+    }
+    cascade.done = fell;
+    document.getElementById('r-fell').innerHTML = fell + '<small>of ' + tiles.length + '</small>';
+    document.getElementById('r-time').innerHTML = ((now - cascade.t0) / 1000).toFixed(1) + '<small>s</small>';
+
+    if (moving) cascade.lastMotion = now;
+    /* A chain can crawl: one tile leans on the next for the best part of a
+       second before it goes. Ending the run at the first still moment
+       would cut most cascades off in the middle. */
+    if (now - cascade.lastMotion > 900 && now - cascade.t0 > 900){
+      cascade.going = false;
+      var secs = (now - cascade.t0) / 1000;
+      if (fell > best){ best = fell; save(); }
+      document.getElementById('r-best').innerHTML = best + '<small>tiles</small>';
+      var pctFell = tiles.length ? fell / tiles.length : 0;
+      if (fell <= 1) say('It went over and nothing followed. Try them closer together.');
+      else if (pctFell > .97) say('The whole run went, all ' + fell + ' of them, in ' + secs.toFixed(1) + ' seconds.');
+      else if (pctFell > .6) say(fell + ' of ' + tiles.length + ' fell before the chain broke. Something in the middle was too far, or too big a jump.');
+      else say('Only ' + fell + ' went over. The chain gave up early.');
+    }
+  }
+
+  /* ================================================================== *
+   *  Sound: a wooden clack per real collision, throttled so a pile-up
+   *  does not become a bang.
+   * ================================================================== */
+  var lastKnock = 0;
+  function onHit(e){
+    if (!sound) return;
+    var pairs = e.pairs, now = performance.now();
+    for (var i = 0; i < pairs.length; i++){
+      var a = pairs[i].bodyA, b = pairs[i].bodyB;
+      if (a.isStatic && b.isStatic) continue;
+      var v = Math.max(Math.hypot(a.velocity.x, a.velocity.y), Math.hypot(b.velocity.x, b.velocity.y));
+      if (v < 1.4) continue;
+      if (now - lastKnock < 26) continue;
+      lastKnock = now;
+      knock(Math.min(1, v / 9), (a.pct || b.pct || 100));
+      break;
+    }
+  }
+  function knock(level, pct){
+    if (!sound) return;
+    var f = 900 * Math.pow(100 / (pct || 100), .45);
+    LCAudio.sting(function(A){
+      A.burst('white', { freq: f, q: 3.2, dur: .05, level: .12 * level, reverb: false });
+      A.blip(f * .55, { type:'triangle', dur:.07, level:.05 * level, reverb:false });
+    });
+  }
+  function setSound(on){
+    sound = on;
+    document.getElementById('btn-sound').setAttribute('aria-pressed', on);
+    if (!engine) return;
+    Matter.Events.off(engine, 'collisionStart', onHit);
+    if (on) Matter.Events.on(engine, 'collisionStart', onHit);
+  }
+
+  /* ================================================================== *
+   *  Drawing.
+   * ================================================================== */
+  function draw(){
+    ctx.clearRect(0, 0, W, H);
+
+    /* felt, with a nap */
+    ctx.fillStyle = '#1D3A2C'; ctx.fillRect(0, 0, W, H);
+    ctx.globalAlpha = .06;
+    for (var i = 0; i < 240; i++){
+      ctx.fillStyle = i % 2 ? '#7FBF9C' : '#0D2018';
+      ctx.fillRect((i * 137.3) % W, (i * 311.7) % H, 3, 2);
+    }
+    ctx.globalAlpha = 1;
+
+    /* the floors, drawn as a wooden lip */
+    floors.forEach(function(f){
+      var v = f.vertices;
+      ctx.beginPath();
+      ctx.moveTo(v[0].x, v[0].y);
+      for (var k = 1; k < v.length; k++) ctx.lineTo(v[k].x, v[k].y);
+      ctx.closePath();
+      var g = ctx.createLinearGradient(0, f.bounds.min.y, 0, f.bounds.max.y);
+      g.addColorStop(0, '#7A5330'); g.addColorStop(.14, '#5A3B22'); g.addColorStop(1, '#3A2617');
+      ctx.fillStyle = g; ctx.fill();
+    });
+
+    tiles.forEach(drawTile);
+  }
+
+  function drawTile(b){
+    var v = b.vertices;
+    ctx.save();
+    ctx.translate(b.position.x, b.position.y);
+    ctx.rotate(b.angle);
+
+    var w = b.tw, h = b.th;
+    /* the tile */
+    var g = ctx.createLinearGradient(-w / 2, 0, w / 2, 0);
+    g.addColorStop(0, '#FFF9EC'); g.addColorStop(.55, '#F2EBDA'); g.addColorStop(1, '#CFC5AC');
+    ctx.fillStyle = g;
+    rr(-w / 2, -h / 2, w, h, Math.min(4, w * .14));
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(90,70,40,.35)'; ctx.lineWidth = Math.max(1, w * .05); ctx.stroke();
+
+    /* the divider and the pips */
+    ctx.strokeStyle = 'rgba(70,55,30,.5)'; ctx.lineWidth = Math.max(1, w * .045);
+    ctx.beginPath(); ctx.moveTo(-w * .34, 0); ctx.lineTo(w * .34, 0); ctx.stroke();
+    pips(b.pips, 0, -h * .26, w, h * .4);
+    pips(b.pips2, 0, h * .26, w, h * .4);
+
+    ctx.restore();
+  }
+
+  /* Pips in the real arrangement for one to six, scaled to the tile. */
+  var PIPS = {
+    1:[[0,0]], 2:[[-1,-1],[1,1]], 3:[[-1,-1],[0,0],[1,1]],
+    4:[[-1,-1],[1,-1],[-1,1],[1,1]], 5:[[-1,-1],[1,-1],[0,0],[-1,1],[1,1]],
+    6:[[-1,-1],[1,-1],[-1,0],[1,0],[-1,1],[1,1]]
+  };
+  function pips(n, cx, cy, w, h){
+    var r = Math.max(.9, w * .095);
+    if (r < 1.4) return;                       /* too small to be anything but noise */
+    ctx.fillStyle = '#3A3020';
+    (PIPS[n] || PIPS[1]).forEach(function(p){
+      ctx.beginPath();
+      ctx.arc(cx + p[0] * w * .21, cy + p[1] * h * .27, r, 0, 6.284);
+      ctx.fill();
+    });
+  }
+  function rr(x, y, w, h, r){
+    ctx.beginPath();
+    ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+  }
+
+  /* ================================================================== *
+   *  Loop.
+   * ================================================================== */
+  function tick(now){
+    requestAnimationFrame(tick);
+    if (!HAVE || document.hidden) return;
+    Matter.Engine.update(engine, 1000 / 60);
+    settleCheck(now);
+    draw();
+  }
+
+  /* ================================================================== *
+   *  Placing, by click or by drag.
+   * ================================================================== */
+  var dragging = false, lastX = 0;
+
+  function toBuffer(e){
+    var r = cv.getBoundingClientRect();
+    return { x: (e.clientX - r.left) / r.width * W, y: (e.clientY - r.top) / r.height * H };
+  }
+
+  cv.addEventListener('pointerdown', function(e){
+    e.preventDefault(); cv.setPointerCapture(e.pointerId);
+    var p = toBuffer(e);
+    if (tool === 'erase'){ eraseAt(p); dragging = 'erase'; return; }
+    place(p.x, size);
+    remember(); hud();
+    dragging = true; lastX = p.x;
+  });
+  cv.addEventListener('pointermove', function(e){
+    if (!dragging) return;
+    var p = toBuffer(e);
+    if (dragging === 'erase'){ eraseAt(p); return; }
+    var step = BASE_H * size / 100 * gap / 100;
+    while (Math.abs(p.x - lastX) >= step){
+      lastX += Math.sign(p.x - lastX) * step;
+      if (lastX < 12 || lastX > W - 12) break;
+      place(lastX, size);
+    }
+    remember(); hud();
+  });
+  ['pointerup','pointercancel'].forEach(function(t){
+    cv.addEventListener(t, function(){ dragging = false; });
+  });
+
+  function eraseAt(p){
+    for (var i = tiles.length - 1; i >= 0; i--){
+      var b = tiles[i];
+      if (Matter.Bounds.contains(b.bounds, p)){
+        Matter.Composite.remove(world, b);
+        tiles.splice(i, 1);
+        hud();
+        return;
+      }
+    }
+  }
+
+  /* ================================================================== *
+   *  Set pieces.
+   * ================================================================== */
+  function preset(name){
+    clearAll();
+    if (name === 'run'){
+      for (var x = 120; x < W - 120; x += BASE_H * .7) place(x, 100);
+      say('Twenty-odd of the same size, evenly spaced. The plain case.');
+    } else if (name === 'grow'){
+      /* Growth of 1.10 per tile, at a spacing of 0.40 of the pusher's own
+         height. Both numbers were found by trying them rather than assumed:
+         at 1.10 this chain carried all fourteen on every run, at 1.14 it
+         stopped at twelve every time, and at 1.22 it died at the second
+         tile. 0.40 was the only spacing of the three tried that carried
+         the run at all. It starts at 45% rather than at something tiny
+         because below about that the tiles are too few pixels across for
+         the solver to resolve a glancing contact.
+         Real dominoes manage about 1.5, which this one cannot — see below. */
+      var pct = 45, gx = 130, n = 0, first = BASE_H * .45;
+      while (n < 14){
+        var h = BASE_H * pct / 100, nextW = BASE_W * (pct * GROW_K) / 100;
+        if (gx + h * 1.6 > W - 40 || h * GROW_K > 420) break;
+        place(gx, pct);
+        gx += h * GROW_GAP + nextW / 2;
+        pct *= GROW_K; n++;
+      }
+      say(n + ' tiles, each ' + GROW_K + ' times the last. The final one is ' +
+          (BASE_H * pct / GROW_K / 100 / first).toFixed(0) + ' times the height of the first, ' +
+          'and the only push anyone gave was to the smallest.');
+    } else if (name === 'stairs'){
+      Matter.Composite.remove(world, floors.slice(1));
+      for (var s = 0; s < 5; s++){
+        addFloor(W * .12 + s * W * .17, FLOOR, W * .17, 50);
+      }
+      Matter.Composite.add(world, floors.slice(1));
+      var px = 130;
+      for (var t2 = 0; t2 < 26 && px < W - 100; t2++){
+        place(px, 70 + (t2 % 5) * 14);
+        px += BASE_H * (70 + (t2 % 5) * 14) / 100 * .68;
+      }
+      say('A run that changes size as it goes. Some of the steps are bigger than a domino likes.');
+    } else if (name === 'gap'){
+      var gx2 = 120;
+      for (var g2 = 0; g2 < 18 && gx2 < W - 100; g2++){
+        place(gx2, 100);
+        gx2 += BASE_H * (g2 === 8 ? 1.06 : .68);      /* one gap that is right at the edge */
+      }
+      say('One of these gaps is right at the limit. It may carry and it may not — try it twice.');
+    }
+    remember(); hud();
+  }
+
+  /* ================================================================== *
+   *  Interface.
+   * ================================================================== */
+  function hud(){
+    document.getElementById('hud-r').innerHTML =
+      '<b id="hud-n">' + tiles.length + '</b> on the table';
+    document.getElementById('btn-tip').disabled = !tiles.length;
+  }
+  function say(s){ document.getElementById('said').textContent = s; }
+
+  document.getElementById('t-place').addEventListener('click', function(){
+    tool = 'place'; this.setAttribute('aria-pressed', true);
+    document.getElementById('t-erase').setAttribute('aria-pressed', false);
+    document.getElementById('table').classList.remove('erasing');
+  });
+  document.getElementById('t-erase').addEventListener('click', function(){
+    tool = 'erase'; this.setAttribute('aria-pressed', true);
+    document.getElementById('t-place').setAttribute('aria-pressed', false);
+    document.getElementById('table').classList.add('erasing');
+  });
+  document.getElementById('btn-clear').addEventListener('click', clearAll);
+  document.getElementById('btn-tip').addEventListener('click', tip);
+  document.getElementById('btn-reset').addEventListener('click', standUp);
+  document.getElementById('btn-sound').addEventListener('click', function(){ setSound(!sound); });
+  document.getElementById('k-size').addEventListener('input', function(){
+    size = +this.value; document.getElementById('v-size').textContent = size;
+  });
+  document.getElementById('k-gap').addEventListener('input', function(){
+    gap = +this.value; document.getElementById('v-gap').textContent = gap;
+  });
+  [].forEach.call(document.querySelectorAll('[data-preset]'), function(b){
+    b.addEventListener('click', function(){ preset(b.dataset.preset); });
+  });
+
+  if (!HAVE){
+    ctx.fillStyle = '#1D3A2C'; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#EDE6D4'; ctx.font = '40px Georgia,serif'; ctx.textAlign = 'center';
+    ctx.fillText('The physics library did not load,', W / 2, H / 2 - 26);
+    ctx.fillText('so there is nothing to knock over.', W / 2, H / 2 + 30);
+    say('Physics unavailable.');
+    document.getElementById('btn-tip').disabled = true;
+  } else {
+    setup();
+    document.getElementById('r-best').innerHTML = best ? best + '<small>tiles</small>' : '&mdash;';
+    preset('run');
+    requestAnimationFrame(tick);
+  }
+
+  window.__dominoes = {
+    tip: tip, preset: preset, clear: clearAll, standUp: standUp,
+    count: function(){ return tiles.length; },
+    fallen: function(){ return tiles.filter(isDown).length; },
+    busy: function(){ return cascade.going; },
+    place: function(x, pct){ place(x, pct); remember(); hud(); },
+    setGrowGap: function(v){ GROW_GAP = v; },
+    setGrowK: function(v){ GROW_K = v; }
+  };
+})();
+</script>
+</body>
+</html>

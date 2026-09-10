@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Reaction Bench</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230C0D0B'/><circle cx='16' cy='9' r='4.4' fill='%23C8341F'/><circle cx='16' cy='22' r='4.4' fill='%2334D65C'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --pit:#0B0C0A;
+  --pit-2:#131511;
+  --rail:#24271F;
+  --amber:#E8A020;
+  --amber-dim:#6B4C14;
+  --go:#3BE066;
+  --stop:#D53722;
+  --ink:#E4E6DE;
+  --dim:#7F857A;
+  --dimmer:#4A5046;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;min-height:100%}
+body{
+  background:
+    radial-gradient(900px 700px at 50% 0%, #16180F 0%, var(--pit) 68%),
+    var(--pit);
+  color:var(--ink);
+  font-family:var(--mono);
+  min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;
+  padding:26px 16px 78px;
+  overscroll-behavior:none;
+  -webkit-tap-highlight-color:transparent;
+}
+
+h1{
+  font-size:12px;font-weight:600;letter-spacing:.34em;text-transform:uppercase;
+  color:var(--dim);margin:0 0 3px;text-align:center;
+}
+.sub{
+  font-size:10px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--dimmer);margin:0 0 22px;text-align:center;
+}
+
+/* ---- the tree ---------------------------------------------------- */
+.rig{
+  width:min(560px,100%);
+  display:flex;flex-direction:column;align-items:center;gap:16px;
+}
+.tree{
+  display:flex;gap:14px;align-items:center;justify-content:center;
+  padding:11px 16px;border-radius:8px;
+  background:linear-gradient(180deg,#1A1D16,#101208);
+  border:1px solid var(--rail);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05), 0 10px 26px rgba(0,0,0,.5);
+}
+.bulb{
+  width:15px;height:15px;border-radius:50%;
+  background:#1E2119;border:1px solid #2C3024;
+  transition:background .06s linear, box-shadow .06s linear;
+}
+.bulb.on{ background:var(--amber);box-shadow:0 0 12px rgba(232,160,32,.75), inset 0 0 4px rgba(255,240,200,.7) }
+.bulb.go{ background:var(--go);box-shadow:0 0 16px rgba(59,224,102,.8), inset 0 0 4px rgba(220,255,230,.8) }
+
+/* ---- the pad ----------------------------------------------------- */
+.pad{
+  position:relative;width:100%;aspect-ratio:16/9;min-height:190px;
+  border:0;padding:0;margin:0;display:block;
+  border-radius:12px;cursor:pointer;
+  font:inherit;color:inherit;
+  background:#15170F;
+  border:1px solid var(--rail);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.04), 0 16px 40px rgba(0,0,0,.55);
+  transition:background .05s linear, border-color .12s;
+  overflow:hidden;
+  touch-action:manipulation;
+}
+.pad:focus-visible{ outline:2px solid var(--amber);outline-offset:4px }
+.pad[data-state="armed"]{ background:linear-gradient(180deg,#3A0F09,#230904);border-color:#4A150C }
+.pad[data-state="go"]{ background:linear-gradient(180deg,#0E5F27,#08411A);border-color:#127C33 }
+.pad[data-state="early"]{ background:linear-gradient(180deg,#4A3A05,#2A2003);border-color:#6B5410 }
+.pad[data-state="done"]{ background:linear-gradient(180deg,#171A12,#0E1009) }
+
+.pad .word{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:7px;padding:14px;
+  text-align:center;
+}
+.pad .big{
+  font-size:clamp(30px,8.4vw,54px);font-weight:600;letter-spacing:.04em;
+  line-height:1;font-variant-numeric:tabular-nums;
+}
+.pad .lil{
+  font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.62);
+  max-width:34ch;line-height:1.7;
+}
+.pad .unit{ font-size:.38em;letter-spacing:.14em;color:rgba(255,255,255,.55);margin-left:.2em }
+
+/* ---- readout ----------------------------------------------------- */
+.strip{
+  width:min(560px,100%);margin-top:20px;
+  display:grid;grid-template-columns:repeat(3,1fr);gap:1px;
+  background:var(--rail);border:1px solid var(--rail);border-radius:8px;overflow:hidden;
+}
+.cell{ background:#111309;padding:11px 8px;text-align:center }
+.cell .k{ font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--dimmer);display:block;margin-bottom:5px }
+.cell .v{ font-size:17px;font-variant-numeric:tabular-nums;color:var(--ink) }
+.cell .v small{ font-size:9px;color:var(--dim);letter-spacing:.1em;margin-left:2px }
+.cell.best .v{ color:var(--amber) }
+
+/* ---- the runs ---------------------------------------------------- */
+.runs{ width:min(560px,100%);margin-top:20px }
+.runs h2{
+  font-size:9px;letter-spacing:.24em;text-transform:uppercase;color:var(--dimmer);
+  margin:0 0 9px;font-weight:600;
+}
+.bars{ display:flex;align-items:flex-end;justify-content:flex-end;gap:3px;height:66px }
+.bar{
+  flex:1 1 0;min-width:3px;max-width:26px;background:#2E3325;border-radius:1px 1px 0 0;position:relative;
+  transition:height .3s cubic-bezier(.2,.8,.3,1);
+}
+.bar.pb{ background:var(--amber) }
+.bar.last{ background:var(--go) }
+.bar.foul{ background:#5A2018 }
+.axis{
+  display:flex;justify-content:space-between;margin-top:6px;
+  font-size:9px;letter-spacing:.14em;color:var(--dimmer);text-transform:uppercase;
+}
+.empty{ font-size:10px;letter-spacing:.16em;color:var(--dimmer);text-transform:uppercase;padding:22px 0;text-align:center }
+
+/* ---- the honest note --------------------------------------------- */
+.note{
+  width:min(560px,100%);margin-top:26px;padding-top:16px;border-top:1px solid #1C1F16;
+  font-size:11px;line-height:1.85;color:var(--dim);letter-spacing:.02em;
+}
+.note b{ color:#A9B09E;font-weight:600 }
+.note p{ margin:0 0 9px }
+.note p:last-child{ margin-bottom:0 }
+.tools{ display:flex;gap:8px;margin-top:16px;flex-wrap:wrap }
+.tools button{
+  font:inherit;font-size:10px;letter-spacing:.18em;text-transform:uppercase;
+  background:#171A12;color:var(--dim);border:1px solid var(--rail);
+  border-radius:5px;padding:8px 13px;cursor:pointer;transition:color .14s,border-color .14s;
+}
+.tools button:hover{ color:var(--ink);border-color:#3C4234 }
+.tools button:focus-visible{ outline:2px solid var(--amber);outline-offset:2px }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 var(--mono);
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#F4F5F6;background:rgba(18,19,22,.82);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid var(--amber);outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media (prefers-reduced-motion: reduce){ *{ transition:none !important } }
+</style>
+</head>
+<body>
+
+<h1>The Reaction Bench</h1>
+<p class="sub">wait for green &middot; hit it</p>
+
+<div class="rig">
+  <div class="tree" id="tree" aria-hidden="true">
+    <span class="bulb"></span><span class="bulb"></span>
+    <span class="bulb"></span><span class="bulb"></span>
+    <span class="bulb"></span>
+  </div>
+
+  <button class="pad" id="pad" data-state="idle" aria-live="polite">
+    <span class="word" id="word">
+      <span class="big">Ready</span>
+      <span class="lil">click, tap or press space to arm the light</span>
+    </span>
+  </button>
+</div>
+
+<div class="strip">
+  <div class="cell best"><span class="k">best</span><span class="v" id="v-best">&mdash;</span></div>
+  <div class="cell"><span class="k">median of last 10</span><span class="v" id="v-med">&mdash;</span></div>
+  <div class="cell"><span class="k">attempts</span><span class="v" id="v-n">0</span></div>
+</div>
+
+<div class="runs">
+  <h2>Your last twenty</h2>
+  <div class="bars" id="bars"></div>
+  <div class="axis"><span id="ax-old">older</span><span id="ax-new">latest</span></div>
+  <p class="empty" id="empty">nothing yet</p>
+</div>
+
+<div class="note">
+  <p><b>This is not a measurement of your nervous system.</b> What it times is the whole
+  loop: this page&rsquo;s timer, your screen drawing a frame, light reaching your eye,
+  your brain deciding, your hand moving, and your mouse or touchscreen reporting it.</p>
+  <p id="refresh-line">Your display appears to refresh every <b><span id="v-hz">&mdash;</span></b>,
+  so up to that much of any number above is the screen alone, and none of it is yours.</p>
+  <p>The honest comparison is your own earlier attempts, which is the only one this
+  page offers. It keeps them in this browser and sends them nowhere.</p>
+  <div class="tools">
+    <button type="button" id="btn-clear">clear my history</button>
+  </div>
+</div>
+
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">&larr;</span><span class="w">cabinet</span></a>
+
+<script src="/shared/lc-audio.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  var KEY = 'lc-reaction';
+  var MAX_KEPT = 200;
+
+  var pad   = document.getElementById('pad');
+  var word  = document.getElementById('word');
+  var tree  = document.getElementById('tree');
+  var bulbs = [].slice.call(tree.children);
+  var barsEl = document.getElementById('bars');
+  var emptyEl = document.getElementById('empty');
+
+  var calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---- stored attempts ------------------------------------------- *
+   * A run is [ms, foul] where foul is 1 for a jumped start. Fouls are
+   * kept because a chart that quietly drops them flatters you.        */
+  var runs = [];
+  try {
+    var raw = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (raw && Array.isArray(raw.runs)) runs = raw.runs.filter(function(r){
+      return Array.isArray(r) && typeof r[0] === 'number' && isFinite(r[0]);
+    }).slice(-MAX_KEPT);
+  } catch (e) {}
+  function save(){
+    try { localStorage.setItem(KEY, JSON.stringify({ runs: runs.slice(-MAX_KEPT) })); } catch (e) {}
+  }
+
+  /* ---- the display's own refresh, measured not assumed ------------ *
+   * Sixty frames of deltas, median taken. It is the floor under every
+   * number on this page and the page says so rather than pretending
+   * the timer is the whole story.                                     */
+  var frameMs = 0;
+  (function measure(){
+    var last = 0, deltas = [], n = 0;
+    function step(t){
+      if (last) deltas.push(t - last);
+      last = t;
+      if (++n < 62) return requestAnimationFrame(step);
+      deltas.sort(function(a,b){ return a - b; });
+      frameMs = deltas[deltas.length >> 1] || 0;
+      var hz = frameMs ? Math.round(1000 / frameMs) : 0;
+      document.getElementById('v-hz').textContent =
+        frameMs ? frameMs.toFixed(1) + ' ms (about ' + hz + ' Hz)' : 'an unknown interval';
+    }
+    requestAnimationFrame(step);
+  })();
+
+  /* ---- sound: a relay, not a beep -------------------------------- */
+  var soundOn = true;
+  function clack(kind){
+    if (!soundOn) return;
+    LCAudio.sting(function(A){
+      if (kind === 'arm'){
+        A.burst('white', { freq: 2400, q: 2.2, dur: .03, level: .10, reverb: false });
+      } else if (kind === 'go'){
+        A.burst('white', { freq: 1500, q: 1.4, dur: .05, level: .17, reverb: false });
+        A.blip(660, { type: 'square', dur: .07, level: .05, reverb: false });
+      } else if (kind === 'foul'){
+        A.blip(150, { type: 'sawtooth', dur: .3, glide: 92, level: .10, reverb: false });
+      } else if (kind === 'pb'){
+        A.blip(A.note(4), { dur: .16, level: .09 });
+        A.blip(A.note(11), { at: .1, dur: .32, level: .09 });
+      } else {
+        A.burst('white', { freq: 900, q: 1.1, dur: .04, level: .12, reverb: false });
+      }
+    });
+  }
+
+  /* ---- state machine --------------------------------------------- */
+  var state = 'idle';       // idle | armed | go | early | done
+  var timer = null, lit = 0, goAt = 0, treeTimer = null;
+
+  function setState(s){ state = s; pad.dataset.state = s; }
+  function litBulbs(n){
+    bulbs.forEach(function(b, i){
+      b.className = 'bulb' + (n === 5 && state === 'go' ? ' go' : (i < n ? ' on' : ''));
+    });
+  }
+  function allGo(on){
+    bulbs.forEach(function(b){ b.className = 'bulb' + (on ? ' go' : ''); });
+  }
+
+  function say(big, lil, unit){
+    word.innerHTML = '<span class="big">' + big + (unit ? '<span class="unit">' + unit + '</span>' : '') +
+                     '</span><span class="lil">' + lil + '</span>';
+  }
+
+  function arm(){
+    clearTimeout(timer); clearInterval(treeTimer);
+    setState('armed');
+    lit = 0; litBulbs(0);
+    say('Wait', 'green means go &middot; anything sooner is a jump');
+    clack('arm');
+
+    /* The stagger is real suspense, not decoration: an interval you can
+       count along with is an interval you can beat by anticipating. Two
+       to seven seconds, and the amber ladder deliberately does not
+       finish at a fixed distance from the green. */
+    var total = 2000 + Math.random() * 5000;
+    var ladder = Math.min(5, 1 + Math.floor(Math.random() * 5));
+    var step = total / (ladder + 1.15);
+    treeTimer = setInterval(function(){
+      if (state !== 'armed') return clearInterval(treeTimer);
+      if (lit >= ladder) return clearInterval(treeTimer);
+      lit++; litBulbs(lit); clack('arm');
+    }, step);
+
+    timer = setTimeout(function(){
+      if (state !== 'armed') return;
+      clearInterval(treeTimer);
+      setState('go');
+      allGo(true);
+      say('GO', 'hit it');
+      /* Timed from the frame the green is actually painted, not from the
+         moment the timeout fired — otherwise the browser's scheduling
+         slop lands in the visitor's score. */
+      requestAnimationFrame(function(t){ goAt = t; });
+      clack('go');
+    }, total);
+  }
+
+  function record(ms, foul){
+    runs.push([Math.round(ms), foul ? 1 : 0]);
+    if (runs.length > MAX_KEPT) runs = runs.slice(-MAX_KEPT);
+    save();
+    draw();
+  }
+
+  function hit(){
+    if (state === 'idle' || state === 'done' || state === 'early'){ arm(); return; }
+
+    if (state === 'armed'){
+      clearTimeout(timer); clearInterval(treeTimer);
+      setState('early');
+      litBulbs(0);
+      record(0, true);
+      say('Jumped', 'you went before the light &middot; click to try again');
+      clack('foul');
+      return;
+    }
+
+    if (state === 'go'){
+      var now = performance.now();
+      var ms = goAt ? now - goAt : 0;
+      if (!goAt || ms < 1) { arm(); return; }   /* the frame never landed; no number to claim */
+      setState('done');
+      allGo(false);
+      var pb = best();
+      record(ms, false);
+      var isPB = (pb === null || ms < pb);
+      say(Math.round(ms), isPB
+            ? 'a personal best &middot; click to go again'
+            : 'click to go again', ' ms');
+      clack(isPB ? 'pb' : 'stop');
+    }
+  }
+
+  function best(){
+    var good = runs.filter(function(r){ return !r[1]; });
+    if (!good.length) return null;
+    return good.reduce(function(m, r){ return Math.min(m, r[0]); }, Infinity);
+  }
+
+  function draw(){
+    var good = runs.filter(function(r){ return !r[1]; });
+    var b = best();
+    document.getElementById('v-best').innerHTML = b === null ? '&mdash;' : b + '<small>ms</small>';
+    document.getElementById('v-n').textContent = runs.length;
+
+    var last10 = good.slice(-10).map(function(r){ return r[0]; }).sort(function(x,y){ return x - y; });
+    var med = '&mdash;';
+    if (last10.length){
+      var mid = last10.length >> 1;
+      med = (last10.length % 2 ? last10[mid] : Math.round((last10[mid-1] + last10[mid]) / 2)) + '<small>ms</small>';
+    }
+    document.getElementById('v-med').innerHTML = med;
+
+    var show = runs.slice(-20);
+    emptyEl.hidden = show.length > 0;
+    barsEl.hidden = show.length === 0;
+    if (!show.length){ barsEl.innerHTML = ''; return; }
+
+    var top = Math.max(320, show.reduce(function(m, r){ return Math.max(m, r[0]); }, 0));
+    barsEl.innerHTML = show.map(function(r, i){
+      var foul = !!r[1];
+      var h = foul ? 100 : Math.max(4, (r[0] / top) * 100);
+      var cls = 'bar' + (foul ? ' foul' : (r[0] === b ? ' pb' : (i === show.length - 1 ? ' last' : '')));
+      var label = foul ? 'jumped start' : r[0] + ' ms';
+      return '<div class="' + cls + '" style="height:' + h.toFixed(1) + '%" title="' + label + '"></div>';
+    }).join('');
+  }
+
+  /* ---- input ------------------------------------------------------ */
+  pad.addEventListener('pointerdown', function(e){ e.preventDefault(); pad.focus(); hit(); });
+  pad.addEventListener('click', function(e){ e.preventDefault(); });      /* pointerdown already did it */
+  window.addEventListener('keydown', function(e){
+    var t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+    if (t && t.tagName === 'BUTTON' && t !== pad) return;
+    if (e.key === ' ' || e.key === 'Spacebar' || e.key === 'Enter'){ e.preventDefault(); hit(); }
+  });
+
+  document.getElementById('btn-clear').addEventListener('click', function(){
+    runs = []; save(); draw();
+    if (state === 'idle' || state === 'done') say('Ready', 'history cleared &middot; click to arm the light');
+  });
+
+  /* Leaving the page mid-wait must not leave a timer that fires green
+     at a tab nobody is looking at, and then times the moment they
+     come back. */
+  document.addEventListener('visibilitychange', function(){
+    if (document.hidden && (state === 'armed' || state === 'go')){
+      clearTimeout(timer); clearInterval(treeTimer);
+      setState('idle'); litBulbs(0);
+      say('Ready', 'the light was reset when you looked away');
+    }
+  });
+
+  draw();
+  window.__reaction = { runs: function(){ return runs.slice(); }, frameMs: function(){ return frameMs; } };
+})();
+</script>
+</body>
+</html>

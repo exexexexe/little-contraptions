@@ -1,0 +1,732 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Paper Aerodrome</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23F2EEE1'/><path d='M4 16l24-9-9 22-4-9z' fill='%23FBFAF4' stroke='%231E3A63' stroke-width='1.3' stroke-linejoin='round'/><path d='M15 20l13-13' stroke='%231E3A63' stroke-width='1.1'/></svg>">
+<style>
+:root{ color-scheme: light; }
+:root{
+  --paper:#F4F1E6;
+  --paper-2:#EDE9DA;
+  --grid:#C4CFDD;
+  --grid-2:#DCE3EC;
+  --ink:#1E3A63;
+  --ink-2:#33507C;
+  --pencil:#5A6274;
+  --faint:#8D93A1;
+  --red:#B23A2E;
+  --stamp:#93705A;
+  --tech:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  --hand:"Iowan Old Style",Georgia,"Times New Roman",serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;min-height:100%}
+body{
+  background:var(--paper);
+  background-image:
+    linear-gradient(var(--grid-2) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-2) 1px, transparent 1px),
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size:11px 11px, 11px 11px, 55px 55px, 55px 55px;
+  color:var(--ink);font-family:var(--tech);
+  min-height:100vh;padding:26px 16px 84px;
+  display:flex;flex-direction:column;align-items:center;
+}
+.wrap{ width:min(940px,100%) }
+
+/* ---- title block, like the corner of a drawing ------------------- */
+.titleblock{
+  border:1.5px solid var(--ink);background:rgba(255,253,246,.86);
+  display:grid;grid-template-columns:1fr auto;gap:0;margin-bottom:18px;
+}
+.titleblock .l{ padding:13px 15px 14px }
+.titleblock .r{
+  border-left:1.5px solid var(--ink);padding:13px 15px;text-align:right;
+  display:flex;flex-direction:column;justify-content:center;gap:3px;min-width:130px;
+}
+h1{ font-family:var(--hand);font-size:clamp(21px,4.6vw,28px);font-weight:600;margin:0 0 5px;letter-spacing:.01em }
+.sub{ font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--pencil);margin:0;line-height:1.7 }
+.titleblock .r span{ font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint) }
+.titleblock .r b{ font-size:15px;color:var(--ink);letter-spacing:.04em }
+
+/* ---- the bench --------------------------------------------------- */
+.bench{ display:grid;grid-template-columns:1fr;gap:16px }
+@media (min-width:840px){ .bench{ grid-template-columns:270px 1fr } }
+
+.card{ border:1.5px solid var(--ink);background:rgba(255,253,246,.86) }
+.card h2{
+  margin:0;padding:8px 12px;font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;
+  border-bottom:1.5px solid var(--ink);background:#E7E2D2;font-weight:700;
+}
+.card .body{ padding:13px 12px 15px }
+
+/* patterns */
+.patterns{ display:grid;gap:7px }
+.pat{
+  font:inherit;text-align:left;cursor:pointer;padding:8px 9px;
+  background:#FBFAF4;border:1px solid #BFC7D4;border-radius:0;
+  display:grid;grid-template-columns:52px 1fr;gap:10px;align-items:center;
+  transition:border-color .14s, background .14s;
+}
+.pat:hover{ border-color:var(--ink-2);background:#fff }
+.pat[aria-pressed="true"]{ border-color:var(--ink);border-width:1.5px;background:#EFF3F9;box-shadow:inset 0 0 0 1px rgba(30,58,99,.18) }
+.pat:focus-visible{ outline:2px solid var(--red);outline-offset:2px }
+.pat svg{ width:52px;height:30px;display:block }
+.pat .n{ font-family:var(--hand);font-size:14px;line-height:1.2;color:var(--ink) }
+.pat .d{ font-size:9px;letter-spacing:.09em;color:var(--faint);text-transform:uppercase;margin-top:3px;display:block }
+
+/* sliders */
+.knob{ margin-top:14px }
+.knob:first-child{ margin-top:0 }
+.knob label{ display:flex;justify-content:space-between;font-size:9.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--pencil);margin-bottom:5px }
+.knob label b{ color:var(--ink);font-weight:700;letter-spacing:.04em }
+input[type=range]{ width:100%;accent-color:#1E3A63 }
+.check{ display:flex;align-items:center;gap:9px;margin-top:14px;font-size:12px;color:var(--ink);cursor:pointer }
+.check input{ accent-color:#1E3A63;width:15px;height:15px }
+
+/* ---- the flight field -------------------------------------------- */
+.field{ position:relative;background:#FBFAF4;border-bottom:1.5px solid var(--ink) }
+.field canvas{ display:block;width:100%;height:auto }
+.readout{
+  display:grid;grid-template-columns:repeat(4,1fr);border-top:0;
+}
+.readout div{ padding:9px 6px;text-align:center;border-right:1px solid #CFD6E0 }
+.readout div:last-child{ border-right:0 }
+.readout .k{ display:block;font-size:8.5px;letter-spacing:.17em;text-transform:uppercase;color:var(--faint);margin-bottom:4px }
+.readout .v{ font-size:17px;color:var(--ink);font-variant-numeric:tabular-nums }
+.readout .v small{ font-size:9px;color:var(--faint);margin-left:2px }
+.readout .best .v{ color:var(--red) }
+
+.throwbar{ display:flex;gap:9px;padding:12px;border-top:1.5px solid var(--ink);flex-wrap:wrap;align-items:center }
+button.go{
+  font:inherit;font-size:12px;letter-spacing:.17em;text-transform:uppercase;
+  background:var(--ink);color:#FBFAF4;border:1.5px solid var(--ink);
+  padding:10px 20px;cursor:pointer;transition:background .14s;
+}
+button.go:hover{ background:#132846 }
+button.go:disabled{ background:#98A3B6;border-color:#98A3B6;cursor:default }
+button.ghost{
+  font:inherit;font-size:11px;letter-spacing:.15em;text-transform:uppercase;
+  background:transparent;color:var(--pencil);border:1px solid #BFC7D4;padding:9px 14px;cursor:pointer;
+}
+button.ghost:hover{ color:var(--ink);border-color:var(--ink) }
+button:focus-visible{ outline:2px solid var(--red);outline-offset:2px }
+.verdict{ font-family:var(--hand);font-size:14px;color:var(--ink-2);flex:1 1 200px;min-width:0;font-style:italic }
+
+/* ---- the fold sheet ---------------------------------------------- */
+.folds{ margin-top:16px;display:grid;grid-template-columns:1fr;gap:16px }
+@media (min-width:840px){ .folds{ grid-template-columns:1fr 1fr } }
+.fold-svg{ width:100%;height:auto;display:block;background:#FBFAF4 }
+.steps{ margin:0;padding:0 0 0 17px;font-size:12.5px;line-height:1.9;color:var(--ink-2) }
+.steps li{ margin-bottom:4px }
+.spec{ list-style:none;margin:0;padding:0;font-size:11.5px;line-height:2 }
+.spec li{ display:flex;justify-content:space-between;gap:12px;border-bottom:1px dotted #C9D0DA }
+.spec b{ font-weight:700;font-variant-numeric:tabular-nums }
+.legend{ font-size:10px;letter-spacing:.1em;color:var(--faint);margin-top:9px;text-transform:uppercase }
+
+/* ---- the honest footnote ------------------------------------------ */
+.foot{
+  margin-top:22px;border-top:1.5px solid var(--ink);padding-top:16px;
+  font-family:var(--hand);font-size:14px;line-height:1.85;color:var(--ink-2);
+}
+.foot p{ margin:0 0 11px }
+.foot p:last-child{ margin:0 }
+.foot b{ color:var(--ink) }
+.foot code{ font-family:var(--tech);font-size:12px;background:#E7E2D2;padding:1px 5px }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 var(--tech);
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#FBFAF4;background:rgba(30,58,99,.92);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  box-shadow:0 4px 16px rgba(30,58,99,.28);
+  transition:width .18s ease, background .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:#132846 }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid var(--red);outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="titleblock">
+  <div class="l">
+    <h1>The Paper Aerodrome</h1>
+    <p class="sub">fold &middot; trim &middot; throw &middot; measure</p>
+  </div>
+  <div class="r">
+    <span>sheet</span><b>A4 &middot; 80 gsm</b>
+  </div>
+</div>
+
+<div class="bench">
+  <div>
+    <div class="card">
+      <h2>Fold pattern</h2>
+      <div class="body"><div class="patterns" id="patterns" role="group" aria-label="Fold pattern"></div></div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h2>Trim</h2>
+      <div class="body">
+        <div class="knob">
+          <label for="k-clip">Nose weight <b><span id="v-clip">0</span> clips</b></label>
+          <input type="range" id="k-clip" min="0" max="4" step="1" value="0">
+        </div>
+        <div class="knob">
+          <label for="k-elev">Wing trailing edge <b><span id="v-elev">0</span>&deg;</b></label>
+          <input type="range" id="k-elev" min="-6" max="6" step="1" value="0">
+        </div>
+        <div class="knob">
+          <label for="k-speed">Throw speed <b><span id="v-speed">8.0</span> m/s</b></label>
+          <input type="range" id="k-speed" min="4" max="14" step="0.5" value="8">
+        </div>
+        <div class="knob">
+          <label for="k-angle">Throw angle <b><span id="v-angle">10</span>&deg;</b></label>
+          <input type="range" id="k-angle" min="-10" max="45" step="1" value="10">
+        </div>
+        <label class="check"><input type="checkbox" id="k-trace" checked> keep the earlier traces</label>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="card">
+      <h2>Flight, seen from the side</h2>
+      <div class="field"><canvas id="cv" width="1240" height="620"></canvas></div>
+      <div class="readout">
+        <div><span class="k">distance</span><span class="v" id="r-dist">&mdash;</span></div>
+        <div><span class="k">time aloft</span><span class="v" id="r-time">&mdash;</span></div>
+        <div><span class="k">glide ratio</span><span class="v" id="r-glide">&mdash;</span></div>
+        <div class="best"><span class="k">your best</span><span class="v" id="r-best">&mdash;</span></div>
+      </div>
+      <div class="throwbar">
+        <button type="button" class="go" id="btn-throw">Throw it</button>
+        <button type="button" class="ghost" id="btn-clear">Clear the field</button>
+        <span class="verdict" id="verdict">Pick a fold, set the trim, and let it go.</span>
+      </div>
+    </div>
+
+    <div class="folds">
+      <div class="card">
+        <h2 id="fold-title">How to fold it</h2>
+        <div class="body">
+          <svg class="fold-svg" id="fold" viewBox="0 0 300 200" role="img" aria-labelledby="fold-desc"></svg>
+          <p class="legend">&mdash; &mdash; valley fold &nbsp;&nbsp; &middot;&mdash;&middot; mountain fold &nbsp;&nbsp; &rarr; direction</p>
+          <ol class="steps" id="steps"></ol>
+        </div>
+      </div>
+      <div class="card">
+        <h2>What the model is using</h2>
+        <div class="body">
+          <ul class="spec" id="spec"></ul>
+          <p class="legend" style="margin-top:12px">figures for the aeroplane as trimmed</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="foot">
+  <p><b>The flight is simulated, not animated.</b> Each throw integrates a longitudinal
+  point-mass model at half-millisecond steps: lift and drag from the wing&rsquo;s lift-curve slope
+  corrected for its aspect ratio, induced drag from <code>CL&sup2;/&pi;ARe</code>, a stall above
+  about thirteen degrees of incidence, and a pitching moment about the centre of gravity that gives
+  the aeroplane its own nose-up-and-down response. Nothing is scripted &mdash; the porpoising you
+  see on a badly trimmed glider is the phugoid falling out of the arithmetic.</p>
+  <p>The nose clips move the centre of gravity forward, which increases the static margin: the
+  aeroplane becomes more stubbornly stable and trims faster and steeper. Bending the trailing edge
+  up trades speed for incidence. Both of those are the real reasons those two tricks work on a real
+  paper aeroplane, and both can be overdone here exactly as they can on the carpet.</p>
+  <p>The five patterns are the familiar families &mdash; a dart, a wide-winged glider, a hoop and so
+  on &mdash; drawn here as original diagrams. Real distances depend on the paper, the room and the
+  arm; this bench holds still air at sea level and a perfectly repeatable throw.</p>
+</div>
+
+</div>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">&larr;</span><span class="w">cabinet</span></a>
+
+<script>
+(function(){
+  'use strict';
+
+  var KEY = 'lc-paper-aerodrome';
+
+  /* ================================================================== *
+   *  The five families.
+   *
+   *  m    kg    mass of the folded aeroplane
+   *  S    m^2   wing area
+   *  AR         aspect ratio (span^2 / S)
+   *  c    m     mean chord, used for the pitching moment
+   *  cd0        parasite drag at zero lift
+   *  sm         static margin as a fraction of chord, before clips
+   *  cm0        camber moment: what the fold is trimmed to on its own
+   *  e          Oswald efficiency
+   * ================================================================== */
+  var PATTERNS = {
+    dart: {
+      name:'The Dart', tag:'fast, sinks',
+      m:.0052, S:.019, AR:2.1, c:.135, cd0:.055, sm:.10, cm0:.030, e:.70,
+      steps:['Fold the sheet in half the long way, then open it flat again.',
+             'Bring both top corners in to meet the centre crease.',
+             'Fold the new long edges in to the centre again, keeping the point sharp.',
+             'Fold the whole thing in half along the first crease, point outwards.',
+             'Fold each wing down so its edge lies along the bottom of the body.'],
+      draw:'dart'
+    },
+    glider: {
+      name:'The Barn Door', tag:'slow, floats',
+      m:.0053, S:.041, AR:3.4, c:.115, cd0:.042, sm:.07, cm0:.048, e:.78,
+      steps:['Fold in half the long way and open it out.',
+             'Fold the top edge down by about a fifth of the sheet.',
+             'Fold the two top corners of that band in to the centre.',
+             'Fold the resulting point back down over them and press it flat.',
+             'Fold in half along the first crease and turn down two very wide wings.'],
+      draw:'glider'
+    },
+    hunter: {
+      name:'The Hunter', tag:'even-tempered',
+      m:.0052, S:.030, AR:2.8, c:.125, cd0:.048, sm:.085, cm0:.038, e:.75,
+      steps:['Fold in half the long way and open it out.',
+             'Fold both top corners in to the centre crease.',
+             'Fold the point that makes down to about a third of the way along.',
+             'Fold the new top corners in to the centre, leaving a small triangle showing.',
+             'Fold that triangle up over them, fold in half, and turn down two medium wings.'],
+      draw:'hunter'
+    },
+    hoop: {
+      name:'The Hoop Wing', tag:'strange, steady',
+      m:.0045, S:.026, AR:1.5, c:.100, cd0:.075, sm:.13, cm0:.020, e:.62,
+      steps:['Cut or tear two strips from the short side: one about three fingers wide, one about two.',
+             'Roll the wide strip into a hoop and tape or tuck the overlap.',
+             'Do the same with the narrow strip to make a smaller hoop.',
+             'Roll the remaining sheet into a tight tube for the body.',
+             'Fix the small hoop at the front of the tube and the large hoop at the back.'],
+      draw:'hoop'
+    },
+    delta: {
+      name:'The Bulldog', tag:'blunt, heavy nose',
+      m:.0057, S:.034, AR:2.2, c:.150, cd0:.060, sm:.12, cm0:.042, e:.72,
+      steps:['Fold in half the long way and open it out.',
+             'Fold the top edge down to about a quarter of the sheet.',
+             'Fold both corners of the folded band in to the centre.',
+             'Fold the whole blunt nose back on itself once more.',
+             'Fold in half, turn down wide wings, and leave the nose square rather than pointed.'],
+      draw:'delta'
+    }
+  };
+  var ORDER = ['dart','glider','hunter','hoop','delta'];
+  var CLIP_MASS = 0.0011;      /* a small paperclip, in kg */
+
+  var state = { pat:'dart', clip:0, elev:0, speed:8, angle:10, trace:true };
+  var best = {};
+  try {
+    var raw = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (raw){
+      if (PATTERNS[raw.pat]) state.pat = raw.pat;
+      if (raw.best && typeof raw.best === 'object') best = raw.best;
+      ['clip','elev','speed','angle'].forEach(function(k){
+        if (typeof raw[k] === 'number' && isFinite(raw[k])) state[k] = raw[k];
+      });
+    }
+  } catch (e) {}
+  function save(){
+    try { localStorage.setItem(KEY, JSON.stringify({
+      pat:state.pat, clip:state.clip, elev:state.elev, speed:state.speed, angle:state.angle, best:best
+    })); } catch (e) {}
+  }
+
+  /* ---- the trimmed aeroplane -------------------------------------- */
+  function build(){
+    var p = PATTERNS[state.pat];
+    var m = p.m + state.clip * CLIP_MASS;
+    /* Every clip pushes the centre of gravity forward. The shift is
+       proportional to the clip's share of the total mass and to how far
+       ahead of the CG it sits — roughly a third of a chord. */
+    var sm = p.sm + (state.clip * CLIP_MASS / m) * 0.55;
+    /* Trailing edge up is nose-up camber: straight into the moment term. */
+    var cm0 = p.cm0 + state.elev * 0.010;
+    return { p:p, m:m, sm:sm, cm0:cm0,
+             CLa: 2 * Math.PI / (1 + 2 / p.AR),           /* finite-wing lift-curve slope */
+             Iyy: m * Math.pow(p.c * 1.25, 2) };
+  }
+
+  /* ================================================================== *
+   *  The flight.
+   *
+   *  State: position, velocity, pitch attitude and pitch rate. Angle of
+   *  incidence is the difference between where the aeroplane is pointing
+   *  and where it is actually going, which is the whole of why a paper
+   *  aeroplane porpoises: gain height, lose speed, lose lift, drop the
+   *  nose, gain speed, and round again.
+   * ================================================================== */
+  var RHO = 1.225, G = 9.81, DT = 0.0005, H0 = 1.55;
+
+  function fly(){
+    var a = build(), p = a.p;
+    var th = state.angle * Math.PI / 180;      /* attitude at release */
+    var v = state.speed;
+    var s = { x:0, y:H0, vx:v * Math.cos(th), vy:v * Math.sin(th), th:th, q:0 };
+    var path = [], t = 0, guard = 0;
+
+    while (s.y > 0 && guard++ < 40000){
+      var V = Math.hypot(s.vx, s.vy);
+      if (V < 0.4) break;
+      var gamma = Math.atan2(s.vy, s.vx);
+      var alpha = s.th - gamma;
+
+      /* stall: lift stops climbing past about thirteen degrees and falls
+         away, which is what turns an over-elevated glider into a stone */
+      var aStall = 0.23;
+      var CL;
+      if (Math.abs(alpha) <= aStall) CL = a.CLa * alpha;
+      else {
+        var over = Math.abs(alpha) - aStall;
+        CL = Math.sign(alpha) * Math.max(0.28, a.CLa * aStall - over * a.CLa * 1.25);
+      }
+      var CD = p.cd0 + (CL * CL) / (Math.PI * p.AR * p.e) + Math.abs(alpha) * 0.10;
+
+      var qd = 0.5 * RHO * V * V;
+      var L = qd * p.S * CL;
+      var D = qd * p.S * CD;
+
+      /* forces resolved from the flight path back into the world */
+      var cg = Math.cos(gamma), sg = Math.sin(gamma);
+      var Fx = -D * cg - L * sg;
+      var Fy = -D * sg + L * cg - a.m * G;
+
+      /* pitching moment about the CG: camber trims it nose-up, the static
+         margin pulls it back towards the airflow, and the long body damps
+         the rate. */
+      var Cm = a.cm0 - a.sm * a.CLa * alpha - 11 * (s.q * p.c / (2 * Math.max(V, 1)));
+      var M = qd * p.S * p.c * Cm;
+
+      s.vx += (Fx / a.m) * DT;
+      s.vy += (Fy / a.m) * DT;
+      s.q  += (M / a.Iyy) * DT;
+      s.q   = Math.max(-14, Math.min(14, s.q));
+      s.th += s.q * DT;
+      s.x  += s.vx * DT;
+      s.y  += s.vy * DT;
+      t += DT;
+
+      if (guard % 20 === 0) path.push({ x:s.x, y:Math.max(0, s.y), th:s.th, v:V, t:t });
+      if (t > 20) break;
+    }
+    path.push({ x:s.x, y:0, th:s.th, v:Math.hypot(s.vx, s.vy), t:t });
+    return { path:path, dist:s.x, time:t, plane:a };
+  }
+
+  /* ================================================================== *
+   *  Drawing the field.
+   * ================================================================== */
+  var cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+  var W = cv.width, H = cv.height;
+  var ghosts = [];              /* earlier traces */
+  var current = null, playT = 0, playing = false;
+
+  function scaleFor(maxX){
+    var span = Math.max(12, Math.ceil(maxX / 4) * 4 + 4);
+    return { px: (W - 90) / span, span: span, y0: H - 74, ph: (H - 150) / 7 };
+  }
+
+  function drawField(){
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#FBFAF4'; ctx.fillRect(0, 0, W, H);
+
+    var maxX = Math.max(
+      current ? current.dist : 0,
+      ghosts.reduce(function(m, g){ return Math.max(m, g.dist); }, 0), 10);
+    var S = scaleFor(maxX);
+
+    /* metre grid */
+    ctx.lineWidth = 1;
+    for (var m = 0; m <= S.span; m++){
+      var x = 56 + m * S.px;
+      ctx.strokeStyle = (m % 5 === 0) ? '#C4CFDD' : '#E4E9F0';
+      ctx.beginPath(); ctx.moveTo(x, 28); ctx.lineTo(x, S.y0); ctx.stroke();
+      if (m % 5 === 0 && m){
+        ctx.fillStyle = '#8D93A1';
+        ctx.font = '22px ui-monospace,monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(m + ' m', x, S.y0 + 30);
+      }
+    }
+    for (var h = 0; h <= 7; h++){
+      var y = S.y0 - h * S.ph;
+      ctx.strokeStyle = h === 0 ? '#1E3A63' : '#E4E9F0';
+      ctx.lineWidth = h === 0 ? 2.5 : 1;
+      ctx.beginPath(); ctx.moveTo(40, y); ctx.lineTo(W - 20, y); ctx.stroke();
+      if (h && h % 2 === 0){
+        ctx.fillStyle = '#8D93A1'; ctx.font = '21px ui-monospace,monospace';
+        ctx.textAlign = 'right'; ctx.fillText(h + ' m', 46, y + 7);
+      }
+    }
+
+    /* the thrower's hand height */
+    ctx.strokeStyle = '#C9A38F'; ctx.setLineDash([7, 7]); ctx.lineWidth = 1.5;
+    var hy = S.y0 - H0 * S.ph;
+    ctx.beginPath(); ctx.moveTo(40, hy); ctx.lineTo(W - 20, hy); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#B08A75'; ctx.font = '20px ui-monospace,monospace'; ctx.textAlign = 'right';
+    ctx.fillText('release, ' + H0.toFixed(2) + ' m', W - 26, hy - 12);
+
+    ghosts.forEach(function(g){ trace(g, S, 'rgba(30,58,99,.16)', 2); });
+    if (current){
+      var upto = playing ? Math.min(current.path.length, Math.ceil(playT)) : current.path.length;
+      trace(current, S, '#1E3A63', 2.6, upto);
+      var pt = current.path[Math.max(0, upto - 1)];
+      if (pt) plane(56 + pt.x * S.px, S.y0 - pt.y * S.ph, pt.th, S);
+    }
+  }
+
+  function trace(run, S, colour, width, upto){
+    var p = run.path;
+    var n = upto == null ? p.length : upto;
+    if (n < 2) return;
+    ctx.beginPath();
+    for (var i = 0; i < n; i++){
+      var x = 56 + p[i].x * S.px, y = S.y0 - p[i].y * S.ph;
+      i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+    }
+    ctx.strokeStyle = colour; ctx.lineWidth = width; ctx.lineJoin = 'round'; ctx.stroke();
+  }
+
+  /* The aeroplane itself: a little side elevation, pointing where its
+     attitude says it is pointing rather than where it is going. */
+  function plane(x, y, th, S){
+    ctx.save(); ctx.translate(x, y); ctx.rotate(-th);
+    ctx.fillStyle = '#FBFAF4'; ctx.strokeStyle = '#1E3A63'; ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(20, 0); ctx.lineTo(-14, -8); ctx.lineTo(-8, 0); ctx.lineTo(-14, 8);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-8, 0); ctx.lineTo(18, 0); ctx.strokeStyle = '#33507C'; ctx.lineWidth = 1.4; ctx.stroke();
+    ctx.restore();
+  }
+
+  /* ================================================================== *
+   *  Throwing.
+   * ================================================================== */
+  var raf = null;
+  function throwIt(){
+    var run = fly();
+    if (current) ghosts.push(current);
+    if (!state.trace) ghosts = [];
+    if (ghosts.length > 7) ghosts.shift();
+    current = run;
+    playT = 0; playing = true;
+    document.getElementById('btn-throw').disabled = true;
+
+    var startedAt = performance.now();
+    cancelAnimationFrame(raf);
+    (function step(now){
+      var elapsed = (now - startedAt) / 1000;
+      playT = (elapsed / Math.max(.6, run.time)) * run.path.length * 1.15;
+      if (playT >= run.path.length){ playT = run.path.length; playing = false; }
+      drawField();
+      if (playing) raf = requestAnimationFrame(step);
+      else { document.getElementById('btn-throw').disabled = false; land(run); }
+    })(performance.now());
+  }
+
+  function land(run){
+    var d = run.dist, t = run.time;
+    document.getElementById('r-dist').innerHTML = d.toFixed(1) + '<small>m</small>';
+    document.getElementById('r-time').innerHTML = t.toFixed(2) + '<small>s</small>';
+    document.getElementById('r-glide').innerHTML = (d / H0).toFixed(1) + '<small>:1</small>';
+
+    var b = best[state.pat] || 0;
+    var isBest = d > b;
+    if (isBest){ best[state.pat] = d; save(); }
+    document.getElementById('r-best').innerHTML = (best[state.pat] || 0).toFixed(1) + '<small>m</small>';
+
+    document.getElementById('verdict').textContent = verdictFor(run, isBest);
+  }
+
+  /* A read of what actually happened, taken from the flight rather than
+     picked at random: it looks at the trace it just drew. */
+  function verdictFor(run, isBest){
+    var p = run.path, peak = 0, dips = 0, prev = 0, rising = false;
+    for (var i = 1; i < p.length; i++){
+      if (p[i].y > peak) peak = p[i].y;
+      var up = p[i].y > p[i-1].y;
+      if (up !== rising){ if (i > 3) dips++; rising = up; }
+    }
+    if (isBest) return 'A personal best for this fold: ' + run.dist.toFixed(1) + ' metres.';
+    if (run.dist < 3) return 'Straight into the floor. Try less trailing edge, or a flatter throw.';
+    if (peak > H0 + 2.4 && run.dist < 9) return 'It climbed, ran out of speed and gave it all back. Ease off the trailing edge.';
+    if (dips >= 6) return 'Porpoising badly — that is the phugoid. A clip on the nose would settle it.';
+    if (run.time > 3.2) return 'A long, patient glide. Nothing hurried about it.';
+    if (run.dist > 14) return 'A good clean run of ' + run.dist.toFixed(1) + ' metres.';
+    return 'It flew. ' + run.dist.toFixed(1) + ' metres, ' + run.time.toFixed(1) + ' seconds up.';
+  }
+
+  /* ================================================================== *
+   *  The fold diagrams. Original drawings, one per family.
+   * ================================================================== */
+  var SHEET = '<rect x="88" y="14" width="124" height="172" fill="#fff" stroke="#1E3A63" stroke-width="1.6"/>';
+  function valley(d){ return '<path d="' + d + '" stroke="#33507C" stroke-width="1.3" stroke-dasharray="6 5" fill="none"/>'; }
+  function mountain(d){ return '<path d="' + d + '" stroke="#B23A2E" stroke-width="1.3" stroke-dasharray="10 4 2 4" fill="none"/>'; }
+  function arrow(x1,y1,x2,y2){
+    var a = Math.atan2(y2-y1, x2-x1);
+    return '<path d="M' + x1 + ' ' + y1 + 'L' + x2 + ' ' + y2 + '" stroke="#8D93A1" stroke-width="1.2" fill="none"/>' +
+      '<path d="M' + x2 + ' ' + y2 + 'L' + (x2 - 7*Math.cos(a-.4)) + ' ' + (y2 - 7*Math.sin(a-.4)) +
+      'L' + (x2 - 7*Math.cos(a+.4)) + ' ' + (y2 - 7*Math.sin(a+.4)) + 'z" fill="#8D93A1"/>';
+  }
+  function num(x,y,n){
+    return '<circle cx="' + x + '" cy="' + y + '" r="8.5" fill="#1E3A63"/>' +
+      '<text x="' + x + '" y="' + (y+3.6) + '" text-anchor="middle" fill="#FBFAF4" font-size="10" font-family="ui-monospace,monospace">' + n + '</text>';
+  }
+
+  var DIAGRAMS = {
+    dart: SHEET +
+      mountain('M150 14V186') +
+      valley('M88 14L150 52') + valley('M212 14L150 52') +
+      valley('M104 44L150 92') + valley('M196 44L150 92') +
+      valley('M100 150H200') +
+      arrow(70,30,96,44) + arrow(230,30,204,44) +
+      num(60,24,1) + num(240,24,2) + num(90,158,5),
+    glider: SHEET +
+      mountain('M150 14V186') +
+      valley('M88 52H212') + valley('M88 78H212') +
+      valley('M108 78L150 118') + valley('M192 78L150 118') +
+      valley('M96 140H204') +
+      arrow(70,44,86,58) + arrow(230,70,214,84) +
+      num(60,40,2) + num(240,66,3) + num(84,148,5),
+    hunter: SHEET +
+      mountain('M150 14V186') +
+      valley('M88 14L150 56') + valley('M212 14L150 56') +
+      valley('M96 76H204') +
+      valley('M104 96L150 134') + valley('M196 96L150 134') +
+      valley('M100 156H200') +
+      arrow(70,26,94,40) + arrow(232,88,212,80) +
+      num(60,20,2) + num(242,84,3) + num(88,164,5),
+    hoop: '<rect x="88" y="14" width="124" height="60" fill="#fff" stroke="#1E3A63" stroke-width="1.6"/>' +
+      '<rect x="88" y="82" width="124" height="38" fill="#fff" stroke="#1E3A63" stroke-width="1.6"/>' +
+      '<rect x="88" y="128" width="124" height="58" fill="#fff" stroke="#1E3A63" stroke-width="1.6"/>' +
+      '<ellipse cx="60" cy="44" rx="16" ry="26" fill="none" stroke="#33507C" stroke-width="1.6"/>' +
+      '<ellipse cx="252" cy="100" rx="11" ry="17" fill="none" stroke="#33507C" stroke-width="1.6"/>' +
+      '<rect x="238" y="150" width="30" height="8" rx="4" fill="none" stroke="#33507C" stroke-width="1.6"/>' +
+      arrow(84,44,78,44) + arrow(216,100,240,100) + arrow(216,157,236,155) +
+      num(70,14,1) + num(266,76,2) + num(276,150,3),
+    delta: SHEET +
+      mountain('M150 14V186') +
+      valley('M88 56H212') +
+      valley('M96 56L150 104') + valley('M204 56L150 104') +
+      valley('M88 84H212') +
+      valley('M94 148H206') +
+      arrow(70,46,86,60) + arrow(232,76,214,86) +
+      num(60,42,2) + num(242,72,4) + num(82,156,5)
+  };
+
+  /* ================================================================== *
+   *  Interface.
+   * ================================================================== */
+  function thumb(k){
+    var d = {
+      dart:  'M4 15L48 6L28 24L22 17z',
+      glider:'M4 12L48 8L42 22L14 22z',
+      hunter:'M4 14L48 7L30 23L20 18z',
+      hoop:  '',
+      delta: 'M6 9L46 12L40 23L10 23z'
+    }[k];
+    if (k === 'hoop'){
+      return '<svg viewBox="0 0 52 30" aria-hidden="true">' +
+        '<ellipse cx="14" cy="15" rx="5" ry="10" fill="none" stroke="#1E3A63" stroke-width="1.6"/>' +
+        '<ellipse cx="40" cy="15" rx="8" ry="13" fill="none" stroke="#1E3A63" stroke-width="1.6"/>' +
+        '<path d="M14 15H40" stroke="#1E3A63" stroke-width="1.6"/></svg>';
+    }
+    return '<svg viewBox="0 0 52 30" aria-hidden="true"><path d="' + d +
+           '" fill="#FBFAF4" stroke="#1E3A63" stroke-width="1.6" stroke-linejoin="round"/></svg>';
+  }
+
+  var pats = document.getElementById('patterns');
+  pats.innerHTML = ORDER.map(function(k){
+    return '<button type="button" class="pat" data-k="' + k + '" aria-pressed="false">' + thumb(k) +
+      '<span><span class="n">' + PATTERNS[k].name + '</span>' +
+      '<span class="d">' + PATTERNS[k].tag + '</span></span></button>';
+  }).join('');
+  pats.addEventListener('click', function(e){
+    var b = e.target.closest('.pat'); if (!b) return;
+    state.pat = b.dataset.k; ghosts = []; current = null;
+    sync(); drawField(); save();
+  });
+
+  function bindRange(id, key, fmt){
+    var el = document.getElementById(id), out = document.getElementById('v-' + id.slice(2));
+    el.addEventListener('input', function(){
+      state[key] = +el.value; out.textContent = fmt(+el.value); sync(true); save();
+    });
+  }
+  bindRange('k-clip',  'clip',  function(v){ return v; });
+  bindRange('k-elev',  'elev',  function(v){ return v > 0 ? '+' + v : v; });
+  bindRange('k-speed', 'speed', function(v){ return v.toFixed(1); });
+  bindRange('k-angle', 'angle', function(v){ return v; });
+  document.getElementById('k-trace').addEventListener('change', function(){
+    state.trace = this.checked; if (!this.checked){ ghosts = []; drawField(); }
+  });
+
+  document.getElementById('btn-throw').addEventListener('click', throwIt);
+  document.getElementById('btn-clear').addEventListener('click', function(){
+    ghosts = []; current = null; drawField();
+    document.getElementById('verdict').textContent = 'Field cleared.';
+    ['r-dist','r-time','r-glide'].forEach(function(i){ document.getElementById(i).innerHTML = '&mdash;'; });
+  });
+
+  function sync(keepField){
+    var p = PATTERNS[state.pat], a = build();
+    [].forEach.call(pats.querySelectorAll('.pat'), function(b){
+      b.setAttribute('aria-pressed', b.dataset.k === state.pat);
+    });
+    document.getElementById('k-clip').value = state.clip;
+    document.getElementById('k-elev').value = state.elev;
+    document.getElementById('k-speed').value = state.speed;
+    document.getElementById('k-angle').value = state.angle;
+    document.getElementById('v-clip').textContent = state.clip;
+    document.getElementById('v-elev').textContent = state.elev > 0 ? '+' + state.elev : state.elev;
+    document.getElementById('v-speed').textContent = (+state.speed).toFixed(1);
+    document.getElementById('v-angle').textContent = state.angle;
+
+    document.getElementById('fold-title').textContent = 'How to fold ' + p.name.toLowerCase().replace(/^the /, 'the ');
+    document.getElementById('fold').innerHTML =
+      '<desc id="fold-desc">A folding diagram for ' + p.name + '.</desc>' + DIAGRAMS[state.pat];
+    document.getElementById('steps').innerHTML = p.steps.map(function(s){ return '<li>' + s + '</li>'; }).join('');
+
+    var loading = a.m * G / p.S;
+    document.getElementById('spec').innerHTML =
+      row('mass', (a.m * 1000).toFixed(1) + ' g') +
+      row('wing area', (p.S * 10000).toFixed(0) + ' cm²') +
+      row('aspect ratio', p.AR.toFixed(1)) +
+      row('wing loading', loading.toFixed(2) + ' N/m²') +
+      row('lift-curve slope', a.CLa.toFixed(2) + ' /rad') +
+      row('static margin', (a.sm * 100).toFixed(1) + '% chord') +
+      row('trim moment', a.cm0.toFixed(3)) +
+      row('parasite drag', p.cd0.toFixed(3));
+
+    document.getElementById('r-best').innerHTML = best[state.pat]
+      ? best[state.pat].toFixed(1) + '<small>m</small>' : '&mdash;';
+
+    if (!keepField) drawField();
+  }
+  function row(k, v){ return '<li><span>' + k + '</span><b>' + v + '</b></li>'; }
+
+  sync();
+  drawField();
+
+  window.__aerodrome = { fly: fly, build: build, patterns: ORDER, state: state,
+                         throwIt: throwIt, current: function(){ return current; } };
+})();
+</script>
+</body>
+</html>

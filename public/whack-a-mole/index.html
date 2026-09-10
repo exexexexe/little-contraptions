@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nine Holes and a Mallet</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23A81E22'/><ellipse cx='16' cy='24' rx='11' ry='4.5' fill='%233A2214'/><ellipse cx='16' cy='19' rx='7.5' ry='8' fill='%238A6440'/><circle cx='13' cy='17' r='1.3' fill='%23241A10'/><circle cx='19' cy='17' r='1.3' fill='%23241A10'/><ellipse cx='16' cy='21' rx='2.4' ry='1.7' fill='%23D8A0A0'/></svg>">
+<style>
+:root{ color-scheme: light; }
+:root{
+  --red:#A81E22;
+  --red-2:#7A1216;
+  --cream:#F6ECD6;
+  --gold:#E0B23C;
+  --board:#6B4A2A;
+  --board-2:#4A3018;
+  --hole:#241609;
+  --fur:#8A6440;
+  --fur-2:#6B4A2E;
+  --ink:#2E1F14;
+  --dim:#7A6650;
+  --slab:"Iowan Old Style",Georgia,"Times New Roman",serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;min-height:100%}
+body{
+  background:
+    repeating-linear-gradient(94deg, var(--red) 0 46px, #C02A2E 46px 92px);
+  color:var(--ink);font-family:var(--slab);
+  min-height:100vh;padding:22px 16px 84px;
+  display:flex;flex-direction:column;align-items:center;
+  -webkit-tap-highlight-color:transparent;
+}
+.wrap{ width:min(640px,100%);display:flex;flex-direction:column;align-items:center }
+
+.sign{
+  background:var(--cream);border:5px solid var(--gold);border-radius:12px;
+  padding:12px 26px 14px;text-align:center;margin-bottom:16px;
+  box-shadow:0 8px 0 rgba(0,0,0,.18), 0 18px 34px rgba(60,10,10,.35);
+}
+h1{
+  font-size:clamp(21px,5.4vw,30px);font-weight:700;margin:0;letter-spacing:.01em;
+  color:var(--red);text-shadow:1px 1px 0 var(--gold);
+}
+.sign p{ font-family:var(--mono);font-size:9.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--dim);margin:6px 0 0 }
+
+/* ---- the scoreboard -------------------------------------------------- */
+.board-top{
+  width:100%;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;
+}
+.gauge{
+  background:#2A1A0C;border:3px solid var(--gold);border-radius:8px;padding:8px 6px;text-align:center;
+  box-shadow:inset 0 2px 8px rgba(0,0,0,.5);
+}
+.gauge .k{ display:block;font-family:var(--mono);font-size:8.5px;letter-spacing:.2em;text-transform:uppercase;color:#B79A63;margin-bottom:4px }
+.gauge .v{ font-family:var(--mono);font-size:22px;color:var(--gold);font-variant-numeric:tabular-nums;line-height:1 }
+.gauge.warn .v{ color:#FF6B5E }
+
+/* ---- the cabinet ----------------------------------------------------- */
+.cabinet{
+  width:100%;background:linear-gradient(180deg,#7E5A34,#4A3018);
+  border:6px solid #3A2412;border-radius:16px;padding:18px;
+  box-shadow:inset 0 3px 0 rgba(255,220,160,.2), 0 20px 44px rgba(50,10,10,.45);
+  position:relative;
+}
+.grid{ display:grid;grid-template-columns:repeat(3,1fr);gap:14px }
+.hole{
+  position:relative;aspect-ratio:1/1.1;border:0;padding:0;background:transparent;
+  cursor:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'><rect x='4' y='4' width='22' height='13' rx='3' fill='%23C9302C' stroke='%23701A18' stroke-width='2'/><rect x='14' y='15' width='5' height='22' rx='2' fill='%238A6440' stroke='%234A3018' stroke-width='1.5'/></svg>") 8 8, pointer;
+  overflow:hidden;
+}
+.hole:focus-visible{ outline:3px solid var(--gold);outline-offset:3px;border-radius:8px }
+.mound{
+  position:absolute;left:0;right:0;bottom:0;height:46%;
+  background:linear-gradient(180deg,#7E5A34 0%,#5A3C20 55%,#4A3018 100%);
+  border-radius:50% 50% 12% 12% / 72% 72% 18% 18%;
+  box-shadow:inset 0 3px 0 rgba(255,220,160,.14);
+}
+.pit{
+  position:absolute;left:11%;right:11%;bottom:22%;height:22%;
+  border-radius:50%;
+  background:radial-gradient(ellipse at 50% 26%, #0E0702 0%, #201206 58%, #331E0C 100%);
+  box-shadow:inset 0 5px 11px rgba(0,0,0,.9);
+}
+.critter{
+  position:absolute;left:24%;right:24%;bottom:26%;
+  /* far enough that the top of its head clears the bottom of the cell —
+     130% left a pale crescent showing in every empty hole */
+  transform:translateY(185%);
+  transition:transform .13s cubic-bezier(.2,.9,.3,1.2);
+  pointer-events:none;
+}
+.critter.up{ transform:translateY(0) }
+.critter.bonked{ transform:translateY(185%) scaleY(.6);transition:transform .11s ease-in }
+.critter svg{ display:block;width:100%;height:auto }
+/* the front lip of the hole, drawn over the critter so it really is
+   coming out of something rather than sliding up in front of it */
+.lip{
+  position:absolute;left:11%;right:11%;bottom:22%;height:22%;
+  border-radius:50%;
+  background:linear-gradient(180deg,#8A6440 0%,#6B4A2A 40%,#4A3018 100%);
+  clip-path:polygon(-2% 44%, 102% 44%, 102% 102%, -2% 102%);
+  box-shadow:0 2px 0 rgba(0,0,0,.3);
+  pointer-events:none;
+}
+.pop{
+  position:absolute;left:50%;top:6%;transform:translateX(-50%) scale(.6);
+  font-family:var(--mono);font-size:15px;font-weight:700;color:var(--gold);
+  opacity:0;pointer-events:none;text-shadow:0 2px 0 rgba(0,0,0,.5);
+}
+.pop.show{ animation:rise .62s ease-out }
+.pop.bad{ color:#FF7B6E }
+@keyframes rise{
+  0%{ opacity:0;transform:translateX(-50%) translateY(10px) scale(.6) }
+  22%{ opacity:1;transform:translateX(-50%) translateY(0) scale(1.15) }
+  100%{ opacity:0;transform:translateX(-50%) translateY(-26px) scale(1) }
+}
+@media (prefers-reduced-motion: reduce){
+  .critter{ transition:none } .pop.show{ animation:none;opacity:0 }
+}
+
+/* ---- the bar ---------------------------------------------------------- */
+.bar{ display:flex;flex-wrap:wrap;gap:9px;margin-top:16px;justify-content:center;align-items:center }
+.bar button{
+  font:inherit;font-family:var(--slab);font-size:15px;font-weight:600;cursor:pointer;
+  background:var(--gold);color:#3A2412;border:3px solid #A87C1E;border-radius:10px;
+  padding:10px 22px;box-shadow:0 4px 0 #8A6414;transition:transform .08s,box-shadow .08s;
+}
+.bar button:active{ transform:translateY(3px);box-shadow:0 1px 0 #8A6414 }
+.bar button.quiet{
+  background:transparent;color:var(--cream);border-color:rgba(246,236,214,.45);
+  box-shadow:none;font-size:12.5px;padding:9px 15px;
+}
+.bar button.quiet[aria-pressed="true"]{ background:var(--cream);color:var(--red) }
+.bar button:focus-visible{ outline:3px solid var(--cream);outline-offset:3px }
+
+.said{
+  margin-top:14px;text-align:center;font-size:15px;line-height:1.6;color:var(--cream);
+  min-height:2.6em;text-shadow:0 1px 2px rgba(0,0,0,.4);
+}
+.said b{ color:var(--gold) }
+
+.book{
+  margin-top:24px;background:rgba(246,236,214,.94);border-radius:10px;padding:16px 18px;
+  font-size:13.5px;line-height:1.8;color:#4A3B28;width:100%;
+}
+.book p{ margin:0 0 10px } .book p:last-child{ margin:0 }
+.book b{ color:var(--ink) }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:700 11px/1 var(--mono);
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#3A2412;background:var(--gold);
+  border:2px solid rgba(255,255,255,.55);border-radius:999px;
+  width:40px;height:40px;justify-content:center;
+  box-shadow:0 6px 18px rgba(50,10,10,.4);
+  transition:width .18s ease, background .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:120px;gap:9px;background:#F2C755 }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:3px solid var(--cream);outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="sign">
+  <h1>Nine Holes and a Mallet</h1>
+  <p>step right up</p>
+</div>
+
+<div class="board-top">
+  <div class="gauge"><span class="k">score</span><span class="v" id="g-score">0</span></div>
+  <div class="gauge" id="g-time-box"><span class="k">seconds left</span><span class="v" id="g-time">60</span></div>
+  <div class="gauge"><span class="k">best</span><span class="v" id="g-best">0</span></div>
+</div>
+
+<div class="cabinet">
+  <div class="grid" id="grid"></div>
+</div>
+
+<div class="bar">
+  <button type="button" id="btn-go">Start the round</button>
+  <button type="button" class="quiet" id="btn-sound" aria-pressed="true">Sound</button>
+  <button type="button" class="quiet" id="btn-reset">Forget my best</button>
+</div>
+
+<p class="said" id="said">Sixty seconds. Hit the moles, leave the tortoises alone.</p>
+
+<div class="book">
+  <p><b>Not everything that comes up is a mole.</b> A tortoise costs you five and a second of your
+  time, and there is no way to take a swing back. They come up more often the better you are doing,
+  which is the fairground&rsquo;s oldest trick and it is being played on you here too.</p>
+  <p>The moles do not appear at random intervals for long. Every ten points the game tightens: they
+  stay up for less time and the gap between them shortens, down to a floor it will not go below.
+  A round is always sixty seconds, so the score is a fair comparison with your own earlier rounds
+  &mdash; which is the only comparison this page offers.</p>
+  <p>Your best is kept in this browser and nowhere else.</p>
+</div>
+
+</div>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">&larr;</span><span class="w">cabinet</span></a>
+
+<script src="/shared/lc-audio.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  var KEY = 'lc-whack';
+  var ROUND = 60;
+  var HOLES = 9;
+
+  var grid = document.getElementById('grid');
+  var sound = true, best = 0;
+  try {
+    var raw = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (raw){ best = raw.best | 0; if (raw.sound === false) sound = false; }
+  } catch (e) {}
+  function save(){ try { localStorage.setItem(KEY, JSON.stringify({ best: best, sound: sound })); } catch (e) {} }
+
+  /* ---- the two things that come out of a hole ------------------------- *
+   * Both drawn here rather than fetched: a mole with a pink nose, and a
+   * tortoise which is unmistakably not a mole even at a glance, because a
+   * penalty you cannot see coming is just unfair.
+   * ------------------------------------------------------------------- */
+  function moleSVG(){
+    return '<svg viewBox="0 0 100 96" aria-hidden="true">' +
+      '<ellipse cx="50" cy="58" rx="34" ry="36" fill="#8A6440"/>' +
+      '<ellipse cx="50" cy="52" rx="26" ry="26" fill="#9C7550"/>' +
+      '<ellipse cx="22" cy="42" rx="9" ry="11" fill="#7A5636"/>' +
+      '<ellipse cx="78" cy="42" rx="9" ry="11" fill="#7A5636"/>' +
+      '<circle cx="38" cy="48" r="5" fill="#241A10"/><circle cx="62" cy="48" r="5" fill="#241A10"/>' +
+      '<circle cx="39.6" cy="46.4" r="1.7" fill="#fff"/><circle cx="63.6" cy="46.4" r="1.7" fill="#fff"/>' +
+      '<ellipse cx="50" cy="62" rx="9" ry="6.5" fill="#D8A0A0"/>' +
+      '<ellipse cx="46.6" cy="60" rx="2" ry="1.4" fill="#B87E7E"/>' +
+      '<ellipse cx="53.4" cy="60" rx="2" ry="1.4" fill="#B87E7E"/>' +
+      '<path d="M44 72h12" stroke="#5A3C24" stroke-width="3" stroke-linecap="round"/>' +
+      '<path d="M18 58l-12-5M18 64l-13 1M82 58l12-5M82 64l13 1" stroke="#6B4A2E" stroke-width="2" stroke-linecap="round"/>' +
+      '</svg>';
+  }
+  function tortoiseSVG(){
+    return '<svg viewBox="0 0 100 96" aria-hidden="true">' +
+      '<ellipse cx="50" cy="64" rx="38" ry="28" fill="#3E6B48"/>' +
+      '<path d="M12 64a38 28 0 0 1 76 0z" fill="#4E8459"/>' +
+      '<path d="M50 38v26M28 50l12 14M72 50L60 64M20 62h60" stroke="#2E5236" stroke-width="2.6"/>' +
+      '<ellipse cx="50" cy="30" rx="15" ry="16" fill="#7FA86A"/>' +
+      '<circle cx="43" cy="28" r="3.4" fill="#1E2A18"/><circle cx="57" cy="28" r="3.4" fill="#1E2A18"/>' +
+      '<circle cx="44.2" cy="26.8" r="1.2" fill="#fff"/><circle cx="58.2" cy="26.8" r="1.2" fill="#fff"/>' +
+      '<path d="M44 38q6 4 12 0" stroke="#2E4A24" stroke-width="2.4" fill="none" stroke-linecap="round"/>' +
+      '</svg>';
+  }
+
+  var holes = [];
+  for (var i = 0; i < HOLES; i++){
+    var b = document.createElement('button');
+    b.className = 'hole';
+    b.type = 'button';
+    b.setAttribute('aria-label', 'Hole ' + (i + 1));
+    b.innerHTML =
+      '<div class="mound"></div>' +
+      '<div class="pit"></div>' +
+      '<div class="critter"><div class="art"></div></div>' +
+      '<div class="lip"></div>' +
+      '<div class="pop"></div>';
+    grid.appendChild(b);
+    holes.push({
+      el: b,
+      critter: b.querySelector('.critter'),
+      art: b.querySelector('.art'),
+      pop: b.querySelector('.pop'),
+      busy: false, kind: null, timer: null
+    });
+    (function(h){
+      b.addEventListener('pointerdown', function(e){ e.preventDefault(); hit(h); });
+    })(holes[i]);
+  }
+
+  /* ---- the round -------------------------------------------------------- */
+  var running = false, score = 0, left = ROUND, tickTimer = null, spawnTimer = null;
+  var misses = 0, hits = 0;
+
+  function start(){
+    if (running) return;
+    running = true; score = 0; left = ROUND; misses = 0; hits = 0;
+    holes.forEach(down);
+    paint();
+    document.getElementById('btn-go').textContent = 'Give up';
+    say('Go.');
+    tickTimer = setInterval(function(){
+      left--;
+      paint();
+      if (left <= 0) finish();
+    }, 1000);
+    schedule(500);
+  }
+
+  function stop(){
+    running = false;
+    clearInterval(tickTimer); clearTimeout(spawnTimer);
+    holes.forEach(down);
+    document.getElementById('btn-go').textContent = 'Start the round';
+  }
+
+  function finish(){
+    stop();
+    var isBest = score > best;
+    if (isBest){ best = score; save(); }
+    paint();
+    var acc = (hits + misses) ? Math.round(hits / (hits + misses) * 100) : 0;
+    say(isBest
+      ? 'A new best: <b>' + score + '</b>. ' + hits + ' hits, ' + acc + ' per cent of your swings landed.'
+      : '<b>' + score + '</b>. ' + hits + ' hits, ' + acc + ' per cent of your swings landed' +
+        (best ? ', against a best of ' + best + '.' : '.'));
+    fanfare(isBest);
+  }
+
+  /* Difficulty. Every ten points shortens both how long they stay up and
+     the gap between them, to a floor — and raises the tortoise rate. */
+  function level(){ return Math.min(8, Math.floor(score / 10)); }
+  function upFor(){ return Math.max(430, 1150 - level() * 95); }
+  function gapFor(){ return Math.max(230, 900 - level() * 90); }
+  function tortoiseChance(){ return Math.min(.30, .06 + level() * .035); }
+
+  function schedule(ms){
+    clearTimeout(spawnTimer);
+    spawnTimer = setTimeout(function(){
+      if (!running) return;
+      spawn();
+      schedule(gapFor() + Math.random() * gapFor() * .5);
+    }, ms);
+  }
+
+  function spawn(){
+    var free = holes.filter(function(h){ return !h.busy; });
+    if (!free.length) return;
+    var h = free[Math.floor(Math.random() * free.length)];
+    h.kind = Math.random() < tortoiseChance() ? 'tortoise' : 'mole';
+    h.art.innerHTML = h.kind === 'mole' ? moleSVG() : tortoiseSVG();
+    h.busy = true;
+    h.critter.className = 'critter up';
+    squeak(h.kind);
+    var stay = upFor() * (h.kind === 'tortoise' ? 1.35 : 1);
+    h.timer = setTimeout(function(){ down(h); }, stay);
+  }
+
+  function down(h){
+    clearTimeout(h.timer);
+    h.busy = false; h.kind = null;
+    h.critter.className = 'critter';
+  }
+
+  function hit(h){
+    if (!running){ start(); return; }
+    if (!h.busy){
+      misses++;
+      score = Math.max(0, score - 1);
+      showPop(h, '−1', true);
+      whiff();
+      paint();
+      return;
+    }
+    if (h.kind === 'tortoise'){
+      score = Math.max(0, score - 5);
+      left = Math.max(0, left - 1);
+      misses++;
+      showPop(h, '−5', true);
+      say('That was a tortoise.');
+      bonk(true);
+    } else {
+      score += 1;
+      hits++;
+      showPop(h, '+1', false);
+      bonk(false);
+    }
+    h.critter.className = 'critter bonked';
+    clearTimeout(h.timer);
+    h.timer = setTimeout(function(){ down(h); }, 130);
+    h.busy = false;
+    paint();
+    if (left <= 0) finish();
+  }
+
+  function showPop(h, text, bad){
+    h.pop.textContent = text;
+    h.pop.className = 'pop' + (bad ? ' bad' : '');
+    void h.pop.offsetWidth;
+    h.pop.className = 'pop show' + (bad ? ' bad' : '');
+  }
+
+  function paint(){
+    document.getElementById('g-score').textContent = score;
+    document.getElementById('g-time').textContent = Math.max(0, left);
+    document.getElementById('g-best').textContent = best;
+    document.getElementById('g-time-box').className = 'gauge' + (left <= 10 && running ? ' warn' : '');
+  }
+  function say(html){ document.getElementById('said').innerHTML = html; }
+
+  /* ---- sound ------------------------------------------------------------ */
+  function bonk(bad){
+    if (!sound) return;
+    LCAudio.sting(function(A){
+      if (bad){
+        A.blip(180, { type:'sawtooth', dur:.34, glide:70, level:.11 });
+      } else {
+        A.burst('white', { freq: 320, q: 1.1, dur:.07, level:.16, reverb:false });
+        A.blip(140, { type:'sine', dur:.14, glide:70, level:.14, reverb:false });
+      }
+    });
+  }
+  function whiff(){
+    if (!sound) return;
+    LCAudio.sting(function(A){
+      A.burst('white', { freq: 3200, q: .7, dur: .1, level: .05, reverb:false });
+    });
+  }
+  function squeak(kind){
+    if (!sound) return;
+    LCAudio.sting(function(A){
+      if (kind === 'mole') A.blip(700 + Math.random() * 200, { type:'square', dur:.07, glide:1100, level:.045 });
+      else A.blip(260, { type:'triangle', dur:.16, glide:200, level:.05 });
+    });
+  }
+  function fanfare(win){
+    if (!sound) return;
+    LCAudio.sting(function(A){
+      var tune = win ? [[0,1],[4,1],[7,1],[12,2]] : [[7,1],[4,1],[0,2]];
+      A.melody(tune, { bpm: 240, level: .09, type:'square' });
+    });
+  }
+
+  /* ---- buttons ----------------------------------------------------------- */
+  document.getElementById('btn-go').addEventListener('click', function(){
+    if (running){ stop(); say('Stopped. Start again whenever.'); paint(); }
+    else start();
+  });
+  document.getElementById('btn-sound').addEventListener('click', function(){
+    sound = !sound; this.setAttribute('aria-pressed', sound); save();
+  });
+  document.getElementById('btn-reset').addEventListener('click', function(){
+    best = 0; save(); paint(); say('Best forgotten.');
+  });
+  document.getElementById('btn-sound').setAttribute('aria-pressed', sound);
+  paint();
+
+  window.__whack = {
+    start: start, stop: stop,
+    score: function(){ return score; },
+    left: function(){ return left; },
+    running: function(){ return running; },
+    upNow: function(){ return holes.filter(function(h){ return h.busy; }).map(function(h){ return h.kind; }); },
+    hitFirst: function(){
+      var h = holes.filter(function(x){ return x.busy; })[0];
+      if (!h) return null;
+      var k = h.kind; hit(h); return k;
+    },
+    setTime: function(t){ left = t; paint(); },
+    best: function(){ return best; }
+  };
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hands Against the Wall</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23E8CE9C'/><path d='M6 24c2-9 7-12 12-12l4-5 1 6 4 2-5 3c0 4-6 6-16 6z' fill='%233A2412'/><circle cx='19' cy='13' r='1' fill='%23E8CE9C'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --dark:#120C06;
+  --wall:#E8CE9C;
+  --wall-2:#C9A46E;
+  --shadow:#3A2412;
+  --flame:#FFC468;
+  --cream:#F2E4C8;
+  --dim:#A08B68;
+  --dimmer:#6E5C42;
+  --line:#33261A;
+  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;min-height:100%}
+body{
+  background:radial-gradient(900px 700px at 50% 30%, #1E1408 0%, #0B0704 72%);
+  color:var(--cream);font-family:var(--serif);
+  min-height:100vh;padding:24px 16px 84px;
+  display:flex;flex-direction:column;align-items:center;
+  -webkit-tap-highlight-color:transparent;
+}
+.wrap{ width:min(860px,100%) }
+
+header{ text-align:center;margin-bottom:16px }
+h1{ font-size:clamp(20px,4.6vw,26px);font-weight:400;margin:0 0 6px;letter-spacing:.02em }
+.tagline{ font-size:13.5px;line-height:1.7;color:var(--dim);margin:0;font-style:italic }
+
+/* ---- the room ---------------------------------------------------------- */
+.room{
+  position:relative;border-radius:5px;overflow:hidden;
+  border:1px solid var(--line);
+  box-shadow:0 22px 52px rgba(0,0,0,.6);
+  cursor:none;touch-action:none;
+}
+.room canvas{ display:block;width:100%;height:auto }
+.hint{
+  position:absolute;left:12px;bottom:10px;pointer-events:none;
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;
+  color:rgba(58,36,18,.5);
+}
+
+/* ---- the shelf ---------------------------------------------------------- */
+.shelf{ display:grid;grid-template-columns:1fr;gap:15px;margin-top:16px }
+@media (min-width:720px){ .shelf{ grid-template-columns:1.3fr 1fr } }
+.panel{
+  background:rgba(30,20,10,.7);border:1px solid var(--line);border-radius:8px;padding:14px 14px 16px;
+}
+.panel h2{
+  font-family:var(--mono);font-size:9px;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--dimmer);margin:0 0 12px;font-weight:600;
+}
+.hands{ display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:7px }
+.hand{
+  font:inherit;cursor:pointer;background:#1E1408;border:1px solid var(--line);border-radius:7px;
+  padding:6px 5px 7px;color:var(--dim);text-align:center;
+  transition:border-color .15s,color .15s,background .15s;
+}
+.hand canvas.thumb{ width:100%;height:auto;display:block;margin-bottom:3px }
+.hand span{ font-family:var(--mono);font-size:8.5px;letter-spacing:.1em;text-transform:uppercase }
+.hand:hover{ border-color:#6E5C42;color:var(--cream) }
+.hand[aria-pressed="true"]{ background:#3A2A14;border-color:var(--flame);color:var(--cream) }
+.hand[aria-pressed="true"] canvas.thumb{ filter:sepia(1) saturate(3) hue-rotate(-14deg) brightness(1.25) }
+.hand:focus-visible{ outline:2px solid var(--flame);outline-offset:2px }
+
+.knob{ margin-bottom:14px }
+.knob:last-of-type{ margin-bottom:0 }
+.knob label{
+  display:flex;justify-content:space-between;font-family:var(--mono);font-size:9.5px;
+  letter-spacing:.15em;text-transform:uppercase;color:var(--dim);margin-bottom:6px;
+}
+.knob label b{ color:var(--flame);font-weight:600 }
+input[type=range]{ width:100%;accent-color:#C9903C }
+.btns{ display:flex;flex-wrap:wrap;gap:7px;margin-top:14px }
+.btns button{
+  font-family:var(--mono);font-size:10px;letter-spacing:.15em;text-transform:uppercase;
+  background:transparent;color:var(--dim);border:1px solid var(--line);border-radius:4px;
+  padding:8px 12px;cursor:pointer;transition:color .15s,border-color .15s;
+}
+.btns button:hover{ color:var(--cream);border-color:var(--flame) }
+.btns button[aria-pressed="true"]{ color:var(--flame);border-color:var(--flame) }
+.btns button:focus-visible{ outline:2px solid var(--flame);outline-offset:2px }
+.said{ font-size:13px;line-height:1.7;color:var(--dimmer);margin:12px 0 0;font-style:italic;min-height:2.6em }
+
+.book{ margin-top:26px;padding-top:19px;border-top:1px solid var(--line);font-size:14px;line-height:1.85;color:var(--dim) }
+.book p{ margin:0 0 12px } .book p:last-child{ margin:0 }
+.book b{ color:var(--cream);font-weight:600 }
+.book code{ font-family:var(--mono);font-size:12.5px;color:var(--flame) }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 var(--mono);
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#2A1C0C;background:var(--flame);
+  border:1px solid rgba(255,255,255,.35);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  box-shadow:0 5px 18px rgba(255,180,80,.25);
+  transition:width .18s ease, background .16s, gap .18s ease;
+}
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:#FFD68A }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid var(--cream);outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Hands Against the Wall</h1>
+  <p class="tagline">Move towards the candle and the shadow grows, and softens at the edges, exactly as much as it should.</p>
+</header>
+
+<div class="room" id="room">
+  <canvas id="cv" width="1440" height="810"></canvas>
+  <div class="hint" id="hint">move the pointer &middot; scroll to step towards the flame</div>
+</div>
+
+<div class="shelf">
+  <div class="panel">
+    <h2>The hand</h2>
+    <div class="hands" id="hands"></div>
+  </div>
+
+  <div class="panel">
+    <h2>The room</h2>
+    <div class="knob">
+      <label for="k-depth">How near the flame <b><span id="v-depth">40</span>%</b></label>
+      <input type="range" id="k-depth" min="4" max="86" step="1" value="40">
+    </div>
+    <div class="knob">
+      <label for="k-size">Size of the flame <b><span id="v-size">medium</span></b></label>
+      <input type="range" id="k-size" min="1" max="5" step="1" value="3">
+    </div>
+    <div class="btns">
+      <button type="button" id="btn-flicker" aria-pressed="true">Flicker</button>
+      <button type="button" id="btn-sound" aria-pressed="false">Fire</button>
+      <button type="button" id="btn-tilt">Use phone tilt</button>
+    </div>
+    <p class="said" id="said">&nbsp;</p>
+  </div>
+</div>
+
+<div class="book">
+  <p><b>The shadow is projected, not drawn bigger.</b> The flame is a point in the room at a known
+  distance from the wall; your hand is somewhere between them. Every point of the hand is cast
+  along the straight line from the flame through it and onto the wall, which works out as a
+  magnification of <code>D / (D &minus; d)</code> about the flame&rsquo;s position &mdash; where
+  <code>D</code> is the flame&rsquo;s distance from the wall and <code>d</code> is your hand&rsquo;s.
+  Right against the wall the shadow is life-size. Halfway, it is twice the size. Nine tenths of the
+  way, ten times. That is why moving your hand a few centimetres near the candle throws a wolf
+  across the whole room.</p>
+  <p><b>The soft edge is real too.</b> A flame is not a point, it is a small bright thing, so every
+  edge has a penumbra whose width grows with the same ratio &mdash; and that is why a shadow held
+  close to the wall has a hard edge and one held near the candle is a vague dark cloud. Both the
+  blur and the growth come off the same two numbers here; nothing is faked to look right.</p>
+  <p>The eight hands are drawn here, as silhouettes, from the shapes everybody&rsquo;s hands
+  eventually find. Nothing is photographed and nothing is traced.</p>
+</div>
+
+</div>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">&larr;</span><span class="w">cabinet</span></a>
+
+<script src="/shared/lc-audio.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  var KEY = 'lc-shadow-puppets';
+  var cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+  var room = document.getElementById('room');
+  var W = cv.width, H = cv.height;
+  var calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ================================================================== *
+   *  The eight hands, as silhouettes in a 200x140 box. Original paths —
+   *  the shapes are the traditional ones, the drawings are not traced
+   *  from anything.
+   * ================================================================== */
+  /* Each hand is a list of parts drawn into a 200x140 box, facing right.
+     Composing from ellipses and polygons rather than freehand curves is
+     the only way to get a silhouette that still reads as an animal once
+     it is four times life size and half out of focus — the first attempt
+     was eight hand-written bezier paths and every one of them came out a
+     blob with ears. "hole" parts are punched out, which is where the eye
+     and the open jaw come from; a shadow puppet is mostly gaps. */
+  var HANDS = {
+    rabbit: { n:'rabbit', parts:[
+      { p:[[0,100],[0,140],[142,140],[126,96]] },
+      { e:[135,88,46,36] },
+      { e:[176,96,16,13] },
+      { p:[[112,60],[88,6],[106,2],[128,56]] },
+      { p:[[132,58],[126,0],[146,4],[150,54]] },
+      { e:[152,80,6,6], hole:true },
+      { p:[[186,92],[200,96],[186,100]], hole:true }
+    ]},
+    bird: { n:'bird', parts:[
+      { p:[[0,96],[0,140],[122,140],[104,92]] },
+      { e:[110,92,58,38] },
+      { e:[164,54,24,22] },
+      { p:[[182,44],[200,60],[180,66]] },
+      { p:[[66,98],[142,78],[142,86],[66,106]], hole:true },
+      { e:[170,48,5,5], hole:true }
+    ]},
+    dog: { n:'dog', parts:[
+      { p:[[0,104],[0,140],[134,140],[120,98]] },
+      { e:[126,86,48,34] },
+      { p:[[158,72],[200,84],[198,98],[156,104]] },
+      { e:[104,58,20,30,-0.4] },
+      { e:[146,76,6,6], hole:true },
+      { p:[[160,94],[200,92],[200,99],[160,101]], hole:true }
+    ]},
+    wolf: { n:'wolf', parts:[
+      { p:[[0,100],[0,140],[128,140],[114,96]] },
+      { e:[118,86,46,32] },
+      { p:[[150,68],[208,82],[208,92],[148,102]] },
+      { p:[[96,60],[86,12],[112,46]] },
+      { p:[[124,54],[128,6],[146,48]] },
+      { p:[[156,90],[208,86],[208,95],[156,99]], hole:true },
+      { e:[142,74,5.5,5.5], hole:true }
+    ]},
+    snail: { n:'snail', parts:[
+      { p:[[0,118],[0,140],[200,140],[200,126]] },
+      { e:[100,116,84,20] },
+      { e:[96,80,46,44] },
+      { e:[168,104,22,16] },
+      { p:[[176,94],[181,58],[188,58],[184,96]] },
+      { e:[185,53,7,7] },
+      { p:[[160,94],[157,66],[164,64],[169,94]] },
+      { e:[159,59,6,6] },
+      { spiral:[96,80,34], hole:true }
+    ]},
+    croc: { n:'crocodile', parts:[
+      { p:[[0,84],[0,128],[104,126],[94,78]] },
+      { e:[92,100,70,26] },
+      { p:[[138,82],[208,64],[208,80],[144,96]] },
+      { p:[[140,106],[208,112],[208,122],[146,114]] },
+      { e:[124,76,13,11] },
+      { e:[124,74,4.5,4.5], hole:true },
+      { p:[[156,90],[164,98],[172,88]], hole:true },
+      { p:[[178,86],[186,94],[194,84]], hole:true }
+    ]},
+    goat: { n:'goat', parts:[
+      { p:[[0,104],[0,140],[132,140],[118,96]] },
+      { e:[126,88,44,32] },
+      { p:[[156,76],[200,86],[196,104],[154,106]] },
+      { p:[[110,60],[96,24],[76,4],[92,2],[114,26],[126,58]] },
+      { p:[[132,58],[128,20],[112,0],[128,2],[144,24],[148,56]] },
+      { p:[[166,106],[186,140],[158,138],[152,108]] },
+      { p:[[100,86],[62,78],[66,98]] },
+      { e:[148,78,5.5,5.5], hole:true }
+    ]},
+    elephant: { n:'elephant', parts:[
+      { p:[[0,96],[0,140],[114,140],[98,92]] },
+      { e:[112,80,52,44] },
+      { e:[76,84,36,40] },
+      { p:[[150,84],[178,94],[194,120],[188,138],[172,138],[180,120],[168,104],[146,102]] },
+      { p:[[154,104],[192,118],[188,126],[152,112]] },
+      { e:[142,70,5.5,5.5], hole:true },
+      { p:[[52,60],[96,52],[96,60],[54,68]], hole:true }
+    ]}
+  };
+  var ORDER = ['rabbit','bird','dog','wolf','snail','croc','goat','elephant'];
+
+  /* Each hand is drawn once into its own offscreen canvas at four times
+     the box, and thereafter blitted. Holes need destination-out, which
+     needs a surface of its own — you cannot punch a hole in the wall. */
+  var SCALE = 4, BOX = { w:210, h:140 }, PAD = 24;
+  var cache = {}, tint = {};
+  function stencil(key){
+    if (cache[key]) return cache[key];
+    var c = document.createElement('canvas');
+    /* a margin, or the blur has a hard edge wherever a snout runs out to
+       the side of the box */
+    c.width = (BOX.w + PAD * 2) * SCALE; c.height = (BOX.h + PAD * 2) * SCALE;
+    var g = c.getContext('2d');
+    g.scale(SCALE, SCALE);
+    g.translate(PAD, PAD);
+    HANDS[key].parts.forEach(function(part){
+      g.globalCompositeOperation = part.hole ? 'destination-out' : 'source-over';
+      g.fillStyle = '#000';
+      g.strokeStyle = '#000';
+      g.beginPath();
+      if (part.e){
+        g.ellipse(part.e[0], part.e[1], part.e[2], part.e[3], part.e[4] || 0, 0, 6.284);
+        g.fill();
+      } else if (part.p){
+        part.p.forEach(function(pt, i){ i ? g.lineTo(pt[0], pt[1]) : g.moveTo(pt[0], pt[1]); });
+        g.closePath();
+        g.fill();
+      } else if (part.spiral){
+        /* the snail's shell, as a stroked spiral rather than a fill */
+        var cx = part.spiral[0], cy = part.spiral[1], r0 = part.spiral[2];
+        g.lineWidth = 3.4;
+        g.beginPath();
+        for (var a = 0; a < 10; a += .08){
+          var r = r0 * (1 - a / 10.4);
+          var x = cx + Math.cos(a * 1.9) * r, y = cy + Math.sin(a * 1.9) * r * .96;
+          a ? g.lineTo(x, y) : g.moveTo(x, y);
+        }
+        g.stroke();
+      }
+    });
+    g.globalCompositeOperation = 'source-over';
+    cache[key] = c;
+    return c;
+  }
+
+  /* Tinting has to happen on the stencil's own surface. Doing it with
+     source-atop on the wall instead paints a neat rectangle of darker
+     wall around the shadow, which is exactly what the first version did. */
+  function tinted(key, colour){
+    var k = key + '|' + colour;
+    if (tint[k]) return tint[k];
+    var src = stencil(key);
+    var c = document.createElement('canvas');
+    c.width = src.width; c.height = src.height;
+    var g = c.getContext('2d');
+    g.drawImage(src, 0, 0);
+    g.globalCompositeOperation = 'source-in';
+    g.fillStyle = colour;
+    g.fillRect(0, 0, c.width, c.height);
+    tint[k] = c;
+    return c;
+  }
+
+  /* ---- state -------------------------------------------------------------- */
+  var hand = 'rabbit';
+  var hx = 0.5, hy = 0.5;            /* the hand's place in the room, 0..1 */
+  var depth = 0.40;                  /* fraction of the way from wall to flame */
+  var flameSize = 3;
+  var flicker = true, sound = false, tilting = false;
+  var LIGHT = { x: 0.16, y: 0.30 };  /* the candle's place on the screen */
+
+  try {
+    var raw = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (raw){
+      if (HANDS[raw.hand]) hand = raw.hand;
+      if (typeof raw.depth === 'number') depth = Math.min(.86, Math.max(.04, raw.depth));
+      if (typeof raw.flameSize === 'number') flameSize = raw.flameSize;
+      if (raw.flicker === false) flicker = false;
+    }
+  } catch (e) {}
+  function save(){
+    try { localStorage.setItem(KEY, JSON.stringify({
+      hand: hand, depth: depth, flameSize: flameSize, flicker: flicker
+    })); } catch (e) {}
+  }
+
+  /* ================================================================== *
+   *  The projection.
+   *
+   *  Wall at z = 0, flame at z = D, hand at z = d. A point P on the hand
+   *  casts to the wall at  L + (P - L) * D/(D - d)  in the wall plane.
+   *  With D fixed at 1 the magnification is simply 1/(1-depth).
+   * ================================================================== */
+  function magnification(){ return 1 / (1 - depth); }
+
+  /* The penumbra. A source of width s at distance D throws an edge whose
+     soft band is  s * d/(D-d)  wide — the same ratio again, which is why
+     a shadow that grows also blurs. */
+  function penumbra(){
+    var s = flameSize * 2.2;
+    return s * depth / (1 - depth);
+  }
+
+  var flamePhase = 0;
+
+  function draw(now){
+    var t = now / 1000;
+    flamePhase = flicker && !calm
+      ? Math.sin(t * 7.3) * .5 + Math.sin(t * 13.1) * .3 + Math.sin(t * 3.1) * .2
+      : 0;
+
+    var lx = (LIGHT.x + flamePhase * .0035) * W;
+    var ly = (LIGHT.y + flamePhase * .0025) * H;
+
+    /* the wall */
+    var g = ctx.createRadialGradient(lx, ly, 20, lx, ly, W * .95);
+    var warm = 1 + flamePhase * .05;
+    g.addColorStop(0, 'rgb(' + Math.round(252 * warm) + ',' + Math.round(232 * warm) + ',190)');
+    g.addColorStop(.35, '#E2C692');
+    g.addColorStop(.72, '#A8834F');
+    g.addColorStop(1, '#4A3520');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+
+    /* plaster: a little tooth, drawn from a fixed pattern so it does not
+       crawl about between frames */
+    ctx.globalAlpha = .05;
+    for (var i = 0; i < 320; i++){
+      var px = (i * 271.3) % W, py = (i * 487.7) % H;
+      ctx.fillStyle = i % 3 ? '#fff' : '#3A2412';
+      ctx.fillRect(px, py, 2, 2);
+    }
+    ctx.globalAlpha = 1;
+
+    /* the shadow */
+    var m = magnification();
+    var pen = penumbra();
+    var baseW = W * .22;                    /* the hand at life size on the wall */
+    var scale = baseW / BOX.w;
+
+    /* The pointer steers the SHADOW, and the hand is worked back from it
+       along the ray to the flame. Doing it the other way round — pointer
+       as the hand — is just as correct and completely unusable: at two
+       times magnification the shadow of a hand anywhere but the middle
+       lands somewhere off the wall entirely. */
+    var sx = hx * W, sy = hy * H;
+    var px2 = lx + (sx - lx) / m;
+    var py2 = ly + (sy - ly) / m;
+
+    ctx.save();
+    if (pen > 0.4 && ctx.filter !== undefined) ctx.filter = 'blur(' + Math.min(60, pen).toFixed(1) + 'px)';
+    ctx.globalAlpha = .88;
+    var st = tinted(hand, '#2E1C0C');
+    ctx.translate(sx, sy);
+    ctx.scale(scale * m / SCALE, scale * m / SCALE);
+    ctx.drawImage(st, -st.width / 2, -st.height / 2);
+    ctx.restore();
+    ctx.filter = 'none';
+
+    /* the candle, drawn last so it sits in front of its own light */
+    candle(lx, ly, t);
+
+    /* The hand itself is not drawn — you are holding it. A small ring
+       marks where it must be in the room for the shadow to land where it
+       has landed, and it visibly creeps towards the flame as you step
+       nearer to it, which is the whole geometry in one dot. */
+    ctx.beginPath();
+    ctx.arc(px2, py2, 8, 0, 6.284);
+    ctx.strokeStyle = 'rgba(58,36,18,.30)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(lx, ly); ctx.lineTo(sx, sy);
+    ctx.strokeStyle = 'rgba(58,36,18,.10)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([6, 9]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    requestAnimationFrame(draw);
+  }
+
+  function candle(x, y, t){
+    var s = 8 + flameSize * 4;
+    /* the stick */
+    ctx.fillStyle = '#F2E4C8';
+    ctx.fillRect(x - 9, y + 12, 18, 74);
+    ctx.fillStyle = 'rgba(120,90,50,.35)';
+    ctx.fillRect(x + 4, y + 12, 5, 74);
+    /* the flame */
+    var f = 1 + flamePhase * .12;
+    var fg = ctx.createRadialGradient(x, y - 2, 1, x, y, s * 2.4 * f);
+    fg.addColorStop(0, 'rgba(255,255,235,1)');
+    fg.addColorStop(.35, 'rgba(255,196,104,.95)');
+    fg.addColorStop(1, 'rgba(255,140,40,0)');
+    ctx.fillStyle = fg;
+    ctx.beginPath();
+    ctx.ellipse(x, y, s * 1.5 * f, s * 2.2 * f, 0, 0, 6.284);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,245,.95)';
+    ctx.beginPath();
+    ctx.ellipse(x, y + 2, s * .38, s * .72 * f, 0, 0, 6.284);
+    ctx.fill();
+  }
+
+  /* ================================================================== *
+   *  Input.
+   * ================================================================== */
+  function move(e){
+    var r = room.getBoundingClientRect();
+    hx = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+    hy = Math.max(0, Math.min(1, (e.clientY - r.top) / r.height));
+  }
+  room.addEventListener('pointermove', move);
+  room.addEventListener('pointerdown', function(e){ e.preventDefault(); move(e); });
+  room.addEventListener('wheel', function(e){
+    e.preventDefault();
+    setDepth(depth + (e.deltaY > 0 ? -.02 : .02));
+  }, { passive:false });
+
+  function setDepth(v){
+    depth = Math.max(.04, Math.min(.86, v));
+    document.getElementById('k-depth').value = Math.round(depth * 100);
+    document.getElementById('v-depth').textContent = Math.round(depth * 100);
+    save();
+    say('The shadow is ' + magnification().toFixed(1) + ' times life size' +
+        (penumbra() > 6 ? ', and the edge has gone very soft.' : '.'));
+  }
+
+  /* ---- phone tilt ---------------------------------------------------------- */
+  document.getElementById('btn-tilt').addEventListener('click', function(){
+    var btn = this;
+    function attach(){
+      tilting = true;
+      btn.setAttribute('aria-pressed', 'true');
+      btn.textContent = 'Tilt is on';
+      say('Tilt the phone: side to side moves the hand, forward and back moves it towards the flame.');
+      window.addEventListener('deviceorientation', onTilt);
+    }
+    if (tilting){
+      tilting = false; window.removeEventListener('deviceorientation', onTilt);
+      btn.setAttribute('aria-pressed', 'false'); btn.textContent = 'Use phone tilt';
+      return;
+    }
+    var DOE = window.DeviceOrientationEvent;
+    if (!DOE) return say('This browser does not report tilt at all.');
+    if (typeof DOE.requestPermission === 'function'){
+      DOE.requestPermission().then(function(res){
+        if (res === 'granted') attach();
+        else say('Tilt was not allowed. The pointer still works.');
+      }).catch(function(){ say('Tilt could not be turned on.'); });
+    } else attach();
+  });
+  function onTilt(e){
+    if (e.gamma == null) return;
+    hx = Math.max(0, Math.min(1, .5 + (e.gamma / 45) * .5));
+    hy = Math.max(0, Math.min(1, .5 + ((e.beta - 45) / 60) * .5));
+  }
+
+  /* ---- fire ---------------------------------------------------------------- */
+  var fireBus = null;
+  function setSound(on){
+    sound = on;
+    document.getElementById('btn-sound').setAttribute('aria-pressed', on);
+    if (!on){ if (fireBus){ fireBus.stopAll(); fireBus = null; } clearInterval(crackleTimer); return; }
+    LCAudio.sting(function(A){
+      if (fireBus) return;
+      fireBus = A.bus(.7);
+      A.chain(fireBus.noise('brown'), A.filt('lowpass', 620, .8), A.gain(.055), fireBus);
+      crackleTimer = setInterval(function(){
+        if (!sound) return;
+        A.burst('white', { freq: 1600 + Math.random() * 2600, q: 3, dur: .03,
+                           level: .02 + Math.random() * .05, reverb: true });
+      }, 190);
+    });
+  }
+  var crackleTimer = null;
+
+  /* ---- the shelf ------------------------------------------------------------ */
+  document.getElementById('hands').innerHTML = ORDER.map(function(k){
+    return '<button type="button" class="hand" data-k="' + k + '" aria-pressed="' + (k === hand) + '">' +
+      '<canvas class="thumb" width="258" height="188" aria-hidden="true"></canvas>' +
+      '<span>' + HANDS[k].n + '</span></button>';
+  }).join('');
+  ORDER.forEach(function(k, i){
+    var c = document.querySelectorAll('.hand .thumb')[i];
+    var g = c.getContext('2d');
+    g.drawImage(tinted(k, '#C9A46E'), 0, 0, 258, 188);
+  });
+  document.getElementById('hands').addEventListener('click', function(e){
+    var b = e.target.closest('.hand'); if (!b) return;
+    hand = b.dataset.k;
+    [].forEach.call(document.querySelectorAll('.hand'), function(o){
+      o.setAttribute('aria-pressed', o === b);
+    });
+    save();
+    say('The ' + HANDS[hand].n + '.');
+  });
+
+  document.getElementById('k-depth').addEventListener('input', function(){ setDepth(+this.value / 100); });
+  var SIZES = ['a pinpoint','small','medium','large','a lantern'];
+  document.getElementById('k-size').addEventListener('input', function(){
+    flameSize = +this.value;
+    document.getElementById('v-size').textContent = SIZES[flameSize - 1];
+    save();
+    say('A bigger flame is a softer edge, even at the same distance.');
+  });
+  document.getElementById('btn-flicker').addEventListener('click', function(){
+    flicker = !flicker; this.setAttribute('aria-pressed', flicker); save();
+  });
+  document.getElementById('btn-sound').addEventListener('click', function(){ setSound(!sound); });
+
+  function say(s){ document.getElementById('said').textContent = s; }
+
+  document.getElementById('k-depth').value = Math.round(depth * 100);
+  document.getElementById('v-depth').textContent = Math.round(depth * 100);
+  document.getElementById('k-size').value = flameSize;
+  document.getElementById('v-size').textContent = SIZES[flameSize - 1];
+  document.getElementById('btn-flicker').setAttribute('aria-pressed', flicker);
+
+  requestAnimationFrame(draw);
+
+  window.__shadows = {
+    mag: magnification, pen: penumbra,
+    set: function(o){
+      if (o.hand) hand = o.hand;
+      if (o.depth != null) setDepth(o.depth);
+      if (o.hx != null) hx = o.hx;
+      if (o.hy != null) hy = o.hy;
+    },
+    hands: ORDER
+  };
+})();
+</script>
+</body>
+</html>
