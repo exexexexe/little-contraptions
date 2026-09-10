@@ -160,6 +160,7 @@ body{ padding-bottom:64px }
 </footer>
 
 <script src="/shared/lc-generate.js"></script>
+<script src="/shared/lc-achievements.js"></script>
 <script>
 'use strict';
 
@@ -355,7 +356,8 @@ async function submit(){
       'Your submission has been reviewed and found complete. It was found complete on the two ' +
       'previous occasions as well, which the reviewing officer has been unable to explain. No ' +
       'further information is required from you. No further form will be issued. ' +
-      '<strong>Congratulations, you are free.</strong> Please do not attempt to submit anything ' +
+      '<strong>Congratulations, you are free.</strong> Please do not attempt to submit anything '
+      if (window.LCAch) LCAch.fire('bureau.free'); +
       'else; there is nothing left to submit it to.</div>';
     $('submit').disabled = true;
     $('submit').textContent = 'Nothing further';

@@ -155,6 +155,18 @@ h1{
   .peel{ width:52px;height:52px }
 }
 .peel:active{ cursor:grabbing }
+.peel-mark{
+  position:absolute;right:8px;bottom:6px;width:22px;height:22px;padding:0;
+  display:flex;align-items:center;justify-content:center;line-height:1;
+  font:700 17px/1 ui-monospace,"SF Mono",Menlo,monospace;
+  background:transparent;border:1px solid currentColor;border-radius:50%;
+  color:inherit;opacity:.30;cursor:pointer;
+  animation:peel-mark-in .5s ease backwards;
+}
+.peel-mark:hover, .peel-mark:focus-visible{ opacity:.95 }
+@keyframes peel-mark-in{ from{ opacity:0;transform:scale(.6) } }
+@media (pointer:coarse){ .peel-mark{ width:34px;height:34px } }
+@media (prefers-reduced-motion: reduce){ .peel-mark{ animation:none } }
 .card-slot .lift{
   position:absolute;top:0;right:0;z-index:3;pointer-events:none;
   width:0;height:0;border-style:solid;border-width:0 26px 26px 0;
@@ -4001,7 +4013,7 @@ footer{
   /* ---- opening ----------------------------------------------------- */
 
   function openIcon(a){
-    if (a.dataset.egg){ blueScreen(); return; }
+    if (a.dataset.egg){ if (window.LCAch) LCAch.fire('desk.bluescreen'); blueScreen(); return; }
     if (a.dataset.folder){ openFolder(a.dataset.folder); return; }
     if (a.dataset.open === 'display'){
       document.dispatchEvent(new CustomEvent('w98:display'));
@@ -5848,6 +5860,8 @@ footer{
 })();
 </script>
 
+<script src="/shared/lc-achievements.js"></script>
+<script src="/shared/lc-achievements-ui.js"></script>
 <script src="/shared/lc-swipe.js"></script>
 <script src="/shared/lc-audio.js"></script>
 <script src="/shared/lc-roomtone.js"></script>
@@ -5955,15 +5969,66 @@ footer{
       grip.setPointerCapture(e.pointerId);
       e.preventDefault();
     });
+    /* ---- the way in to the tracker ---------------------------------- *
+     *  Hold a card fully peeled and a small mark appears in the corner of
+     *  the note. It opens the list of what you have found.
+     *
+     *  It is here because peeling is already the cabinet's oldest hidden
+     *  thing and anybody who has found the notes has the habit that finds
+     *  this: peel a card and keep holding. It cannot be stumbled into by
+     *  a normal drag, which ends in well under a second, and it never
+     *  appears on a card that has not been taken all the way over.
+     * ---------------------------------------------------------------- */
+    var holdMark = null, holdTimer = null;
+
+    function armMark(){
+      if (holdMark || holdTimer) return;
+      holdTimer = setTimeout(function(){
+        holdTimer = null;
+        holdMark = document.createElement('button');
+        holdMark.type = 'button';
+        holdMark.className = 'peel-mark';
+        holdMark.title = 'What you have found';
+        holdMark.setAttribute('aria-label', 'What you have found');
+        holdMark.textContent = '\u00b7';
+        holdMark.addEventListener('click', function(ev){
+          ev.stopPropagation();
+          if (window.LCAch) LCAch.fire('front.tracker');
+          if (window.LCAchUI) LCAchUI.open();
+        });
+        under.appendChild(holdMark);
+      }, 900);
+    }
+    function disarmMark(){
+      if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+      if (holdMark) { holdMark.remove(); holdMark = null; }
+    }
+
     grip.addEventListener('pointermove', function(e){
       if (!dragging) return;
-      apply(progress(e));
+      var t = progress(e);
+      apply(t);
+      if (t >= 0.98) armMark(); else disarmMark();
     });
     function release(e){
       if (!dragging) return;
       dragging = false;
       slot.classList.remove('peeling');
       try { grip.releasePointerCapture(e.pointerId); } catch (err) {}
+      if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+      if (holdMark) {
+        // let go with the mark up and the note stays open under the
+        // pointer for a moment, or there is nothing to click
+        slot.classList.add('peeled-open');
+        setTimeout(function(){
+          slot.classList.remove('peeled-open');
+          disarmMark();
+          lift.style.borderWidth = '';
+          under.style.opacity = '';
+          card.style.opacity = '';
+        }, 2600);
+        return;
+      }
       lift.style.borderWidth = '';
       under.style.opacity = '';
       card.style.opacity = '';
@@ -6040,6 +6105,7 @@ footer{
 
   var aboutEl = null;
   function about(){
+    if (window.LCAch) LCAch.fire('front.konami');
     if (!aboutEl){
       aboutEl = document.createElement('div');
       aboutEl.id = 'lc-about';
@@ -6077,6 +6143,7 @@ footer{
   function closeAbout(){ if (aboutEl) aboutEl.classList.remove('on'); }
 
   function shuffle(){
+    if (window.LCAch) LCAch.fire('front.shuffle');
     var visible = slots.filter(function(s){ return !s.hidden; });
     if (!visible.length) return;
     visible.forEach(function(s){
@@ -6144,6 +6211,7 @@ footer{
       return;
     }
     if (buf.indexOf('neal') >= 0){
+      if (window.LCAch) LCAch.fire('front.neal');
       buf = '';
       say('Yes — this whole cabinet is standing on the shoulders of ' +
           '<b>neal.fun</b>. If you have not been, go there instead of here.', 5200);
