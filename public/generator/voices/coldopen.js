@@ -1,0 +1,414 @@
+/* ------------------------------------------------------------------ *
+ *  Voice: Cold Open.
+ *
+ *  Was /sitcom-generator/. Moved across rather than rewritten: the word lists, the
+ *  assembly and the room are the originals. The prose is the toy, and
+ *  retyping it is how a merge quietly loses things.
+ * ------------------------------------------------------------------ */
+LCGen.voice({
+  id: "coldopen",
+  name: "Cold Open",
+  blurb: "Four characters, one apartment, and a premise that will not survive.",
+  page: {
+      "--gen-bg": "rgb(247, 233, 201)",
+      "--gen-ink": "#3A2A18",
+      "--gen-body": "Nunito, -apple-system, \"Segoe UI Rounded\", \"SF Pro Rounded\", ui-rounded, \"Trebuchet MS\", Verdana, sans-serif",
+      "--gen-bar": "rgba(0,0,0,.22)",
+      "--gen-rule": "rgba(128,128,128,.35)",
+      "--gen-field": "rgba(127,127,127,.14)"
+  },
+
+  css: `
+
+:root{
+  --stage:#F7E9C9;
+  --stage-2:#F2DBAC;
+  --set:#FFF8E8;
+  --wood:#A0522D;
+  --wood-2:#7A3D21;
+  --ink:#3A2A18;
+  --ink-2:#6B5236;
+  --dim:#9C8462;
+  --lamp:#F6C453;
+  --neon:#E2725B;
+  --round:"Nunito",-apple-system,"Segoe UI Rounded","SF Pro Rounded",ui-rounded,"Trebuchet MS",Verdana,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+.room{
+  background:var(--stage);
+  /* the multi-cam look: three warm keys from above, and a fall-off to the flats */
+  background-image:
+    radial-gradient(60% 42% at 22% -6%, rgba(255,236,190,.95), transparent 62%),
+    radial-gradient(60% 42% at 50% -8%, rgba(255,244,214,.95), transparent 62%),
+    radial-gradient(60% 42% at 78% -6%, rgba(255,236,190,.95), transparent 62%),
+    linear-gradient(180deg, var(--stage) 0%, var(--stage-2) 100%);
+  background-attachment:fixed;
+  color:var(--ink);font-family:var(--round);font-size:15px;
+  padding:26px 16px 84px;
+  display:flex;flex-direction:column;align-items:center;
+}
+.wrap{ max-width:720px;width:100% }
+
+header{ text-align:center;margin-bottom:6px }
+h1{
+  margin:0;font-size:clamp(30px,7vw,48px);font-weight:800;letter-spacing:-.02em;
+  color:var(--wood);text-shadow:0 2px 0 #fff, 0 6px 18px rgba(160,82,45,.18);
+}
+.sub{
+  margin-top:8px;font-family:var(--mono);font-size:10px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--dim);
+}
+
+/* the three stage lamps */
+.rig{ display:flex;justify-content:center;gap:34px;margin:18px 0 4px }
+.rig i{
+  display:block;width:22px;height:14px;border-radius:3px 3px 9px 9px;
+  background:linear-gradient(180deg,#6B5236,#3A2A18);position:relative;
+}
+.rig i::after{
+  content:'';position:absolute;left:3px;right:3px;bottom:-3px;height:6px;border-radius:50%;
+  background:var(--lamp);box-shadow:0 0 16px 6px rgba(246,196,83,.6);
+}
+.rig.hot i::after{ background:#FFF0BC;box-shadow:0 0 26px 12px rgba(255,240,188,.85) }
+
+/* ---------- the card ---------- */
+.card{
+  background:var(--set);border:3px solid var(--wood);border-radius:16px;
+  box-shadow:0 10px 0 var(--wood-2), 0 24px 44px rgba(90,50,20,.22);
+  padding:24px 24px 22px;margin-top:16px;position:relative;
+  transition:transform .18s cubic-bezier(.34,1.56,.64,1);
+}
+.card.pop{ transform:translateY(-5px) }
+.card .tag{
+  position:absolute;top:-13px;left:22px;background:var(--neon);color:#fff;
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;
+  padding:5px 11px;border-radius:99px;font-weight:700;
+}
+.slug{
+  font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--dim);margin:6px 0 14px;display:flex;gap:12px;flex-wrap:wrap;
+}
+.title{ font-size:clamp(21px,4.6vw,29px);font-weight:800;line-height:1.2;margin:0 0 4px;color:var(--wood-2) }
+.where{ font-size:13px;color:var(--ink-2);margin:0 0 16px;font-weight:600 }
+.premise{ font-size:17.5px;line-height:1.6;margin:0 0 18px }
+.beat{
+  border-left:5px solid var(--lamp);padding:2px 0 2px 14px;margin:0 0 18px;
+  font-size:15.5px;line-height:1.65;color:var(--ink-2);
+}
+.punch{
+  background:#FFF3D0;border:2px dashed var(--lamp);border-radius:12px;
+  padding:15px 17px;font-size:18px;line-height:1.5;font-weight:700;
+}
+.punch .who{
+  display:block;font-family:var(--mono);font-size:10px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--wood);margin-bottom:6px;font-weight:700;
+}
+.laugh{
+  margin-top:12px;text-align:center;font-family:var(--mono);font-size:10px;
+  letter-spacing:.24em;text-transform:uppercase;color:var(--dim);
+  opacity:0;transition:opacity .3s ease;
+}
+.laugh.on{ opacity:1 }
+
+/* ---------- controls ---------- */
+.deck{ display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;align-items:center }
+button{
+  font-family:var(--round);font-size:15px;font-weight:800;
+  background:var(--neon);color:#fff;border:0;border-radius:99px;
+  padding:14px 26px;cursor:pointer;box-shadow:0 4px 0 #B4523E;
+}
+button:hover{ background:#EC8570 }
+button:active{ transform:translateY(3px);box-shadow:0 1px 0 #B4523E }
+button.sec{ background:var(--set);color:var(--wood);box-shadow:0 4px 0 #D8C49C }
+button.sec:hover{ background:#FFFDF6 }
+button:focus-visible{ outline:3px solid var(--wood);outline-offset:2px }
+.sound{
+  margin-left:auto;display:flex;align-items:center;gap:7px;
+  font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);
+}
+.sound input{ width:16px;height:16px;accent-color:var(--neon) }
+
+footer{
+  max-width:720px;width:100%;margin:26px auto 0;padding-top:14px;border-top:2px solid rgba(160,82,45,.2);
+  font-family:var(--mono);font-size:10.5px;line-height:1.85;color:var(--ink-2);
+}
+footer a{ color:var(--wood) }
+
+/* ---------- shared: back to the cabinet ---------- */
+/* --- touch targets (sweep) --- */
+@media (pointer:coarse){
+  #snd{ min-height:44px }
+  #snd{ min-width:44px }
+}
+
+/* A 38px pill is under the 44px a fingertip needs. */
+@media (pointer:coarse){ #lc-back{ width:44px;height:44px } }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media (prefers-reduced-motion: reduce){ #lc-back, .card, .laugh{ transition:none } }
+
+`,
+
+  mount: function (root) {
+    /* Listeners this voice puts on the document or the window outlive
+       root.innerHTML = '', so they are tracked and handed back for
+       teardown. Otherwise a key pressed three voices later still reaches
+       a toy that is no longer on the screen. */
+    var __off = [], __timers = [], __dead = false;
+    function __add(t, ty, fn, o){ t.addEventListener(ty, fn, o); __off.push([t, ty, fn, o]); }
+
+    /* Timers outlive innerHTML the same way listeners do, and worse: a
+       stray setTimeout from a voice you left three minutes ago wakes up,
+       looks for an element that belongs to the voice now on screen, and
+       throws in a file the visitor is not even looking at. That is
+       exactly what happened — a pending timer in the pitch deck threw
+       while the TV voice was up.
+
+       These shadow the globals inside this closure, so the ported code
+       gets them without being changed, and the dead flag catches work
+       that was already in flight when the voice was torn down. */
+    function setTimeout(fn, ms){
+      var id = window.setTimeout(function(){ if (!__dead) fn(); }, ms);
+      __timers.push(id); return id;
+    }
+    function setInterval(fn, ms){
+      var id = window.setInterval(function(){ if (!__dead) fn(); }, ms);
+      __timers.push(id); return id;
+    }
+    function requestAnimationFrame(fn){
+      return window.requestAnimationFrame(function(t){ if (!__dead) fn(t); });
+    }
+
+    root.innerHTML = "<div class=\"wrap\">\n  <header>\n    <h1>Cold Open</h1>\n    <div class=\"sub\">one premise \u00b7 one punchline \u00b7 filmed before a live studio audience</div>\n  </header>\n\n  <div class=\"rig\" id=\"rig\" aria-hidden=\"true\"><i></i><i></i><i></i></div>\n\n  <div class=\"card\" id=\"card\">\n    <span class=\"tag\">Episode</span>\n    <div class=\"slug\" id=\"slug\"></div>\n    <h2 class=\"title\" id=\"title\"></h2>\n    <p class=\"where\" id=\"where\"></p>\n    <p class=\"premise\" id=\"premise\"></p>\n    <div class=\"beat\" id=\"beat\"></div>\n    <div class=\"punch\"><span class=\"who\" id=\"who\"></span><span id=\"punch\"></span></div>\n    <div class=\"laugh\" id=\"laugh\">\u2014 audience \u2014</div>\n  </div>\n\n  <div class=\"deck\">\n    <button id=\"go\" type=\"button\">Roll another</button>\n    <button id=\"copy\" class=\"sec\" type=\"button\">Copy it</button>\n    <label class=\"sound\"><input type=\"checkbox\" id=\"snd\" checked> laugh track</label>\n  </div>\n</div>";
+
+    
+    'use strict';
+    const $ = (id) => document.getElementById(id);
+    const pick = (a) => a[Math.floor(Math.random() * a.length)];
+    const ri = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+    const chance = (p) => Math.random() < p;
+    
+    /* ------------------------------------------------------------------ *
+     *  The word lists. Everything is invented for this page; the genre is
+     *  the target, never a particular programme.
+     * ------------------------------------------------------------------ */
+    
+    const SHOWS = [
+      'Six Chairs','Downstairs Neighbours','The Usual Table','Rent Controlled','Group Chat',
+      'Second Floor Front','Everybody Has A Key','The Long Lease','Communal Kitchen','Upstairs, Ideally',
+      'One Bathroom','The Sublet','Mutual Friends','Nobody Owns A Car','Still On The Sofa'
+    ];
+    const SETS = [
+      'the flat with the good sofa','the coffee place with the bad chairs','the corridor between the two flats',
+      'the roof nobody is technically allowed on','the launderette on the corner','the stairwell',
+      'the bar where they know everybody’s order and get it wrong','the office nobody actually works at',
+      'the kitchen, which is also the hallway','the balcony that fits one and a half people'
+    ];
+    const NAMES = ['Nina','Dev','Rosa','Callum','Priya','Marcus','Bee','Theo','Yusuf','Greta',
+                   'Sam','Lin','Otto','Maeve','Rafa','Joss','Nadia','Bram'];
+    
+    /* Each premise is a shape with a hole in it, so the same list makes a
+       different episode every time rather than a fixed list of jokes. */
+    const PREMISES = [
+      '{A} agrees to look after {B}’s {THING} for one weekend and immediately loses it, then spends the episode replacing it with something almost identical.',
+      '{A} tells one small lie at {B}’s birthday and by the end of the night four people believe {A} {CLAIM}.',
+      '{A} and {B} both invite someone to the same dinner without telling the other, and both guests turn out to be {GUEST}.',
+      'Everyone finds out that {A} has been quietly {HABIT} for two years, and each of them thinks they were the only one who knew.',
+      '{A} tries to return a {THING} without a receipt, which becomes a much longer negotiation than the episode has room for.',
+      '{B} volunteers {A} for {CHORE} at the exact moment {A} is trying to impress {C}.',
+      'The group makes a rule about {RULE}. The rule survives eleven minutes.',
+      '{A} gets a {THING} to prove a point to {B} and has to keep it alive, fed, or charged for the rest of the episode.',
+      '{A} agrees to be {B}’s emergency contact and is then contacted, twice, about things that are not emergencies.',
+      '{A} accidentally reads {B}’s {THING} and now cannot mention anything at all without it being suspicious.',
+      '{A} is trying to have one quiet evening. Six people separately decide this is the night to talk to {A} about {TOPIC}.',
+      'A {THING} arrives addressed to nobody in the building and the whole group spends the episode deciding whose it is.',
+      '{A} and {B} swap {CHORE} for a week as an experiment and both immediately become insufferable about it.',
+      '{A} claims to be {CLAIM_ADJ} and is given exactly one opportunity to prove it, in front of everyone.'
+    ];
+    const BEATS = [
+      '{C} arrives with an opinion nobody asked for and a bag of something warm.',
+      'There is a long stretch in the middle where {B} is simply lying on the floor and nobody comments on it.',
+      '{C} keeps trying to leave. {C} does not leave.',
+      'Somebody says “it is fine” four times, each time less convincingly.',
+      '{A} and {C} have an entire argument about {TOPIC} without ever saying what it is about.',
+      'The {THING} is briefly, and never explained, on the roof.',
+      '{B} tells the truth to the wrong person at exactly the wrong volume.',
+      'There is a montage. It is thirty seconds long and it fixes nothing.',
+      'Everybody sits down at once, which the room does not have chairs for.',
+      '{C} makes a chart. The chart makes it worse.'
+    ];
+    const PUNCHES = [
+      'So what you are saying is, we are the neighbours the neighbours complain about.',
+      'I have been here nine years. I have never once been to the second floor.',
+      'Okay, but in my defence, at no point did anyone say I could not.',
+      'It is not a lie if you say it quickly and then open a door.',
+      'Great. So now we all have one. Nobody speak to me until Thursday.',
+      'You realise this is the third time this exact thing has happened to us.',
+      'I would like it on the record that I was the only person who said no.',
+      'Right — everybody out. Not you. Definitely not you.',
+      'And that is why we do not have nice things, or a table.',
+      'I am going to go and sit in the launderette for a bit.',
+      'Fine. But we are never telling {C} about any of this.',
+      'Look, one of us was always going to end up holding it.',
+      'This is the most anybody has ever done for me and I hate all of it.',
+      'Some of us have jobs. Not me. But some of us.'
+    ];
+    const THINGS = ['plant','printer','wedding invitation','fish','fondue set','emergency spare key',
+      'exercise bike','signed poster','set of very specific allen keys','sourdough starter','bread maker',
+      'inflatable armchair','ancestry test','parking permit','box labelled DO NOT OPEN'];
+    const CLAIMS = ['is fluent in Portuguese','has been to Iceland','used to be in a band',
+      'knows how to fix a boiler','has a driving licence','is a qualified first-aider',
+      'invented a small part of the internet','can do a backflip'];
+    const CLAIM_ADJ = ['good at conflict','a morning person','over it','fine with change',
+      'the responsible one','extremely relaxed about all of this'];
+    const HABITS = ['learning the cello','feeding a specific fox','running a small quiz night',
+      'writing an extremely long review of the building','taking the long way home to avoid one person'];
+    const CHORES = ['the bins','the group holiday','the shared shopping','the rota','the birthday cake',
+      'the flat inspection','the plant watering'];
+    const GUESTS = ['the ex','a person from the building nobody can place','the landlord',
+      'somebody’s parent','the person from the coffee place'];
+    const RULES = ['no talking about work after seven','one shared calendar','no phones at the table',
+      'nobody brings anyone new for a month','washing up before the end of the same day'];
+    const TOPICS = ['moving out','the ceiling','somebody’s job','the wedding','whether the fox is a pet'];
+    const NIGHTS = ['Thursday, 8:30','Thursday, 9:00','Friday, 8:00','Tuesday, 8:30','Wednesday, 9:30'];
+    
+    /* ---- filling in --------------------------------------------------- */
+    
+    function castOf(){
+      const pool = NAMES.slice();
+      const out = [];
+      for (let i = 0; i < 3; i++) out.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+      return { A: out[0], B: out[1], C: out[2] };
+    }
+    
+    function fill(t, s){
+      return t.replace(/\{(\w+)\}/g, (m, k) => (s[k] != null ? s[k] : m));
+    }
+    
+    let episode = null;
+    
+    function roll(){
+      const cast = castOf();
+      const slots = Object.assign({}, cast, {
+        THING: pick(THINGS), CLAIM: pick(CLAIMS), CLAIM_ADJ: pick(CLAIM_ADJ),
+        HABIT: pick(HABITS), CHORE: pick(CHORES), GUEST: pick(GUESTS),
+        RULE: pick(RULES), TOPIC: pick(TOPICS)
+      });
+    
+      const show = pick(SHOWS);
+      const season = ri(1, 9), ep = ri(1, 24);
+      const set = pick(SETS);
+      const premise = fill(pick(PREMISES), slots);
+      const beat = fill(pick(BEATS), slots);
+      const punch = fill(pick(PUNCHES), slots);
+      const who = chance(.5) ? slots.A : (chance(.5) ? slots.B : slots.C);
+    
+      episode = { show, season, ep, set, premise, beat, punch, who };
+    
+      $('slug').innerHTML =
+        '<span>' + show + '</span><span>S' + String(season).padStart(2,'0') +
+        ' E' + String(ep).padStart(2,'0') + '</span><span>' + pick(NIGHTS) + '</span>';
+      $('title').textContent = 'The One Where ' + theOneWhere(slots);
+      $('where').textContent = 'INT. ' + set.toUpperCase() + ' — NIGHT';
+      $('premise').textContent = premise;
+      $('beat').textContent = beat;
+      $('who').textContent = who;
+      $('punch').textContent = punch;
+    
+      $('card').classList.add('pop');
+      $('rig').classList.add('hot');
+      setTimeout(() => { $('card').classList.remove('pop'); $('rig').classList.remove('hot'); }, 220);
+    
+      if ($('snd').checked) laughTrack();
+      $('laugh').classList.add('on');
+      clearTimeout(roll._t);
+      roll._t = setTimeout(() => $('laugh').classList.remove('on'), 2600);
+    }
+    
+    const TITLES = [
+      '{A} Says Yes','Nobody Tells {B}','It Was Always The {THING}','{C} Makes A Chart',
+      'Everyone Is Wrong','{A} And {B} Have A System','The Rota','It Is Fine',
+      '{B} Finds Out','Nobody Is Moving Out','The Second Floor','{C} Was Right',
+      '{A} Holds It','We Agreed On This'
+    ];
+    function theOneWhere(s){ return fill(pick(TITLES), s); }
+    
+    /* ---- the laugh ---------------------------------------------------- *
+     *  Not a recording. A studio laugh is a lot of people at slightly
+     *  different pitches starting at slightly different moments and dying
+     *  away together, so that is what this is: eighteen short breathy voices
+     *  scattered over 200 ms, each a filtered noise burst with a little
+     *  vibrato from a detuned sine, over one warm swell.
+     * ------------------------------------------------------------------ */
+    function laughTrack(){
+      LCAudio.sting((A) => {
+        const out = A.gain(0.5);
+        out.connect(A.master);
+    
+        // the swell: the room, not any one person
+        A.burst('pink', { to: out, type: 'bandpass', freq: 620, q: .7,
+                          attack: .08, dur: 1.1, level: .1, reverb: true });
+    
+        // the individual voices
+        for (let i = 0; i < 18; i++){
+          const at = Math.random() * .22;
+          const base = 180 + Math.random() * 320;
+          const n = 2 + Math.floor(Math.random() * 3);          // ha-ha-ha
+          for (let k = 0; k < n; k++){
+            A.burst('white', {
+              to: out, type: 'bandpass',
+              freq: base * (1 + k * .06) * (1 + (Math.random() - .5) * .1),
+              q: 5.5,
+              at: at + k * (.11 + Math.random() * .05),
+              attack: .012, dur: .10 + Math.random() * .05,
+              level: (.055 + Math.random() * .04) * (1 - k * .18)
+            });
+          }
+        }
+        // fade the whole thing out so it does not just stop
+        const t = A.ctx.currentTime;
+        out.gain.setValueAtTime(.5, t + .9);
+        out.gain.exponentialRampToValueAtTime(.0001, t + 1.7);
+        setTimeout(() => { try { out.disconnect(); } catch (e) {} }, 2200);
+      });
+    }
+    
+    $('go').addEventListener('click', roll);
+    $('copy').addEventListener('click', () => {
+      if (!episode) return;
+      const text = episode.show + ' — S' + episode.season + 'E' + episode.ep + '\n' +
+        $('title').textContent + '\n' + $('where').textContent + '\n\n' +
+        episode.premise + '\n\n' + episode.beat + '\n\n' +
+        episode.who.toUpperCase() + '\n' + episode.punch;
+      navigator.clipboard.writeText(text).then(
+        () => { $('copy').textContent = 'Copied'; setTimeout(() => $('copy').textContent = 'Copy it', 1400); },
+        () => { $('copy').textContent = 'Could not copy'; setTimeout(() => $('copy').textContent = 'Copy it', 1800); }
+      );
+    });
+    __add(document, 'keydown', (e) => {
+      if (e.key === ' ' && e.target === document.body){ e.preventDefault(); roll(); }
+    });
+    
+    roll();
+    $('laugh').classList.remove('on');   // no laugh before anybody has pressed anything
+    
+    window.__sitcom = { roll: roll, get episode(){ return episode; } };
+    
+    
+    /* This toy builds its noises straight off the shared bench, so the
+       cabinet-wide mute already reaches them through lc-audio's gate.
+       What was missing was the switch itself: the preference applied
+       here and there was no way to set it from here. */
+    
+
+    return function () {
+      __dead = true;
+      __off.forEach(function (r) {
+        try { r[0].removeEventListener(r[1], r[2], r[3]); } catch (e) {}
+      });
+      __timers.forEach(function (id) {
+        try { window.clearTimeout(id); window.clearInterval(id); } catch (e) {}
+      });
+      __off = []; __timers = [];
+    };
+  }
+});

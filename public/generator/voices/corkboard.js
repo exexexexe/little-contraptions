@@ -1,0 +1,497 @@
+/* ------------------------------------------------------------------ *
+ *  Voice: The Corkboard.
+ *
+ *  Was /conspiracy/. Moved across rather than rewritten: the word lists, the
+ *  assembly and the room are the originals. The prose is the toy, and
+ *  retyping it is how a merge quietly loses things.
+ * ------------------------------------------------------------------ */
+LCGen.voice({
+  id: "corkboard",
+  name: "The Corkboard",
+  blurb: "Red string, index cards, and a connection nobody asked for.",
+  page: {
+      "--gen-bg": "#6B4A2F",
+      "--gen-ink": "#241C12",
+      "--gen-body": "\"American Typewriter\", \"Courier New\", Courier, ui-monospace, \"SF Mono\", Menlo, Consolas, monospace",
+      "--gen-bar": "rgba(0,0,0,.22)",
+      "--gen-rule": "rgba(128,128,128,.35)",
+      "--gen-field": "rgba(127,127,127,.14)"
+  },
+
+  css: `
+
+:root{
+  --cork:#8A5A32;
+  --cork-2:#6E4526;
+  --cork-3:#5A3720;
+  --card:#F4EEDC;
+  --ink:#241C12;
+  --ink-2:#54432E;
+  --dim:#B79B76;
+  --string:#C4322A;
+  --pin:#D8483C;
+  --sans:ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --type:"American Typewriter","Courier New",Courier,var(--mono);
+  --display:"Avenir Next Condensed","Roboto Condensed","Arial Narrow",var(--sans);
+}
+.room{
+  background:
+    repeating-linear-gradient(43deg, rgba(0,0,0,.05) 0 2px, transparent 2px 5px),
+    repeating-linear-gradient(-37deg, rgba(255,255,255,.04) 0 2px, transparent 2px 6px),
+    linear-gradient(160deg, var(--cork) 0%, var(--cork-2) 100%);
+  color:var(--card);font-family:var(--type);padding:28px 18px 64px;
+}
+.wrap{ max-width:760px;margin:0 auto }
+h1{ font-family:var(--display);font-size:clamp(26px,5.6vw,40px);margin:0;letter-spacing:.05em;text-transform:uppercase;font-weight:700 }
+.sub{ font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;opacity:.75;margin-top:8px }
+
+.warn{
+  margin:16px 0 18px;background:rgba(20,12,6,.42);border-left:4px solid #E8C05A;
+  padding:11px 14px;font-family:var(--mono);font-size:11px;line-height:1.7;color:#F0E0BC;
+}
+
+.bar{ display:flex;gap:9px;flex-wrap:wrap;align-items:center }
+input[type=text]{
+  flex:1;min-width:200px;background:rgba(20,12,6,.4);border:1px solid rgba(244,238,220,.28);
+  color:var(--card);font-family:var(--sans);font-size:16px;padding:12px 14px;border-radius:2px;
+}
+input[type=text]:focus{ outline:2px solid #E8C05A;outline-offset:-1px }
+.btn{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
+  background:var(--card);color:var(--ink);border:0;padding:12px 18px;cursor:pointer;font-weight:700;border-radius:2px;
+}
+.btn:hover{ background:#fff }
+.btn.sec{ background:transparent;color:var(--card);border:1px solid rgba(244,238,220,.3);font-weight:400 }
+.btn.sec:hover{ border-color:var(--card) }
+.btn:focus-visible{ outline:2px solid #E8C05A;outline-offset:3px }
+
+/* ---- the board itself ------------------------------------------------ *
+ * Cork, drawn with layered radial gradients rather than an image, with a
+ * batten frame around it. Everything pinned to it sits in a grid so it
+ * reflows on a phone, and the string is drawn afterwards from where the
+ * cards actually ended up.
+ * -------------------------------------------------------------------- */
+.board{
+  position:relative;margin-top:22px;padding:26px 22px 30px;border-radius:3px;
+  background:
+    radial-gradient(circle at 12% 20%, rgba(0,0,0,.16) 0 2px, transparent 3px),
+    radial-gradient(circle at 63% 8%,  rgba(255,235,200,.13) 0 2px, transparent 3px),
+    radial-gradient(circle at 31% 71%, rgba(0,0,0,.13) 0 1.5px, transparent 3px),
+    radial-gradient(circle at 87% 47%, rgba(255,235,200,.10) 0 2px, transparent 3px),
+    radial-gradient(circle at 47% 39%, rgba(0,0,0,.10) 0 1.5px, transparent 3px),
+    linear-gradient(158deg, var(--cork) 0%, var(--cork-2) 58%, var(--cork-3) 100%);
+  background-size:37px 37px,53px 53px,41px 41px,61px 61px,29px 29px,100% 100%;
+  box-shadow:
+    inset 0 0 0 9px #4A2C16, inset 0 0 0 11px #6B4526,
+    inset 0 22px 44px rgba(0,0,0,.34), 0 18px 44px rgba(0,0,0,.45);
+  min-height:120px;
+}
+/* the string layer sits under the cards and over the cork */
+.strings{ position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1 }
+.strings path{
+  fill:none;stroke:var(--string);stroke-width:2.2;stroke-linecap:round;
+  filter:drop-shadow(0 2px 2px rgba(0,0,0,.5));
+}
+.strings path.draw{ animation:pull .5s ease-out backwards }
+@keyframes pull{ from{ stroke-dashoffset:var(--len) } to{ stroke-dashoffset:0 } }
+
+.pinboard{ position:relative;z-index:2;display:grid;gap:18px;grid-template-columns:1fr }
+/* Grid items default to min-width:auto, so the nowrap meter labels below were
+   sizing the whole board wider than a phone. */
+.pinboard > *{ min-width:0 }
+@media (min-width:660px){ .pinboard{ grid-template-columns:1fr 1fr } }
+
+.note, .card{
+  position:relative;background:var(--card);color:var(--ink);
+  border-radius:2px;box-shadow:0 10px 24px rgba(0,0,0,.42);
+}
+.note{ padding:22px 24px 20px;grid-column:1/-1;transform:rotate(-.5deg) }
+.card{ padding:15px 16px 14px;font-family:var(--type);font-size:13.5px;line-height:1.62;color:var(--ink-2) }
+.card.a{ transform:rotate(.9deg) } .card.b{ transform:rotate(-1.2deg) }
+.card.c{ transform:rotate(.5deg) } .card.d{ transform:rotate(-.6deg) }
+.card .tag{
+  display:block;font-family:var(--mono);font-size:8.5px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--string);margin-bottom:6px;
+}
+.note::before, .card::before{
+  content:"";position:absolute;left:50%;top:-8px;width:15px;height:15px;margin-left:-7.5px;
+  background:radial-gradient(circle at 36% 32%, #F08A80, var(--pin));border-radius:50%;
+  box-shadow:0 2px 5px rgba(0,0,0,.5);z-index:3;
+}
+.card.b::before{ background:radial-gradient(circle at 36% 32%, #8AC0F0, #2E6EA8) }
+.card.c::before{ background:radial-gradient(circle at 36% 32%, #F0D48A, #C09A2E) }
+.card.d::before{ background:radial-gradient(circle at 36% 32%, #A8E08A, #4E9A2E) }
+
+/* cards arrive one at a time, as though being pinned up */
+.pinned{ animation:pinup .34s cubic-bezier(.2,.9,.3,1.5) backwards }
+@keyframes pinup{
+  from{ opacity:0;transform:translateY(-14px) rotate(-4deg) scale(.94) }
+}
+@media (prefers-reduced-motion: reduce){
+  .pinned{ animation:none } .strings path.draw{ animation:none }
+}
+
+.kicker{
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--string);margin-bottom:10px;
+}
+.note h2{ font-family:var(--type);font-size:clamp(19px,4vw,27px);margin:0 0 12px;line-height:1.25 }
+.note p{ font-family:var(--type);font-size:15px;line-height:1.7;margin:0 0 11px;color:var(--ink-2) }
+.note .collapse{
+  margin-top:16px;padding-top:13px;border-top:1px dashed #D2C4A2;
+  font-family:var(--sans);font-size:14px;line-height:1.6;color:var(--ink);
+}
+.note .collapse b{ color:var(--string) }
+
+.meter{ display:flex;align-items:center;gap:10px;margin-top:16px;flex-wrap:wrap }
+.meter .t{ font-family:var(--mono);font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:#8A7A5E;white-space:nowrap }
+.meter .track{ flex:1 1 42px;min-width:42px;height:5px;background:#E0D6BC;border-radius:3px;overflow:hidden }
+.meter .track i{ display:block;height:100%;background:linear-gradient(90deg,#8AA06A,#D9A441,var(--string)) }
+
+.deck{ display:flex;gap:9px;flex-wrap:wrap;margin-top:18px }
+.chips{ display:flex;gap:7px;flex-wrap:wrap;margin-top:14px }
+.chip{
+  font-family:var(--mono);font-size:11px;background:rgba(20,12,6,.3);border:1px dashed rgba(244,238,220,.3);
+  color:var(--card);padding:7px 11px;cursor:pointer;border-radius:2px;
+}
+.chip:hover{ border-style:solid;border-color:var(--card) }
+
+.refused{
+  background:rgba(20,12,6,.5);border-left:4px solid #E8C05A;padding:16px 18px;
+  font-size:15px;line-height:1.65;color:#F4EEDC;border-radius:2px;
+}
+
+footer{
+  max-width:760px;margin:26px auto 0;padding-top:14px;border-top:1px solid rgba(244,238,220,.2);
+  font-family:var(--mono);font-size:10.5px;line-height:1.8;color:#E6D6B8;opacity:.8;
+}
+footer a{ color:#FFF0CC }
+
+/* --- touch targets (sweep) --- */
+@media (pointer:coarse){
+  .btn, .chip{ min-height:44px }
+}
+
+/* A 38px pill is under the 44px a fingertip needs. */
+@media (pointer:coarse){ #lc-back{ width:44px;height:44px } }
+.room{ padding-bottom:64px }
+@media (max-width:420px){
+  body{ padding-left:12px;padding-right:12px }
+  .board{ padding:18px 12px 22px }
+  .note{ padding:18px 16px 16px }
+  .card{ padding:13px 14px 12px }
+  .note, .card{ overflow-wrap:anywhere }
+}
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+@media print{ #lc-back{ display:none } }
+@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } }
+
+`,
+
+  mount: function (root) {
+    /* Listeners this voice puts on the document or the window outlive
+       root.innerHTML = '', so they are tracked and handed back for
+       teardown. Otherwise a key pressed three voices later still reaches
+       a toy that is no longer on the screen. */
+    var __off = [], __timers = [], __dead = false;
+    function __add(t, ty, fn, o){ t.addEventListener(ty, fn, o); __off.push([t, ty, fn, o]); }
+
+    /* Timers outlive innerHTML the same way listeners do, and worse: a
+       stray setTimeout from a voice you left three minutes ago wakes up,
+       looks for an element that belongs to the voice now on screen, and
+       throws in a file the visitor is not even looking at. That is
+       exactly what happened — a pending timer in the pitch deck threw
+       while the TV voice was up.
+
+       These shadow the globals inside this closure, so the ported code
+       gets them without being changed, and the dead flag catches work
+       that was already in flight when the voice was torn down. */
+    function setTimeout(fn, ms){
+      var id = window.setTimeout(function(){ if (!__dead) fn(); }, ms);
+      __timers.push(id); return id;
+    }
+    function setInterval(fn, ms){
+      var id = window.setInterval(function(){ if (!__dead) fn(); }, ms);
+      __timers.push(id); return id;
+    }
+    function requestAnimationFrame(fn){
+      return window.requestAnimationFrame(function(t){ if (!__dead) fn(t); });
+    }
+
+    root.innerHTML = "<div class=\"wrap\">\n  <h1>The Corkboard</h1>\n  <div class=\"sub\">red string \u00b7 one object at a time</div>\n\n  <div class=\"warn\">\n    This is a joke machine. It only does <b>objects</b> \u2014 a kettle, a traffic cone, the\n    third stair. Every theory it produces is nonsense, says so, and ends by explaining the\n    boring real reason. It will not do people, groups or actual events.\n  </div>\n\n  <div class=\"bar\">\n    <input type=\"text\" id=\"obj\" maxlength=\"42\" placeholder=\"an ordinary object \u2014 kettle, sock, escalator\" value=\"the office kettle\">\n    <button class=\"btn\" id=\"go\">Investigate</button>\n    <button class=\"btn sec\" id=\"rand\">Surprise me</button>\n  </div>\n\n  <div class=\"chips\" id=\"chips\"></div>\n\n  <div class=\"board\" id=\"board\"></div>\n</div>";
+
+    
+    'use strict';
+    
+    const $ = (id) => document.getElementById(id);
+    const pick = (a) => a[Math.floor(Math.random() * a.length)];
+    const ri = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+    const esc = (s) => String(s == null ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    
+    /* ------------------------------------------------------------------ *
+     *  Real conspiracy theories are about people: groups, minorities,
+     *  named individuals, and actual events with actual victims. This toy
+     *  is about objects, and it refuses anything that looks like it is
+     *  heading for a person or a real event rather than a kettle. The list
+     *  is deliberately blunt — a false refusal costs a joke, a false pass
+     *  costs something worth more.
+     * ------------------------------------------------------------------ */
+    const OFF_LIMITS = [
+      // groups and identities
+      'jew','jews','jewish','muslim','muslims','islam','christian','christians','catholic','hindu','sikh',
+      'black','white people','asian','arab','immigrant','immigrants','migrant','refugee','gay','trans',
+      'women','men are','feminis','zionis','nazi','race','racial','ethnic',
+      // institutional targets with real-world harm attached
+      'government','deep state','illuminati','freemason','rothschild','soros','vaccine','vaccines','vaxx',
+      'covid','pandemic','virus','5g','chemtrail','flat earth','moon landing','holocaust','9/11','911',
+      'election','voter','cia','fbi','mossad','who ','united nations','bill gates','elon','trump','biden',
+      'lizard people','reptilian','cabal','globalis','new world order','qanon','pizzagate','crisis actor',
+      'climate change is','climate hoax','school shooting','false flag','assassinat',
+    ];
+    function looksLikeAPerson(s){
+      // two capitalised words in a row reads as a name; the input is meant to be an object
+      return /\b[A-Z][a-z]{2,}\s+[A-Z][a-z]{2,}\b/.test(s);
+    }
+    function refuse(raw){
+      const low = ' ' + raw.toLowerCase() + ' ';
+      if (OFF_LIMITS.some(t => low.includes(t))) return true;
+      if (looksLikeAPerson(raw)) return true;
+      return false;
+    }
+    
+    const SUGGESTIONS = ['the office kettle','traffic cones','the third stair','hotel carpet','shopping trolleys',
+      'the sock that goes missing','airport chairs','ceiling tiles','the fridge light','bin day',
+      'the loud vending machine','hold music','shredded cheese','the spare button','car park barriers'];
+    
+    /* ---------- the shape of the reasoning ---------- */
+    const OPENERS = [
+      'Nobody chose {x}. That is the part that should worry you.',
+      'Ask yourself when you last saw {x} being delivered. You cannot. Nobody can.',
+      'There is no committee for {x}. And yet {x} is everywhere, identically.',
+      'I am not saying anything about {x}. I am saying look at {x} and tell me what you see.',
+      'Start with a simple question about {x} and you will not get a simple answer.',
+      'The story we are told about {x} does not survive ten minutes of looking.',
+    ];
+    const EVIDENCE = [
+      'In {n} separate buildings, {x} is in almost exactly the same place. Nobody has ever explained the standard.',
+      'The paperwork for {x} exists. It is dated {yr}. It references an earlier document that does not.',
+      'Every attempt to photograph {x} properly comes out slightly wrong. Try it. I will wait.',
+      'There are {n} suppliers of {x} in this country and {n2} of them share a registered address.',
+      '{X} was updated in {yr} and nobody was consulted, informed, or apparently even present.',
+      'Ask three people how {x} works. You will get three answers and one of them will be angry.',
+      'The one time {x} failed publicly, the coverage lasted {n} hours and then simply stopped.',
+      'A man I trust counted {x} on his street for a year. The number never changed. Not once.',
+    ];
+    const LEAPS = [
+      'Which means the decision was made somewhere else, by someone who does not have to answer for it.',
+      'And if that is true — and it is — then everything downstream of {x} needs looking at again.',
+      'Follow that thread and it does not lead where you expect. It leads back to the same building.',
+      'So either that is a coincidence {n} times over, or it is not a coincidence at all.',
+      'They are not hiding {x}. That is the clever part. It is directly in front of you.',
+      'The absence of evidence here is, if anything, the strongest evidence available.',
+    ];
+    const CREDS = [
+      'I am not an expert. I have simply been paying attention since {yr}.',
+      'I have a folder. The folder is now two folders.',
+      'I used to think like you. I had a normal Tuesday and everything.',
+      'You can look all of this up, and I would encourage you not to take my word for it, and also not to look.',
+      'People have stopped inviting me to things. I consider that data.',
+    ];
+    
+    /* Every card lands on the actual, dull explanation — the toy's whole
+       position is that the boring answer is the true one. */
+    const COLLAPSES = [
+      'the actual reason is a British Standard from the 1970s that nobody has revisited because it works',
+      'the actual reason is that one supplier undercut everyone else in 1998 and never stopped',
+      'the actual reason is that it is the cheapest shape to stack on a pallet',
+      'the actual reason is a fire regulation, and the regulation is public, and it is extremely boring',
+      'the actual reason is that somebody measured a doorway once and everyone copied them',
+      'the actual reason is that the alternative gets stolen',
+      'the actual reason is that it was designed for a machine that no longer exists',
+      'the actual reason is insurance',
+      'the actual reason is that a committee met in 1986, chose the middle option, and went to lunch',
+      'the actual reason is that it has to survive being cleaned with a very strong chemical',
+    ];
+    const RATINGS = ['ask a normal question','slightly unwell','folder acquired','string purchased',
+      'no longer invited to things','writes to the council weekly'];
+    
+    function theory(x){
+      const X = x.charAt(0).toUpperCase() + x.slice(1);
+      const f = (s) => s.replace(/\{x\}/g, x).replace(/\{X\}/g, X)
+        .replace(/\{n2\}/g, String(ri(2, 4)))
+        .replace(/\{n\}/g, String(ri(3, 40)))
+        .replace(/\{yr\}/g, String(ri(1968, 2011)));
+    
+      const ev = [];
+      const pool = EVIDENCE.slice();
+      for (let i = 0; i < 3; i++) ev.push(f(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]));
+    
+      return {
+        head: f(pick(OPENERS)),
+        ev,
+        leap: f(pick(LEAPS)),
+        cred: f(pick(CREDS)),
+        collapse: pick(COLLAPSES),
+        rating: ri(1, 6),
+      };
+    }
+    
+    function render(){
+      const raw = $('obj').value.trim();
+      if (!raw){
+        $('board').innerHTML = '<div class="refused">Give it an object and it will do the rest.</div>';
+        return;
+      }
+      if (refuse(raw)){
+        $('board').innerHTML = '<div class="refused">' +
+          'This one only does <b>objects</b> — kettles, cones, ceiling tiles, the third stair. ' +
+          'Point it at people, groups or real events and it stops being a joke about how conspiratorial ' +
+          'reasoning sounds and starts being the thing itself. Try a kettle.' +
+          '</div>';
+        rustle(1.1);
+        return;
+      }
+      const x = raw.toLowerCase();
+      const t = theory(x);
+      const TAGS = ['exhibit a', 'exhibit b', 'exhibit c', 'exhibit d', 'exhibit e'];
+    
+      $('board').innerHTML =
+        '<svg class="strings" id="strings" aria-hidden="true"></svg>' +
+        '<div class="pinboard" id="pinboard">' +
+          '<div class="note pinned" data-step="0" style="animation-delay:0s">' +
+            '<div class="kicker">case file &middot; ' + esc(String(ri(100, 999))) + ' &middot; unproven, unprovable</div>' +
+            '<h2>' + esc(t.head) + '</h2>' +
+            '<p>' + esc(t.leap) + '</p>' +
+            '<p>' + esc(t.cred) + '</p>' +
+            '<div class="collapse">And then you look it up, and <b>' + esc(t.collapse) + '</b>. ' +
+              'It is always this. It has always been this.</div>' +
+            '<div class="meter">' +
+              '<span class="t">how far gone</span>' +
+              '<span class="track"><i style="width:' + (t.rating / 6 * 100).toFixed(0) + '%"></i></span>' +
+              '<span class="t">' + esc(RATINGS[t.rating - 1]) + '</span>' +
+            '</div>' +
+          '</div>' +
+          t.ev.map((e, i) =>
+            '<div class="card ' + 'abcd'[i % 4] + ' pinned" data-step="' + (i + 1) + '" ' +
+            'style="animation-delay:' + (0.22 + i * 0.34).toFixed(2) + 's">' +
+            '<span class="tag">' + TAGS[i % TAGS.length] + '</span>' + esc(e) + '</div>').join('') +
+        '</div>';
+    
+      /* Pin each card up in turn with a thock, then run string between them. */
+      /* The first pin fires synchronously, inside the click that caused it.
+         Everything after is on a timer, which is fine — but a Web Audio
+         context will only start during a real gesture, so the very first
+         noise the page ever makes has to happen before this handler returns. */
+      const cards = [...$('board').querySelectorAll('[data-step]')];
+      thock(0);
+      cards.forEach((c, i) => { if (i) setTimeout(() => thock(i), 220 + (i - 1) * 340); });
+      setTimeout(() => runString(cards), 220 + (cards.length - 1) * 340 + 120);
+    }
+    
+    /* ---- the string ------------------------------------------------------- *
+     * Measured from where the cards actually landed rather than from assumed
+     * coordinates, so it survives any reflow — which matters, because the
+     * pinboard is one column on a phone and two on a desktop and the string
+     * has to find the pins either way. Each length is a slack curve rather
+     * than a straight line, because string does not go in straight lines.
+     * --------------------------------------------------------------------- */
+    function runString(cards){
+      const svg = document.getElementById('strings');
+      if (!svg || cards.length < 2) return;
+      const box = $('board').getBoundingClientRect();
+      svg.setAttribute('viewBox', '0 0 ' + box.width + ' ' + box.height);
+    
+      const pins = cards.map((c) => {
+        const r = c.getBoundingClientRect();
+        return { x: r.left - box.left + r.width / 2, y: r.top - box.top - 1 };
+      });
+    
+      let out = '';
+      for (let i = 0; i < pins.length - 1; i++){
+        const a = pins[i], b = pins[i + 1];
+        const dx = b.x - a.x, dy = b.y - a.y;
+        const len = Math.hypot(dx, dy);
+        /* the sag: string hangs, and hangs further the longer the run */
+        const sag = Math.min(38, len * 0.16);
+        const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2 + sag;
+        const d = 'M' + a.x.toFixed(1) + ' ' + a.y.toFixed(1) +
+                  ' Q' + mx.toFixed(1) + ' ' + my.toFixed(1) +
+                  ' ' + b.x.toFixed(1) + ' ' + b.y.toFixed(1);
+        const approx = len + sag;
+        out += '<path class="draw" d="' + d + '" style="--len:' + approx.toFixed(0) +
+               ';stroke-dasharray:' + approx.toFixed(0) +
+               ';animation-delay:' + (i * 0.16).toFixed(2) + 's"/>';
+      }
+      svg.innerHTML = out;
+      for (let i = 0; i < pins.length - 1; i++) setTimeout(() => rustle(0.5), i * 160);
+    }
+    
+    /* ---- sound ------------------------------------------------------------ *
+     * Two cues, both noise-based because paper and cork are noise: a short
+     * "thock" of a pin going into cork, and the dry rustle of a sheet being
+     * handled. Nothing tonal, nothing sampled.
+     * --------------------------------------------------------------------- */
+    function thock(i){
+      LCSound.play((A) => {
+        A.burst('brown', { freq: 220 + i * 18, q: 2.4, dur: .055, level: A.cap(.085), reverb: false });
+        A.burst('white', { freq: 3200, q: 3, dur: .022, level: A.cap(.035), reverb: false });
+      });
+      rustle(0.7);
+    }
+    function rustle(mult){
+      LCSound.play((A) => {
+        for (let i = 0; i < 3; i++){
+          A.burst('white', {
+            at: i * 0.035 + Math.random() * 0.02,
+            freq: 2400 + Math.random() * 2600, q: 0.7,
+            dur: 0.05 + Math.random() * 0.05,
+            level: A.cap(0.028 * (mult || 1)), reverb: false
+          });
+        }
+      });
+    }
+    
+    $('go').addEventListener('click', render);
+    $('obj').addEventListener('keydown', (e) => { if (e.key === 'Enter') render(); });
+    $('rand').addEventListener('click', () => { $('obj').value = pick(SUGGESTIONS); render(); });
+    $('chips').innerHTML = SUGGESTIONS.slice(0, 6).map(s => '<button class="chip">' + esc(s) + '</button>').join('');
+    $('chips').addEventListener('click', (e) => {
+      const c = e.target.closest('.chip');
+      if (!c) return;
+      $('obj').value = c.textContent;
+      render();
+    });
+    
+    /* the pinboard goes from two columns to one and back, and the string has
+       to be re-run from the new positions or it points at nothing */
+    let restring;
+    __add(window, 'resize', () => {
+      clearTimeout(restring);
+      restring = setTimeout(() => {
+        const cards = [...$('board').querySelectorAll('[data-step]')];
+        if (cards.length > 1){
+          const svg = document.getElementById('strings');
+          if (svg) svg.innerHTML = '';
+          const was = LCSound.on;
+          LCSound.set(false); runString(cards); LCSound.set(was);
+        }
+      }, 180);
+    });
+    
+    render();
+    
+
+    return function () {
+      __dead = true;
+      __off.forEach(function (r) {
+        try { r[0].removeEventListener(r[1], r[2], r[3]); } catch (e) {}
+      });
+      __timers.forEach(function (id) {
+        try { window.clearTimeout(id); window.clearInterval(id); } catch (e) {}
+      });
+      __off = []; __timers = [];
+    };
+  }
+});
