@@ -2719,3 +2719,107 @@ Only three, and all three are deliberate:
 ## Still to do
 
 Nothing outstanding from the phone-friendliness brief. Not yet committed or deployed.
+
+---
+
+# Phase 3 — the Windows 98 OS features
+
+All four built and wired into the desktop shell. The three modules they lean on were written in
+an earlier sitting and sat unwired because the phone pass had `public/index.html` open; this is
+the sitting that connected them.
+
+## What is in the Start menu now
+
+Three entries under a rule at the foot of the menu, where the real one put the things that end a
+session. All three close the menu first — a shutdown screen with the start menu still hanging
+open underneath it is a machine that has not finished the thought.
+
+**Restart** runs a power-on self test and then genuinely reloads. The BIOS is invented: no real
+vendor string, no real copyright line, no real POST code table. It counts memory up to 65536K
+because that is the part of a POST anybody actually watched, and it reports the cabinet's own
+figure — `Detecting drawers .............. 149 found` — read off the page rather than written
+into the file, so drawer 150 does not need anybody to remember this line exists.
+
+**Shut Down** parks on *It is now safe to turn off your computer*, and clicking anywhere reloads.
+The screen ignores clicks for its first 420ms, which is not decoration: without it the click that
+chose Shut Down lands on the screen it just asked for and dismisses it instantly.
+
+**Rest** dims to near-black, brings up a Room Tone bed at 0.34 and shows the time. Any key, click
+or wheel ends it, deliberately — a mode you have to work out how to leave is a trap, not a rest.
+
+## The messy desktop
+
+A switch in Display Properties → Settings, drawn as a plate with a travelling knob and a printed
+legend either side rather than a tickbox, because the brief asked for a physical switch and a
+tickbox is not one.
+
+**It is a disturbed desk, not a random one.** Every icon stays near the cell it came from and is
+knocked askew. Scattering to genuinely random coordinates was tried and reads as a bug: things
+end up three deep in one corner with a bare stretch beside them, and nobody believes it. The
+offset is bounded by the cell — 0.62 of its width, 0.42 of its height — so two neighbours can
+lean together without one landing on top of the other.
+
+It is built *on* free mode rather than beside it. Scattering is `enterFree()` plus an offset, so a
+scattered icon can still be picked up and put somewhere on purpose, and Auto Arrange is still the
+way out of it.
+
+**The lean is derived, not stored.** `tiltFor()` hashes the icon's own position key, so the same
+icon leans the same way on every load. Storing a tilt per icon would have meant a second record
+that has to stay in step with the positions, and re-rolling them on load would make the desk
+rearrange itself behind your back every time you came back. Verified: same six tilts before and
+after a reload.
+
+The tilt goes through a `--tilt` custom property rather than a plain transform, because an icon
+still has to shrink when it is held and fade when it is dragged — an inline `transform` would have
+won against the `.holding` rule and silently killed the touch feedback the phone pass had just
+added.
+
+## The soundtrack that follows the scheme
+
+Room Tone's engine at 0.22, which is background. The brief asked for four moods and Room Tone
+already had beds for all four, so this is a mapping and not a fifth engine: **library** is the
+office one (air handling, distant paper), **campfire** is the warm acoustic one, **rain** is the
+gentle noise, **underwater** is underwater. All twenty schemes map onto those four, keyed by
+scheme *name* rather than index so that inserting a scheme into the list cannot silently shift
+twenty assignments by one.
+
+**Nothing can play on load, and that is enforced rather than hoped for.** A Web Audio context will
+not start without a gesture, so when the pref is already on from a previous visit the bed is armed
+and waits for the first thing the visitor does. Verified: a fresh page with `music:'on'` already
+stored sits silent until a gesture arrives.
+
+Resting borrows the engine and hands it back. Changing the colour scheme while the screen is
+dimmed does not yank the room out from under it. Verified end to end: Wheat playing campfire at
+0.22 → rest at 0.34 → back to campfire at 0.22, still running.
+
+## Two closures, one contract
+
+The icons and the settings panel are different IIFEs and neither can see the other's variables.
+Rather than reach across, the switch dispatches `w98:messy` and reads the answer back off
+`documentElement.dataset.w98Messy`, and the scheme publishes its chosen bed as
+`dataset.w98Tone` for the Rest button to pick up. Whether the desk is messy stays the desktop's
+fact to keep.
+
+## Verified
+
+Driven in a real browser, both modes, at 1280px and 390px.
+
+- All four features exercised through their actual controls: the three menu entries, the lever,
+  the music chips, and a scheme change while music was playing.
+- **Restart really reloads** and **Shut Down really powers back on** — both confirmed by counting
+  main-frame navigations, not by trusting the screen.
+- **Catalogue mode is untouched**: desktop hidden, 149 cards, no power row, no lever, no rest or
+  POST layer, no audio, no overflow, no page errors, and the Konami code still fires.
+- **Settings persist**: music on and messy on both survive a reload, and the messy class comes
+  back with the icons.
+- No horizontal overflow at 390px in desktop mode, with the settings panel open, or with the
+  start menu open.
+- Zero page errors across every run.
+
+## Not done
+
+- The hall of fame and the retrofit of the other fifty-odd eggs are Phase 6's actual work. The
+  registry and its panel exist and are still unwired — there is no trigger for the tracker yet.
+- Phase 5, the four-toy consolidation, is untouched, so `/generator/` still does not exist and the
+  Tatu-and-Patu voice pack parked in Phase 1 is still parked.
+- The generator-family ambience pass reached 22 of 49 toys; 21 are still silent.
