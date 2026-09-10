@@ -150,6 +150,15 @@ body{ padding-bottom:64px }
   mount: function (root) {
     'use strict';
 
+    /* A pending timer here touches elements inside root, and root is
+       emptied when the voice is switched away — so the copy button's
+       reset would throw into whichever voice is on screen by then. */
+    var __timers = [], __dead = false;
+    function setTimeout(fn, ms){
+      var id = window.setTimeout(function(){ if (!__dead) fn(); }, ms);
+      __timers.push(id); return id;
+    }
+
     const LEVELS = ['plausible','a bit thin','stretching it','openly suspicious','physically impossible','cosmological'];
     const BELIEVE = ['84%','61%','38%','17%','4%','0%'];
     const PRESSED = ['hold firm','add a detail','change the subject','produce a receipt','leave the country','admit nothing'];
@@ -360,5 +369,10 @@ body{ padding-bottom:64px }
 
     renderPicks();
     render(false);
+    return function () {
+      __dead = true;
+      __timers.forEach(function (id) { try { window.clearTimeout(id); } catch (e) {} });
+      __timers = [];
+    };
   }
 });

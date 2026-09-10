@@ -3,339 +3,39 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Seed Round</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23FAFAFB'/><path d='M7 22l6-7 4 4 8-10' stroke='%23FF5A3C' stroke-width='2.6' fill='none' stroke-linecap='round'/></svg>">
+<title>Seed Round has moved</title>
+<link rel="canonical" href="/generator/?voice=seedround">
+<meta name="robots" content="noindex">
+<!-- The toy is not gone; it is a voice inside The Generator now. Anyone
+     who bookmarked this URL, or linked it, still lands on the same thing.
+     The refresh is the fallback: the script below goes first and replaces
+     this entry in the history, so Back returns to wherever they came from
+     rather than bouncing them through this page again. -->
+<meta http-equiv="refresh" content="2;url=/generator/?voice=seedround">
 <style>
-:root{ color-scheme: dark; }
-:root{
-  /* A pitch deck at eleven at night: near-black, one hot gradient, and
-     everything important glowing slightly more than it has earned. */
-  --bg:#08070E;
-  --bg-2:#100C1C;
-  --slide:#15111F;
-  --ink:#F2EEFF;
-  --ink-2:#A79CC4;
-  --dim:#6E6490;
-  --brand:#FF3D8A;
-  --brand-2:#31E0C8;
-  --rule:#2A2140;
-  --sans:ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif;
-  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
-  --display:"Avenir Next","Helvetica Neue",Helvetica,Arial,sans-serif;
-}
-@keyframes deckin{
-  from{ opacity:0;transform:translateY(20px) scale(.985) }
-}
-/* the valuation ticks up and then, a beat later, the page admits itself */
-.metrics b{ font-variant-numeric:tabular-nums }
-.flag{ animation:undercut .5s ease .75s backwards }
-@keyframes undercut{
-  0%{ opacity:0;transform:translateY(-8px) }
-  60%{ opacity:1;transform:translateY(2px) }
-  100%{ transform:none }
-}
-.slide.scratched{ animation:scratch .34s ease }
-@keyframes scratch{
-  0%,100%{ transform:none;filter:none }
-  20%{ transform:translateX(-7px) skewX(-1.6deg);filter:saturate(.3) }
-  55%{ transform:translateX(5px) skewX(1deg);filter:saturate(.6) }
-}
-@media (prefers-reduced-motion: reduce){
-  .slide,.flag{ animation:none } .slide.scratched{ animation:none }
-}
-*{box-sizing:border-box}
-html,body{margin:0;padding:0}
+:root{ color-scheme: light dark }
 body{
-  background:
-    radial-gradient(760px 420px at 78% -6%, rgba(255,61,138,.20), transparent 62%),
-    radial-gradient(620px 400px at 12% 104%, rgba(49,224,200,.14), transparent 60%),
-    linear-gradient(180deg, var(--bg-2), var(--bg));
-  color:var(--ink);font-family:var(--sans);min-height:100vh;padding:30px 18px 64px;
+  margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+  padding:28px;text-align:center;background:#15151b;color:#e8e6df;
+  font:400 15px/1.65 ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif;
 }
-/* a faint grid, because every deck has one */
-body::before{
-  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.35;
-  background-image:
-    linear-gradient(rgba(167,156,196,.055) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(167,156,196,.055) 1px, transparent 1px);
-  background-size:44px 44px;
-}
-.wrap, footer{ position:relative;z-index:1 }
-.wrap{ max-width:780px;margin:0 auto }
-h1{
-  font-family:var(--display);font-size:clamp(28px,6.2vw,46px);margin:0;
-  letter-spacing:-.025em;font-weight:800;
-  background:linear-gradient(96deg,var(--brand) 0%,#B478FF 46%,var(--brand-2) 100%);
-  -webkit-background-clip:text;background-clip:text;color:transparent;
-}
-.sub{ font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-top:8px }
-
-.deck{ display:flex;gap:9px;flex-wrap:wrap;margin:20px 0 22px }
-.btn{
-  font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
-  background:var(--brand);color:#fff;border:0;padding:12px 20px;cursor:pointer;font-weight:700;border-radius:3px;
-}
-.btn:hover{ background:#FF6E54 }
-.btn.sec{ background:transparent;color:var(--ink);border:1px solid var(--rule);font-weight:400 }
-.btn.sec:hover{ border-color:var(--brand);color:var(--brand) }
-.btn:focus-visible{ outline:2px solid var(--brand);outline-offset:3px }
-
-.slide{
-  animation:deckin .42s cubic-bezier(.2,.9,.3,1.1) backwards;
-  background:var(--slide);border:1px solid var(--rule);border-radius:6px;padding:34px 32px;
-  box-shadow:0 18px 50px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.05);
-}
-.logo{ display:flex;align-items:center;gap:12px;margin-bottom:22px }
-.mark{
-  width:40px;height:40px;border-radius:9px;flex:0 0 auto;display:grid;place-items:center;
-  color:#fff;font-family:var(--display);font-weight:700;font-size:19px;letter-spacing:.02em;
-}
-.name{ font-family:var(--display);font-size:clamp(26px,5vw,38px);letter-spacing:-.01em;font-weight:700;line-height:1 }
-.name em{ font-style:normal;color:var(--brand) }
-.but{
-  font-size:clamp(17px,3.4vw,23px);line-height:1.4;margin:0 0 20px;color:var(--ink);font-weight:600;
-}
-.pitch{ font-size:16px;line-height:1.7;color:var(--ink-2);margin:0 0 22px;max-width:60ch }
-.but{ color:var(--ink) }
-
-.metrics{
-  display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:1px;
-  background:var(--rule);border:1px solid var(--rule);border-radius:4px;overflow:hidden;margin-bottom:20px;
-}
-.metrics div{ background:#1B1529;padding:14px 15px }
-.metrics span{ font-family:var(--mono);font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);display:block }
-.metrics b{ display:block;font-size:19px;margin-top:6px;letter-spacing:-.02em;color:var(--brand-2);font-variant-numeric:tabular-nums }
-
-.rows{ border-top:1px solid var(--rule);padding-top:18px }
-.row{ display:grid;grid-template-columns:130px 1fr;gap:14px;padding:9px 0;align-items:start }
-.row dt{ font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);padding-top:3px }
-.row dd{ margin:0;font-size:15px;line-height:1.6;color:var(--ink-2) }
-
-.flag{
-  margin-top:20px;background:rgba(255,61,138,.10);border-left:3px solid var(--brand);
-  padding:12px 15px;font-size:14px;line-height:1.6;color:#FFC2DA;border-radius:0 3px 3px 0;
-}
-.flag b{ font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;display:block;margin-bottom:5px;color:var(--brand) }
-
-footer{
-  max-width:780px;margin:26px auto 0;padding-top:14px;border-top:1px solid var(--rule);
-  font-family:var(--mono);font-size:10.5px;line-height:1.8;color:var(--dim);
-}
-footer a{ color:var(--ink-2) }
-
-/* --- touch targets (sweep) --- */
-@media (pointer:coarse){
-  .btn{ min-height:44px }
-}
-
-#lc-back{
-  position:fixed;left:14px;bottom:14px;z-index:9999;
-  display:inline-flex;align-items:center;gap:0;overflow:hidden;
-  font:600 11px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
-  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
-  color:#F4F5F6;background:rgba(18,19,22,.82);
-  border:1px solid rgba(255,255,255,.3);border-radius:999px;
-  width:38px;height:38px;justify-content:center;
-  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
-  box-shadow:0 4px 16px rgba(0,0,0,.3);
-  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
-}
-/* A 38px pill is under the 44px a fingertip needs. */
-@media (pointer:coarse){ #lc-back{ width:44px;height:44px } }
-#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
-#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
-#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
-#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
-#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
-body{ padding-bottom:64px }
-@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } .row{ grid-template-columns:1fr;gap:4px } }
-@media print{ #lc-back{ display:none } }
-@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } }
+.b{ max-width:30rem }
+h1{ font-size:20px;margin:0 0 12px;font-weight:600 }
+p{ margin:0 0 16px;opacity:.8 }
+a{ color:#e0c36a }
 </style>
 </head>
 <body>
-<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
-
-<div class="wrap">
-  <h1>Seed Round</h1>
-  <div class="sub">pre-revenue · pre-product · pre-thinking-about-it</div>
-
-  <div class="deck">
-    <button class="btn" id="go">Pitch me something</button>
-    <button class="btn sec" id="copy">Copy the pitch</button>
-  </div>
-
-  <div id="out"></div>
+<div class="b">
+  <h1>Seed Round has moved</h1>
+  <p>It is one of the voices in <strong>The Generator</strong> now, with the same
+     room and the same words it always had.</p>
+  <p><a href="/generator/?voice=seedround">Go there now</a> &middot;
+     <a href="/">back to the cabinet</a></p>
 </div>
-
-<footer>
-  Every company, metric and quote here is generated in your browser and none of them exist. The
-  numbers are deliberately absurd — this is a joke about pitch decks, not a source of any figure.
-  <a href="/">← back to the cabinet</a>
-</footer>
-
-<script src="/shared/lc-audio.js"></script>
-<script src="/shared/lc-sound.js"></script>
 <script>
-'use strict';
-
-const $ = (id) => document.getElementById(id);
-const pick = (a) => a[Math.floor(Math.random() * a.length)];
-const ri = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
-const esc = (s) => String(s == null ? '' : s)
-  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-
-/* Invented company names — vowel-dropped, over-suffixed, the usual. None of
-   these are real companies; the generator avoids well-known names by
-   construction rather than by blocklist. */
-const STEM = ['Zeph','Lume','Kindr','Orbi','Vaunt','Plink','Murmr','Sable','Tendr','Grava','Nulla',
-  'Perch','Wisp','Hark','Quill','Onda','Brim','Solder','Yonder','Fathom','Nimbus','Crumb','Loft',
-  'Verge','Halcy','Trellis','Cobalt','Pileus','Mote','Thicket'];
-const SUFF = ['ly','io','r','ify','base','stack','loop','hub','works','labs','co','wise','flow','pilot'];
-
-const NOUN_A = ['Uber','Airbnb','Spotify','Netflix','LinkedIn','Tinder','Duolingo','Slack','Strava','Wikipedia','eBay','Zoom'];
-const NOUN_B = [
-  'regret','grudges','unfinished books','other people\'s laundry','the feeling you left the hob on',
-  'apologies you owe','half-remembered dreams','your father\'s opinions','things you nearly said',
-  'expired warranties','arguments you already lost','unread group chats','the loft',
-  'people who owe you money','your own handwriting','plants you have killed','songs stuck in your head',
-  'the bin schedule','small talk','borrowed umbrellas','unfinished side projects','your posture',
-  'awkward silences','emails you drafted at 2am','the third drawer','other people\'s children',
-  'sleep you did not get','the sound of your own voice','decisions made on a Tuesday','minor grievances'];
-
-const PITCHES = [
-  'It is a two-sided marketplace. We have not identified either side yet, but the sides are the exciting part.',
-  'Think of us as infrastructure. Nobody knows what we do, and that is defensibility.',
-  'We are AI-first, which in practice means one model call and a spreadsheet somebody maintains by hand.',
-  'The insight is that this is currently free and unstructured, and we intend to fix exactly one of those.',
-  'We started as a newsletter. We are now a platform. The newsletter was better and had more readers.',
-  'Users hate the current process. Our research shows they will also hate ours, but on their phones.',
-  'It is a subscription. Everything is a subscription. The question was never whether.',
-  'We take a fifteen per cent cut of something that has never previously involved money.',
-  'The wedge is a free tool nobody wants, which we will convert into a paid tool nobody wants.',
-  'Community-led growth, meaning we have a Discord with four hundred people and one of them is my brother.',
-  'We are pre-revenue by choice. Revenue this early distorts the signal, we have decided.',
-  'The moat is that it is extremely annoying to build and we were the only ones stubborn enough.',
-];
-
-const WHY_NOW = [
-  'The infrastructure only became cheap enough eighteen months ago, and nobody has noticed yet.',
-  'A regulation changed in a jurisdiction we do not operate in. The direction of travel is clear.',
-  'Post-pandemic behaviour has permanently shifted, in ways we will define after the round closes.',
-  'Everyone tried this in 2014 and failed. We have studied why and we are going to do it again.',
-  'The incumbent has become complacent, by which we mean profitable.',
-  'Gen Z do this already, informally, for free. We are here to add friction and a fee.',
-];
-
-const MODELS = ['freemium, with the free tier deliberately painful','£8 a month, cancellable in theory',
-  'take rate on transactions we will have to invent','enterprise, eventually, once we meet an enterprise',
-  'usage-based, which nobody can forecast including us','ads, but tasteful, we promise',
-  'we have not decided, and the deck says "multiple monetisation levers"'];
-const TEAM = ['two founders, one technical, both tired','three cofounders and an unresolved equity conversation',
-  'a solo founder and a very patient partner','ex-big-tech, which we mention early and often',
-  'first-time founders with what we are calling founder-market fit','four people, one of whom is an advisor with 0.2%'];
-const ASKS = ['£1.2m on a SAFE, uncapped, do not ask','a £600k pre-seed to reach a metric we will choose later',
-  '£2m to hire six people and buy a very large screen','£350k to keep going for eleven more months',
-  'strategic capital only — we want the logo more than the money'];
-
-const FLAGS = [
-  'The competitor slide lists three companies, two of which are dead and one of which is a feature.',
-  'Growth chart has no y-axis. This was not an accident.',
-  'The founders describe the market as "at least a billion" and decline to show the arithmetic.',
-  'Slide 14 says "and then we expand to Europe", which is the entire international strategy.',
-  'The CAC figure is from a two-week experiment with a budget of forty pounds.',
-  'They have used the word "obviously" nine times and defended nothing.',
-  'The product does not exist but the brand guidelines run to sixteen pages.',
-  'They keep saying "when we get to scale" about a problem that only exists at scale.',
-];
-
-function coName(){
-  const n = pick(STEM) + pick(SUFF);
-  return n.charAt(0).toUpperCase() + n.slice(1);
-}
-function bigNumber(){
-  const n = ri(2, 940);
-  const unit = pick(['bn','bn','tn']);
-  return '£' + n + unit;
-}
-
-function render(){
-  const name = coName();
-  const a = pick(NOUN_A), b = pick(NOUN_B);
-  const hue = ri(0, 359);
-  $('out').innerHTML =
-    '<div class="slide">' +
-      '<div class="logo">' +
-        '<div class="mark" style="background:hsl(' + hue + ' 68% 52%)">' + esc(name[0]) + '</div>' +
-        '<div class="name">' + esc(name.slice(0, -2)) + '<em>' + esc(name.slice(-2)) + '</em></div>' +
-      '</div>' +
-      '<p class="but">' + esc(a) + ', but for ' + esc(b) + '.</p>' +
-      '<p class="pitch">' + esc(pick(PITCHES)) + ' ' + esc(pick(PITCHES)) + '</p>' +
-      '<div class="metrics">' +
-        '<div><span>market size</span><b>' + bigNumber() + '</b></div>' +
-        '<div><span>users</span><b>' + ri(0, 40) + '</b></div>' +
-        '<div><span>revenue</span><b>£' + ri(0, 400) + '</b></div>' +
-        '<div><span>burn</span><b>£' + ri(18, 240) + 'k/mo</b></div>' +
-      '</div>' +
-      '<dl class="rows">' +
-        '<div class="row"><dt>why now</dt><dd>' + esc(pick(WHY_NOW)) + '</dd></div>' +
-        '<div class="row"><dt>business model</dt><dd>' + esc(pick(MODELS)) + '</dd></div>' +
-        '<div class="row"><dt>team</dt><dd>' + esc(pick(TEAM)) + '</dd></div>' +
-        '<div class="row"><dt>the ask</dt><dd>' + esc(pick(ASKS)) + '</dd></div>' +
-      '</dl>' +
-      '<div class="flag"><b>noted by the associate who read it</b>' + esc(pick(FLAGS)) + '</div>' +
-    '</div>';
-}
-
-/* ---- the sounds -------------------------------------------------------- *
- * A till drawer's bright double ding, and then — three quarters of a
- * second later, exactly when the associate's note appears — a record
- * scratch: a noise band swept hard downward with the pitch bending under
- * it. The joke is entirely in the gap between the two.
- * ---------------------------------------------------------------------- */
-function ding(){
-  LCSound.play((A) => {
-    [0, .055].forEach((at, i) => {
-      A.blip(A.note(19 + i * 5), { at, dur: .5, level: A.cap(.07 - i * .015), type: 'sine', reverb: true });
-      A.blip(A.note(31 + i * 5), { at, dur: .34, level: A.cap(.035), type: 'sine', reverb: true });
-    });
-    A.burst('white', { freq: 7200, q: 2, dur: .04, level: A.cap(.03), reverb: true });
-  });
-}
-function scratch(){
-  LCSound.play((A) => {
-    /* two passes of the needle, the second shorter, which is what a
-       scratch actually is */
-    A.burst('white', { freq: 2600, q: .5, dur: .13, level: A.cap(.075), reverb: false });
-    A.blip(520, { dur: .15, glide: 90, level: A.cap(.06), type: 'sawtooth',
-                  filter: 'lowpass', filterFreq: 1500, reverb: false });
-    A.burst('pink', { at: .15, freq: 1200, q: .6, dur: .1, level: A.cap(.05), reverb: false });
-    A.blip(300, { at: .15, dur: .11, glide: 700, level: A.cap(.04), type: 'sawtooth', reverb: false });
-  });
-}
-
-function pitch(){
-  render();
-  ding();
-  const el = document.querySelector('.slide');
-  setTimeout(() => {
-    scratch();
-    if (el){ el.classList.remove('scratched'); void el.offsetWidth; el.classList.add('scratched'); }
-  }, 750);
-}
-
-$('go').addEventListener('click', pitch);
-LCSound.mount({ color: 'var(--ink-2)' });
-$('copy').addEventListener('click', async () => {
-  const el = document.querySelector('.slide');
-  if (!el) return;
-  const text = el.innerText.replace(/\n{3,}/g, '\n\n');
-  try { await navigator.clipboard.writeText(text); $('copy').textContent = 'Copied'; }
-  catch (e) { window.prompt('Copy the pitch:', text); }
-  setTimeout(() => { $('copy').textContent = 'Copy the pitch'; }, 1500);
-});
-
-render();
+  // replace, not assign: this page should not sit in the history
+  location.replace('/generator/?voice=seedround');
 </script>
 </body>
 </html>

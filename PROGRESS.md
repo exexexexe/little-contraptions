@@ -2903,3 +2903,87 @@ to go and find another drawer to turn sound off. All twenty-two now mount it.
   backgrounds these are not byte-identical surrounds, and several are deliberate pairs on toys
   that look nothing alike otherwise.
 
+---
+
+# Phase 5 — the Generator
+
+Fourteen drawers became fifteen voices in one. The hub reads **136** and the drawer that replaced
+them is No. 150.
+
+## The decision the merge turned on
+
+A voice repaints the **whole page**, not just the middle of it.
+
+Each of these toys had a room built for it during the generator pass — the ruled biro note, the
+pegboard workbench under a fluorescent tube, the memo in genuine triplicate, the green CRT —
+specifically so that no two would look alike. A merge that flattened them into one Generator room
+would have spent that work to save effort. So a voice brings its palette, its type, its surround
+and its renderer, and the shell is only the door between them. Measured at the end: **15 voices,
+15 distinct page backgrounds, no two the same.**
+
+## How the port was done, and why that way
+
+The insight that made this tractable: a voice's markup goes into the live document, so a toy's
+original script can run **unchanged** inside `mount(root)` — `document.getElementById` still finds
+its own elements. So the port is a move, not a rewrite. The word lists, the assembly and the room
+are the originals.
+
+That matters because the prose *is* the toy. Retyping it is how a merge quietly loses things, so
+it was checked rather than assumed: **1,040 long strings across the fourteen originals, zero
+missing from the ports.**
+
+## Three real bugs, all found by loading it
+
+1. **A voice's CSS is scoped into the room** on the way in, which is the only way two voices can
+   both style `.sheet` without meeting — but scoping puts the voice's `:root` variables on the
+   room rather than the document, so the page *behind* it kept the shell's default and only the
+   middle of the screen changed. Caught by measuring computed background on two voices and getting
+   `rgb(21,21,27)` twice. Voices now declare the handful of variables the page itself reads.
+
+2. **Timers outlived their voice.** A pending `setTimeout` in the pitch deck woke up while the TV
+   voice was on screen, went looking for an element that no longer existed, and threw from
+   `seedround.js` in front of a visitor who was not looking at it. Listeners were already tracked;
+   timers were not. Each voice now shadows `setTimeout`, `setInterval` and `requestAnimationFrame`
+   inside its own closure and carries a dead flag, so work already in flight at teardown does
+   nothing rather than something wrong.
+
+3. **The shanty kept its verse engine in a sibling file** (`verse.js`), which the port dropped, so
+   that voice failed to mount at all with `makeVerses is not defined`. It travels with the voice
+   now.
+
+## The new voice pack
+
+**The Contraption Bureau** is the nonsense-inventor pack Phase 1 parked waiting on this phase. It
+is inspired by a tradition — two visitors explaining the ordinary world back to you as an
+elaborate invention — and it is **not those characters**: no names, no likenesses, nothing quoted,
+everything written here. The rule that makes it work is that the nonsense has to be rigorous. Each
+device follows from its premise, each step from the last, and the caution at the bottom is a real
+consequence of the mechanism described. A random absurdity is not funny; a wrong thing argued
+carefully is.
+
+## Nothing was thrown away
+
+All fourteen old URLs still answer. Each is a redirect stub that `location.replace()`s to its
+voice — replace rather than assign, so Back returns where the visitor came from instead of
+bouncing them through the stub again. Verified: **all 14 land on the right voice, mounted**, and
+Back from one goes to the hub.
+
+The footer used to carry the drawer count as text, which meant every batch had to remember to
+change it and this one would have left it reading 149 forever. It counts the cards it can see.
+
+## Verified
+
+- All 15 voices mount, tear down without leaking state into each other, and were driven through
+  their own controls with zero page errors.
+- 15 distinct page backgrounds; the W98 desktop picked the Generator up and holds **no stale icons**
+  for any merged toy, without being told about the change.
+- The one LLM-backed voice degrades properly: rate-limited, it prints *registry unreachable* and
+  the house message rather than throwing.
+- Full cabinet sweep after the merge: **150 pages, zero page errors, zero horizontal overflow.**
+
+## Not done
+
+- The other three consolidations in the brief — Design Studio, Sound Lab, History Desk — are not
+  built. This phase's Generator was the one blocking Phase 6.
+- 97 toys still make no sound and 59 have no animation, unchanged from the Phase 4 note.
+

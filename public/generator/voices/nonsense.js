@@ -106,6 +106,15 @@ h1{ font-size:clamp(26px,5.6vw,40px);margin:0;line-height:1.08;transform:rotate(
   mount: function (root) {
     'use strict';
 
+    /* A pending timer here touches elements inside root, and root is
+       emptied when the voice is switched away — so the copy button's
+       reset would throw into whichever voice is on screen by then. */
+    var __timers = [], __dead = false;
+    function setTimeout(fn, ms){
+      var id = window.setTimeout(function(){ if (!__dead) fn(); }, ms);
+      __timers.push(id); return id;
+    }
+
     /* Six ordinary complaints. The bureau does not consider any of them
        small, which is the joke: the machine is always proportionate to
        how seriously the problem is taken, never to the problem. */
@@ -291,5 +300,10 @@ h1{ font-size:clamp(26px,5.6vw,40px);margin:0;line-height:1.08;transform:rotate(
 
     renderPicks();
     build();
+    return function () {
+      __dead = true;
+      __timers.forEach(function (id) { try { window.clearTimeout(id); } catch (e) {} });
+      __timers = [];
+    };
   }
 });

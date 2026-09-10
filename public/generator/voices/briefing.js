@@ -1,0 +1,369 @@
+/* ------------------------------------------------------------------ *
+ *  Voice: Briefing Room.
+ *
+ *  Was /espionage/. Moved across rather than rewritten: the word lists, the
+ *  assembly and the room are the originals. The prose is the toy, and
+ *  retyping it is how a merge quietly loses things.
+ * ------------------------------------------------------------------ */
+LCGen.voice({
+  id: "briefing",
+  name: "Briefing Room",
+  blurb: "Your assignment, should you be the sort of person who accepts.",
+  page: {
+      "--gen-bg": "rgb(201, 196, 180)",
+      "--gen-ink": "#1C1C18",
+      "--gen-body": "ui-sans-serif, system-ui, \"Helvetica Neue\", Arial, sans-serif",
+      "--gen-bar": "rgba(0,0,0,.22)",
+      "--gen-rule": "rgba(128,128,128,.35)",
+      "--gen-field": "rgba(127,127,127,.14)"
+  },
+
+  css: `
+
+:root{
+  --desk:#C9C4B4;
+  --paper:#EFEBDF;
+  --ink:#1C1C18;
+  --ink-2:#4A4A42;
+  --dim:#87857A;
+  --stamp:#8E2820;
+  --rule:#C4BFB0;
+  --sans:ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --type:"American Typewriter","Courier New",Courier,var(--mono);
+  --display:"Avenir Next Condensed","Roboto Condensed","Arial Narrow",var(--sans);
+}
+.room{ background:var(--desk);color:var(--ink);font-family:var(--sans);padding:28px 18px 64px }
+.wrap{ max-width:740px;margin:0 auto }
+h1{ font-family:var(--display);font-size:clamp(25px,5.4vw,38px);margin:0;letter-spacing:.05em;text-transform:uppercase;font-weight:700 }
+.sub{ font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#6E6B60;margin-top:8px }
+
+.bar{ display:flex;gap:9px;flex-wrap:wrap;margin:18px 0 0 }
+input{
+  flex:1;min-width:200px;background:var(--paper);border:1px solid var(--rule);color:var(--ink);
+  font-family:var(--sans);font-size:16px;padding:12px 14px;border-radius:2px;
+}
+input:focus{ outline:2px solid var(--stamp);outline-offset:-1px }
+.btn{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
+  background:var(--ink);color:var(--paper);border:0;padding:12px 18px;cursor:pointer;font-weight:700;border-radius:2px;
+}
+.btn:hover{ background:#000 }
+.btn.sec{ background:transparent;color:var(--ink);border:1px solid var(--rule);font-weight:400 }
+.btn.sec:hover{ border-color:var(--stamp);color:var(--stamp) }
+.btn:focus-visible{ outline:2px solid var(--stamp);outline-offset:3px }
+.chips{ display:flex;gap:7px;flex-wrap:wrap;margin-top:13px }
+.chip{ font-family:var(--mono);font-size:11px;background:transparent;border:1px dashed var(--rule);
+  color:var(--ink-2);padding:7px 11px;cursor:pointer;border-radius:2px }
+.chip:hover{ border-style:solid;border-color:var(--stamp);color:var(--stamp) }
+
+.doc{
+  margin-top:22px;background:var(--paper);border:1px solid var(--rule);
+  padding:32px 34px 28px;position:relative;box-shadow:0 14px 36px rgba(0,0,0,.18);
+  font-family:var(--type);
+}
+.doc::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg, rgba(0,0,0,.014) 0 1px, transparent 1px 4px);
+}
+.class{
+  text-align:center;font-family:var(--display);font-size:clamp(15px,3vw,20px);letter-spacing:.34em;
+  text-transform:uppercase;color:var(--stamp);border-top:3px solid var(--stamp);
+  border-bottom:3px solid var(--stamp);padding:7px 0;margin-bottom:22px;font-weight:700;
+}
+.meta{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:9px 18px;
+  font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);
+  padding-bottom:18px;margin-bottom:20px;border-bottom:1px solid var(--rule);
+}
+.meta b{ display:block;color:var(--ink);font-size:12.5px;margin-top:4px;letter-spacing:.04em }
+.doc h2{
+  font-family:var(--display);font-size:clamp(21px,4.4vw,30px);letter-spacing:.08em;text-transform:uppercase;
+  margin:0 0 16px;font-weight:700;
+}
+.fallback{
+  margin-bottom:16px;padding:12px 15px;border-radius:4px;
+  background:rgba(0,0,0,.05);border-left:3px solid var(--dim, #8B8171);
+  font-size:13px;line-height:1.65;
+}
+.fallback b{ display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;
+  text-transform:uppercase;margin-bottom:4px;font-weight:700 }
+.fallback.key{ border-left-color:#B8863C }
+.fallback.pending{ border-left-color:#8B8171 }
+.fallback .quiet{ opacity:.75 }
+.dots:after{ content:'';animation:dots 1.2s steps(4,end) infinite }
+@keyframes dots{ 0%{content:''} 25%{content:'.'} 50%{content:'..'} 75%{content:'...'} }
+@media (prefers-reduced-motion: reduce){ .dots:after{ animation:none;content:'…' } }
+.docsec{ margin-bottom:19px }
+.docsec h3{
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--stamp);font-weight:400;margin:0 0 8px;
+}
+.docsec p{ margin:0 0 9px;font-size:14.5px;line-height:1.72;color:var(--ink-2) }
+.docsec ul{ margin:0;padding-left:19px }
+.docsec li{ font-size:14.5px;line-height:1.7;color:var(--ink-2);margin-bottom:6px }
+.red{ background:#1C1C18;color:#1C1C18;border-radius:1px;padding:0 3px;user-select:none;cursor:help }
+.red:hover{ background:#3A3A32 }
+.foot{
+  margin-top:24px;padding-top:14px;border-top:1px solid var(--rule);
+  display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);
+}
+.stamp{
+  position:absolute;right:26px;bottom:56px;border:3px solid var(--stamp);color:var(--stamp);
+  font-family:var(--display);font-size:15px;letter-spacing:.2em;text-transform:uppercase;
+  padding:7px 13px;transform:rotate(-11deg);opacity:.75;font-weight:700;
+}
+
+footer{
+  max-width:740px;margin:26px auto 0;padding-top:14px;border-top:1px solid var(--rule);
+  font-family:var(--mono);font-size:10.5px;line-height:1.8;color:#6E6B60;
+}
+footer a{ color:var(--ink-2) }
+
+/* --- touch targets (sweep) --- */
+@media (pointer:coarse){
+  .btn, .chip{ min-height:44px }
+}
+
+/* A 38px pill is under the 44px a fingertip needs. */
+@media (pointer:coarse){ #lc-back{ width:44px;height:44px } }
+.room{ padding-bottom:64px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } .doc{ padding:22px 20px } .stamp{ right:14px;bottom:70px } }
+@media print{ #lc-back{ display:none } }
+@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } }
+
+`,
+
+  mount: function (root) {
+    /* Listeners this voice puts on the document or the window outlive
+       root.innerHTML = '', so they are tracked and handed back for
+       teardown. Otherwise a key pressed three voices later still reaches
+       a toy that is no longer on the screen. */
+    var __off = [], __timers = [], __dead = false;
+    function __add(t, ty, fn, o){ t.addEventListener(ty, fn, o); __off.push([t, ty, fn, o]); }
+
+    /* Timers outlive innerHTML the same way listeners do, and worse: a
+       stray setTimeout from a voice you left three minutes ago wakes up,
+       looks for an element that belongs to the voice now on screen, and
+       throws in a file the visitor is not even looking at. That is
+       exactly what happened — a pending timer in the pitch deck threw
+       while the TV voice was up.
+
+       These shadow the globals inside this closure, so the ported code
+       gets them without being changed, and the dead flag catches work
+       that was already in flight when the voice was torn down. */
+    function setTimeout(fn, ms){
+      var id = window.setTimeout(function(){ if (!__dead) fn(); }, ms);
+      __timers.push(id); return id;
+    }
+    function setInterval(fn, ms){
+      var id = window.setInterval(function(){ if (!__dead) fn(); }, ms);
+      __timers.push(id); return id;
+    }
+    function requestAnimationFrame(fn){
+      return window.requestAnimationFrame(function(t){ if (!__dead) fn(t); });
+    }
+
+    root.innerHTML = "<div class=\"wrap\">\n  <h1>Briefing Room</h1>\n  <div class=\"sub\">give it a word \u00b7 it will give you a mission</div>\n\n  <div class=\"bar\">\n    <input type=\"text\" id=\"in\" maxlength=\"40\" placeholder=\"any word \u2014 umbrella, cheese, Tuesday\" value=\"the umbrella\">\n    <button class=\"btn\" id=\"go\">Brief me</button>\n    <button class=\"btn sec\" id=\"rand\">Random word</button>\n  </div>\n  <div class=\"chips\" id=\"chips\"></div>\n\n  <div id=\"out\"></div>\n</div>";
+
+    
+    'use strict';
+    
+    const $ = (id) => document.getElementById(id);
+    const pick = (a) => a[Math.floor(Math.random() * a.length)];
+    const ri = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+    const esc = (s) => String(s == null ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    
+    /* Invented service furniture. No real agency, station or operation name. */
+    const ADJ = ['SILENT','PALE','BROKEN','HOLLOW','LONG','COLD','QUIET','BITTER','SLOW','HONEST',
+      'THIRD','LAST','GLASS','IRON','SOFT','BLIND','NARROW','PATIENT','SUDDEN','WINTER'];
+    const NOUN = ['LANTERN','HARVEST','MERIDIAN','SPARROW','LEDGER','ORCHARD','SEXTANT','TALLY','KESTREL',
+      'BULWARK','MARROW','SIGNAL','THRESHOLD','ANVIL','CANDLE','FURROW','PENDULUM','WICKER','GANTRY','TIDE'];
+    
+    const CITIES = ['Trieste','Vilnius','Rotterdam','Porto','Gothenburg','Ljubljana','Tallinn','Bergen',
+      'Bratislava','Cádiz','Aarhus','Thessaloniki','Bilbao','Gdańsk','Ostend','Rijeka','Turku','Odense'];
+    const PLACES = ['a municipal swimming pool','the long-stay car park','a hotel that is being refurbished',
+      'the third floor of a public library','a garden centre out of season','the ferry terminal at low tide',
+      'an unlicensed dentist\'s waiting room','a language school with no students','the back office of a laundrette',
+      'a museum of agricultural machinery','an airport chapel','the staff canteen of a paper mill'];
+    
+    const CLASS = ['SECRET','MOST SECRET','RESTRICTED','EYES ONLY','NOT FOR CIRCULATION'];
+    const HANDLING = ['destroy after reading','do not photocopy','return to registry within 24 hours',
+      'may not leave the building','verbal briefing only — this document does not exist'];
+    
+    const OBJECTIVES = [
+      'Recover {x} from {place} in {city} without confirming that {x} was ever there.',
+      'Establish who has been asking about {x}, and stop them asking, without answering.',
+      'Deliver {x} to a contact who will not identify themselves and may not attend.',
+      'Verify that {x} is exactly as unremarkable as {n} previous reports have claimed.',
+      'Substitute {x} for an identical {x}. The difference must not be findable.',
+      'Determine why {x} has appeared in {n} separate inventories across four countries.',
+      'Prevent {x} from arriving. Do not prevent it from being sent.',
+    ];
+    const ASSETS = [
+      'A local contact who is reliable, expensive, and no longer speaking to the service.',
+      'One vehicle, unremarkable, with a registration that will not survive scrutiny.',
+      'A cover identity assembled in eleven hours. Do not let anyone ask about the school.',
+      'Access to the building between 03:10 and 03:40, arranged by somebody who has since resigned.',
+      'A second officer who has been briefed differently and will behave accordingly.',
+      'Four hundred in local currency and a receipt book you must fill in.',
+      'One phone call, at a time of your choosing, to a number that will ring once.',
+    ];
+    const COMPLICATIONS = [
+      'The building has been sold. The new owner is present and enthusiastic.',
+      'Your contact has brought a friend, unannounced, who is taking notes.',
+      'The item is heavier than the file suggests and does not fit in the vehicle.',
+      'A second service is running an unrelated operation in the same corridor tonight.',
+      'The floor plan in this briefing is from 1994 and the staircase has been removed.',
+      'Somebody has already been. There is no sign of a break-in and the item is still there.',
+      'Local police are conducting an unrelated exercise and have closed the road you were leaving by.',
+      'Your cover identity shares a surname with the caretaker, who wants to talk about it.',
+      'The item is in use. It is being used correctly and by somebody who is enjoying it.',
+    ];
+    const EXTRACT = [
+      'Ferry, 06:40, foot passenger. Do not book in advance.',
+      'Coach to the border, then walk. The walk is longer than it looks on the map.',
+      'You will be collected. If you are not collected by 09:00, you were not going to be.',
+      'Hire car, returned to a different branch, in somebody else\'s name, with a full tank.',
+      'Remain in place for four days and behave like a tourist. You will be poor at this.',
+      'Train, second class, no reservation. Sit where you can see the corridor.',
+    ];
+    const NOTES = [
+      'Registry notes that {x} has appeared in three unrelated files this quarter and has no explanation for it.',
+      'Analysis considers this operation low-risk. Analysis has not been to {city}.',
+      'The previous officer assigned to {x} has requested a transfer and would not say why.',
+      'If asked directly about {x}, deny nothing. Denial is what they are counting.',
+      'You will be tempted to look inside. The last four officers were also tempted.',
+      'This briefing was assembled quickly. The parts that are wrong are the parts stated with most confidence.',
+    ];
+    
+    const WORDS = ['the umbrella','a jar of honey','the office kettle','a library card','Tuesday','a spare button',
+      'the good scissors','a lost sock','a bus timetable','the last biscuit','a garden gnome','a paperclip'];
+    
+    function redact(n){
+      return '<span class="red" title="redacted">' + '█'.repeat(n) + '</span>';
+    }
+    
+    /* The document is rendered from one shape, whoever supplies the contents:
+       the language model when it is reachable, the original template bank when
+       it is not. Same chrome either way. */
+    function renderDoc(d, note){
+      $('out').innerHTML =
+        (note || '') +
+        '<div class="doc">' +
+          '<div class="class">' + esc(d.classification) + '</div>' +
+          '<div class="meta">' +
+            '<span>operation<b>' + esc(d.operation) + '</b></span>' +
+            '<span>station<b>' + esc(d.station) + '</b></span>' +
+            '<span>officer<b>' + redact(ri(6, 11)) + '</b></span>' +
+            '<span>authorised by<b>' + redact(ri(5, 9)) + '</b></span>' +
+          '</div>' +
+          '<h2>Objective</h2>' +
+          '<div class="docsec"><p>' + esc(d.objective) + '</p></div>' +
+          '<div class="docsec"><h3>assets available to you</h3><ul>' +
+            d.assets.map(a => '<li>' + esc(a) + '</li>').join('') + '</ul></div>' +
+          '<div class="docsec"><h3>anticipated complications</h3><ul>' +
+            d.complications.map(c => '<li>' + esc(c) + '</li>').join('') + '</ul></div>' +
+          '<div class="docsec"><h3>extraction</h3><p>' + esc(d.extraction) + '</p></div>' +
+          '<div class="docsec"><h3>note from registry</h3><p>' + esc(d.note) + '</p></div>' +
+          '<div class="foot"><span>handling: ' + esc(pick(HANDLING)) + '</span>' +
+            '<span>ref ' + redact(4) + '/' + ri(100, 999) + '</span></div>' +
+          '<div class="stamp">' + esc(pick(['read','burned','unactioned','pending','lost'])) + '</div>' +
+        '</div>';
+    }
+    
+    /* The original template bank, kept as the fallback. */
+    function staticDoc(){
+      const raw = $('in').value.trim() || 'the umbrella';
+      const x = raw.toLowerCase();
+      const city = pick(CITIES);
+      const f = (s) => s.replace(/\{x\}/g, x).replace(/\{city\}/g, city)
+        .replace(/\{place\}/g, pick(PLACES)).replace(/\{n\}/g, String(ri(3, 19)));
+      const cp = COMPLICATIONS.slice();
+      const comps = [];
+      for (let i = 0; i < 3; i++) comps.push(cp.splice(Math.floor(Math.random() * cp.length), 1)[0]);
+      return {
+        classification: pick(CLASS),
+        operation: pick(ADJ) + ' ' + pick(NOUN),
+        station: city,
+        objective: f(pick(OBJECTIVES)),
+        assets: [pick(ASSETS), pick(ASSETS)],
+        complications: comps,
+        extraction: pick(EXTRACT),
+        note: f(pick(NOTES)),
+      };
+    }
+    
+    function banner(kind, message){
+      return '<div class="fallback' + (kind === 'no_key' ? ' key' : '') + '">' +
+        '<b>' + (kind === 'no_key' ? 'Registry offline' : 'Registry unreachable') + '</b>' +
+        esc(message) +
+        ' <span class="quiet">Briefing below assembled from the standing template bank instead.</span>' +
+        '</div>';
+    }
+    
+    let busy = false;
+    
+    async function render(){
+      if (busy) return;
+      const subject = $('in').value.trim() || 'the umbrella';
+      busy = true;
+      $('go').disabled = true;
+      $('out').innerHTML = '<div class="fallback pending"><b>Drafting</b>' +
+        '<span class="dots">the registry is writing it up</span></div>';
+    
+      const out = await LCGenerate.run('espionage', { subject: subject });
+      busy = false;
+      $('go').disabled = false;
+    
+      if (out.ok){
+        const parsed = LCGenerate.parseJSON(out.text);
+        const v = LCGenerate.need(parsed, {
+          operation: 'string', station: 'string', objective: 'string',
+          extraction: 'string', note: 'string'
+        });
+        const assets = Array.isArray(parsed && parsed.assets)
+          ? parsed.assets.filter(a => typeof a === 'string' && a.trim()) : [];
+        const comps = Array.isArray(parsed && parsed.complications)
+          ? parsed.complications.filter(a => typeof a === 'string' && a.trim()) : [];
+        if (v && assets.length && comps.length){
+          v.classification = pick(CLASS);
+          v.assets = assets.slice(0, 3);
+          v.complications = comps.slice(0, 4);
+          renderDoc(v);
+          return;
+        }
+        // answered, but not in the shape asked for — fall through to the bank
+        renderDoc(staticDoc(), banner('failed', 'The registry sent back something unreadable.'));
+        return;
+      }
+    
+      renderDoc(staticDoc(), banner(out.kind, out.message));
+    }
+    
+    $('go').addEventListener('click', render);
+    $('in').addEventListener('keydown', (e) => { if (e.key === 'Enter') render(); });
+    $('rand').addEventListener('click', () => { $('in').value = pick(WORDS); render(); });
+    $('chips').innerHTML = WORDS.slice(0, 5).map(w => '<button class="chip">' + esc(w) + '</button>').join('');
+    $('chips').addEventListener('click', (e) => {
+      const c = e.target.closest('.chip'); if (!c) return;
+      $('in').value = c.textContent; render();
+    });
+    
+    render();
+    
+
+    return function () {
+      __dead = true;
+      __off.forEach(function (r) {
+        try { r[0].removeEventListener(r[1], r[2], r[3]); } catch (e) {}
+      });
+      __timers.forEach(function (id) {
+        try { window.clearTimeout(id); window.clearInterval(id); } catch (e) {}
+      });
+      __off = []; __timers = [];
+    };
+  }
+});
