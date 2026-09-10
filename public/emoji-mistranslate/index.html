@@ -8,23 +8,45 @@
 <style>
 :root{ color-scheme: light; }
 :root{
-  --paper:#FCF6E8;
-  --paper-2:#F2E9D6;
-  --ink:#241E14;
-  --ink-2:#5A4E38;
-  --dim:#8E8168;
-  --accent:#C4562E;
-  --rule:#DCCFB4;
+  /* A cataloguer's desk. Everything is an index card, everything has a
+     ruled line down it, and the only colour on the page is the red the
+     corrections are made in. */
+  --paper:#EDEAE0;
+  --paper-2:#FBFAF6;
+  --ink:#1E1C18;
+  --ink-2:#4A473E;
+  --dim:#8A8578;
+  --accent:#B4261E;
+  --rule:#D2CDBE;
   --sans:ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif;
   --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
-  --display:"Avenir Next Condensed","Roboto Condensed","Arial Narrow",var(--sans);
+  --display:"American Typewriter","Courier New",Courier,var(--mono);
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
 body{
-  background:var(--paper);color:var(--ink);font-family:var(--sans);
+  background:var(--paper);color:var(--ink);font-family:var(--display);
   min-height:100vh;padding:30px 18px 64px;
+  /* the ruled card, and the red margin line every index card has */
+  background-image:
+    repeating-linear-gradient(180deg, transparent 0 27px, rgba(120,116,100,.13) 27px 28px),
+    linear-gradient(90deg, transparent 0 62px, rgba(180,38,30,.20) 62px 63px, transparent 63px);
 }
+/* the correction stamp the pedant keeps by the blotter */
+.out{ position:relative }
+.out.marked::after{
+  content:"literally";
+  position:absolute;right:8px;top:-14px;z-index:3;pointer-events:none;
+  font-family:var(--display);font-size:13px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--accent);border:2px solid var(--accent);border-radius:3px;padding:3px 9px;
+  transform:rotate(-7deg);opacity:.85;
+  animation:mark .3s cubic-bezier(.2,.8,.25,1);
+}
+@keyframes mark{
+  0%{ opacity:0;transform:rotate(-19deg) scale(2.2);filter:blur(4px) }
+  100%{ opacity:.85;transform:rotate(-7deg) scale(1) }
+}
+@media (prefers-reduced-motion: reduce){ .out.marked::after{ animation:none } }
 .wrap{ max-width:720px;margin:0 auto }
 header{ margin-bottom:20px }
 h1{ font-family:var(--display);font-size:clamp(28px,6vw,44px);margin:0;letter-spacing:.02em;text-transform:uppercase;font-weight:700 }
@@ -151,6 +173,8 @@ body{ padding-bottom:64px }
   <a href="/">← back to the cabinet</a>
 </footer>
 
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
 <script>
 'use strict';
 
@@ -340,19 +364,47 @@ function render(){
   }
 }
 
-$('go').addEventListener('click', render);
+/* ---- the sound: a typewriter carriage return ------------------------ *
+ * The zip of the carriage travelling, the bell at the margin, and the
+ * clunk of it hitting the stop. A pedant's punctuation mark.
+ * ------------------------------------------------------------------- */
+function carriage(){
+  LCSound.play((A) => {
+    for (let i = 0; i < 7; i++)
+      A.burst('white', { at: i * .014, freq: 2600 + i * 260, q: 3,
+                         dur: .016, level: A.cap(.022), reverb: false });
+    A.blip(2100, { at: .10, dur: .55, level: A.cap(.05), type: 'sine', reverb: true });
+    A.blip(3150, { at: .10, dur: .34, level: A.cap(.018), type: 'sine', reverb: true });
+    A.burst('brown', { at: .16, freq: 220, q: 1.8, dur: .06, level: A.cap(.07), reverb: false });
+  });
+}
+
+/* Named runTranslation, not translate: this toy already has a translate()
+   and it is the one that does the actual work. Shadowing it made render()
+   call this wrapper, which called render(), until the stack ran out. */
+function runTranslation(){
+  render();
+  carriage();
+  const out = document.querySelector('.out');
+  if (out){ out.classList.remove('marked'); void out.offsetWidth; out.classList.add('marked'); }
+}
+
+$('go').addEventListener('click', runTranslation);
+/* typing is not a translation event — the bell would be unbearable */
 $('in').addEventListener('input', render);
-$('rand').addEventListener('click', () => { $('in').value = pick(EXAMPLES); render(); });
+$('rand').addEventListener('click', () => { $('in').value = pick(EXAMPLES); runTranslation(); });
 $('examples').innerHTML = EXAMPLES.slice(0, 4).map((e, i) =>
   '<button class="ex" data-i="' + i + '">' + esc(e.length > 40 ? e.slice(0, 38) + '…' : e) + '</button>').join('');
 $('examples').addEventListener('click', (e) => {
   const b = e.target.closest('.ex');
   if (!b) return;
   $('in').value = EXAMPLES[Number(b.dataset.i)];
-  render();
+  runTranslation();
 });
 
 render();
+
+LCSound.mount({ color: 'var(--dim)' });
 </script>
 </body>
 </html>

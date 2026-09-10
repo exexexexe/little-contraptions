@@ -14,15 +14,45 @@
   --pale:#F0E9D8;
   --dim:#9C917C;
   --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
-  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+  --serif:"Copperplate","Copperplate Gothic Light","Optima",Georgia,serif;
 }
+/* the press coming down: the stamp arrives slightly too big and slightly
+   crooked, then settles, the way a hand-struck impression does */
+#stamp.pressed{ animation:press .34s cubic-bezier(.2,.85,.25,1) }
+@keyframes press{
+  0%{ transform:scale(1.06) rotate(-1.6deg);filter:brightness(1.25) }
+  55%{ transform:scale(.985) rotate(.5deg);filter:brightness(1) }
+  100%{ transform:none }
+}
+@media (prefers-reduced-motion: reduce){ #stamp.pressed{ animation:none } }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
+/* A collector's desk: green baize, the pool of a work lamp, and the faint
+   grid of an album page underneath everything. */
 body{
-  background:radial-gradient(820px 660px at 50% 2%, var(--bg-2) 0%, var(--bg) 68%);
+  background:
+    radial-gradient(560px 380px at 50% -4%, rgba(255,240,200,.13), transparent 62%),
+    repeating-linear-gradient(0deg, rgba(0,0,0,.05) 0 2px, transparent 2px 5px),
+    repeating-linear-gradient(90deg, rgba(0,0,0,.05) 0 2px, transparent 2px 5px),
+    linear-gradient(180deg,#26402F 0%,#1B3023 60%,#152618 100%);
   color:var(--pale);font-family:var(--serif);min-height:100vh;
   padding:30px 16px 80px;display:flex;flex-direction:column;align-items:center;
 }
+/* the tweezers and the perforation gauge, lying on the baize */
+body::before{
+  content:"";position:fixed;right:-30px;top:16%;width:190px;height:16px;z-index:0;
+  background:linear-gradient(90deg, transparent, #9AA4A8 18%, #C4CED2 45%, #8A949A 78%, transparent);
+  transform:rotate(-24deg);opacity:.28;border-radius:8px;
+  box-shadow:0 6px 14px rgba(0,0,0,.4);
+}
+body::after{
+  content:"";position:fixed;left:-40px;bottom:12%;width:150px;height:52px;z-index:0;
+  background:
+    repeating-linear-gradient(90deg, rgba(240,232,210,.5) 0 3px, transparent 3px 9px),
+    rgba(240,232,210,.10);
+  transform:rotate(9deg);opacity:.22;border-radius:3px;
+}
+.wrap, footer, .sheet, .deck{ position:relative;z-index:1 }
 .wrap{ max-width:520px;width:100% }
 header{ text-align:center;margin-bottom:20px }
 h1{
@@ -113,6 +143,8 @@ canvas{
 
 <a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
 
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
 <script>
 (function(){
   'use strict';
@@ -435,7 +467,31 @@ canvas{
     seedBump = 0;
     draw();
   });
+  /* ---- the sound: a perforation tearing ----------------------------- *
+   * A run of tiny paper snaps, accelerating, then the dull thud of the
+   * cancelling hand-stamp. Nothing tonal — tearing paper has no pitch.
+   * ------------------------------------------------------------------ */
+  function tear(){
+    LCSound.play(function(A){
+      for (var i = 0; i < 9; i++){
+        A.burst('white', { at: i * (0.028 - i * 0.0012),
+                           freq: 2800 + Math.random() * 2400, q: 2.2,
+                           dur: 0.02, level: A.cap(0.03), reverb: false });
+      }
+      A.burst('brown', { at: .27, freq: 170, q: 1.6, dur: .09, level: A.cap(.10), reverb: false });
+      A.burst('white', { at: .27, freq: 1400, q: 2, dur: .03, level: A.cap(.04), reverb: false });
+    });
+  }
+  LCSound.mount({ color: 'var(--dim)' });
+
+  function pressed(){
+    var c = document.getElementById('stamp');
+    if (!c) return;
+    c.classList.remove('pressed'); void c.offsetWidth; c.classList.add('pressed');
+  }
+
   document.getElementById('reissue').addEventListener('click', function(){
+    tear(); pressed();
     seedBump++;
     draw();
   });

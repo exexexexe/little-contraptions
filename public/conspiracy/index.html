@@ -10,6 +10,7 @@
 :root{
   --cork:#8A5A32;
   --cork-2:#6E4526;
+  --cork-3:#5A3720;
   --card:#F4EEDC;
   --ink:#241C12;
   --ink-2:#54432E;
@@ -28,7 +29,7 @@ body{
     repeating-linear-gradient(43deg, rgba(0,0,0,.05) 0 2px, transparent 2px 5px),
     repeating-linear-gradient(-37deg, rgba(255,255,255,.04) 0 2px, transparent 2px 6px),
     linear-gradient(160deg, var(--cork) 0%, var(--cork-2) 100%);
-  color:var(--card);font-family:var(--sans);min-height:100vh;padding:28px 18px 64px;
+  color:var(--card);font-family:var(--type);min-height:100vh;padding:28px 18px 64px;
 }
 .wrap{ max-width:760px;margin:0 auto }
 h1{ font-family:var(--display);font-size:clamp(26px,5.6vw,40px);margin:0;letter-spacing:.05em;text-transform:uppercase;font-weight:700 }
@@ -54,23 +55,75 @@ input[type=text]:focus{ outline:2px solid #E8C05A;outline-offset:-1px }
 .btn.sec:hover{ border-color:var(--card) }
 .btn:focus-visible{ outline:2px solid #E8C05A;outline-offset:3px }
 
-.board{ position:relative;margin-top:22px }
-.note{
-  position:relative;background:var(--card);color:var(--ink);padding:22px 24px 20px;
-  border-radius:2px;box-shadow:0 12px 30px rgba(0,0,0,.4);transform:rotate(-.5deg);
+/* ---- the board itself ------------------------------------------------ *
+ * Cork, drawn with layered radial gradients rather than an image, with a
+ * batten frame around it. Everything pinned to it sits in a grid so it
+ * reflows on a phone, and the string is drawn afterwards from where the
+ * cards actually ended up.
+ * -------------------------------------------------------------------- */
+.board{
+  position:relative;margin-top:22px;padding:26px 22px 30px;border-radius:3px;
+  background:
+    radial-gradient(circle at 12% 20%, rgba(0,0,0,.16) 0 2px, transparent 3px),
+    radial-gradient(circle at 63% 8%,  rgba(255,235,200,.13) 0 2px, transparent 3px),
+    radial-gradient(circle at 31% 71%, rgba(0,0,0,.13) 0 1.5px, transparent 3px),
+    radial-gradient(circle at 87% 47%, rgba(255,235,200,.10) 0 2px, transparent 3px),
+    radial-gradient(circle at 47% 39%, rgba(0,0,0,.10) 0 1.5px, transparent 3px),
+    linear-gradient(158deg, var(--cork) 0%, var(--cork-2) 58%, var(--cork-3) 100%);
+  background-size:37px 37px,53px 53px,41px 41px,61px 61px,29px 29px,100% 100%;
+  box-shadow:
+    inset 0 0 0 9px #4A2C16, inset 0 0 0 11px #6B4526,
+    inset 0 22px 44px rgba(0,0,0,.34), 0 18px 44px rgba(0,0,0,.45);
+  min-height:120px;
 }
-.note::before{
-  content:"";position:absolute;left:50%;top:-9px;width:16px;height:16px;margin-left:-8px;
+/* the string layer sits under the cards and over the cork */
+.strings{ position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1 }
+.strings path{
+  fill:none;stroke:var(--string);stroke-width:2.2;stroke-linecap:round;
+  filter:drop-shadow(0 2px 2px rgba(0,0,0,.5));
+}
+.strings path.draw{ animation:pull .5s ease-out backwards }
+@keyframes pull{ from{ stroke-dashoffset:var(--len) } to{ stroke-dashoffset:0 } }
+
+.pinboard{ position:relative;z-index:2;display:grid;gap:18px;grid-template-columns:1fr }
+@media (min-width:660px){ .pinboard{ grid-template-columns:1fr 1fr } }
+
+.note, .card{
+  position:relative;background:var(--card);color:var(--ink);
+  border-radius:2px;box-shadow:0 10px 24px rgba(0,0,0,.42);
+}
+.note{ padding:22px 24px 20px;grid-column:1/-1;transform:rotate(-.5deg) }
+.card{ padding:15px 16px 14px;font-family:var(--type);font-size:13.5px;line-height:1.62;color:var(--ink-2) }
+.card.a{ transform:rotate(.9deg) } .card.b{ transform:rotate(-1.2deg) }
+.card.c{ transform:rotate(.5deg) } .card.d{ transform:rotate(-.6deg) }
+.card .tag{
+  display:block;font-family:var(--mono);font-size:8.5px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--string);margin-bottom:6px;
+}
+.note::before, .card::before{
+  content:"";position:absolute;left:50%;top:-8px;width:15px;height:15px;margin-left:-7.5px;
   background:radial-gradient(circle at 36% 32%, #F08A80, var(--pin));border-radius:50%;
-  box-shadow:0 2px 5px rgba(0,0,0,.45);
+  box-shadow:0 2px 5px rgba(0,0,0,.5);z-index:3;
 }
+.card.b::before{ background:radial-gradient(circle at 36% 32%, #8AC0F0, #2E6EA8) }
+.card.c::before{ background:radial-gradient(circle at 36% 32%, #F0D48A, #C09A2E) }
+.card.d::before{ background:radial-gradient(circle at 36% 32%, #A8E08A, #4E9A2E) }
+
+/* cards arrive one at a time, as though being pinned up */
+.pinned{ animation:pinup .34s cubic-bezier(.2,.9,.3,1.5) backwards }
+@keyframes pinup{
+  from{ opacity:0;transform:translateY(-14px) rotate(-4deg) scale(.94) }
+}
+@media (prefers-reduced-motion: reduce){
+  .pinned{ animation:none } .strings path.draw{ animation:none }
+}
+
 .kicker{
   font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;
   color:var(--string);margin-bottom:10px;
 }
-.note h2{ font-family:var(--type);font-size:clamp(19px,4vw,27px);margin:0 0 14px;line-height:1.25 }
+.note h2{ font-family:var(--type);font-size:clamp(19px,4vw,27px);margin:0 0 12px;line-height:1.25 }
 .note p{ font-family:var(--type);font-size:15px;line-height:1.7;margin:0 0 11px;color:var(--ink-2) }
-.note p.evidence{ padding-left:16px;border-left:2px solid #DCCFAE }
 .note .collapse{
   margin-top:16px;padding-top:13px;border-top:1px dashed #D2C4A2;
   font-family:var(--sans);font-size:14px;line-height:1.6;color:var(--ink);
@@ -155,6 +208,8 @@ body{ padding-bottom:64px }
   <a href="/">← back to the cabinet</a>
 </footer>
 
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
 <script>
 'use strict';
 
@@ -284,25 +339,107 @@ function render(){
       'Point it at people, groups or real events and it stops being a joke about how conspiratorial ' +
       'reasoning sounds and starts being the thing itself. Try a kettle.' +
       '</div>';
+    rustle(1.1);
     return;
   }
   const x = raw.toLowerCase();
   const t = theory(x);
+  const TAGS = ['exhibit a', 'exhibit b', 'exhibit c', 'exhibit d', 'exhibit e'];
+
   $('board').innerHTML =
-    '<div class="note">' +
-      '<div class="kicker">case file · ' + esc(String(ri(100, 999))) + ' · unproven, unprovable</div>' +
-      '<h2>' + esc(t.head) + '</h2>' +
-      t.ev.map(e => '<p class="evidence">' + esc(e) + '</p>').join('') +
-      '<p>' + esc(t.leap) + '</p>' +
-      '<p>' + esc(t.cred) + '</p>' +
-      '<div class="collapse">And then you look it up, and <b>' + esc(t.collapse) + '</b>. ' +
-        'It is always this. It has always been this.</div>' +
-      '<div class="meter">' +
-        '<span class="t">how far gone</span>' +
-        '<span class="track"><i style="width:' + (t.rating / 6 * 100).toFixed(0) + '%"></i></span>' +
-        '<span class="t">' + esc(RATINGS[t.rating - 1]) + '</span>' +
+    '<svg class="strings" id="strings" aria-hidden="true"></svg>' +
+    '<div class="pinboard" id="pinboard">' +
+      '<div class="note pinned" data-step="0" style="animation-delay:0s">' +
+        '<div class="kicker">case file &middot; ' + esc(String(ri(100, 999))) + ' &middot; unproven, unprovable</div>' +
+        '<h2>' + esc(t.head) + '</h2>' +
+        '<p>' + esc(t.leap) + '</p>' +
+        '<p>' + esc(t.cred) + '</p>' +
+        '<div class="collapse">And then you look it up, and <b>' + esc(t.collapse) + '</b>. ' +
+          'It is always this. It has always been this.</div>' +
+        '<div class="meter">' +
+          '<span class="t">how far gone</span>' +
+          '<span class="track"><i style="width:' + (t.rating / 6 * 100).toFixed(0) + '%"></i></span>' +
+          '<span class="t">' + esc(RATINGS[t.rating - 1]) + '</span>' +
+        '</div>' +
       '</div>' +
+      t.ev.map((e, i) =>
+        '<div class="card ' + 'abcd'[i % 4] + ' pinned" data-step="' + (i + 1) + '" ' +
+        'style="animation-delay:' + (0.22 + i * 0.34).toFixed(2) + 's">' +
+        '<span class="tag">' + TAGS[i % TAGS.length] + '</span>' + esc(e) + '</div>').join('') +
     '</div>';
+
+  /* Pin each card up in turn with a thock, then run string between them. */
+  /* The first pin fires synchronously, inside the click that caused it.
+     Everything after is on a timer, which is fine — but a Web Audio
+     context will only start during a real gesture, so the very first
+     noise the page ever makes has to happen before this handler returns. */
+  const cards = [...$('board').querySelectorAll('[data-step]')];
+  thock(0);
+  cards.forEach((c, i) => { if (i) setTimeout(() => thock(i), 220 + (i - 1) * 340); });
+  setTimeout(() => runString(cards), 220 + (cards.length - 1) * 340 + 120);
+}
+
+/* ---- the string ------------------------------------------------------- *
+ * Measured from where the cards actually landed rather than from assumed
+ * coordinates, so it survives any reflow — which matters, because the
+ * pinboard is one column on a phone and two on a desktop and the string
+ * has to find the pins either way. Each length is a slack curve rather
+ * than a straight line, because string does not go in straight lines.
+ * --------------------------------------------------------------------- */
+function runString(cards){
+  const svg = document.getElementById('strings');
+  if (!svg || cards.length < 2) return;
+  const box = $('board').getBoundingClientRect();
+  svg.setAttribute('viewBox', '0 0 ' + box.width + ' ' + box.height);
+
+  const pins = cards.map((c) => {
+    const r = c.getBoundingClientRect();
+    return { x: r.left - box.left + r.width / 2, y: r.top - box.top - 1 };
+  });
+
+  let out = '';
+  for (let i = 0; i < pins.length - 1; i++){
+    const a = pins[i], b = pins[i + 1];
+    const dx = b.x - a.x, dy = b.y - a.y;
+    const len = Math.hypot(dx, dy);
+    /* the sag: string hangs, and hangs further the longer the run */
+    const sag = Math.min(38, len * 0.16);
+    const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2 + sag;
+    const d = 'M' + a.x.toFixed(1) + ' ' + a.y.toFixed(1) +
+              ' Q' + mx.toFixed(1) + ' ' + my.toFixed(1) +
+              ' ' + b.x.toFixed(1) + ' ' + b.y.toFixed(1);
+    const approx = len + sag;
+    out += '<path class="draw" d="' + d + '" style="--len:' + approx.toFixed(0) +
+           ';stroke-dasharray:' + approx.toFixed(0) +
+           ';animation-delay:' + (i * 0.16).toFixed(2) + 's"/>';
+  }
+  svg.innerHTML = out;
+  for (let i = 0; i < pins.length - 1; i++) setTimeout(() => rustle(0.5), i * 160);
+}
+
+/* ---- sound ------------------------------------------------------------ *
+ * Two cues, both noise-based because paper and cork are noise: a short
+ * "thock" of a pin going into cork, and the dry rustle of a sheet being
+ * handled. Nothing tonal, nothing sampled.
+ * --------------------------------------------------------------------- */
+function thock(i){
+  LCSound.play((A) => {
+    A.burst('brown', { freq: 220 + i * 18, q: 2.4, dur: .055, level: A.cap(.085), reverb: false });
+    A.burst('white', { freq: 3200, q: 3, dur: .022, level: A.cap(.035), reverb: false });
+  });
+  rustle(0.7);
+}
+function rustle(mult){
+  LCSound.play((A) => {
+    for (let i = 0; i < 3; i++){
+      A.burst('white', {
+        at: i * 0.035 + Math.random() * 0.02,
+        freq: 2400 + Math.random() * 2600, q: 0.7,
+        dur: 0.05 + Math.random() * 0.05,
+        level: A.cap(0.028 * (mult || 1)), reverb: false
+      });
+    }
+  });
 }
 
 $('go').addEventListener('click', render);
@@ -315,6 +452,24 @@ $('chips').addEventListener('click', (e) => {
   $('obj').value = c.textContent;
   render();
 });
+
+/* the pinboard goes from two columns to one and back, and the string has
+   to be re-run from the new positions or it points at nothing */
+let restring;
+window.addEventListener('resize', () => {
+  clearTimeout(restring);
+  restring = setTimeout(() => {
+    const cards = [...$('board').querySelectorAll('[data-step]')];
+    if (cards.length > 1){
+      const svg = document.getElementById('strings');
+      if (svg) svg.innerHTML = '';
+      const was = LCSound.on;
+      LCSound.set(false); runString(cards); LCSound.set(was);
+    }
+  }, 180);
+});
+
+LCSound.mount({ color: '#F4EEDC' });
 
 render();
 </script>

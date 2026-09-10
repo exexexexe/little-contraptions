@@ -25,13 +25,29 @@
   --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
   --sans:ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif;
 }
+/* the screen wakes up: a scanline sweeps down it whenever a new entry
+   is fetched, and the whole panel flickers once as it settles */
+.screen.fetch{ animation:crtflick .28s steps(3) }
+.screen.fetch::after{
+  content:"";position:absolute;left:0;right:0;top:0;height:34%;pointer-events:none;
+  background:linear-gradient(180deg, rgba(127,226,138,.16), transparent);
+  animation:sweep .5s linear;
+}
+@keyframes crtflick{ 0%,100%{ filter:none } 50%{ filter:brightness(1.5) } }
+@keyframes sweep{ from{ transform:translateY(-120%) } to{ transform:translateY(300%) } }
+/* the entry types itself in rather than appearing */
+.screen .typing{ border-right:.5em solid var(--glow);animation:caret .7s steps(1) infinite }
+@keyframes caret{ 50%{ border-color:transparent } }
+@media (prefers-reduced-motion: reduce){
+  .screen.fetch, .screen.fetch::after, .screen .typing{ animation:none }
+}
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
 body{
   background:var(--room);
   background-image:radial-gradient(900px 600px at 50% -10%, var(--room-2) 0%, transparent 65%);
   min-height:100vh;padding:30px 16px 60px;
-  font-family:var(--sans);color:#CFCABC;
+  font-family:var(--mono);color:#CFCABC;
 }
 .wrap{ max-width:720px;margin:0 auto }
 
@@ -48,7 +64,7 @@ body{
   border-radius:22px;padding:16px;
   box-shadow:0 22px 60px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.14);
 }
-.screen{
+.screen{ position:relative;overflow:hidden;
   background:var(--screen);
   background-image:
     repeating-linear-gradient(0deg, rgba(127,226,138,.045) 0 1px, transparent 1px 3px),
@@ -178,6 +194,8 @@ h1{ font-family:var(--display) }
   </footer>
 </div>
 
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
 <script>
 'use strict';
 
@@ -270,18 +288,56 @@ function entry(word){
   };
 }
 
+/* ---- the sound: a small machine thinking --------------------------- *
+ * Two square-wave notes a fourth apart, the second slightly late and
+ * slightly bent, plus the faint tick of a read head. Deliberately cheap
+ * and slightly out of tune, because a pocket reference book from an
+ * imaginary 1979 would be.
+ * ------------------------------------------------------------------- */
+function beepboop(){
+  LCSound.play((A) => {
+    A.blip(880, { dur: .075, level: A.cap(.05), type: 'square', reverb: false });
+    A.blip(587, { at: .095, dur: .13, glide: 620, level: A.cap(.05), type: 'square', reverb: false });
+    A.burst('white', { at: .02, freq: 5200, q: 4, dur: .02, level: A.cap(.02), reverb: false });
+  });
+}
+function keytick(){
+  LCSound.play((A) => {
+    A.burst('white', { freq: 3000 + Math.random() * 1200, q: 5, dur: .014,
+                       level: A.cap(.018), reverb: false });
+  });
+}
+
 function show(word){
   const w = tidy(word);
   if (!w) return;
   const e = entry(w);
+  beepboop();
+  const sc = $('screen');
+  sc.classList.remove('fetch'); void sc.offsetWidth; sc.classList.add('fetch');
   $('screen').innerHTML =
     '<div class="top"><span>entry ' + esc(e.ref) + '</span><span>ed. 47</span></div>' +
-    '<h2>' + esc(e.word) + '</h2>' +
+    '<h2 id="gword"></h2>' +
     '<div class="rating">' + esc(e.rating) + '</div>' +
     e.paras.map((p, i) => '<p>' + esc(p) + (i === 1 ? '<sup style="color:var(--amber)">1</sup>' : '') + '</p>').join('') +
     '<div class="fn"><sup>1</sup> ' + esc(e.footnote) + '</div>' +
     '<div class="also">See also: ' +
       e.also.map(a => '<b data-w="' + esc(a) + '">' + esc(a) + '</b>').join(', ') + '</div>';
+
+  /* the headword types itself, with a tick per letter — the rest of the
+     entry is already there underneath it, as though it had been fetched
+     whole and the display is just catching up */
+  const head = document.getElementById('gword');
+  if (head){
+    const letters = e.word.split('');
+    head.className = 'typing';
+    let i = 0;
+    const iv = setInterval(() => {
+      head.textContent = letters.slice(0, ++i).join('');
+      if (i % 2 === 0) keytick();
+      if (i >= letters.length){ clearInterval(iv); head.className = ''; }
+    }, 42);
+  }
 
   [...$('screen').querySelectorAll('.also b')].forEach(b => {
     b.onclick = () => { $('q').value = b.dataset.w; show(b.dataset.w); };
@@ -290,6 +346,7 @@ function show(word){
 }
 
 $('look').addEventListener('click', () => show($('q').value));
+LCSound.mount({ color: 'var(--glow-dim)' });
 $('q').addEventListener('keydown', (e) => { if (e.key === 'Enter') show($('q').value); });
 $('rand').addEventListener('click', () => {
   const w = RANDOM_NOUNS[Math.floor(Math.random() * RANDOM_NOUNS.length)];

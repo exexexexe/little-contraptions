@@ -16,7 +16,7 @@
   --ink:#241C14;
   --dim:#9C8770;
   --red:#B8342C;
-  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+  --serif:Optima,"Gill Sans MT",Candara,"Palatino Linotype",Georgia,serif;
   --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
   --display:"Avenir Next Condensed","Roboto Condensed","Arial Narrow",var(--serif);
 }
@@ -161,6 +161,8 @@ body{ padding-bottom:64px }
   <a href="/">← back to the cabinet</a>
 </footer>
 
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
 <script>
 'use strict';
 
@@ -282,7 +284,24 @@ function reset(){
   setTimeout(crack, 260);
 }
 
+/* ---- the sound: a cookie giving way -------------------------------- *
+ * One dry snap — a very short filtered noise transient with a woody body
+ * under it — and then a scatter of crumbs. It is over in a quarter of a
+ * second, which is how long it takes.
+ * ------------------------------------------------------------------- */
+function snap(){
+  LCSound.play((A) => {
+    A.burst('white', { freq: 3400, q: 2.6, dur: .028, level: A.cap(.09), reverb: false });
+    A.burst('brown', { freq: 480, q: 2, dur: .05, level: A.cap(.06), reverb: false });
+    for (let i = 0; i < 5; i++)
+      A.burst('white', { at: .06 + i * .035 + Math.random() * .02,
+                         freq: 4200 + Math.random() * 3000, q: 3,
+                         dur: .015, level: A.cap(.016), reverb: false });
+  });
+}
+
 $('cookie').addEventListener('click', () => {
+  snap();
   const stage = $('cookie').parentElement;
   stage.classList.contains('cracked') ? reset() : crack();
 });
@@ -293,6 +312,8 @@ $('copy').addEventListener('click', async () => {
   catch (e) { window.prompt('Copy the fortune:', currentFortune); }
   setTimeout(() => { $('copy').textContent = 'Copy the fortune'; }, 1400);
 });
+
+LCSound.mount({ color: 'var(--slip)' });
 </script>
 </body>
 </html>

@@ -18,9 +18,15 @@
   --text:#F2F2F0;
   --dim:#8A8A90;
   --hot:#FF3D8B;
-  --sans:ui-sans-serif,system-ui,"Helvetica Neue",Helvetica,Arial,sans-serif;
+  --gold:#E8C05A;
+  --sans:"Futura","Century Gothic","Avenir Next",ui-sans-serif,sans-serif;
   --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
 }
+/* the other universes do not all report at once — each line arrives on
+   its own, which is the only way a list of parallel outcomes is funny */
+.branches .u{ animation:reportin .34s ease backwards }
+@keyframes reportin{ from{ opacity:0;transform:translateX(-10px) } }
+@media (prefers-reduced-motion: reduce){ .alt{ animation:none } }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
 body{
@@ -179,6 +185,8 @@ h1{ font-family:var(--display) }
   </footer>
 </div>
 
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
 <script>
 'use strict';
 
@@ -309,6 +317,7 @@ function branches(thing, heads){
 let busy = false;
 
 function settle(heads, thing){
+  land();
   $('result').innerHTML =
     '<div class="call">the coin has an opinion</div>' +
     '<h2>' + (heads ? 'Do it.' : 'Don\'t.') + '</h2>' +
@@ -317,8 +326,9 @@ function settle(heads, thing){
       : 'On whatever it was. Binding in this universe only.') + '</p>';
 
   const rows = branches(thing, heads);
-  $('branches').innerHTML = rows.map(r =>
-    '<div class="u' + (r.here ? ' you' : '') + '">' +
+  $('branches').innerHTML = rows.map((r, i) =>
+    '<div class="u' + (r.here ? ' you' : '') + '" ' +
+    'style="animation-delay:' + (0.06 + i * 0.075).toFixed(3) + 's">' +
       '<div class="id">' + esc(r.id) + '</div>' +
       '<div class="txt"><b>' + esc(r.head) + '</b><span>' + esc(r.body) + '</span></div>' +
     '</div>').join('');
@@ -326,9 +336,31 @@ function settle(heads, thing){
   $('again').disabled = false;
 }
 
+/* ---- the sound: a coin --------------------------------------------- *
+ * A thumb-flick, then the metallic shimmer of a spinning coin — a pair of
+ * detuned partials sliding slightly against each other, which is what
+ * gives a spin its wobble — and finally the ring as it settles.
+ * ------------------------------------------------------------------- */
+function flick(){
+  LCSound.play((A) => {
+    A.burst('white', { freq: 2600, q: 4, dur: .02, level: A.cap(.05), reverb: false });
+    A.blip(A.note(24), { dur: .5, level: A.cap(.028), type: 'sine', reverb: true });
+    A.blip(A.note(24.4), { dur: .5, level: A.cap(.024), type: 'sine', reverb: true });
+  });
+}
+function land(){
+  LCSound.play((A) => {
+    A.burst('white', { freq: 3200, q: 3, dur: .03, level: A.cap(.05), reverb: false });
+    A.blip(A.note(28), { dur: 1.0, level: A.cap(.04), type: 'sine', reverb: true });
+    A.blip(A.note(35), { dur: .7, level: A.cap(.018), type: 'sine', reverb: true });
+    A.blip(A.note(40), { at: .02, dur: .45, level: A.cap(.01), type: 'sine', reverb: true });
+  });
+}
+
 function flip(){
   if (busy) return;
   busy = true;
+  flick();
   const thing = tidy($('q').value);
   const heads = Math.random() < 0.5;
 
@@ -359,6 +391,8 @@ function flip(){
 $('flip').addEventListener('click', flip);
 $('again').addEventListener('click', flip);
 $('q').addEventListener('keydown', (e) => { if (e.key === 'Enter') flip(); });
+
+LCSound.mount({ color: 'var(--dim)' });
 </script>
 </body>
 </html>

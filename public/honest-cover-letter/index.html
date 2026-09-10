@@ -8,17 +8,21 @@
 <style>
 :root{ color-scheme: light; }
 :root{
-  --paper:#F6F4EE;
+  /* Cool office greys rather than warm paper: this is a laser-printed
+     letter on company stock, not something handwritten. The accent is a
+     corporate navy and the only warm thing on the page is the rejection. */
+  --paper:#E7E9ED;
   --sheet:#FFFFFF;
-  --ink:#1F231F;
-  --ink-2:#4C534C;
-  --dim:#8A908A;
-  --accent:#3E6B4A;
-  --rule:#DDDCD2;
+  --ink:#161A22;
+  --ink-2:#464E5C;
+  --dim:#8C93A0;
+  --accent:#1E3A6E;
+  --rule:#D6DAE2;
+  --stampred:#B4232A;
   --sans:ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif;
   --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
-  --serif:"Iowan Old Style","Palatino Linotype",Georgia,serif;
-  --display:"Avenir Next Condensed","Roboto Condensed","Arial Narrow",var(--sans);
+  --serif:"Times New Roman",Times,"Liberation Serif",serif;
+  --display:"Helvetica Neue",Helvetica,Arial,"Liberation Sans",sans-serif;
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
@@ -45,7 +49,14 @@ h1{ font-family:var(--display);font-size:clamp(26px,5.6vw,40px);margin:0;letter-
 .btn.sec:hover{ border-color:var(--accent);color:var(--accent) }
 .btn:focus-visible{ outline:2px solid var(--accent);outline-offset:3px }
 
+.letter::before{
+  content:"";position:absolute;left:0;right:0;top:0;height:5px;
+  background:linear-gradient(90deg,var(--accent) 0 34%,#C8CEDA 34% 100%);
+}
 .letter{
+  /* the stamp overhangs on purpose and is clipped by the sheet, exactly as
+     a real one would be — without this it pushed the page 153px wide */
+  position:relative;overflow:hidden;
   background:var(--sheet);border:1px solid var(--rule);border-radius:2px;
   padding:38px 40px 34px;box-shadow:0 12px 34px rgba(0,0,0,.07);
   font-family:var(--serif);font-size:16px;line-height:1.72;color:var(--ink-2);
@@ -62,9 +73,39 @@ h1{ font-family:var(--display);font-size:clamp(26px,5.6vw,40px);margin:0;letter-
 .letter .sig i{ color:var(--dim);display:block;margin-top:5px;font-size:13px }
 .letter mark{ background:#EEF3EA;color:var(--accent);padding:0 2px;border-radius:2px }
 
+/* ---- the stamp -------------------------------------------------------- *
+ * It arrives from above, oversized and out of focus, and lands hard and
+ * crooked across the signature — which is where a real one would land,
+ * because that is the part anybody actually reads.
+ * ---------------------------------------------------------------------- */
 .stamp{
-  display:inline-block;margin-top:16px;font-family:var(--mono);font-size:9px;letter-spacing:.2em;
-  text-transform:uppercase;color:#B4453A;border:1px solid #B4453A;padding:5px 10px;transform:rotate(-1.5deg);
+  position:absolute;right:6%;bottom:14%;z-index:4;pointer-events:none;
+  font-family:var(--display);font-weight:800;font-size:clamp(30px,7vw,52px);
+  letter-spacing:.06em;text-transform:uppercase;
+  color:var(--stampred);
+  border:5px solid var(--stampred);border-radius:6px;padding:6px 18px 8px;
+  opacity:.82;transform:rotate(-13deg);
+  box-shadow:inset 0 0 0 2px rgba(180,35,42,.25);
+  /* the ink is never solid — a rubber stamp on paper never is */
+  -webkit-mask-image:radial-gradient(circle at 22% 28%, #000 0 62%, rgba(0,0,0,.72) 78%, #000 100%);
+          mask-image:radial-gradient(circle at 22% 28%, #000 0 62%, rgba(0,0,0,.72) 78%, #000 100%);
+  animation:land .42s cubic-bezier(.2,.8,.25,1) backwards;
+}
+@keyframes land{
+  0%{ opacity:0;transform:rotate(-26deg) scale(3.1);filter:blur(7px) }
+  70%{ opacity:.92;transform:rotate(-11deg) scale(.94);filter:blur(0) }
+  85%{ transform:rotate(-14deg) scale(1.03) }
+  100%{ opacity:.82;transform:rotate(-13deg) scale(1) }
+}
+/* and the whole sheet takes the hit */
+.letter.struck{ animation:jolt .3s ease }
+@keyframes jolt{
+  0%,100%{ transform:none }
+  25%{ transform:translateY(3px) rotate(.4deg) }
+  55%{ transform:translateY(-1px) rotate(-.25deg) }
+}
+@media (prefers-reduced-motion: reduce){
+  .stamp{ animation:none } .letter.struck{ animation:none }
 }
 
 footer{
@@ -91,7 +132,14 @@ footer a{ color:var(--ink-2) }
 #lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
 #lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
 body{ padding-bottom:64px }
-@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } .letter{ padding:26px 22px } }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } .letter::before{
+  content:"";position:absolute;left:0;right:0;top:0;height:5px;
+  background:linear-gradient(90deg,var(--accent) 0 34%,#C8CEDA 34% 100%);
+}
+.letter{
+  /* the stamp overhangs on purpose and is clipped by the sheet, exactly as
+     a real one would be — without this it pushed the page 153px wide */
+  position:relative;overflow:hidden; padding:26px 22px } }
 @media print{ #lc-back{ display:none } }
 @media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } }
 </style>
@@ -139,6 +187,8 @@ body{ padding-bottom:64px }
   <a href="/">← back to the cabinet</a>
 </footer>
 
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
 <script>
 'use strict';
 
@@ -243,14 +293,45 @@ function render(){
       '<p>' + esc(f(pick(CLOSERS))) + '</p>' +
       '<div class="sig">' + esc(pick(NAMES)) +
         '<i>' + esc(pick(PS)) + '</i></div>' +
-      '<div class="stamp">do not send</div>' +
+      '<div class="stamp">rejected</div>' +
     '</div>';
 }
 
-$('go').addEventListener('click', render);
-$('again').addEventListener('click', render);
-['role','co'].forEach(id => $(id).addEventListener('keydown', (e) => { if (e.key === 'Enter') render(); }));
-$('tone').addEventListener('change', render);
+/* ---- the sounds -------------------------------------------------------- *
+ * Two, in sequence: the flat wooden thump of a rubber stamp hitting a desk
+ * through a sheet of paper, and then a sigh — filtered noise on a falling
+ * envelope, which is what a sigh is if you take the words out.
+ * ---------------------------------------------------------------------- */
+function thump(){
+  LCSound.play((A) => {
+    A.burst('brown', { freq: 150, q: 1.5, dur: .09, level: A.cap(.12), reverb: false });
+    A.burst('white', { freq: 1900, q: 1.8, dur: .035, level: A.cap(.045), reverb: false });
+    A.blip(84, { type: 'sine', dur: .14, glide: 56, level: A.cap(.07), reverb: false });
+  });
+}
+function sigh(){
+  LCSound.play((A) => {
+    /* breath out: a band of noise sliding down and fading, with a touch of
+       voice in it so it is a person and not a radiator */
+    A.burst('pink', { at: .16, freq: 620, q: .9, dur: .62, level: A.cap(.05),
+                      attack: .16, reverb: true });
+    A.blip(186, { at: .18, dur: .5, glide: 124, level: A.cap(.028), type: 'triangle',
+                  filter: 'lowpass', filterFreq: 700, reverb: true });
+  });
+}
+
+function write(){
+  render();
+  const el = document.querySelector('.letter');
+  if (el){ el.classList.remove('struck'); void el.offsetWidth; el.classList.add('struck'); }
+  thump();
+  sigh();
+}
+
+$('go').addEventListener('click', write);
+$('again').addEventListener('click', write);
+['role','co'].forEach(id => $(id).addEventListener('keydown', (e) => { if (e.key === 'Enter') write(); }));
+$('tone').addEventListener('change', write);
 $('copy').addEventListener('click', async () => {
   const el = document.querySelector('.letter');
   if (!el) return;
@@ -261,6 +342,8 @@ $('copy').addEventListener('click', async () => {
 });
 
 render();
+
+LCSound.mount({ color: 'var(--ink-2)' });
 </script>
 </body>
 </html>

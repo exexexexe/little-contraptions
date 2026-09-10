@@ -6,24 +6,68 @@
 <title>Seed Round</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23FAFAFB'/><path d='M7 22l6-7 4 4 8-10' stroke='%23FF5A3C' stroke-width='2.6' fill='none' stroke-linecap='round'/></svg>">
 <style>
-:root{ color-scheme: light; }
+:root{ color-scheme: dark; }
 :root{
-  --bg:#FAFAFB;
-  --slide:#FFFFFF;
-  --ink:#101116;
-  --ink-2:#4A4D57;
-  --dim:#8B8E99;
-  --brand:#FF5A3C;
-  --rule:#E4E5EA;
+  /* A pitch deck at eleven at night: near-black, one hot gradient, and
+     everything important glowing slightly more than it has earned. */
+  --bg:#08070E;
+  --bg-2:#100C1C;
+  --slide:#15111F;
+  --ink:#F2EEFF;
+  --ink-2:#A79CC4;
+  --dim:#6E6490;
+  --brand:#FF3D8A;
+  --brand-2:#31E0C8;
+  --rule:#2A2140;
   --sans:ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif;
   --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
-  --display:"Avenir Next Condensed","Roboto Condensed","Arial Narrow",var(--sans);
+  --display:"Avenir Next","Helvetica Neue",Helvetica,Arial,sans-serif;
+}
+@keyframes deckin{
+  from{ opacity:0;transform:translateY(20px) scale(.985) }
+}
+/* the valuation ticks up and then, a beat later, the page admits itself */
+.metrics b{ font-variant-numeric:tabular-nums }
+.flag{ animation:undercut .5s ease .75s backwards }
+@keyframes undercut{
+  0%{ opacity:0;transform:translateY(-8px) }
+  60%{ opacity:1;transform:translateY(2px) }
+  100%{ transform:none }
+}
+.slide.scratched{ animation:scratch .34s ease }
+@keyframes scratch{
+  0%,100%{ transform:none;filter:none }
+  20%{ transform:translateX(-7px) skewX(-1.6deg);filter:saturate(.3) }
+  55%{ transform:translateX(5px) skewX(1deg);filter:saturate(.6) }
+}
+@media (prefers-reduced-motion: reduce){
+  .slide,.flag{ animation:none } .slide.scratched{ animation:none }
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
-body{ background:var(--bg);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:30px 18px 64px }
+body{
+  background:
+    radial-gradient(760px 420px at 78% -6%, rgba(255,61,138,.20), transparent 62%),
+    radial-gradient(620px 400px at 12% 104%, rgba(49,224,200,.14), transparent 60%),
+    linear-gradient(180deg, var(--bg-2), var(--bg));
+  color:var(--ink);font-family:var(--sans);min-height:100vh;padding:30px 18px 64px;
+}
+/* a faint grid, because every deck has one */
+body::before{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.35;
+  background-image:
+    linear-gradient(rgba(167,156,196,.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(167,156,196,.055) 1px, transparent 1px);
+  background-size:44px 44px;
+}
+.wrap, footer{ position:relative;z-index:1 }
 .wrap{ max-width:780px;margin:0 auto }
-h1{ font-family:var(--display);font-size:clamp(26px,5.6vw,40px);margin:0;letter-spacing:.02em;text-transform:uppercase;font-weight:700 }
+h1{
+  font-family:var(--display);font-size:clamp(28px,6.2vw,46px);margin:0;
+  letter-spacing:-.025em;font-weight:800;
+  background:linear-gradient(96deg,var(--brand) 0%,#B478FF 46%,var(--brand-2) 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
 .sub{ font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-top:8px }
 
 .deck{ display:flex;gap:9px;flex-wrap:wrap;margin:20px 0 22px }
@@ -37,8 +81,9 @@ h1{ font-family:var(--display);font-size:clamp(26px,5.6vw,40px);margin:0;letter-
 .btn:focus-visible{ outline:2px solid var(--brand);outline-offset:3px }
 
 .slide{
+  animation:deckin .42s cubic-bezier(.2,.9,.3,1.1) backwards;
   background:var(--slide);border:1px solid var(--rule);border-radius:6px;padding:34px 32px;
-  box-shadow:0 14px 40px rgba(16,17,22,.07);
+  box-shadow:0 18px 50px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.05);
 }
 .logo{ display:flex;align-items:center;gap:12px;margin-bottom:22px }
 .mark{
@@ -51,14 +96,15 @@ h1{ font-family:var(--display);font-size:clamp(26px,5.6vw,40px);margin:0;letter-
   font-size:clamp(17px,3.4vw,23px);line-height:1.4;margin:0 0 20px;color:var(--ink);font-weight:600;
 }
 .pitch{ font-size:16px;line-height:1.7;color:var(--ink-2);margin:0 0 22px;max-width:60ch }
+.but{ color:var(--ink) }
 
 .metrics{
   display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:1px;
   background:var(--rule);border:1px solid var(--rule);border-radius:4px;overflow:hidden;margin-bottom:20px;
 }
-.metrics div{ background:#fff;padding:14px 15px }
+.metrics div{ background:#1B1529;padding:14px 15px }
 .metrics span{ font-family:var(--mono);font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);display:block }
-.metrics b{ display:block;font-size:19px;margin-top:6px;letter-spacing:-.02em;font-variant-numeric:tabular-nums }
+.metrics b{ display:block;font-size:19px;margin-top:6px;letter-spacing:-.02em;color:var(--brand-2);font-variant-numeric:tabular-nums }
 
 .rows{ border-top:1px solid var(--rule);padding-top:18px }
 .row{ display:grid;grid-template-columns:130px 1fr;gap:14px;padding:9px 0;align-items:start }
@@ -66,8 +112,8 @@ h1{ font-family:var(--display);font-size:clamp(26px,5.6vw,40px);margin:0;letter-
 .row dd{ margin:0;font-size:15px;line-height:1.6;color:var(--ink-2) }
 
 .flag{
-  margin-top:20px;background:#FFF3F0;border-left:3px solid var(--brand);padding:12px 15px;
-  font-size:14px;line-height:1.6;color:#8A3320;border-radius:0 3px 3px 0;
+  margin-top:20px;background:rgba(255,61,138,.10);border-left:3px solid var(--brand);
+  padding:12px 15px;font-size:14px;line-height:1.6;color:#FFC2DA;border-radius:0 3px 3px 0;
 }
 .flag b{ font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;display:block;margin-bottom:5px;color:var(--brand) }
 
@@ -121,6 +167,8 @@ body{ padding-bottom:64px }
   <a href="/">← back to the cabinet</a>
 </footer>
 
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
 <script>
 'use strict';
 
@@ -232,7 +280,45 @@ function render(){
     '</div>';
 }
 
-$('go').addEventListener('click', render);
+/* ---- the sounds -------------------------------------------------------- *
+ * A till drawer's bright double ding, and then — three quarters of a
+ * second later, exactly when the associate's note appears — a record
+ * scratch: a noise band swept hard downward with the pitch bending under
+ * it. The joke is entirely in the gap between the two.
+ * ---------------------------------------------------------------------- */
+function ding(){
+  LCSound.play((A) => {
+    [0, .055].forEach((at, i) => {
+      A.blip(A.note(19 + i * 5), { at, dur: .5, level: A.cap(.07 - i * .015), type: 'sine', reverb: true });
+      A.blip(A.note(31 + i * 5), { at, dur: .34, level: A.cap(.035), type: 'sine', reverb: true });
+    });
+    A.burst('white', { freq: 7200, q: 2, dur: .04, level: A.cap(.03), reverb: true });
+  });
+}
+function scratch(){
+  LCSound.play((A) => {
+    /* two passes of the needle, the second shorter, which is what a
+       scratch actually is */
+    A.burst('white', { freq: 2600, q: .5, dur: .13, level: A.cap(.075), reverb: false });
+    A.blip(520, { dur: .15, glide: 90, level: A.cap(.06), type: 'sawtooth',
+                  filter: 'lowpass', filterFreq: 1500, reverb: false });
+    A.burst('pink', { at: .15, freq: 1200, q: .6, dur: .1, level: A.cap(.05), reverb: false });
+    A.blip(300, { at: .15, dur: .11, glide: 700, level: A.cap(.04), type: 'sawtooth', reverb: false });
+  });
+}
+
+function pitch(){
+  render();
+  ding();
+  const el = document.querySelector('.slide');
+  setTimeout(() => {
+    scratch();
+    if (el){ el.classList.remove('scratched'); void el.offsetWidth; el.classList.add('scratched'); }
+  }, 750);
+}
+
+$('go').addEventListener('click', pitch);
+LCSound.mount({ color: 'var(--ink-2)' });
 $('copy').addEventListener('click', async () => {
   const el = document.querySelector('.slide');
   if (!el) return;

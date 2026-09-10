@@ -12,13 +12,16 @@
    background is flattened to black. */
 :root{ color-scheme: dark; }
 :root{
-  --paper:#E8EDE5;
-  --paper-2:#DDE4D9;
-  --ink:#1A1D19;
-  --ink-2:#414A3F;
-  --dim:#78826F;
-  --teal:#155E52;
-  --rule:#B9C4B3;
+  /* Not newsprint any more: this is a sheet of something being projected.
+     The "paper" is a dark pane, the ink is light, and the rules glow. */
+  --paper:#0A1218;
+  --paper-2:#0E1A22;
+  --ink:#DCF2EE;
+  --ink-2:#9EC4BE;
+  --dim:#6E8E8A;
+  --teal:#7FE3D0;
+  --magenta:#F06AC0;
+  --rule:rgba(127,227,208,.28);
   --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Georgia,serif;
   --sans:ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif;
   --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
@@ -156,7 +159,28 @@ body::after{
 .sheet::after{ right:7px;bottom:7px;border-width:0 1px 1px 0 }
 .paper{
   max-width:none;margin:0;padding:26px 26px 24px;position:relative;z-index:1;
-  background-image:repeating-linear-gradient(0deg, rgba(26,29,25,.028) 0 1px, transparent 1px 3px);
+  /* scanlines, and the faint horizontal banding of a projected image */
+  background-image:
+    repeating-linear-gradient(0deg, rgba(127,227,208,.045) 0 1px, transparent 1px 3px),
+    linear-gradient(180deg, rgba(127,227,208,.05), transparent 30%, rgba(240,106,192,.035));
+  animation:holo 9s ease-in-out infinite;
+}
+/* the whole sheet drifts in brightness the way a projection does, and the
+   chromatic split at the edges is what makes it read as light rather than
+   as a dark web page */
+@keyframes holo{
+  0%,100%{ filter:none }
+  46%{ filter:brightness(1.05) }
+  52%{ filter:brightness(.97) }
+}
+.paper::before{
+  content:"";position:absolute;inset:0;pointer-events:none;z-index:3;
+  box-shadow:
+    inset 2px 0 0 rgba(240,106,192,.22),
+    inset -2px 0 0 rgba(127,227,208,.22);
+  mix-blend-mode:screen;
+}
+@media (prefers-reduced-motion: reduce){ .paper{ animation:none }
 }
 .scan{
   position:absolute;left:0;right:0;top:0;height:34%;z-index:2;pointer-events:none;opacity:0;
@@ -280,6 +304,8 @@ body{ padding-bottom:64px }
   or in any sense information. <a href="/">← back to the cabinet</a>
 </footer>
 
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
 <script>
 'use strict';
 
@@ -739,8 +765,31 @@ function render(){
   sweep();
 }
 
-$('next').addEventListener('click', render);
-$('far').addEventListener('click', () => { yearOffset += 100; render(); });
+/* ---- the sound: a soft edition chime -------------------------------- *
+ * Three sine partials of one bell, struck together and left to ring, with
+ * a slow shimmer above them. Deliberately gentle: the sheet is arriving,
+ * not alarming anybody.
+ * -------------------------------------------------------------------- */
+function chime(){
+  LCSound.play((A) => {
+    [ [0,  .05, 1.5],
+      [7,  .03, 1.1],
+      [12, .022, .9],
+      [19, .012, .7] ].forEach(([semi, lvl, dur], i) => {
+      A.blip(A.note(semi + 4), { at: i * .022, dur, level: A.cap(lvl), type: 'sine', reverb: true });
+    });
+    A.burst('white', { at: .05, freq: 8000, q: .8, dur: .5, level: A.cap(.012), reverb: true });
+  });
+}
+
+function issue(){
+  render();
+  chime();
+}
+
+$('next').addEventListener('click', issue);
+$('far').addEventListener('click', () => { yearOffset += 100; issue(); });
+LCSound.mount({ color: 'var(--dim)' });
 
 render();
 </script>
