@@ -5798,9 +5798,15 @@ footer{
   if (ghost){
     var p = ghost.querySelector('p');
     var original = p ? p.innerHTML : '';
+    /* The number is read out of the drawer rather than written in here.
+       It was hard-coded as 133 and went stale the moment seventeen more
+       drawers were added and the ghost became 150 — the card said one
+       number and the egg said another. Whoever adds drawer 151 should not
+       have to know this line exists. */
+    var ghostNo = (original.match(/\d+/) || ['the next one'])[0];
     var taps = 0;
     var LINES = [
-      'Drawer 133 is still<br>being built.',
+      'Drawer ' + ghostNo + ' is still<br>being built.',
       'Still being built.',
       'Yes, still.',
       'It is a big drawer.',
@@ -5808,7 +5814,7 @@ footer{
       'You have clicked this seven times.',
       'The drawer is fine. I am the problem.',
       'Fine. It is not being built.<br>It never was.',
-      'There is no drawer 133.<br>There is only this.'
+      'There is no drawer ' + ghostNo + '.<br>There is only this.'
     ];
     ghost.style.cursor = 'pointer';
     ghost.addEventListener('click', function(){
