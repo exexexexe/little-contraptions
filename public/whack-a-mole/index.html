@@ -159,6 +159,8 @@ h1{
   box-shadow:0 6px 18px rgba(50,10,10,.4);
   transition:width .18s ease, background .16s, gap .18s ease;
 }
+/* A 38px pill is under the 44px a fingertip needs. */
+@media (pointer:coarse){ #lc-back{ width:44px;height:44px } }
 #lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
 #lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
 #lc-back:hover, #lc-back:focus-visible{ width:120px;gap:9px;background:#F2C755 }

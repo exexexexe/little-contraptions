@@ -73,6 +73,10 @@
       '#lc-sound-btn:focus-visible{outline:2px solid currentColor;outline-offset:3px;opacity:1}' +
       '#lc-sound-btn svg{width:17px;height:17px;display:block}' +
       '@media (max-width:520px){#lc-sound-btn{right:10px;bottom:10px}}' +
+      /* 38px is under the 44px a fingertip needs, and this one sits in the
+         corner a thumb reaches for. */
+      '@media (pointer:coarse){#lc-sound-btn{width:44px;height:44px}' +
+      '#lc-sound-btn svg{width:19px;height:19px}}' +
       '@media print{#lc-sound-btn{display:none}}';
     document.head.appendChild(css);
 

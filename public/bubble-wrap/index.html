@@ -75,6 +75,11 @@ h1{ font-size:clamp(17px,4vw,22px);font-weight:700;margin:0;color:#FFF6E8;text-s
 .bar button:focus-visible{ outline:2px solid #FFF6E8;outline-offset:2px }
 .bar .note{ font-size:11.5px;color:rgba(255,246,232,.62);flex:1 1 200px;min-width:0 }
 
+/* --- touch targets (sweep) --- */
+@media (pointer:coarse){
+  #btn-size, #btn-sound, #btn-top{ min-height:44px }
+}
+
 #lc-back{
   position:fixed;left:14px;bottom:14px;z-index:9999;
   display:inline-flex;align-items:center;gap:0;overflow:hidden;
@@ -86,6 +91,8 @@ h1{ font-size:clamp(17px,4vw,22px);font-weight:700;margin:0;color:#FFF6E8;text-s
   box-shadow:0 6px 18px rgba(50,34,16,.4);
   transition:width .18s ease, background .16s, gap .18s ease;
 }
+/* A 38px pill is under the 44px a fingertip needs. */
+@media (pointer:coarse){ #lc-back{ width:44px;height:44px } }
 #lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
 #lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
 #lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:#fff }

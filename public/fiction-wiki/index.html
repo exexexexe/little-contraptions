@@ -41,6 +41,8 @@ body{
   box-shadow:0 4px 16px rgba(0,0,0,.3);
   transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
 }
+/* A 38px pill is under the 44px a fingertip needs. */
+@media (pointer:coarse){ #lc-back{ width:44px;height:44px } }
 #lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
 #lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
 #lc-back:hover, #lc-back:focus-visible{
@@ -98,12 +100,21 @@ h1 em{ font-style:italic;color:var(--gold) }
 select, .btn{
   font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
   color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:3px;
-  padding:0 12px;height:43px;cursor:pointer;
+  padding:0 12px;height:43px;cursor:pointer;max-width:100%;
 }
 select:focus-visible, .btn:focus-visible{ outline:2px solid var(--gold);outline-offset:2px }
 .btn:hover{ border-color:rgba(236,231,220,.4) }
 
 .chips{ display:flex;flex-wrap:wrap;gap:6px;margin-top:11px }
+.fbtn{
+  display:none;width:100%;margin-top:9px;height:42px;
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--dim);background:var(--panel);border:1px solid var(--line);border-radius:3px;cursor:pointer;
+}
+.fbtn::after{ content:" \25BE";color:var(--dimmer) }
+.controls.open .fbtn::after{ content:" \25B4" }
+.fbtn:focus-visible{ outline:2px solid var(--gold);outline-offset:2px }
+.fbtn b{ color:var(--gold);font-weight:600 }
 .chip{
   font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;
   color:var(--dim);background:transparent;border:1px solid var(--line);border-radius:999px;
@@ -163,6 +174,18 @@ footer a{ color:var(--dim) }
   li.row{ grid-template-columns:1fr;gap:0 }
   li.row .idx{ text-align:left;padding:0 0 4px }
   .controls{ padding:12px 0 12px }
+  /* The source filter takes its width from its longest option — a couple of
+     the source titles are long enough to push the row 60px past a phone. */
+  .searchbox{ flex:1 1 100% }
+  .searchrow select, .searchrow .btn{ flex:1 1 46%;min-width:0;text-overflow:ellipsis }
+  /* Sticky, the full control block was 366px of a 568px phone. The search box
+     stays put; everything else folds behind a disclosure. */
+  .fbtn{ display:block }
+  .controls:not(.open) .searchrow select,
+  .controls:not(.open) #lucky,
+  .controls:not(.open) .chips{ display:none }
+  .chips{ max-height:38vh;overflow-y:auto;overscroll-behavior:contain }
+  #clear{ padding:12px 10px }
 }
 </style>
 </head>
@@ -199,6 +222,7 @@ footer a{ color:var(--dim) }
     </select>
     <button class="btn" id="lucky" type="button">Surprise me</button>
   </div>
+  <button class="fbtn" id="filters" type="button" aria-expanded="false" aria-controls="chips">Filters &amp; sorting</button>
   <div class="chips" id="chips" role="group" aria-label="Filter by category"></div>
 </div>
 
@@ -337,6 +361,7 @@ footer a{ color:var(--dim) }
   var current = [];
 
   function render(){
+    filterLabel();
     current = select();
     var q = state.q.trim();
     var slice = current.slice(0, shown);
@@ -391,6 +416,16 @@ footer a{ color:var(--dim) }
       c.setAttribute('aria-pressed', c === b ? 'true' : 'false');
     });
     shown = PAGE; render();
+  });
+  /* The disclosure says how many filters are on, so a folded panel is never
+     the reason a search looks empty. */
+  function filterLabel(){
+    var n = (state.cat ? 1 : 0) + (state.src ? 1 : 0) + (state.sort !== 'az' ? 1 : 0);
+    $('filters').innerHTML = 'Filters &amp; sorting' + (n ? ' &mdash; <b>' + n + '</b> on' : '');
+  }
+  $('filters').addEventListener('click', function(){
+    var open = document.querySelector('.controls').classList.toggle('open');
+    this.setAttribute('aria-expanded', open ? 'true' : 'false');
   });
   $('source').addEventListener('change', function(e){ state.src = e.target.value; shown = PAGE; render(); });
   $('sort').addEventListener('change', function(e){ state.sort = e.target.value; shown = PAGE; render(); });

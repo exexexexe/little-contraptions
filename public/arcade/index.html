@@ -38,6 +38,8 @@ body{
   box-shadow:0 4px 16px rgba(0,0,0,.3);
   transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
 }
+/* A 38px pill is under the 44px a fingertip needs. */
+@media (pointer:coarse){ #lc-back{ width:44px;height:44px } }
 #lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
 #lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
 #lc-back:hover, #lc-back:focus-visible{
@@ -67,7 +69,7 @@ body{
 }
 /* The CRT treatment: applied once, here, so every game inherits it. */
 #crt{
-  position:absolute;left:0;top:0;pointer-events:none;
+  position:absolute;inset:0;pointer-events:none;
   background:
     repeating-linear-gradient(to bottom,
       rgba(0,0,0,.30) 0px, rgba(0,0,0,.30) 1px,
@@ -107,7 +109,26 @@ body{
 .pad button:active{ background:var(--violet);color:#0B0C14 }
 .round{ width:54px;height:54px;border-radius:50% !important }
 .pad .sm{ width:auto;padding:0 12px;height:32px;font-size:9px;letter-spacing:.12em }
+/* ESC and P were 32px tall — under a fingertip and the two buttons that
+   get you out of a game and pause it, which are exactly the two you do
+   not want to miss. */
+@media (pointer:coarse){
+  .pad .sm{ height:44px;min-width:52px;padding:0 14px;font-size:10px }
+}
 @media (pointer:coarse){ .pad{ display:flex } body{ padding-bottom:150px } }
+/* Phone widths: the 320px canvas plus the cabinet's padding was 346px wide,
+   and the d-pad and the four face buttons together wanted 408px. The screen
+   scales (it is pixel art, so it takes it well) and the face buttons wrap
+   into two rows beside the d-pad. */
+@media (max-width:420px){
+  /* The canvas keeps its 320px intrinsic width for max-content sizing, so the
+     cabinet needs an explicit cap as well as a fluid screen. */
+  #cab{ padding:8px;max-width:100% }
+  .pad{ padding:10px 8px 14px;gap:8px }
+  .btns{ flex-wrap:wrap;justify-content:flex-end;align-content:flex-end;max-width:124px }
+  .round{ width:50px;height:50px }
+  .pad .sm{ min-width:48px;padding:0 8px }
+}
 </style>
 </head>
 <body>

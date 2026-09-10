@@ -41,6 +41,8 @@ body{
   box-shadow:0 4px 16px rgba(0,0,0,.3);
   transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
 }
+/* A 38px pill is under the 44px a fingertip needs. */
+@media (pointer:coarse){ #lc-back{ width:44px;height:44px } }
 #lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
 #lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
 #lc-back:hover, #lc-back:focus-visible{
@@ -122,8 +124,21 @@ select.t{ max-width:210px }
   .head{ padding-bottom:16px }
   .readout{ top:60px }
   .note{ display:none }
-  .foot{ padding-left:14px }
+  /* The 62px reserve is where the back-to-the-cabinet pill sits; dropping it
+     on narrow screens put the pill straight on top of the rail. */
+  .foot{ padding-left:62px }
   select.t{ max-width:130px }
+}
+@media (max-width:560px){
+  /* Stacked in the corner the tools ran across the title, so on a phone they
+     become a full-width bar and the title sits under them. */
+  .tools{ left:14px;right:14px;flex-direction:row;flex-wrap:wrap;justify-content:flex-end;align-items:center }
+  select.t{ max-width:none;flex:1 1 110px }
+  .head{ padding-top:112px }
+  .readout{ top:118px }
+}
+@media (pointer:coarse){
+  button.t, select.t{ height:44px }
 }
 </style>
 </head>

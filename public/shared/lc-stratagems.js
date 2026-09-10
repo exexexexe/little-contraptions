@@ -366,6 +366,37 @@
 
   window.addEventListener('keydown', onKey);
 
+  /* ---- the same five codes, by swipe --------------------------------- *
+   *  There are no arrow keys on a phone, so without this every one of
+   *  these was unreachable there. A swipe arrives as the same direction
+   *  the arrow key would have produced and goes through the identical
+   *  matcher below — the sequence is the secret, not the keyboard.
+   * ------------------------------------------------------------------ */
+  function feedDirection(dir){
+    var now = performance.now();
+    if (now - lastKey > 2200) buffer.length = 0;
+    lastKey = now;
+
+    buffer.push(dir);
+    if (buffer.length > LONGEST) buffer.shift();
+    showTrail();
+
+    for (var i = 0; i < CODES.length; i++) {
+      var c = CODES[i];
+      if (buffer.length < c.seq.length) continue;
+      if (buffer.slice(-c.seq.length).join(',') === c.seq.join(',')) {
+        buffer.length = 0;
+        hideTrail();
+        open(c);
+        return true;
+      }
+    }
+    setTimeout(function () { if (performance.now() - lastKey > 2100) hideTrail(); }, 2200);
+    return false;
+  }
+
+  if (window.LCSwipe && LCSwipe.available) LCSwipe.on(feedDirection);
+
   window.LCStratagems = {
     codes: CODES,
     open: function (id) {
@@ -379,6 +410,11 @@
         onKey({ key: 'Arrow' + d.charAt(0).toUpperCase() + d.slice(1),
                 target: document.body, preventDefault: function () {} });
       });
+      return !!panel;
+    },
+    /* the touch path, so it can be driven in a test the same way */
+    swipe: function (dirs) {
+      dirs.forEach(function (d) { feedDirection(d); });
       return !!panel;
     },
     isOpen: function () { return !!panel; }

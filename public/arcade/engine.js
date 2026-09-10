@@ -226,7 +226,11 @@
       // so asking it how much room there is always answers "this much".
       var availW = Math.min(window.innerWidth - 40, 1100);
       var availH = window.innerHeight - (window.matchMedia('(pointer:coarse)').matches ? 210 : 150);
-      var s = Math.max(1, Math.floor(Math.min(availW / W, availH / H)));
+      // Integer scaling above 1x keeps the pixels crisp. Below 1x, flooring
+      // pinned the canvas at its full 320px and it hung off the side of a
+      // phone, so under 1x it takes the exact fractional fit instead.
+      var raw = Math.min(availW / W, availH / H);
+      var s = raw >= 1 ? Math.floor(raw) : raw;
       cv.style.width = (W * s) + 'px';
       cv.style.height = (H * s) + 'px';
       var ov = document.getElementById('crt');

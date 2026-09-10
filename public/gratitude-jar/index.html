@@ -78,6 +78,11 @@ footer{
 }
 footer a{ color:var(--ink-2) }
 
+/* --- touch targets (sweep) --- */
+@media (pointer:coarse){
+  .btn{ min-height:44px }
+}
+
 #lc-back{
   position:fixed;left:14px;bottom:14px;z-index:9999;
   display:inline-flex;align-items:center;gap:0;overflow:hidden;
@@ -90,6 +95,8 @@ footer a{ color:var(--ink-2) }
   box-shadow:0 4px 16px rgba(0,0,0,.3);
   transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
 }
+/* A 38px pill is under the 44px a fingertip needs. */
+@media (pointer:coarse){ #lc-back{ width:44px;height:44px } }
 #lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
 #lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
 #lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
@@ -398,6 +405,69 @@ cv.addEventListener('pointermove', (e) => {
   $('hint').textContent = spilling ? 'everything came out at once'
         : shake > SPILL_AT * 0.55 ? 'the lid is not going to hold' : 'shaking';
 });
+/* ---- shaking the actual phone -------------------------------------- *
+ *  Layered on top of the drag, never instead of it: a mouse still shakes
+ *  the jar exactly as it did. This only adds the obvious gesture for a
+ *  device that can feel itself being moved — the jar is a jar, and what
+ *  you do to a jar is shake it.
+ *
+ *  It feeds the same `shake` accumulator the drag does, so the lid gives
+ *  way at the same threshold and there is only ever one rule about how
+ *  hard is hard enough.
+ * ------------------------------------------------------------------- */
+(function realShake(){
+  if (typeof DeviceMotionEvent === 'undefined') return;
+  let lastMag = 0, armed = false;
+
+  function onMotion(e){
+    const a = e.accelerationIncludingGravity;
+    if (!a) return;
+    const mag = Math.hypot(a.x || 0, a.y || 0, a.z || 0);
+    const jerk = Math.abs(mag - lastMag);
+    lastMag = mag;
+    if (jerk < 3) return;                       // hand tremor is not shaking
+
+    const now = performance.now();
+    shake = Math.max(0, shake - (now - lastShake) * 1.1) + jerk * 12;
+    lastShake = now;
+
+    // and give the contents a real shove, so it looks shaken as well
+    slips.forEach((b) => {
+      Matter.Body.applyForce(b, b.position, {
+        x: (Math.random() - 0.5) * jerk * 0.00022,
+        y: (Math.random() - 0.5) * jerk * 0.00022
+      });
+    });
+
+    if (!spilling && shake > SPILL_AT) spill();
+    $('hint').textContent = spilling ? 'everything came out at once'
+      : shake > SPILL_AT * 0.55 ? 'the lid is not going to hold' : 'shaking';
+  }
+
+  function arm(){
+    if (armed) return;
+    armed = true;
+    window.addEventListener('devicemotion', onMotion);
+    $('hint').textContent = 'shake the phone, or drag the jar';
+  }
+
+  // iOS will only grant this from inside a real gesture, so it is asked
+  // for on the first touch of the jar rather than on load.
+  if (typeof DeviceMotionEvent.requestPermission === 'function'){
+    const ask = () => {
+      DeviceMotionEvent.requestPermission()
+        .then((r) => { if (r === 'granted') arm(); })
+        .catch(() => {});
+      cv.removeEventListener('pointerdown', ask);
+    };
+    cv.addEventListener('pointerdown', ask);
+  } else if (window.matchMedia && matchMedia('(pointer: coarse)').matches) {
+    arm();
+  }
+
+  window.__jarShake = { onMotion: onMotion, arm: arm };
+})();
+
 const endDrag = () => {
   if (!drag) return;
   drag = null;

@@ -28,6 +28,11 @@ body{
 @media (prefers-reduced-motion: reduce){ body{ transition:none } }
 
 /* ---------- shared: back to the cabinet ---------- */
+/* --- touch targets (sweep) --- */
+@media (pointer:coarse){
+  #vol{ min-height:44px }
+}
+
 #lc-back{
   position:fixed;left:14px;bottom:14px;z-index:9999;
   display:inline-flex;align-items:center;gap:0;overflow:hidden;
@@ -40,6 +45,8 @@ body{
   box-shadow:0 4px 16px rgba(0,0,0,.3);
   transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
 }
+/* A 38px pill is under the 44px a fingertip needs. */
+@media (pointer:coarse){ #lc-back{ width:44px;height:44px } }
 #lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
 #lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
 #lc-back:hover, #lc-back:focus-visible{
@@ -150,362 +157,19 @@ footer a{ color:var(--dim) }
 </div>
 
 <script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-roomtone.js"></script>
 <script>
 (function(){
   'use strict';
   var $ = function(id){ return document.getElementById(id); };
 
-  /* ================================================================== *
-   *  Scene definitions.
-   *
-   *  Each one is a genuinely different graph. `bed` is what runs
-   *  continuously; `events` are one-shot voices scheduled at their own
-   *  rates. Nothing is sampled: every source is either an oscillator or
-   *  a noise buffer generated below.
-   * ================================================================== */
-  var SCENES = [
-    { key:'library', name:'A Library, Late', tint:'#161320',
-      desc:'Air handling, distant paper, the occasional chair. Almost nothing happens, which is the point.',
-      gear:'pink noise · 420 Hz–3.4 kHz band · 50 Hz hum · rare transients' },
-    { key:'rain', name:'Rain on a Window', tint:'#101821',
-      desc:'A steady wash with individual drips on the glass, and thunder far enough away to be pleasant.',
-      gear:'white noise · bandpass wash · pitched drips · thunder swells' },
-    { key:'bridge', name:"A Ship's Bridge", tint:'#101A1C',
-      desc:'A deep drive hum, the recyclers, and something politely reporting itself every few seconds.',
-      gear:'detuned saws · 89 Hz drive · 2.4 kHz recyclers · periodic pings' },
-    { key:'campfire', name:'A Fire Outside', tint:'#1C1512',
-      desc:'Brown noise for the burn and a lot of small sharp things happening at once.',
-      gear:'brown noise · crackle bursts · occasional pop' },
-    { key:'underwater', name:'Somewhere Warm and Underwater', tint:'#111A22',
-      desc:'The dreamy one. A slow detuned pad through a filter that keeps breathing, muffled the way a swimming pool muffles a summer afternoon.',
-      gear:'detuned sines · slow filter LFO · long reverb · bubbles' },
-    { key:'train', name:'A Night Train', tint:'#171319',
-      desc:'Rail joints at a steady clip, a low rumble under it, and a horn now and then from the front of the train.',
-      gear:'rhythmic noise bursts · 125 Hz rumble · horn chords' },
-  ];
-
-  /* ---- state ---- */
-  var ctx = null, master = null, wet = null, analyser = null;
-  var current = null, currentKey = null, timers = [], raf = null;
-  var running = false;
-
-  /* ---- the bench ----
-     The noise buffers, the reverb impulse and the graph helpers used to
-     be defined here; they are now /shared/lc-audio.js, because the snow
-     globe wants the same ambient engine and half a dozen generators want
-     the same one-shots. The six beds below are unchanged and still the
-     only thing this page is about — they call the same names, which are
-     now thin wrappers over the shared bench rather than definitions.
-
-     Nothing is sampled. Every source is still an oscillator or a noise
-     buffer generated in the browser. */
-
-  var A = null;                 // the shared bench
-  var NOISE = null;
-
-  function init(){
-    A = LCAudio.get();
-    if (!A) throw new Error('no web audio in this browser');
-    ctx = A.ctx;
-    NOISE = A.NOISE;
-
-    master = A.gain(0);
-    analyser = ctx.createAnalyser();
-    analyser.fftSize = 2048;
-    analyser.smoothingTimeConstant = 0.82;
-
-    // this page owns its own master so its fade in and out are its own,
-    // and hangs it off the shared destination rather than the bench's
-    // master gain, which other toys on other pages also use
-    master.connect(analyser);
-    analyser.connect(ctx.destination);
-
-    // the shared reverb send, routed into this page's master
-    wet = A.gain(0.28);
-    var conv = ctx.createConvolver();
-    conv.buffer = A.makeIR(2.6, 2.4);
-    wet.connect(conv); conv.connect(master);
-
-    // handy for checking the scenes really do differ; harmless otherwise
-    window.RoomTone = { ctx: ctx, analyser: analyser, scenes: SCENES,
-                        play: play, stop: stopAll, get current(){ return currentKey; } };
-  }
-
-  /* ---- helpers ----
-     Disconnecting a scene's output silences it but leaves its oscillators
-     and looping buffers running for the life of the page. Every long-lived
-     source is registered here so switching scenes actually stops the old
-     one. */
-  function reg(node) { if (current) current.sources.push(node); return node; }
-
-  function noiseSource(kind){
-    var s = ctx.createBufferSource();
-    s.buffer = NOISE[kind]; s.loop = true; s.start();
-    return reg(s);
-  }
-
-  /* a registered oscillator, NOT started for you — the beds start their
-     own, which is how they were written */
-  function osc(type, freq){
-    var o = ctx.createOscillator();
-    o.type = type; o.frequency.value = freq;
-    return reg(o);
-  }
-  function filt(type, freq, q){ return A.filt(type, freq, q); }
-  function gain(v){ return A.gain(v); }
-  function chain(){ return A.chain.apply(null, arguments); }
-
-  function every(msMin, msMax, fn){
-    function go(){
-      var t = setTimeout(function () { if (running) { fn(); go(); } },
-                         msMin + Math.random() * (msMax - msMin));
-      timers.push(t);
-    }
-    go();
-  }
-  function rnd(a, b){ return a + Math.random() * (b - a); }
-
-  /* one-shot noise burst with an envelope — the workhorse for transients.
-     Routed into the CURRENT SCENE's output, not the bench master, so a
-     scene change takes its transients with it. */
-  function burst(kind, opts){
-    var o = opts || {};
-    A.burst(kind, {
-      to: current.out, type: o.type, freq: o.freq, q: o.q,
-      attack: o.attack, dur: o.dur, level: o.level
-    });
-    if (o.send) { /* the bench's own send is separate; this page's wet is below */ }
-  }
-
-  /* one-shot pitched blip */
-  function blip(freq, opts){
-    var o = opts || {};
-    var osc2 = ctx.createOscillator();
-    osc2.type = o.type || 'sine';
-    var now = ctx.currentTime;
-    osc2.frequency.setValueAtTime(freq, now);
-    if (o.glide) osc2.frequency.exponentialRampToValueAtTime(o.glide, now + (o.dur || 0.3));
-    var g = gain(0);
-    var dur = o.dur || 0.3;
-    g.gain.setValueAtTime(0, now);
-    g.gain.linearRampToValueAtTime(o.level || 0.12, now + (o.attack || 0.01));
-    g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
-    chain(osc2, g, current.out);
-    if (o.send !== false) g.connect(wet);
-    osc2.start(now);
-    osc2.stop(now + dur + 0.05);
-  }
-
-  /* ================================================================== *
-   *  The six beds
-   * ================================================================== */
-  var BUILD = {
-
-    library: function(out){
-      // barely-there air, a mains hum, and long silences
-      chain(noiseSource('pink'), filt('highpass', 420), filt('lowpass', 3400), gain(0.032), out);
-      var hum = osc('sine', 50);  chain(hum, gain(0.018), out); hum.start();
-      var hum2 = osc('sine', 100); chain(hum2, gain(0.007), out); hum2.start();
-
-      every(3200, 9000, function(){          // a page, or a sleeve on a desk
-        burst('white', { freq: rnd(1900, 3600), q: 0.8, dur: rnd(0.05, 0.13),
-                         level: rnd(0.020, 0.055), send: true });
-      });
-      every(11000, 26000, function(){        // a chair, a distant door
-        burst('brown', { type:'lowpass', freq: rnd(160, 420), dur: rnd(0.18, 0.5),
-                         level: rnd(0.05, 0.11), attack: 0.02, send: true });
-      });
-    },
-
-    rain: function(out){
-      // two layers of wash so it does not sit on one band
-      chain(noiseSource('white'), filt('bandpass', 1400, 0.55), gain(0.30), out);
-      chain(noiseSource('pink'),  filt('highpass', 2600), gain(0.16), out);
-      chain(noiseSource('brown'), filt('lowpass', 220), gain(0.10), out);
-
-      every(90, 420, function(){             // individual drips on the glass
-        burst('white', { freq: rnd(2400, 6200), q: rnd(4, 12), dur: rnd(0.012, 0.05),
-                         level: rnd(0.05, 0.16) });
-      });
-      every(17000, 44000, function(){        // thunder, a long way off
-        var src = noiseSource('brown');
-        var f = filt('lowpass', 150);
-        var g = gain(0);
-        var now = ctx.currentTime, dur = rnd(2.2, 4.4);
-        g.gain.setValueAtTime(0, now);
-        g.gain.linearRampToValueAtTime(rnd(0.10, 0.24), now + rnd(0.35, 0.9));
-        g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
-        chain(src, f, g, out); g.connect(wet);
-        src.stop(now + dur + 0.1);
-      });
-    },
-
-    bridge: function(out){
-      // the drive: two saws a few cents apart, well below the vocal range
-      [89, 89.7, 134].forEach(function(f, i){
-        var o = osc(i === 2 ? 'triangle' : 'sawtooth', f);
-        chain(o, filt('lowpass', 210), gain(i === 2 ? 0.090 : 0.135), out);
-        o.start();
-      });
-      chain(noiseSource('white'), filt('bandpass', 2400, 1.1), gain(0.028), out); // recyclers
-
-      // a slow breathing on the hiss, so it is not static
-      var lfo = osc('sine', 0.06);
-      var lg = gain(0.02); chain(lfo, lg); lfo.start();
-
-      every(4200, 9000, function(){          // something reporting itself
-        blip(rnd(1180, 1320), { dur: 0.16, level: 0.045, type: 'sine' });
-      });
-      every(9000, 21000, function(){         // a relay, somewhere behind a panel
-        burst('white', { freq: rnd(700, 1500), q: 6, dur: 0.02, level: 0.05 });
-      });
-    },
-
-    campfire: function(out){
-      chain(noiseSource('brown'), filt('lowpass', 320), gain(0.15), out);   // the burn
-      chain(noiseSource('pink'),  filt('bandpass', 2100, 0.8), gain(0.06), out);
-
-      every(28, 150, function(){             // small crackles, constantly
-        burst('white', { freq: rnd(1600, 5200), q: rnd(3, 10), dur: rnd(0.006, 0.03),
-                         level: rnd(0.03, 0.13) });
-      });
-      every(1400, 5200, function(){          // a proper pop
-        burst('white', { freq: rnd(500, 1400), q: 2.5, dur: rnd(0.04, 0.11),
-                         level: rnd(0.12, 0.26), send: true });
-      });
-    },
-
-    /* The nostalgia one. Warm, dreamy, and muffled the way water muffles. */
-    underwater: function(out){
-      var root = 110;
-      [1, 1.005, 1.5, 2.002, 2.997].forEach(function(m, i){
-        var o = osc('sine', root * m);
-        var g = gain([0.075, 0.070, 0.040, 0.026, 0.016][i]);
-        chain(o, g, out);
-        g.connect(wet);                       // the pad sits mostly in the reverb
-        o.start();
-        // each partial drifts at its own rate, so the chord never quite settles
-        var d = osc('sine', 0.03 + i * 0.017);
-        var dg = gain(root * m * 0.004);
-        chain(d, dg, o.frequency); d.start();
-      });
-
-      // one lowpass, breathing slowly: this is what makes it dreamy
-      var lp = filt('lowpass', 460, 3.2);
-      var swell = osc('sine', 0.055);
-      var sg = gain(210);
-      chain(swell, sg, lp.frequency); swell.start();
-      chain(noiseSource('pink'), filt('lowpass', 700), gain(0.05), lp, out);
-
-      every(2600, 8000, function(){          // bubbles, rising
-        blip(rnd(320, 620), { glide: rnd(700, 1500), dur: rnd(0.16, 0.36),
-                              level: rnd(0.020, 0.05) });
-      });
-    },
-
-    train: function(out){
-      chain(noiseSource('brown'), filt('lowpass', 125), gain(0.26), out);   // rumble
-      chain(noiseSource('pink'),  filt('bandpass', 820, 0.9), gain(0.055), out);
-
-      // rail joints: a steady pair-of-pairs, the way bogies actually pass them
-      var beat = rnd(0.62, 0.74);
-      var step = 0;
-      (function clack(){
-        if (!running) return;
-        var gapAfter = (step % 4 === 1) ? beat * 0.9 : (step % 4 === 3 ? beat * 1.25 : beat * 0.22);
-        burst('white', { type:'bandpass', freq: rnd(260, 540), q: 1.7,
-                         dur: rnd(0.03, 0.06), level: rnd(0.14, 0.25), send: true });
-        step++;
-        timers.push(setTimeout(clack, gapAfter * 1000));
-      })();
-
-      every(26000, 60000, function(){        // the horn, from up front
-        [1, 1.19, 1.5].forEach(function(m){
-          var o = ctx.createOscillator(); o.type = 'sawtooth';
-          o.frequency.value = 155 * m;
-          var g = gain(0);
-          var now = ctx.currentTime, dur = rnd(1.4, 2.4);
-          g.gain.setValueAtTime(0, now);
-          g.gain.linearRampToValueAtTime(0.030, now + 0.22);
-          g.gain.setValueAtTime(0.030, now + dur * 0.62);
-          g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
-          chain(o, filt('lowpass', 900), g, out); g.connect(wet);
-          o.start(now); o.stop(now + dur + 0.1);
-        });
-      });
-    },
-  };
-
-  /* ---- scene switching, with a crossfade ---- */
-  function stopScene(sc){
-    if (!sc) return;
-    var now = ctx.currentTime;
-    sc.out.gain.cancelScheduledValues(now);
-    sc.out.gain.setValueAtTime(sc.out.gain.value, now);
-    sc.out.gain.linearRampToValueAtTime(0, now + 0.9);
-    setTimeout(function(){
-      try { sc.out.disconnect(); } catch (e) {}
-      // stop the sources too, or every scene you visit keeps running silently
-      (sc.sources || []).forEach(function(n){
-        try { n.stop(); } catch (e) {}
-        try { n.disconnect(); } catch (e) {}
-      });
-      sc.sources = [];
-    }, 1400);
-  }
-
-  function play(key){
-    if (!ctx) init();
-    if (ctx.state === 'suspended') ctx.resume();
-
-    timers.forEach(clearTimeout); timers = [];
-    var old = current;
-    running = true;
-
-    var out = gain(0);
-    out.connect(master);
-    current = { out: out, key: key, sources: [] };
-    currentKey = key;
-
-    BUILD[key](out);
-
-    var now = ctx.currentTime;
-    out.gain.setValueAtTime(0, now);
-    out.gain.linearRampToValueAtTime(1, now + 1.1);
-    stopScene(old);
-
-    var sc = SCENES.filter(function(s){ return s.key === key; })[0];
-    $('lede').textContent = sc.name;
-    document.body.style.background = sc.tint;
-    [].forEach.call($('scenes').children, function(b){
-      b.setAttribute('aria-pressed', String(b.dataset.k === key));
-    });
-    setPower(true);
-  }
-
-  function stopAll(){
-    running = false;
-    timers.forEach(clearTimeout); timers = [];
-    if (current) { stopScene(current); current = null; }
-    currentKey = null;
-    if (master) {
-      var now = ctx.currentTime;
-      master.gain.cancelScheduledValues(now);
-      master.gain.linearRampToValueAtTime(0, now + 0.5);
-    }
-    [].forEach.call($('scenes').children, function(b){ b.setAttribute('aria-pressed','false'); });
-    $('lede').textContent = 'Silence, then.';
-    setPower(false);
-  }
-
-  function setPower(on){
-    $('power').textContent = on ? 'Stop' : 'Start';
-    $('hint').hidden = on;
-    if (on && master) {
-      var v = $('vol').value / 100;
-      master.gain.linearRampToValueAtTime(v, ctx.currentTime + 0.6);
-    }
-  }
+  /* The six beds, the crossfade and the master now live in
+     /shared/lc-roomtone.js, because the desktop's rest mode and its
+     theme soundtrack want the same engine. What is left here is this
+     page's chrome: the scene list, the power button, the level, and
+     the meter. The engine draws nothing and this file makes no sound. */
+  var RT = window.LCRoomTone;
+  var SCENES = RT.scenes;
 
   /* ---- chrome ---- */
   $('scenes').innerHTML = SCENES.map(function(s){
@@ -515,18 +179,33 @@ footer a{ color:var(--dim) }
            '<div class="sg">' + s.gear + '</div></button>';
   }).join('');
 
+  /* The engine says what it is doing; the page says what that looks
+     like. Every state change lands here, whether it came from a click,
+     the spacebar or a number key. */
+  RT.on(function(key){
+    var on = RT.running;
+    $('power').textContent = on ? 'Stop' : 'Start';
+    $('hint').hidden = on;
+    var sc = key ? RT.scene(key) : null;
+    $('lede').textContent = sc ? sc.name : 'Silence, then.';
+    if (sc) document.body.style.background = sc.tint;
+    [].forEach.call($('scenes').children, function(b){
+      b.setAttribute('aria-pressed', String(b.dataset.k === key));
+    });
+  });
+
   $('scenes').addEventListener('click', function(e){
     var b = e.target.closest('.scene'); if (!b) return;
-    play(b.dataset.k);
+    RT.play(b.dataset.k);
   });
 
   $('power').addEventListener('click', function(){
-    if (running) return stopAll();
-    play(currentKey || SCENES[0].key);
+    if (RT.running) return RT.stop();
+    RT.play(RT.current || SCENES[0].key);
   });
 
   $('vol').addEventListener('input', function(){
-    if (master && running) master.gain.value = $('vol').value / 100;
+    RT.setVolume($('vol').value / 100);
   });
 
   /* ---- the meter ---- */
@@ -540,10 +219,11 @@ footer a{ color:var(--dim) }
   sizeScope();
 
   function draw(){
-    raf = requestAnimationFrame(draw);
+    requestAnimationFrame(draw);
     var w = cv.clientWidth, h = cv.clientHeight;
     c2.clearRect(0, 0, w, h);
-    if (!analyser || !running) return;
+    var analyser = RT.analyser;
+    if (!analyser || !RT.running) return;
     var n = analyser.frequencyBinCount;
     var data = new Uint8Array(n);
     analyser.getByteFrequencyData(data);
@@ -567,7 +247,7 @@ footer a{ color:var(--dim) }
     if (e.target.tagName === 'INPUT') return;
     if (e.key === ' ') { e.preventDefault(); $('power').click(); }
     var n = parseInt(e.key, 10);
-    if (n >= 1 && n <= SCENES.length) play(SCENES[n - 1].key);
+    if (n >= 1 && n <= SCENES.length) RT.play(SCENES[n - 1].key);
   });
 })();
 </script>

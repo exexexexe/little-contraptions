@@ -48,6 +48,12 @@ body{
    wire holds it still. */
 .wire-track{ display:inline-flex;align-items:center;padding-left:100%;animation:wire 112s linear infinite }
 .wire:hover .wire-track, .wire:focus-within .wire-track{ animation-play-state:paused }
+/* Hovering is how a mouse holds this still; a phone has no hover at all,
+   so on touch a tap holds it and a second tap lets it go. Without this
+   the ticker simply cannot be stopped on a phone, which is the one thing
+   people want to do to a ticker. */
+.wire.held .wire-track{ animation-play-state:paused }
+@media (hover: none){ .wire{ cursor:pointer } }
 .wire-track span{ font-size:12.5px;padding-right:44px;opacity:.95 }
 .wire-track span::before{ content:"✓";color:var(--sun);margin-right:9px;font-weight:700 }
 @keyframes wire{ from{transform:translateX(0)} to{transform:translateX(-100%)} }
@@ -117,6 +123,11 @@ footer a{ color:var(--ink-2) }
    one way out that does not depend on scrolling to a footer. It sits as a
    compact disc and opens to the word on hover or focus, because a wide
    permanent chip covers whatever is in the corner of a scrolling page. */
+/* --- touch targets (sweep) --- */
+@media (pointer:coarse){
+  .btn, .sources button, .wire{ min-height:44px }
+}
+
 #lc-back{
   position:fixed;left:14px;bottom:14px;z-index:9999;
   display:inline-flex;align-items:center;gap:0;overflow:hidden;
@@ -129,6 +140,8 @@ footer a{ color:var(--ink-2) }
   box-shadow:0 4px 16px rgba(0,0,0,.3);
   transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
 }
+/* A 38px pill is under the 44px a fingertip needs. */
+@media (pointer:coarse){ #lc-back{ width:44px;height:44px } }
 #lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
 #lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
 #lc-back:hover, #lc-back:focus-visible{
@@ -300,6 +313,20 @@ $('refresh').addEventListener('click', () => { if (current) load(current); });
     $('list').innerHTML = '<div class="state"><b>No wire available</b>' +
       'The server did not list any feeds (' + esc(err.message) + ').</div>';
   }
+})();
+
+/* ---- tap to hold the ticker still (touch only) --------------------- */
+(function(){
+  var holder = document.querySelector('.wire');
+  if (!holder) return;
+  if (window.matchMedia && !matchMedia('(hover: none)').matches) return;
+  holder.setAttribute('role', 'button');
+  holder.setAttribute('tabindex', '0');
+  holder.setAttribute('aria-label', 'Tap to hold the ticker still');
+  holder.addEventListener('click', function(){
+    var held = holder.classList.toggle('held');
+    holder.setAttribute('aria-pressed', String(held));
+  });
 })();
 </script>
 </body>
