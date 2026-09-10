@@ -12,26 +12,46 @@
    background is flattened to black. */
 :root{ color-scheme: dark; }
 :root{
+  /* These are only the defaults. Choosing an era rewrites every one of
+     them on <html>, so the room the listener is standing in changes with
+     them — a 1180 scriptorium and a 1998 bedroom should not share a
+     background, a chrome colour or a typeface. */
   --room:#2E2A26;
   --room-2:#3A3530;
   --chrome:#5A544C;
   --text:#E7E0D4;
   --dim:#9A9184;
   --brass:#D9B36C;
+  --page:ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif;
   --sans:ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif;
   --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
 }
+html{
+  transition:background-color .45s ease, color .45s ease;
+}
+/* the reply arrives a line at a time, so you watch the listener work it
+   out rather than being handed a finished paragraph */
+.panel p{ animation:said .42s ease backwards }
+.panel p:nth-of-type(1){ animation-delay:.05s }
+.panel p:nth-of-type(2){ animation-delay:.30s }
+.panel p:nth-of-type(3){ animation-delay:.55s }
+@keyframes said{ from{ opacity:0;transform:translateY(7px) } }
+@media (prefers-reduced-motion: reduce){ .panel p{ animation:none } }
+body, h1, .dial button, .bar input, footer{
+  transition:background-color .45s ease, color .45s ease, border-color .45s ease, font-family 0s;
+}
+@media (prefers-reduced-motion: reduce){ html, body, h1, .dial button{ transition:none } }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
 body{
   background:var(--room);
   background-image:radial-gradient(900px 520px at 50% -12%, var(--room-2) 0%, transparent 65%);
-  color:var(--text);font-family:var(--sans);min-height:100vh;padding:30px 18px 60px;
+  color:var(--text);font-family:var(--page);min-height:100vh;padding:30px 18px 60px;
 }
 .wrap{ max-width:760px;margin:0 auto }
 
 header{ text-align:center;margin-bottom:20px }
-h1{ margin:0;font-size:clamp(25px,5.2vw,38px);font-weight:300;letter-spacing:-.02em }
+h1{ margin:0;font-size:clamp(25px,5.2vw,38px);font-weight:300;letter-spacing:-.02em;font-family:var(--page) }
 h1 b{ font-weight:800;color:var(--brass) }
 .sub{ margin-top:8px;font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:.08em }
 
@@ -226,6 +246,8 @@ h1{ font-family:var(--display) }
   </footer>
 </div>
 
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
 <script>
 'use strict';
 
@@ -248,6 +270,124 @@ const esc = (s) => String(s == null ? '' : s)
  *  proxy — generating in-character rather than assembling. Left as a
  *  decision to make rather than one taken here.
  * ------------------------------------------------------------------ */
+/* The room each listener is standing in, plus the noise the moment of
+   explanation makes in it. Both are per-era on purpose: the whole point of
+   this toy is the difference between the eras, and a page that looks and
+   sounds identical whichever one you pick is quietly arguing the opposite. */
+const ROOMS = {
+  neolithic:   { room:'#2A2118', room2:'#382C1F', chrome:'#6B5636', text:'#EADCC2', dim:'#A08A66', brass:'#C99C55',
+                 page:'"Iowan Old Style",Georgia,serif', cue:'stone' },
+  egypt:       { room:'#2A2210', room2:'#3A2F16', chrome:'#7A6428', text:'#F0E3B4', dim:'#B49C5E', brass:'#D8B95E',
+                 page:'"Iowan Old Style",Georgia,serif', cue:'reed' },
+  roman:       { room:'#26251F', room2:'#33322A', chrome:'#6E6B5E', text:'#E8E5DA', dim:'#9C9887', brass:'#C6BFA4',
+                 page:'"Trajan Pro",Optima,"Palatino Linotype",Georgia,serif', cue:'chisel' },
+  monk:        { room:'#231C10', room2:'#31281A', chrome:'#75643A', text:'#EFE6D2', dim:'#A89572', brass:'#C2A662',
+                 page:'"Iowan Old Style",Georgia,serif', cue:'quill' },
+  medieval:    { room:'#211A11', room2:'#2F2618', chrome:'#6E5B3A', text:'#E8DCC0', dim:'#A08E68', brass:'#C49A52',
+                 page:'"Iowan Old Style",Palatino,Georgia,serif', cue:'anvil' },
+  elizabethan: { room:'#1E1A12', room2:'#2C2619', chrome:'#6A5E3F', text:'#E4DAC4', dim:'#9C8F6E', brass:'#C0A566',
+                 page:'"Iowan Old Style",Georgia,serif', cue:'lute' },
+  victorian:   { room:'#1C1A16', room2:'#282520', chrome:'#6E6250', text:'#F4EDE0', dim:'#9E9280', brass:'#C7B694',
+                 page:'"Iowan Old Style",Georgia,serif', cue:'bell' },
+  deco:        { room:'#0C0A09', room2:'#16120E', chrome:'#8A6E2E', text:'#F0E2BE', dim:'#A08E62', brass:'#C8A24A',
+                 page:'"Futura","Century Gothic",ui-sans-serif,sans-serif', cue:'jazz' },
+  wartime:     { room:'#1E1D17', room2:'#2A281F', chrome:'#5E5A48', text:'#CFC9B4', dim:'#8E8A74', brass:'#A89C6E',
+                 page:'ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif', cue:'wireless' },
+  apollo:      { room:'#070E0B', room2:'#0E1A16', chrome:'#2C4A3C', text:'#BFE8D2', dim:'#6E9A82', brass:'#4EC28A',
+                 page:'ui-monospace,"SF Mono",Menlo,Consolas,monospace', cue:'mission' },
+  office:      { room:'#22201C', room2:'#2E2C26', chrome:'#6A675A', text:'#DAD7C8', dim:'#96937F', brass:'#B0AC90',
+                 page:'ui-monospace,"SF Mono",Menlo,Consolas,monospace', cue:'keyclack' },
+  dialup:      { room:'#0A0A18', room2:'#12122A', chrome:'#3A3A72', text:'#D2D2FF', dim:'#8280C0', brass:'#7B7BFF',
+                 page:'"Comic Sans MS","Segoe Print",ui-sans-serif,sans-serif', cue:'modem' }
+};
+
+/* One cue each, all built out of oscillators and noise. Nothing sampled,
+   nothing borrowed — a chisel is a filtered click on stone, a modem is
+   four tones and a hiss, and a lute is three plucked strings. */
+function eraSound(k){
+  LCSound.play((A) => {
+    switch (k){
+      case 'stone':
+        A.burst('brown', { freq: 260, q: 2.2, dur: .09, level: A.cap(.10), reverb: true });
+        A.burst('white', { at: .09, freq: 1800, q: 2, dur: .05, level: A.cap(.04), reverb: true });
+        break;
+      case 'reed':
+        A.burst('pink', { freq: 3000, q: 1.4, dur: .22, level: A.cap(.035), attack: .05, reverb: true });
+        A.blip(430, { dur: .3, level: A.cap(.03), type: 'triangle', reverb: true });
+        break;
+      case 'chisel':
+        [0, .13, .27].forEach((at) => {
+          A.burst('white', { at, freq: 2600, q: 4, dur: .035, level: A.cap(.07), reverb: true });
+          A.burst('brown', { at, freq: 320, q: 2, dur: .06, level: A.cap(.05), reverb: true });
+        });
+        break;
+      case 'quill':
+        for (let i = 0; i < 5; i++)
+          A.burst('white', { at: i * .07, freq: 3400 + Math.random() * 1600, q: .9,
+                             dur: .055, level: A.cap(.026), reverb: true });
+        break;
+      case 'anvil':
+        A.blip(1180, { dur: .8, level: A.cap(.075), type: 'triangle', reverb: true });
+        A.blip(1790, { dur: .55, level: A.cap(.035), type: 'sine', reverb: true });
+        A.burst('white', { freq: 4200, q: 3, dur: .04, level: A.cap(.05), reverb: true });
+        break;
+      case 'lute':
+        [0, 4, 7].forEach((semi, i) => A.blip(A.note(semi - 5), {
+          at: i * .065, dur: .7, level: A.cap(.05), type: 'triangle',
+          filter: 'lowpass', filterFreq: 2200, reverb: true }));
+        break;
+      case 'bell':
+        A.blip(A.note(16), { dur: 1.1, level: A.cap(.055), type: 'sine', reverb: true });
+        A.blip(A.note(28), { dur: .7, level: A.cap(.022), type: 'sine', reverb: true });
+        break;
+      case 'jazz':
+        [0, 4, 10, 15].forEach((semi, i) => A.blip(A.note(semi - 8), {
+          at: .012 * i, dur: .42, level: A.cap(.045), type: 'sawtooth',
+          filter: 'lowpass', filterFreq: 1500, reverb: true }));
+        A.burst('white', { at: .02, freq: 5200, q: 1, dur: .18, level: A.cap(.02), reverb: true });
+        break;
+      case 'wireless':
+        A.burst('pink', { freq: 900, q: .8, dur: .45, level: A.cap(.035), reverb: false });
+        A.blip(620, { dur: .3, glide: 500, level: A.cap(.03), type: 'sine', reverb: false });
+        break;
+      case 'mission':
+        A.blip(1000, { dur: .1, level: A.cap(.05), type: 'sine', reverb: false });
+        A.blip(1000, { at: .17, dur: .1, level: A.cap(.05), type: 'sine', reverb: false });
+        A.burst('white', { at: .3, freq: 1400, q: .7, dur: .2, level: A.cap(.022), reverb: false });
+        break;
+      case 'keyclack':
+        for (let i = 0; i < 4; i++)
+          A.burst('white', { at: i * .055, freq: 2200 + Math.random() * 900, q: 3,
+                             dur: .022, level: A.cap(.05), reverb: false });
+        break;
+      case 'modem':
+        /* a handshake: two answer tones, a carrier, and then the hiss */
+        A.blip(2100, { dur: .22, level: A.cap(.035), type: 'sine', reverb: false });
+        A.blip(1180, { at: .24, dur: .2, level: A.cap(.035), type: 'sine', reverb: false });
+        A.blip(1650, { at: .46, dur: .16, glide: 900, level: A.cap(.03), type: 'square', reverb: false });
+        A.burst('white', { at: .62, freq: 1800, q: .5, dur: .5, level: A.cap(.03), reverb: false });
+        break;
+      default:
+        A.blip(660, { dur: .12, level: A.cap(.05), reverb: false });
+    }
+  });
+}
+
+/* Repaint the room. Font is set with no transition because interpolating a
+   typeface is not a thing; the colours cross-fade underneath it. */
+function dressRoom(k){
+  const r = ROOMS[k];
+  if (!r) return;
+  const root = document.documentElement;
+  root.style.setProperty('--room', r.room);
+  root.style.setProperty('--room-2', r.room2);
+  root.style.setProperty('--chrome', r.chrome);
+  root.style.setProperty('--text', r.text);
+  root.style.setProperty('--dim', r.dim);
+  root.style.setProperty('--brass', r.brass);
+  root.style.setProperty('--page', r.page);
+}
+
 const ERAS = [
   {
     k:'neolithic', css:'era-neolithic', label:'Farmer, 4000 BC',
@@ -507,7 +647,13 @@ function renderDial(){
     const b = document.createElement('button');
     b.textContent = e.label;
     b.setAttribute('aria-pressed', String(e === era));
-    b.onclick = () => { era = e; renderDial(); if (lastThing) speak(lastThing); };
+    b.onclick = () => {
+      era = e;
+      dressRoom(e.k);
+      renderDial();
+      eraSound(ROOMS[e.k] ? ROOMS[e.k].cue : null);
+      if (lastThing) speak(lastThing);
+    };
     $('dial').appendChild(b);
   });
 }
@@ -546,9 +692,15 @@ function speak(thingRaw){
   $('q').value = thing;
 }
 
-$('go').addEventListener('click', () => speak($('q').value));
-$('q').addEventListener('keydown', (e) => { if (e.key === 'Enter') speak($('q').value); });
-$('again').addEventListener('click', () => { if (lastThing) speak(lastThing); });
+function explain(v){
+  speak(v);
+  eraSound(ROOMS[era.k] ? ROOMS[era.k].cue : null);
+}
+dressRoom(era.k);
+LCSound.mount({ color: 'var(--dim)' });
+$('go').addEventListener('click', () => explain($('q').value));
+$('q').addEventListener('keydown', (e) => { if (e.key === 'Enter') explain($('q').value); });
+$('again').addEventListener('click', () => { if (lastThing) explain(lastThing); });
 $('rand').addEventListener('click', () => {
   const s = pick(SUGGESTIONS);
   $('q').value = s;

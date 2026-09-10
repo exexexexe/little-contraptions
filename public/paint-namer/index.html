@@ -13,14 +13,50 @@
   --dim:#6E6A60;
   --rule:#D6D1C4;
   --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
-  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+  --serif:"Avenir Next",Avenir,"Futura","Century Gothic",ui-sans-serif,sans-serif;
 }
+/* the chip is painted on rather than appearing: a wipe from the left, as
+   though somebody had drawn a brush across the card */
+#chip{ position:relative;overflow:hidden }
+#chip.brushed::before{
+  content:"";position:absolute;inset:0;background:inherit;z-index:2;
+  animation:brush .42s cubic-bezier(.3,.8,.35,1);
+}
+@keyframes brush{
+  from{ clip-path:inset(0 100% 0 0) }
+  to{ clip-path:inset(0 0 0 0) }
+}
+@media (prefers-reduced-motion: reduce){ #chip.brushed::before{ animation:none } }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
+/* A paint shop counter: a white laminate top under strip lighting, with
+   the wall of sample chips behind it slightly out of focus. */
 body{
-  background:var(--paper);color:var(--ink);font-family:var(--serif);min-height:100vh;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.05), transparent 22%),
+    var(--paper);
+  color:var(--ink);font-family:var(--serif);min-height:100vh;
   padding:28px 16px 80px;display:flex;flex-direction:column;align-items:center;
 }
+/* the chip wall — every one a different hue, blurred back so it never
+   competes with the colour you are actually being asked about */
+body::before{
+  content:"";position:fixed;inset:0 0 auto 0;height:38vh;z-index:0;pointer-events:none;
+  opacity:.30;filter:blur(1px);
+  background:
+    repeating-linear-gradient(90deg,
+      #E8B4A0 0 26px, #D9C4A8 26px 52px, #BFCBB4 52px 78px, #A8C0C8 78px 104px,
+      #B4AEC8 104px 130px, #D8B8C4 130px 156px, #E0C8A0 156px 182px, #C0CBB0 182px 208px);
+  -webkit-mask-image:linear-gradient(180deg, #000 0 40%, transparent 96%);
+          mask-image:linear-gradient(180deg, #000 0 40%, transparent 96%);
+}
+/* and the counter edge it all sits on */
+body::after{
+  content:"";position:fixed;left:0;right:0;top:38vh;height:10px;z-index:0;pointer-events:none;
+  background:linear-gradient(180deg,#FFFFFF,#DFDCD4 40%,#B8B4AA);
+  box-shadow:0 4px 14px rgba(0,0,0,.10);
+}
+.wrap, footer{ position:relative;z-index:1 }
 .wrap{ max-width:520px;width:100% }
 header{ text-align:center;margin-bottom:20px }
 h1{
@@ -117,6 +153,8 @@ h1{
 
 <a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
 
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
 <script>
 (function(){
   'use strict';
@@ -213,6 +251,7 @@ h1{
   }
 
   $('opts').addEventListener('click', function(e){
+    chipTick();
     var b = e.target.closest ? e.target.closest('button') : null;
     if (!b || done) return;
     done = true;
@@ -234,7 +273,31 @@ h1{
     $('next').hidden = false;
   });
 
-  $('next').addEventListener('click', round);
+  /* ---- the sounds ---------------------------------------------------- *
+   * A paint tin lid coming off — a short suck of air and a metallic pop —
+   * for a new swatch, and a dry card-on-card tick when you pick a name.
+   * ------------------------------------------------------------------- */
+  function lid(){
+    LCSound.play(function(A){
+      A.burst('pink', { freq: 900, q: .8, dur: .1, level: A.cap(.035), attack: .05, reverb: false });
+      A.blip(320, { at: .08, dur: .1, glide: 760, level: A.cap(.06), type: 'sine', reverb: false });
+      A.burst('white', { at: .08, freq: 4200, q: 3, dur: .03, level: A.cap(.03), reverb: false });
+    });
+  }
+  function chipTick(){
+    LCSound.play(function(A){
+      A.burst('white', { freq: 2400, q: 3.5, dur: .022, level: A.cap(.04), reverb: false });
+    });
+  }
+  LCSound.mount({ color: 'var(--dim)' });
+
+  function brush(){
+    var c = $('chip');
+    if (!c) return;
+    c.classList.remove('brushed'); void c.offsetWidth; c.classList.add('brushed');
+  }
+
+  $('next').addEventListener('click', function(){ round(); lid(); brush(); });
   round();
 
   window.__paint = {

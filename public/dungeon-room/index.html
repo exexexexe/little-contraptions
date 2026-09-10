@@ -17,17 +17,47 @@
   --blood:#A8443C;
   --moss:#7A9161;
   --dim:#9A8B72;
-  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+  --serif:"Hoefler Text","Baskerville Old Face",Baskerville,"Palatino Linotype",Georgia,serif;
   --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
   --disp:"Avenir Next Condensed","Roboto Condensed","Arial Narrow",var(--serif);
 }
+/* torchlight: the whole room breathes, slowly and not quite regularly */
+body{ animation:torch 7s ease-in-out infinite }
+@keyframes torch{
+  0%,100%{ filter:brightness(1) }
+  23%{ filter:brightness(1.045) }
+  41%{ filter:brightness(.975) }
+  68%{ filter:brightness(1.03) }
+}
+@media (prefers-reduced-motion: reduce){ body{ animation:none } }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
+/* A wall, not a backdrop: courses of dressed stone with mortar between
+   them, two torches guttering out of frame, and the light falling off
+   fast towards the floor. */
 body{
-  background:radial-gradient(900px 640px at 50% -8%, var(--dark-2) 0%, var(--dark) 64%);
+  background:
+    radial-gradient(340px 260px at 14% 12%, rgba(255,186,96,.14), transparent 66%),
+    radial-gradient(340px 260px at 86% 20%, rgba(255,170,80,.11), transparent 66%),
+    repeating-linear-gradient(0deg, rgba(0,0,0,.30) 0 2px, transparent 2px 58px),
+    repeating-linear-gradient(90deg, rgba(0,0,0,.26) 0 2px, transparent 2px 116px),
+    linear-gradient(180deg,#3A322A 0%,#241E19 52%,#14100D 100%);
+  background-position:0 0, 0 0, 0 0, 0 0, 0 0;
   color:var(--parch);font-family:var(--serif);min-height:100vh;
   padding:34px 18px 78px;display:flex;flex-direction:column;align-items:center;
 }
+/* Every other course is offset, which is what stops it reading as tiling.
+   Done with background-position rather than a transformed fixed layer:
+   a fixed layer nudged 58px to the right extends the scroll area and the
+   page picks up a horizontal scrollbar. */
+body::before{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:repeating-linear-gradient(90deg, rgba(0,0,0,.26) 0 2px, transparent 2px 116px);
+  background-position:58px 0;
+  -webkit-mask-image:repeating-linear-gradient(0deg, #000 0 58px, transparent 58px 116px);
+          mask-image:repeating-linear-gradient(0deg, #000 0 58px, transparent 58px 116px);
+}
+.wrap, footer{ position:relative;z-index:1 }
 .wrap{ max-width:640px;width:100% }
 header{ text-align:center }
 h1{
@@ -166,6 +196,8 @@ footer a{ color:var(--gold) }
 </footer>
 
 <script src="rooms.js"></script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
 <script>
 'use strict';
 const $ = (id) => document.getElementById(id);
@@ -333,9 +365,25 @@ function show(){
   draw(room);
 }
 
-$('deeper').addEventListener('click', function(){ depth++; show(); });
-$('today').addEventListener('click', function(){ depth = 0; show(); });
+/* ---- the sound: a stone door, and something further in -------------- *
+ * A long low grind with grit in it, then a distant drip. No music: the
+ * point of a dungeon is that it is quiet enough to hear water.
+ * ------------------------------------------------------------------- */
+function stone(){
+  LCSound.play(function(A){
+    A.burst('brown', { freq: 120, q: 1.1, dur: .55, level: A.cap(.075), attack: .07, reverb: true });
+    A.burst('pink',  { freq: 640, q: .9, dur: .4, level: A.cap(.02), attack: .1, reverb: true });
+    A.blip(52, { dur: .6, glide: 38, level: A.cap(.045), type: 'sine', reverb: true });
+    /* the drip, well after the door has stopped */
+    A.blip(1500, { at: .95, dur: .12, glide: 900, level: A.cap(.03), type: 'sine', reverb: true });
+  });
+}
+
+$('deeper').addEventListener('click', function(){ depth++; show(); stone(); });
+$('today').addEventListener('click', function(){ depth = 0; show(); stone(); });
 show();
+
+LCSound.mount({ color: 'var(--parch)' });
 </script>
 </body>
 </html>

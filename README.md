@@ -3,9 +3,10 @@
 A small hub of self-contained web toys. Zero dependencies — one Node
 static file server, one HTML page per toy.
 
-The single exception is the ISS tracker's 3D globe, which loads Three.js from
-a CDN. Every other toy is dependency-free, and that one falls back to its flat
-map if the CDN does not answer.
+Two exceptions, both loaded from a CDN and both with a working fallback if it
+does not answer: the ISS tracker's 3D globe uses Three.js, and the physics toys
+— the hourglass, the toppling table, the marble run, the gratitude jar, the snow
+globe and the arcade — use Matter.js.
 
 ## Run locally
 
@@ -15,7 +16,7 @@ Opens on http://localhost:3000.
 
 ## The toys
 
-**132 drawers**, each a single self-contained HTML file under `public/<slug>/index.html`.
+**149 drawers**, each a single self-contained HTML file under `public/<slug>/index.html`.
 The hub filters them by the tag on each card.
 
 The table below covers the first 29 and has not been maintained since — the
@@ -56,7 +57,7 @@ what it is.
 | 28 | [Civilizations, Ranked](/civilizations/) | scroll story | Up the Kardashev scale — build a Dyson swarm, send a message through a wormhole. |
 | 29 | [The Loot Terminal](/loot-terminal/) | generator | Fantasy item appraisal with a compendium that persists in the browser. |
 
-(The table above stops at 29; the hub itself is at 109. Bringing it up to date is on the list.)
+(The table above stops at 29; the hub itself is at 149. Bringing it up to date is on the list.)
 
 `/api/keys` reports which optional keys are configured — `nasa`, `tmdb`, `groq`, `pexels` — plus
 `store`, which is not a key but says whether the shared database is open. `pexels` gates

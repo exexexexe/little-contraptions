@@ -16,17 +16,42 @@
   --teal:#5FB4C4;
   --brass:#E5B15E;
   --dim:#88A3AB;
-  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+  --serif:Optima,"Gill Sans","Gill Sans MT",Candara,"Trebuchet MS",sans-serif;
   --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
   --disp:"Avenir Next Condensed","Roboto Condensed","Arial Narrow",var(--serif);
 }
+/* the swell: the whole page rises and falls, very slightly, on a long
+   period — enough to feel and not enough to notice */
+body{ animation:swell 11s ease-in-out infinite }
+@keyframes swell{ 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(4px) } }
+@media (prefers-reduced-motion: reduce){ body{ animation:none } }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
+/* Below deck: planking running fore and aft, caulked seams between the
+   boards, and one lamp swinging somewhere off to port. */
 body{
-  background:radial-gradient(900px 640px at 50% -8%, var(--sea-2) 0%, var(--sea) 64%);
+  background:
+    radial-gradient(520px 340px at 22% -4%, rgba(255,222,160,.10), transparent 64%),
+    repeating-linear-gradient(90deg,
+      rgba(0,0,0,.34) 0 3px,
+      rgba(255,255,255,.028) 3px 5px,
+      transparent 5px 84px),
+    repeating-linear-gradient(90deg, rgba(0,0,0,.10) 0 1px, transparent 1px 11px),
+    linear-gradient(180deg,#33362E 0%,#232821 46%,#161A16 100%);
   color:var(--foam);font-family:var(--serif);min-height:100vh;
   padding:34px 18px 78px;display:flex;flex-direction:column;align-items:center;
 }
+/* a rope, coiled and lying across one corner */
+body::before{
+  content:"";position:fixed;right:0;bottom:0;width:210px;height:210px;z-index:0;
+  border:14px solid rgba(196,168,116,.13);border-radius:50%;pointer-events:none;
+  box-shadow:inset 0 0 0 13px rgba(196,168,116,.08), inset 0 0 0 27px rgba(196,168,116,.05);
+  /* faded into the corner instead of hanging over the edge, which was
+     adding to the scroll width */
+  -webkit-mask-image:radial-gradient(circle at 100% 100%, #000 40%, transparent 78%);
+          mask-image:radial-gradient(circle at 100% 100%, #000 40%, transparent 78%);
+}
+.wrap, footer{ position:relative;z-index:1 }
 .wrap{ max-width:660px;width:100% }
 header{ text-align:center }
 h1{
@@ -141,6 +166,8 @@ footer a{ color:var(--teal) }
 </footer>
 
 <script src="verse.js"></script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
 <script>
 'use strict';
 const $ = (id) => document.getElementById(id);
@@ -191,8 +218,25 @@ function render(){
   });
 }
 
-$('go').addEventListener('click', function(){ salt++; render(); });
-$('again').addEventListener('click', function(){ salt++; render(); });
+/* ---- the sound: a squeezebox chord --------------------------------- *
+ * Four reeds pushed at once, slightly out of tune with each other, with
+ * the breath of the bellows underneath. The detuning is what makes it a
+ * concertina rather than an organ.
+ * ------------------------------------------------------------------- */
+function squeeze(){
+  LCSound.play(function(A){
+    [-12, 0, 4, 7].forEach(function(semi, i){
+      A.blip(A.note(semi) * (1 + (i - 1.5) * 0.0035), {
+        dur: .78, level: A.cap(.042), type: 'sawtooth',
+        filter: 'lowpass', filterFreq: 1700, attack: .04, reverb: true
+      });
+    });
+    A.burst('pink', { freq: 500, q: .7, dur: .5, level: A.cap(.018), attack: .12, reverb: true });
+  });
+}
+
+$('go').addEventListener('click', function(){ salt++; render(); squeeze(); });
+$('again').addEventListener('click', function(){ salt++; render(); squeeze(); });
 $('lucky').addEventListener('click', function(){
   $('in').value = DAYS[Math.floor(Math.random() * DAYS.length)];
   salt++; render();
@@ -203,6 +247,8 @@ $('in').addEventListener('keydown', function(e){
 
 $('in').value = DAYS[0];
 render();
+
+LCSound.mount({ color: 'var(--foam)' });
 </script>
 </body>
 </html>

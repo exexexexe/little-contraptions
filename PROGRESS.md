@@ -2077,3 +2077,399 @@ Real browser, isolated profile, against a local server on :3999.
   stacked. No horizontal overflow at 380px or 390px.
 - Hub: 109 cards, footer and ghost drawer bumped, clapperboard icon on the Windows 98 desktop,
   vanilla catalogue unaffected. No console errors in any state.
+
+---
+
+# Phase 1 — the normal batch
+
+Seventeen new drawers (Nos. 133–149), an expanded snow globe, five hidden directional codes, and
+two toys that now have a language model behind them. The hub is at **149**.
+
+Everything below was loaded in a real browser, exercised, and photographed. Where a thing did not
+work the first time, what was actually wrong is written down rather than smoothed over — several of
+these were only found by watching the thing misbehave, and the wrong first answer is usually the
+more useful note.
+
+## The fifteen toys
+
+**No. 133 — The Reaction Bench** (`/reaction-test/`). Drag-strip christmas tree, amber ladder at a
+deliberately irregular stagger so it cannot be anticipated, and a jumped-start state that is
+recorded rather than quietly dropped. It measures the display's own refresh interval from sixty
+frames of `requestAnimationFrame` deltas before anything else, and says out loud that up to that
+much of every number is the screen. Timed from the frame the green is *painted*, not from when the
+timeout fired. Leaving the tab mid-wait resets the light rather than timing your return.
+
+**No. 134 — The Night, Counted in Cycles** (`/sleep-cycles/`). Ninety-minute cycles both ways —
+"I am going to bed" and "I must be up at" — with sleep-onset latency put back in, which is the part
+people forget and the part that makes the answer wrong by a quarter of an hour every time. The
+hypnogram is a schematic drawn from the chosen number of cycles: deep sleep shallower each cycle,
+REM absent from the first and lengthening towards morning. Says plainly that ninety is a population
+average with a seventy-to-a-hundred-and-twenty range, that nothing here is measured, and that
+persistent exhaustion is a doctor's problem and not a calculator's.
+
+**No. 135 — The Standing Tank** (`/aquarium/`). Six invented fish, three plants, three ornaments.
+The fish steer rather than animate — glass avoidance, a preferred depth held loosely, food as the
+only override, and shoaling for the two species that shoal. Positions are stored normalised, so a
+tank looks the same on a phone as on a desktop. No hunger, no water quality, nothing to fail.
+*Found by testing:* a restored tank did not push its own state back onto the hood-light and pump
+buttons, so the toggles lied about the tank after a reload.
+
+**No. 136 — The Paper Aerodrome** (`/paper-airplane/`). Five fold families with original folding
+diagrams, four trim controls, and a real longitudinal flight model integrated at half-millisecond
+steps: finite-wing lift-curve slope, induced drag from `CL²/πARe`, a stall above about thirteen
+degrees, and a pitching moment about the CG with rate damping. The porpoising is the phugoid falling
+out of the arithmetic. Nose clips move the CG forward and can be overdone exactly as they can on the
+carpet — a glider with two clips drops from 14.8 m over 7.0 s to 9.5 m over 2.8 s. *Found by
+looking:* the canvas is a 2× buffer, so every label was rendering at half the intended size.
+
+**No. 137 — The Glass That Learns Its Own Time** (`/hourglass/`). A few hundred Matter.js grains
+through a real neck. Flipping rotates gravity with the glass rather than teleporting the sand.
+It does not know how long it runs, so it times each flip against the machine's own clock, writes it
+down, and reports what to expect from the runs it has actually seen — three runs at one setting came
+out 32.5 s, 28.9 s and 36.0 s, and the page says so rather than averaging the honesty out. A run
+paused by a hidden tab is discarded, not recorded as a slow one. *Found by testing:* the first fill
+poured into the upper chamber and along the bounding box rather than the funnel, so grains spawned
+outside the glass, and the sand started where it should have ended.
+
+**No. 138 — The Toppling Table** (`/dominoes/`). Real rectangles with friction on a real floor.
+Four set pieces. *The growing chain is the honest one:* the well-known figure is that a domino can
+topple one about 1.5× its size, and this table cannot. Tried rather than assumed — it carried all
+fourteen at 1.10× on every run, stopped at twelve every time at 1.14×, and died at the second tile
+at 1.22×. So it is built at 1.10 and the page explains that the shortfall is the simulation's, not
+the world's: perfectly rigid tiles meeting at a single point with no give. Spacing turned out to
+matter as much as ratio — 0.40 of the pusher's height carried the run and 0.32 and 0.46 both broke
+it. Matter's default gravity also had a topple taking half a second, which is far slower than a real
+tile that size.
+
+**No. 139 — The Marble Run** (`/marble-run/`). Draw ramps, drop pegs, aim for the bucket, and every
+drop leaves a faint trail of where it actually went. Three problems, none of them guessable from the
+code:
+1. *Tunnelling.* A marble coming off a long ramp moves about thirty pixels per frame, which is wider
+   than a ramp is thick, and Matter has no continuous collision detection — so it passed clean
+   through and landed on the floor every time. Three physics steps per frame fixed it.
+2. *Static friction.* Matter takes the **larger** of a pair's `frictionStatic`, and a body's default
+   is 0.5 — enough to pin a marble motionless on a one-in-five slope. It has to be zero on the marble.
+3. *Corner pockets.* A ramp ending at the side wall leaves a notch between its rounded cap and the
+   wall, and a marble that lands in it sits there for ever. Catching ramps now run past the wall.
+
+**No. 140 — The Beam and the Weights** (`/balance-scale/`). Moments, not mass: six tasks on a beam
+integrated as a real physical pendulum, so it slams to its stop when badly loaded, hunts about when
+nearly right, and settles level when the moments cancel. Solving a task prints the arithmetic
+(`12×5 + 2×1 = 62 and 10×5 + 3×4 = 62`). *Found by exhaustive search:* the fifth task's only
+solution wanted two weights in one notch, which the beam does not allow, so it was unsolvable and
+has been replaced. All six are now search-verified solvable using every tray weight.
+
+**No. 141 — The Corner of the Notebook** (`/flip-book/`). Up to sixty pages, onion skin of the page
+before, a live thumbnail strip, 3–24 fps. Pages are kept as strokes rather than images, so the
+drawing stays crisp, thumbnails are the real pages, and undo takes back exactly one line.
+
+**No. 142 — The Roll That Does Not End** (`/bubble-wrap/`). Endless, because the sheet is not stored
+— every bubble's size and whether it is a stubborn one comes from a hash of its row and column, so
+the roll is the same every time you scroll back up it and costs nothing to be infinite. Eight per
+cent need a second push. Pops are synthesised: a resonant burst with the pitch falling away, plus
+the click of the film letting go.
+
+**No. 143 — Two Knobs and a Screen** (`/etch-a-sketch/`). The constraint is the toy: one knob
+sideways, one up and down, and the stylus never leaves the glass, so every drawing is one unbroken
+line. Knobs turn by pointer angle about their own centre, arrow keys are held rather than repeated
+so two at once give a diagonal, and the demonstration draws its house the only way this toy can —
+including the walk back along the bottom wall to reach the door. Shaking really clears it, and the
+powder settles back over the line rather than the line vanishing.
+
+**No. 144 — Nine Holes and a Mallet** (`/whack-a-mole/`). Sixty seconds, nine holes, moles and
+tortoises, difficulty tightening every ten points and the tortoise rate rising with it — the
+fairground's oldest trick, played on you and admitted to. *Found by looking:* the first holes were
+rounded boxes with the mole floating above them, and at rest a pale crescent of every mole's head
+showed at the bottom of its cell.
+
+**No. 145 — A Tree That Takes Its Time** (`/bonsai/`). The whole tree — every branch it will ever
+have and the day each opens — is settled the day it is planted; the calendar decides how much has
+happened. Pruning takes a branch and its subtree for good and gives the rest one day's vigour, which
+is roughly what redirecting a real tree's growth does. Leaves follow the real month, with a
+hemisphere switch. *Two real bugs:* a foliage helper named `pad` shadowed the date zero-padding
+helper of the same name in the same scope, which would have corrupted every date the toy computed;
+and branch thickness summed the children's widths directly, which compounds through eight levels
+into a baobab — it now follows da Vinci's rule, `w = √(Σ w_child²)`.
+
+**No. 146 — Put the Colours in Order** (`/color-test/`). The clinical hue-arrangement format: four
+rows of caps at constant lightness and chroma, ends fixed, middle shuffled, scored by total
+displacement. Caps are spaced in CIELAB — full Lab→XYZ→linear→sRGB with the real piecewise transfer
+curve — because stepping evenly through RGB hue measures the colour space rather than the eye. The
+chroma is found by search: the largest value at L\*62 that every hue on the circle can reach in sRGB,
+which came out at 34.5, and the page prints the figure. States plainly that it is not a diagnosis and
+cannot be one.
+
+**No. 147 — Hands Against the Wall** (`/shadow-puppets/`). Eight silhouettes cast by a point flame.
+The magnification is `D/(D−d)` about the flame's position and the penumbra grows by the same ratio,
+so growing and softening come off the same two numbers. *Two things learned by trying:* pointing the
+cursor at the *hand* is just as correct and completely unusable — at 2× magnification a hand
+anywhere but the centre throws its shadow off the wall entirely — so the pointer steers the shadow
+and the hand is worked back along the ray; and eight hand-written bezier silhouettes all came out as
+blobs with ears, so they are composed from ellipses and polygons with punched-out gaps for the eye
+and the open jaw instead.
+
+## No. 148 — The Room of Things That Are Not There (`/illusions/`)
+
+Ten documented effects, each drawn from its own rules and each with a control that turns the trick
+off: the café wall with an adjustable mortar, peripheral drift with the tone order reversible,
+simultaneous contrast with a bar you can run between the two patches, Müller-Lyer, Ebbinghaus, the
+scintillating grid, three impossible figures, the Necker cube with an occlusion switch, an
+afterimage with a countdown, and the motion aftereffect with a frame counter that proves the
+pattern has stopped. Where the explanation is still argued about it says so — the textbook
+retinal account of the Hermann grid is noted as known to be wrong.
+
+The three impossible figures took four attempts between them and are worth writing down:
+- **The tribar** is three bent beams computed rather than hand-drawn, each wrapping a corner, with
+  beam one's tip redrawn *last* so the overlap order is a cycle no real scene can have. Each beam
+  needed a second, narrower face along its outer edge or the whole thing read as a flat triangle.
+- **The staircase** closes because the rise cancels *inside* each step — tread down-and-along,
+  riser back up — so the zig-zag shuts whenever the four plan vectors sum to zero. Two earlier
+  attempts added a correction to force the loop closed, which was exactly wrong and produced a
+  scattered arc and then a giant X. It also needed a long plan rather than a square one, or the near
+  flight comes out nearly vertical and stops reading as stairs.
+- **The fork** is the two-pronged U whose slot back wall is where the middle of three round prongs
+  ends.
+
+## No. 149 — The Card for Today (`/recipe-of-the-day/`)
+
+LLM-backed through the shared Groq route, filtered by meal, diet, tradition and effort. The prompt
+carries a food-safety block that overrides style: poultry, pork, mince and eggs cooked through with
+an internal temperature in Celsius; no canning, curing, fermenting or foraging; no health claim and
+no calorie figure, because the model does not know them; and a stated diet respected absolutely,
+honey and fish sauce included. One card per day per set of choices, kept in the browser, so today's
+dinner stays today's dinner. The page says the recipe did not exist before you asked and that nobody
+has eaten it.
+
+## The snow globe, expanded
+
+Five new dioramas — **a lighthouse in the weather** (rain), **a terrace in fog** (fog), **a country
+halt** (snow), **an orchard in blossom** (blossom) and **a hilltop observatory** (starfield) — taking
+it to nine, drawn in the same 128×128 pixel buffer with the same seeded generator. Two new racks
+under the presets: **what is falling**, which puts any of the eight particle fields in any globe and
+reverts to the scene's own when you change globe, and **the music box**, now five melodies —
+Jingle Bells, Silent Night, Deck the Halls, O Tannenbaum and Ode to Joy, all long out of copyright
+and arranged for oscillators. Nothing is sampled and there is still no audio file in this repo.
+*Found by testing:* `set()` did not update the plaque, so the brass plate named the previous globe.
+
+## Five directional codes (`/shared/lc-stratagems.js`)
+
+Arrow sequences in the front door, alongside the Konami code that was already there. A trail appears
+in the corner once you are two arrows in, so you can tell something is listening; a pause of over two
+seconds starts a fresh sequence.
+
+- `↑ ↓ → ← ↑` — links to **Arrowhead's real website**, as a plain link you click rather than a popup.
+- `↓ ↓ ↑ → ←` — a ballot box, a stamp, and a flag unfurling.
+- `→ → ↑ ↑ ↓` — a cup whose steam eventually makes a star.
+- `← ↓ → ↑ ↑` — a supply pod arriving with more enthusiasm than accuracy.
+- `↑ → ↓ ← ↑` — an officer, entirely satisfied.
+
+The nod is to Helldivers 2, whose input language is arrow sequences and whose register is a very
+good satire of cheerful wartime propaganda. **Everything shown is written and drawn here:** the
+sequences are this cabinet's own and are not the game's stratagem codes, every animation is drawn a
+rectangle at a time in that file, every slogan is invented, and each panel carries the line
+*"drawn here · not from the game"*. No game footage, art, audio or text is used anywhere.
+Checked that none of the five is a consecutive run inside the Konami code, and that the Konami code
+still fires.
+
+## Two toys given a language model
+
+Both keep their original generator as the fallback, and both always say which one answered.
+
+**The Paradox Machine.** The model is asked to take the statement seriously — where it forks, where
+it turns on itself, what family of older problems it belongs to — and specifically told to say so
+when a proposition is *not* paradoxical, or when the trouble is really one word doing two jobs.
+Fed "The sky is blue on Tuesdays" it identified the ambiguity in *is* rather than inventing a
+contradiction, which is the behaviour that was wanted. The clause machine takes over with no key and
+can be asked for on purpose. *Found by testing:* two meditations could run at once and the older one
+could land last, answering a question that had already been replaced.
+
+**The Dream Decoder.** The model is told in as many words that it is not a psychic, not a therapist
+and not a dream dictionary, and forbidden to say what any image means about the dreamer or to
+mention their health or relationships. What it does instead is read the dream as a piece of
+night-time writing: what it is built out of, how it is put together, and the exact point where it
+stopped bothering to be consistent. The jumble-sale dream book is still there behind a button.
+
+## Held back on purpose
+
+**The Tatu-and-Patu-inspired voice pack** is not built. The brief says to add it inside The
+Generator if that mega-toy exists and otherwise to hold it for Phase 5 rather than making a
+temporary standalone icon. `/generator/` does not exist yet, so it is held.
+
+## What was verified
+
+Every one of the seventeen new pages: loaded in a real browser, driven through its actual controls,
+photographed, and checked at 390 px for horizontal overflow (all zero) and for the back button (all
+present). A twenty-page sweep with error handlers attached inside each frame reported nothing. The
+hub reads 149 cards with no duplicate numbers, every new href returns 200, the tag filter counts
+recomputed themselves, and the Windows 98 desktop picked up all seventeen icons without being told
+about them. Both hub modes still toggle. All five directional codes fire through the real key
+handler and a wrong sequence does nothing.
+
+## What needs a look before Phase 2
+
+- **The marble run's presets are honest about failing.** The zigzag lands the marble in the bucket
+  reliably but takes about fifteen seconds, which is the physics being right rather than slow code —
+  three crossings of a 1760-unit board at one in five. The pin field is quicker and genuinely
+  chancy. If a fifteen-second run feels too long in use, the fix is a shorter board, not more
+  gravity: more gravity brings the tunnelling back.
+- **The dominoes' growing chain tops out at 1.10× rather than the real 1.5×.** The page explains why
+  and the numbers are all measured, but if a future session wants the real figure it will need soft
+  bodies or a proper impulse model, not tuning.
+- **The snow globe's settled snow is white in every scene**, including the orchard and the
+  lighthouse. It reads as fallen blossom and as sea spray respectively, which is a happy accident
+  rather than a decision, and could be tinted per scene.
+- **`/generator/` still does not exist**, so the voice pack above is waiting on Phase 5.
+
+---
+
+# Making the generators feel alive
+
+**The codebase was pre-consolidation when this was done.** `/generator/` does not exist, there is no
+voice-pack picker anywhere, and the hub still lists all of these as separate drawers. So the work was
+applied to each individual toy, as the brief directs for that case.
+
+## What the audit actually found
+
+Before touching anything, all 49 generator-family toys were checked mechanically for the three
+things. The result was worse than "a few feel generic":
+
+- **41 of 49 made no sound at all** — no `lc-audio`, no `AudioContext`, nothing.
+- **33 of 49 had no animation of any kind** — no `@keyframes`, no `requestAnimationFrame`.
+- **The fonts clustered on three shared defaults.** Sixteen were on
+  `ui-sans-serif,system-ui,"Helvetica Neue",Arial`, twelve on `ui-monospace,"SF Mono",Menlo`, and
+  eleven on `"Iowan Old Style","Palatino Linotype"`. Four toys — the stamp press, the mint, the
+  paint namer and the rock adoption — shared a *byte-identical* body rule:
+  `radial-gradient(820px 660px at 50% 2%, var(--bg-2), var(--bg))` with `font-family:var(--serif)`.
+
+That last one is the clearest evidence the prompt was right: four toys that produce completely
+different artefacts were sitting on the same page.
+
+## One mute switch, not sixteen — `/shared/lc-sound.js`
+
+Rather than a per-toy mute, there is now a single shared preference in `localStorage` under
+`lc-sound`, read and written by every toy that makes a noise. Mute the excuse generator and the
+Department of Redundancy Department is muted too, because somebody who turns sound off has told you
+something about the room they are in, not about one page.
+
+- `LCSound.play(fn)` runs a cue through `LCAudio.sting` and silently does nothing when muted or
+  when there is no audio at all, so no caller ever has to check.
+- `LCSound.mount()` drops a small speaker toggle in the bottom-right, opposite the back button so the
+  two never fight. It takes its colour from the page it lands on.
+- Cues are handed `A.cap(v)`, which clamps any single voice to 0.14 so no one toy can be the loud one.
+- **Sound is on by default and nothing can play on load** — a Web Audio context will not start
+  without a gesture and every cue is on a deliberate click, so the first noise anybody hears is one
+  they asked for, with the switch sitting next to the button that made it.
+
+**Measured, not assumed.** The loudest cue in the set is the sequel's trailer sting: peak amplitude
+**0.196** on the master bus, about a fifth of full scale, 14 dB of headroom, no clipping. The
+quietest is the excuse generator's nervous laugh at 0.014. The 0.14 cap bounds each *voice*, not the
+sum — the sting stacks several partials on purpose, which is why it measures above the cap and is
+still nowhere near clipping. Muting was verified across documents: muted on the sequel page, a
+freshly loaded Department of Redundancy Department came up muted, its button showed the muted state,
+and `LCSound.play` declined to run the cue.
+
+## Twenty-two toys got a real pass
+
+Each one can be described in a sentence, which was the bar.
+
+**The twelve the brief named directly**
+
+| Toy | One sentence |
+|---|---|
+| The Escalating Excuse | A biro note on ruled paper whose every word trembles on its own clock, harder the further out on a limb you go, with a nervous laugh that speeds up as it gets worse. |
+| The Corkboard | A real cork board with index cards pinned to it and red string measured between the actual pins after layout, arriving one card at a time with a pin-thock and a paper rustle. |
+| The Uninvited Sequel | Two searchlights over black, a title that slams in in Impact and settles, and dun-dun-**DUN**. |
+| Cover Letter, But Honest | Cool corporate letterhead in Times, and a **REJECTED** stamp that falls from above, lands crooked across the signature, and takes the whole sheet with it — thump, then a sigh. |
+| Seed Round | A near-black deck under one hot gradient, where the cash-register ding is undercut three-quarters of a second later by a record scratch, exactly as the associate's note appears. |
+| Explain It To An Era | **The whole room changes with the listener** — 1180 is warm brown and serif, 1926 is near-black and Futura, 1998 is midnight blue and Comic Sans — and each era has its own noise: a chisel, a quill, a lute, a mission-control blip, a modem handshake. |
+| The Daily Hence | Not newsprint any more: a dark projected pane with chromatic cyan/magenta split at the edges, scanlines and a holographic brightness drift, with a soft bell as the edition lands. |
+| The Guide Entry | A green CRT that flickers and sweeps a scanline when it fetches, types the headword on with a tick per letter, and beeps and boops in a slightly out-of-tune square wave. |
+| Rick's Wiki | The filing slapped down on a pegboard workbench under one fluorescent tube, with something sickly green oozing along the bottom of the page, and a burp. |
+| Name the Group Chat | A daylight phone: white shell, blue sender bubble, grey replies that bounce in one at a time on their own delays with a notification ping and smaller taps behind it. |
+| The Department of Redundancy Department | Issued in genuine triplicate — a green carbon and a pink one visibly offset behind the top sheet — with a rubber stamp that slams down and a wooden thunk that shakes the whole stack. |
+| The Estimator | A slate blackboard with a wooden chalk rail, handwriting throughout, the answer scribbled over as it recalculates and a chalk rule drawn under it, then a small brass bell. |
+
+**The four that already made an artefact** — the brief asked whether the *surrounding page* was
+intentional. It was not: all four shared one body rule. Each now has a room.
+
+- **The Stamp Press** → a collector's green baize desk with tweezers and a perforation gauge lying on
+  it, Copperplate, a perforation tearing into a cancelling thud, and the stamp pressed on crooked.
+- **The Mint** → an engraver's steel bench with a guilloche rosette ghosted behind everything, Didot,
+  the heavy thud of a plate coming down with the note ringing after it, and a band of light
+  travelling across the note the way you tilt an unfamiliar banknote.
+- **Paint Namer** → a shop counter under a blurred wall of colour chips, Avenir Next, a tin lid
+  coming off with a metallic pop, and the swatch brushed on left to right.
+- **Rock Adoption** → a kraft-paper counter scattered with packing straw and a strip of tape, Marker
+  Felt, two stones knocking, and the certificate settling onto the counter.
+
+**Six more from the family, same standard**
+
+The Literalist (a cataloguer's ruled index card with a red margin line, American Typewriter, a
+typewriter carriage return and a **literally** stamp); The Multiverse Coin Flip (Futura, a thumb-flick
+into a detuned spinning shimmer and a ring, adjacent universes reporting in one at a time); The
+Fortune Cookie (Optima, one dry snap and a scatter of crumbs); Postcard from an Exoplanet (Trebuchet,
+a carrier tone arriving out of the noise it travelled through while the card resolves out of blur);
+Dungeon Room of the Day (a real stone wall with offset courses and torchlight guttering at the top
+corners, Hoefler Text, a stone door grinding open and a drip a second later); Five Ways To Say It
+(below decks — vertical planking with caulked seams and a coiled rope in the corner, Optima, a
+four-reed squeezebox chord with the bellows under it).
+
+## Three real bugs, found by testing
+
+1. **`translate()` collided with `translate()` in The Literalist.** That toy already had a function
+   of that name doing the actual emoji work; my UI wrapper shadowed it, so `render()` called the
+   wrapper, which called `render()`, until the stack ran out. Renamed `runTranslation`. This is the
+   second name-collision of exactly this shape in this cabinet — the bonsai's `pad()` was the first —
+   and both were only caught by loading the page.
+2. **The REJECTED stamp pushed the cover letter page 153px wide.** It is oversized and rotated on
+   purpose; it is now clipped by the sheet it is stamped on, which is also what a real one does.
+3. **Two of my own new surrounds added horizontal overflow** — a fixed layer nudged 58px right for
+   the dungeon's offset stone courses, and a rope coil hung 70px off the corner in the shanty. Both
+   redone to stay inside the viewport.
+
+A fourth thing that looked like a bug was not: `absurd-estimator` and `vintage-stamp` threw in the
+first test harness because that harness used `srcdoc`, which has no base URL, so the estimator's
+relative `data.js` resolved against the wrong path. Re-tested with real page loads and both are fine.
+The harness was wrong, not the pages.
+
+## Verified
+
+All 22 loaded as real pages and driven through their actual controls.
+
+- **No two share a look.** Compared computed `background-color` + `background-image` across all 22:
+  zero identical pairs. The first run of this check found dungeon-room and shanty-ifier still sharing
+  a `radial-gradient(900px 640px at 50% ...)` — that is what prompted rebuilding both surrounds.
+- **16 distinct body typefaces across 22 toys.** The five remaining repeats are deliberate pairs
+  (two hands, two typewriters, two Optima) on toys that look nothing alike otherwise, and the three
+  still on a system sans are pages whose identity is a display face on the content — Impact, the
+  letterhead, the deck headings.
+- **Every one has all three parts**: a `@keyframes` flourish, at least one `LCSound.play` cue, and a
+  mounted mute. Checked mechanically; zero failures.
+- **No horizontal overflow at 1100px or 390px**, across all 44 combinations.
+
+## Not done
+
+- **Sixteen of the toys in the brief's final list do not exist** and never have: the legalese
+  translator, mood haiku, fake academic abstract, compliment sandwich, group project generator,
+  workout playlist namer, baby-to-English translator, telephone chain, commit message generator, git
+  blame, small talk rescuer, overthinking simulator, excuse-my-typo generator, roast my playlist,
+  museum placard for mundane objects, and roast this business idea. Searched by slug and by title
+  across every toy and the hub; the only hits are those words appearing incidentally in other toys'
+  prose. Nothing was built for them — they would be new toys, which is a different job from this one.
+- **Twenty-one generator-family toys are still silent** and were not reached: album-cover,
+  city-builder-map, declassified-search, design-a-country, dream-decoder, espionage,
+  eternal-groupchat, impossible-vending, loot-terminal, name-my-thing, operator-gen, paradox-machine,
+  radio, recipe-of-the-day, the-oracle, the-zone, tv-voice, universes-colliding, weather,
+  what-beats-this, what-if-history. Several of these already have strong palettes and their own
+  flourishes (the Zone, the Radio Hub, the Almanac, the Oracle) and mainly want a cue; the flatter
+  ones are album-cover, name-my-thing, operator-gen, design-a-country and tv-voice. Adding
+  `lc-sound.js` to any of them is now a two-line job.
+- Six more (ancient-advisor, generate-a-stand, ships-log, sitcom-generator, snarky-weapon,
+  tactical-loadout) already had audio of their own from batch 17 and were left alone; they should be
+  moved onto the shared mute when somebody is next in there, or their sound will ignore it.
+
+## One thing found and not fixed
+
+Dungeon Room of the Day generates **"There is four sconces, three of them lit."** — a subject/verb
+agreement bug in its existing word lists, nothing to do with this pass. Left alone rather than
+widening the scope of an ambience job, but it is a one-line fix for whoever is next in that file.

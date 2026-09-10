@@ -10,6 +10,8 @@
 :root{
   --paper:#F7F2E4;
   --paper-2:#EDE6D2;
+  --copy2:#E4EDE6;      /* the second copy, on green */
+  --copy3:#F2E2E4;      /* and the third, on pink, for the file */
   --ink:#2A251C;
   --ink-2:#5E5647;
   --rule:#C5B99C;
@@ -22,15 +24,42 @@
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
 body{
-  background:#2A251C;color:var(--ink);font-family:var(--serif);min-height:100vh;
+  background:#2A251C;color:var(--ink);font-family:var(--type);min-height:100vh;
   padding:26px 14px 80px;display:flex;flex-direction:column;align-items:center;
 }
 .wrap{ max-width:660px;width:100% }
 
+.memo-stack{ position:relative;padding-bottom:14px }
+/* Two carbon copies, offset behind the top sheet — the green one for the
+   file and the pink one for the department that requested it, which is
+   this department. You can see their edges and that is the joke. */
+.memo-stack::before, .memo-stack::after{
+  content:"";position:absolute;left:0;right:0;top:0;bottom:0;border-top:6px double var(--ink);
+  box-shadow:0 10px 26px rgba(0,0,0,.4);
+}
+.memo-stack::before{ background:var(--copy3);transform:rotate(.75deg) translate(7px,7px);z-index:0 }
+.memo-stack::after{ background:var(--copy2);transform:rotate(-.45deg) translate(3px,3px);z-index:1 }
 .memo{
-  background:var(--paper);padding:32px 30px 34px;position:relative;
+  background:var(--paper);padding:32px 30px 34px;position:relative;z-index:2;
   box-shadow:0 18px 46px rgba(0,0,0,.5);
   border-top:6px double var(--ink);
+}
+/* the stamp lands on the top copy and the whole stack takes it */
+.memo-stack.stamped{ animation:thunk .3s ease }
+@keyframes thunk{
+  0%,100%{ transform:none }
+  22%{ transform:translateY(4px) }
+  60%{ transform:translateY(-1px) }
+}
+#f-stamp{ display:inline-block }
+.memo-stack.stamped #f-stamp{ animation:slam .34s cubic-bezier(.2,.8,.25,1) }
+@keyframes slam{
+  0%{ transform:scale(2.6) rotate(-18deg);opacity:0;filter:blur(5px) }
+  70%{ transform:scale(.95) rotate(-3deg);opacity:1;filter:blur(0) }
+  100%{ transform:none }
+}
+@media (prefers-reduced-motion: reduce){
+  .memo-stack.stamped, .memo-stack.stamped #f-stamp{ animation:none }
 }
 .memo::after{
   content:"";position:absolute;inset:0;pointer-events:none;
@@ -103,6 +132,7 @@ button:focus-visible{ outline:2px solid var(--paper);outline-offset:3px }
 <body>
 
 <div class="wrap">
+  <div class="memo-stack" id="stack">
   <div class="memo">
     <div class="letterhead">
       <h1>The Department of<br>Redundancy Department</h1>
@@ -120,6 +150,7 @@ button:focus-visible{ outline:2px solid var(--paper);outline-offset:3px }
       <span id="f-title">—</span>
     </div>
     <div class="stamp" id="f-stamp">Duplicate<br>Copy</div>
+  </div>
   </div>
 
   <div class="controls">
@@ -139,6 +170,8 @@ button:focus-visible{ outline:2px solid var(--paper);outline-offset:3px }
 
 <a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
 
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
 <script>
 (function(){
   'use strict';
@@ -229,8 +262,31 @@ button:focus-visible{ outline:2px solid var(--paper);outline-offset:3px }
     return '<li><b>' + r[0] + '</b><span>' + r[1] + '</span></li>';
   }).join('');
 
-  $('again').addEventListener('click', issue);
+  /* ---- the sound: a rubber stamp ------------------------------------- *
+   * Wood on a desk through three sheets of paper and a carbon: a short
+   * low thud with a hard click on top of it, and then the smaller sound
+   * of the stamp being lifted off again.
+   * ------------------------------------------------------------------- */
+  function thunk(){
+    LCSound.play(function(A){
+      A.burst('brown', { freq: 132, q: 1.4, dur: .1, level: A.cap(.13), reverb: false });
+      A.burst('white', { freq: 1500, q: 2.2, dur: .03, level: A.cap(.055), reverb: false });
+      A.blip(72, { type:'sine', dur:.15, glide:48, level:A.cap(.07), reverb:false });
+      /* lifted off */
+      A.burst('white', { at:.17, freq: 2600, q: 1.6, dur: .04, level: A.cap(.03), reverb: false });
+    });
+  }
+
+  function issueStamped(){
+    issue();
+    var st = $('stack');
+    st.classList.remove('stamped'); void st.offsetWidth; st.classList.add('stamped');
+    thunk();
+  }
+
+  $('again').addEventListener('click', issueStamped);
   issue();
+  LCSound.mount({ color: 'var(--paper-2)' });
 
   window.__memo = {
     issue: issue,

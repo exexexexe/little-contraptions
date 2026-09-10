@@ -14,15 +14,44 @@
   --pale:#EFEAE0;
   --dim:#948C7E;
   --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
-  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+  --serif:"Marker Felt","Comic Sans MS","Chalkboard SE",ui-rounded,sans-serif;
 }
+/* the certificate lands on the counter and settles, once */
+#cert.issued{ animation:settle .4s cubic-bezier(.2,.85,.25,1.05) }
+@keyframes settle{
+  0%{ transform:translateY(-16px) rotate(-1.4deg);opacity:.4 }
+  62%{ transform:translateY(3px) rotate(.5deg);opacity:1 }
+  100%{ transform:none }
+}
+@media (prefers-reduced-motion: reduce){ #cert.issued{ animation:none } }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
+/* The counter of a shop that should not exist: brown kraft, a scatter of
+   the straw the box was packed with, and a strip of parcel tape. */
 body{
-  background:radial-gradient(820px 660px at 50% 2%, var(--bg-2) 0%, var(--bg) 68%);
+  background:
+    radial-gradient(700px 460px at 50% -6%, rgba(255,236,196,.10), transparent 62%),
+    repeating-linear-gradient(94deg, rgba(120,86,48,.10) 0 3px, transparent 3px 8px),
+    repeating-linear-gradient(4deg, rgba(120,86,48,.07) 0 2px, transparent 2px 11px),
+    linear-gradient(180deg,#54402A 0%,#3E2E1E 58%,#2C2015 100%);
   color:var(--pale);font-family:var(--serif);min-height:100vh;
   padding:28px 16px 80px;display:flex;flex-direction:column;align-items:center;
 }
+/* straw */
+body::before{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.16;
+  background:
+    repeating-linear-gradient(72deg, rgba(226,196,130,.9) 0 1px, transparent 1px 34px),
+    repeating-linear-gradient(-51deg, rgba(226,196,130,.7) 0 1px, transparent 1px 47px),
+    repeating-linear-gradient(18deg, rgba(226,196,130,.6) 0 1px, transparent 1px 61px);
+}
+/* and a strip of tape across one corner */
+body::after{
+  content:"";position:fixed;right:-60px;top:38px;width:260px;height:34px;z-index:0;
+  background:rgba(232,216,178,.16);border-top:1px solid rgba(255,255,255,.12);
+  border-bottom:1px solid rgba(0,0,0,.14);transform:rotate(-32deg);pointer-events:none;
+}
+.wrap, footer{ position:relative;z-index:1 }
 .wrap{ max-width:600px;width:100% }
 header{ text-align:center;margin-bottom:20px }
 h1{
@@ -128,6 +157,8 @@ button.act:focus-visible{ outline:2px solid var(--pale);outline-offset:3px }
 
 <a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
 
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
 <script>
 (function(){
   'use strict';
@@ -351,7 +382,28 @@ button.act:focus-visible{ outline:2px solid var(--pale);outline-offset:3px }
     ctx.restore();
   }
 
-  document.getElementById('issue').addEventListener('click', issue);
+  /* ---- the sound: a rock being set down on a counter ----------------- *
+   * Two stones knocking together — a hard short click with a low body
+   * under it and no ring at all, because rocks do not ring. Then the
+   * paper of the certificate.
+   * ------------------------------------------------------------------- */
+  function knock(){
+    LCSound.play(function(A){
+      A.burst('white', { freq: 1800, q: 4.5, dur: .022, level: A.cap(.075), reverb: false });
+      A.burst('brown', { freq: 260, q: 2.6, dur: .06, level: A.cap(.09), reverb: false });
+      A.blip(148, { type:'sine', dur:.09, glide:104, level:A.cap(.05), reverb:false });
+      A.burst('white', { at: .13, freq: 3400, q: .8, dur: .07, level: A.cap(.022), reverb: false });
+    });
+  }
+  LCSound.mount({ color: 'var(--dim)' });
+
+  function settle(){
+    var c = document.getElementById('cert');
+    if (!c) return;
+    c.classList.remove('issued'); void c.offsetWidth; c.classList.add('issued');
+  }
+
+  document.getElementById('issue').addEventListener('click', function(){ issue(); knock(); settle(); });
   document.getElementById('name').addEventListener('keydown', function(e){ if (e.key === 'Enter') issue(); });
 
   document.getElementById('file').addEventListener('change', function(e){

@@ -19,10 +19,20 @@
   --dim:#8A7A63;
   --stamp:#B8452F;
   --rule:#C9B79A;
-  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+  --serif:"Trebuchet MS","Lucida Grande","Segoe UI",Verdana,sans-serif;
   --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
   --display:"Avenir Next Condensed","Roboto Condensed","Arial Narrow",var(--serif);
 }
+/* the postcard does not appear, it arrives: it resolves out of the noise
+   it travelled through, which is the only honest way to show something
+   that has come a very long way */
+#card.arriving{ animation:arrive .62s cubic-bezier(.2,.8,.3,1) }
+@keyframes arrive{
+  0%{ opacity:0;filter:blur(9px) saturate(.2);transform:scale(1.03) }
+  55%{ opacity:1;filter:blur(1.5px) saturate(.8) }
+  100%{ filter:none;transform:none }
+}
+@media (prefers-reduced-motion: reduce){ #card.arriving{ animation:none } }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
 body{
@@ -171,6 +181,8 @@ body{ padding-bottom:64px }
   arrangement is a postcard, not an observation. <a href="/">← back to the cabinet</a>
 </footer>
 
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
 <script>
 'use strict';
 
@@ -422,7 +434,27 @@ function render(){
     '</div>';
 }
 
+/* ---- the sound: something arriving from a long way off -------------- *
+ * A short carrier tone that arrives already fading in, a two-note data
+ * chirp, and a wash of the noise it travelled through. Distance is the
+ * whole feeling and distance in sound is reverb plus a soft attack.
+ * ------------------------------------------------------------------- */
+function transmit(){
+  LCSound.play((A) => {
+    A.burst('pink', { freq: 1200, q: .6, dur: .5, level: A.cap(.022), attack: .18, reverb: true });
+    A.blip(720, { at: .12, dur: .2, glide: 1080, level: A.cap(.04), type: 'sine', reverb: true });
+    A.blip(1080, { at: .3, dur: .34, glide: 640, level: A.cap(.034), type: 'sine', reverb: true });
+  });
+}
+
+function arriveCard(){
+  const c = $('card');
+  if (!c) return;
+  c.classList.remove('arriving'); void c.offsetWidth; c.classList.add('arriving');
+}
+
 $('next').addEventListener('click', () => {
+  transmit(); arriveCard();
   $('card').classList.remove('flipped');
   current = make();
   render();
@@ -432,6 +464,8 @@ $('card').addEventListener('click', () => $('card').classList.toggle('flipped'))
 
 current = make();
 render();
+
+LCSound.mount({ color: 'var(--card)' });
 </script>
 </body>
 </html>

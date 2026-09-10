@@ -17,7 +17,43 @@
   --rule:#2A2A38;
   --sans:ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif;
   --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
-  --display:"Avenir Next Condensed","Roboto Condensed","Arial Narrow",Impact,var(--sans);
+  --display:Impact,"Haettenschweiler","Franklin Gothic Bold","Arial Black",sans-serif;
+  --credit:"Trajan Pro","Cinzel","Optima","Palatino Linotype",Georgia,serif;
+}
+/* ---- the auditorium ---------------------------------------------------- *
+ * Two searchlights crossing a black sky, drawn as slow-rotating conic
+ * wedges. They are the only thing moving until you green-light something.
+ * ---------------------------------------------------------------------- */
+body::before{
+  content:"";position:fixed;inset:-40% -10% auto -10%;height:150%;z-index:0;pointer-events:none;
+  background:
+    conic-gradient(from 210deg at 18% 100%, transparent 0 6deg, rgba(232,192,90,.055) 8deg, transparent 14deg),
+    conic-gradient(from 300deg at 82% 100%, transparent 0 6deg, rgba(232,192,90,.045) 9deg, transparent 15deg);
+  animation:sweep 19s ease-in-out infinite alternate;
+}
+@keyframes sweep{
+  from{ transform:rotate(-2.5deg) }
+  to{ transform:rotate(2.5deg) }
+}
+.wrap, footer{ position:relative;z-index:1 }
+@media (prefers-reduced-motion: reduce){ body::before{ animation:none } }
+
+/* the title card slams in, then settles — the whole reason to press the
+   button is to watch this happen */
+.slam{ animation:slam .5s cubic-bezier(.15,.9,.25,1.05) backwards }
+@keyframes slam{
+  0%{ opacity:0;transform:scale(2.4);letter-spacing:.5em;filter:blur(9px) }
+  62%{ opacity:1;transform:scale(.965);letter-spacing:.01em;filter:blur(0) }
+  80%{ transform:scale(1.012) }
+  100%{ transform:scale(1) }
+}
+.fadein{ animation:fadein .5s ease backwards }
+@keyframes fadein{ from{ opacity:0;transform:translateY(9px) } }
+.flash{ position:fixed;inset:0;z-index:60;background:#F6EAC4;opacity:0;pointer-events:none }
+.flash.go{ animation:flash .42s ease-out }
+@keyframes flash{ 0%{ opacity:.5 } 100%{ opacity:0 } }
+@media (prefers-reduced-motion: reduce){
+  .slam,.fadein{ animation:none } .flash.go{ animation:none }
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
@@ -65,7 +101,7 @@ input:focus{ outline:2px solid var(--gold);outline-offset:-1px }
   font-size:clamp(30px,8vw,62px);line-height:.94;letter-spacing:.01em;margin:0;
   text-shadow:0 2px 0 rgba(0,0,0,.6);
 }
-.title .two{ display:block;color:var(--gold);font-size:.62em;margin-top:6px;letter-spacing:.06em }
+.title .two{ display:block;color:var(--gold);font-size:.62em;margin-top:6px;letter-spacing:.06em;font-family:var(--credit) }
 .strap{
   text-align:center;font-style:italic;font-size:clamp(14px,2.8vw,18px);color:#C8C2D6;
   margin:16px auto 0;max-width:44ch;line-height:1.5;
@@ -120,6 +156,7 @@ body{ padding-bottom:64px }
 <body>
 <a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
 
+<div class="flash" id="flash" aria-hidden="true"></div>
 <div class="wrap">
   <h1>The Uninvited Sequel</h1>
   <div class="sub">nobody asked for this · it is being made anyway</div>
@@ -140,6 +177,8 @@ body{ padding-bottom:64px }
   to whatever you typed. <a href="/">← back to the cabinet</a>
 </footer>
 
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
 <script>
 'use strict';
 
@@ -250,27 +289,59 @@ function render(){
 
   $('out').innerHTML =
     '<div class="sheet">' +
-      '<div class="tagline">' + esc(pick(['coming ' + pick(['summer','winter','eventually','at some point']),
+      '<div class="tagline fadein" style="animation-delay:.05s">' + esc(pick(['coming ' + pick(['summer','winter','eventually','at some point']),
         'nobody asked', 'in theatres and also not', 'from the makers of the first one'])) + '</div>' +
-      '<h2 class="title">' + esc(t.main) + '<span class="two">' + esc(t.two) + '</span></h2>' +
-      '<p class="strap">' + esc(f(pick(STRAPS))) + '</p>' +
+      '<h2 class="title slam" style="animation-delay:.52s">' + esc(t.main) +
+        '<span class="two">' + esc(t.two) + '</span></h2>' +
+      '<p class="strap fadein" style="animation-delay:1.02s">' + esc(f(pick(STRAPS))) + '</p>' +
       '<div class="rule"></div>' +
-      '<p class="log">' + esc(f(pick(HOOKS))) + '</p>' +
-      '<ul class="beats">' + beats.map(b => '<li>' + esc(b) + '</li>').join('') + '</ul>' +
-      '<div class="grid">' +
+      '<p class="log fadein" style="animation-delay:1.16s">' + esc(f(pick(HOOKS))) + '</p>' +
+      '<ul class="beats fadein" style="animation-delay:1.28s">' + beats.map(b => '<li>' + esc(b) + '</li>').join('') + '</ul>' +
+      '<div class="grid fadein" style="animation-delay:1.4s">' +
         '<div><span>returning</span><b>' + esc(pick(CAST)) + '</b></div>' +
         '<div><span>directed by</span><b>' + esc(pick(DIRECTORS)) + '</b></div>' +
         '<div><span>budget</span><b>' + esc(pick(BUDGETS)) + '</b></div>' +
         '<div><span>projected</span><b>' + esc(pick(OPENINGS)) + '</b></div>' +
       '</div>' +
-      '<div class="note"><b>note from the eleventh floor</b>' + esc(pick(NOTES)) + '</div>' +
+      '<div class="note fadein" style="animation-delay:1.52s"><b>note from the eleventh floor</b>' + esc(pick(NOTES)) + '</div>' +
     '</div>';
 }
 
-$('go').addEventListener('click', render);
+/* ---- the sting -------------------------------------------------------- *
+ * Dun. Dun. DUN. Three brass-ish hits, the last one a minor third below
+ * with a sub under it and a cymbal-ish wash, which is the entire musical
+ * vocabulary of a trailer voiceover and takes about a second.
+ * ---------------------------------------------------------------------- */
+function sting(){
+  LCSound.play((A) => {
+    const hit = (at, semi, level, dur) => {
+      [0, 12, 19].forEach((h, i) => {
+        A.blip(A.note(semi + h), {
+          at, dur, level: A.cap(level / (i + 1.6)), type: i ? 'sawtooth' : 'square',
+          filter: 'lowpass', filterFreq: 900 + i * 400, reverb: true
+        });
+      });
+      A.blip(A.note(semi - 24), { at, dur: dur * 1.2, level: A.cap(level * .9), type: 'sine', reverb: false });
+    };
+    hit(0,    -8, .085, .20);
+    hit(.24,  -8, .085, .20);
+    hit(.52, -13, .115, .95);
+    A.burst('white', { at: .52, freq: 6000, q: .6, dur: .7, level: A.cap(.03), reverb: true });
+  });
+}
+
+function greenlight(){
+  render();
+  const f = $('flash');
+  f.classList.remove('go'); void f.offsetWidth; f.classList.add('go');
+  sting();
+}
+
+$('go').addEventListener('click', greenlight);
 $('in').addEventListener('keydown', (e) => { if (e.key === 'Enter') render(); });
-$('rand').addEventListener('click', () => { $('in').value = pick(SUGGESTIONS); render(); });
+$('rand').addEventListener('click', () => { $('in').value = pick(SUGGESTIONS); greenlight(); });
 $('chips').innerHTML = SUGGESTIONS.slice(0, 5).map(s => '<button class="chip">' + esc(s) + '</button>').join('');
+LCSound.mount({ color: '#8A8798' });
 $('chips').addEventListener('click', (e) => {
   const c = e.target.closest('.chip'); if (!c) return;
   $('in').value = c.textContent; render();

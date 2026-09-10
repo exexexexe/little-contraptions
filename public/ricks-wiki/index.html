@@ -10,25 +10,60 @@
    running forced dark mode will invert the whole page — the cream card
    comes back dark brown, the ink comes back pale, and the illustrated
    background is flattened to black. */
-:root{ color-scheme: light; }
+:root{ color-scheme: dark; }
 :root{
-  --paper:#F4F5F0;
-  --paper-2:#E9EBE3;
-  --blue:#2A5B9E;
-  --blue-2:#7FA3CE;
-  --ink:#1B1F26;
-  --ink-2:#4C5461;
-  --dim:#8B929C;
-  --stamp:#B02B2B;
-  --line:#C9CEC4;
-  --sans:ui-sans-serif,system-ui,"Helvetica Neue",Helvetica,Arial,sans-serif;
+  /* The filing is still a filing, but it is being written on a bench in a
+     garage at three in the morning under one fluorescent tube that has
+     never been changed. Everything is grease-grey; the only bright thing
+     is the stuff in the jar, and it is the wrong green. */
+  --paper:#1A1D18;
+  --paper-2:#23271F;
+  --sheet:#E8E4D2;
+  --blue:#8ADB4E;
+  --blue-2:#B6F27A;
+  --ink:#E4E2D2;
+  --ink-2:#A8A896;
+  --dim:#71755F;
+  --stamp:#C24A2A;
+  --line:#3A3E30;
+  --ooze:#9BE03C;
+  --sans:"Avenir Next Condensed","Roboto Condensed","Arial Narrow",ui-sans-serif,sans-serif;
   --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
 }
+/* the tube overhead, and the jar of something on the shelf */
+body::before{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(680px 300px at 50% -12%, rgba(220,240,180,.07), transparent 70%),
+    radial-gradient(320px 320px at 88% 78%, rgba(155,224,60,.075), transparent 68%);
+}
+/* a pegboard, because that is what the wall behind a bench is */
+body::after{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5;
+  background-image:radial-gradient(circle at 10px 10px, rgba(0,0,0,.35) 1.6px, transparent 2px);
+  background-size:26px 26px;
+}
+.wrap, footer{ position:relative;z-index:1 }
+/* the filing arrives crooked, as though slapped down on the bench */
+.filing.slap{ animation:slap .3s cubic-bezier(.2,.9,.3,1.2) }
+@keyframes slap{
+  0%{ transform:rotate(-2.4deg) translateY(-12px) scale(1.02) }
+  60%{ transform:rotate(.5deg) translateY(2px) }
+  100%{ transform:none }
+}
+/* and something in the margin bubbles, slowly and unpleasantly */
+.ooze{
+  position:fixed;left:0;bottom:0;width:100%;height:5px;z-index:2;pointer-events:none;
+  background:linear-gradient(90deg, transparent, var(--ooze), transparent);
+  opacity:.34;filter:blur(1px);animation:ooze 7s ease-in-out infinite alternate;
+}
+@keyframes ooze{ from{ transform:translateX(-24%) } to{ transform:translateX(24%) } }
+@media (prefers-reduced-motion: reduce){ .filing.slap,.ooze{ animation:none } }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
 body{
-  background:#D9DCD3;
-  background-image:repeating-linear-gradient(0deg, rgba(0,0,0,.02) 0 1px, transparent 1px 4px);
+  background:#14170F;
+  background-image:repeating-linear-gradient(0deg, rgba(255,255,255,.014) 0 1px, transparent 1px 4px);
   color:var(--ink);font-family:var(--sans);min-height:100vh;padding:28px 16px 60px;
 }
 .wrap{ max-width:780px;margin:0 auto }
@@ -61,7 +96,7 @@ h2.device{
   letter-spacing:-.025em;line-height:1.12;text-transform:uppercase;
 }
 .classif{ font-family:var(--mono);font-size:10.5px;color:var(--blue);letter-spacing:.09em;margin-bottom:14px }
-svg.schema{ width:100%;height:auto;border:1px solid var(--blue-2);background:#FBFCFA }
+svg.schema{ width:100%;height:auto;border:1px solid var(--line);background:#12150E;opacity:.72 }
 
 .sec{ margin-top:18px }
 .sec h3{
@@ -75,21 +110,21 @@ ol.claims{ margin:0;padding-left:22px;font-size:14.5px;line-height:1.62 }
 ol.claims li{ margin-bottom:7px }
 
 .warn{
-  margin-top:18px;border:2px solid var(--stamp);background:#FBF0EF;
+  margin-top:18px;border:2px solid var(--stamp);background:rgba(194,74,42,.12);
   padding:14px 16px;
 }
 .warn h3{
   margin:0 0 6px;font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;
-  text-transform:uppercase;color:var(--stamp);
+  text-transform:uppercase;color:#E07A54;
 }
-.warn p{ margin:0;font-size:14.5px;line-height:1.6;color:#5A2320 }
+.warn p{ margin:0;font-size:15px;line-height:1.6;color:#F0B49A }
 
 .stamp{
   position:absolute;right:22px;top:120px;
   border:3px solid var(--stamp);color:var(--stamp);
   font-family:var(--mono);font-size:12px;letter-spacing:.16em;font-weight:700;
   padding:7px 12px;transform:rotate(-11deg);opacity:.78;text-transform:uppercase;
-  z-index:2;pointer-events:none;background:rgba(244,245,240,.6);
+  z-index:2;pointer-events:none;background:rgba(26,29,24,.6);
 }
 
 .deck{ display:flex;gap:9px;flex-wrap:wrap;margin-top:20px;padding:0 24px }
@@ -157,6 +192,7 @@ h1{ font-family:var(--display) }
 <body>
 <a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
 
+<div class="ooze" aria-hidden="true"></div>
 <div class="wrap">
   <div class="filing" id="filing"></div>
   <div class="deck">
@@ -179,6 +215,8 @@ h1{ font-family:var(--display) }
   </footer>
 </div>
 
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
 <script>
 'use strict';
 
@@ -546,7 +584,33 @@ function render(){
     '</div>';
 }
 
-$('next').addEventListener('click', () => { current = makeFiling(); render(); });
+/* ---- the sound ------------------------------------------------------- *
+ * A burp, which is a sawtooth dragged downwards through a lowpass with the
+ * filter itself wobbling — that wobble is the whole thing, and without it
+ * you have a car horn. Short, and quiet enough to be funny once rather
+ * than a problem.
+ * -------------------------------------------------------------------- */
+function burp(){
+  LCSound.play((A) => {
+    const dur = .34;
+    A.blip(132, { dur, glide: 62, level: A.cap(.075), type: 'sawtooth',
+                  filter: 'lowpass', filterFreq: 420, q: 7, reverb: false });
+    /* the flutter: three short overlapping copies, detuned */
+    [0, .07, .15, .23].forEach((at, i) => {
+      A.blip(118 - i * 9, { at, dur: .09, glide: 70, level: A.cap(.045), type: 'square',
+                            filter: 'lowpass', filterFreq: 300 + i * 60, q: 5, reverb: false });
+    });
+    A.burst('brown', { at: .02, freq: 190, q: 1.6, dur: .26, level: A.cap(.03), reverb: false });
+  });
+}
+
+$('next').addEventListener('click', () => {
+  current = makeFiling(); render();
+  const el = $('filing');
+  el.classList.remove('slap'); void el.offsetWidth; el.classList.add('slap');
+  burp();
+});
+LCSound.mount({ color: 'var(--dim)' });
 $('copy').addEventListener('click', async () => {
   try { await navigator.clipboard.writeText(current.name + ' — ' + current.abstractText); }
   catch (e) { window.prompt('Copy:', current.name + ' — ' + current.abstractText); }
