@@ -139,6 +139,12 @@ body{
 .crawl-track span::before{ content:"◆";color:var(--amber);margin-right:12px;font-size:8px;vertical-align:middle }
 @keyframes crawl{ from{transform:translateX(0)} to{transform:translateX(-100%)} }
 .crawl:hover .crawl-track, .crawl:focus-within .crawl-track{ animation-play-state:paused }
+/* Hovering is how a mouse holds this still; a phone has no hover at all,
+   so on touch a tap holds it and a second tap lets it go. Without this
+   the ticker simply cannot be stopped on a phone, which is the one thing
+   people want to do to a ticker. */
+.crawl.held .crawl-track{ animation-play-state:paused }
+@media (hover: none){ .crawl{ cursor:pointer } }
 
 /* ---------- controls ---------- */
 .deck{
@@ -183,6 +189,16 @@ footer a{ color:#7A7A88 }
   .logo{ font-size:20px }
   .yearsago b{ font-size:20px }
   .crawl-label{ display:none }
+  /* The category strip is a segmented control: wrapping it breaks the shared
+     borders, so on a narrow deck it scrolls sideways instead. */
+  .seg{ min-width:0;max-width:100%;overflow-x:auto;overscroll-behavior-x:contain }
+  .seg button{ flex:0 0 auto }
+}
+@media (pointer:coarse){
+  button, select, input[type=date]{ min-height:44px;padding:0 13px }
+  .seg button{ min-height:42px }
+  /* On a phone the crawl is a tap target (tap to hold it still). */
+  .crawl, .crawl-track{ height:44px }
 }
 
 /* ---------- shared: back to the cabinet ----------
@@ -202,6 +218,8 @@ footer a{ color:#7A7A88 }
   box-shadow:0 4px 16px rgba(0,0,0,.3);
   transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
 }
+/* A 38px pill is under the 44px a fingertip needs. */
+@media (pointer:coarse){ #lc-back{ width:44px;height:44px } }
 #lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
 #lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
 #lc-back:hover, #lc-back:focus-visible{
@@ -434,6 +452,20 @@ $('date').addEventListener('change', (e) => {
 });
 
 load(today);
+
+/* ---- tap to hold the ticker still (touch only) --------------------- */
+(function(){
+  var holder = document.querySelector('.crawl');
+  if (!holder) return;
+  if (window.matchMedia && !matchMedia('(hover: none)').matches) return;
+  holder.setAttribute('role', 'button');
+  holder.setAttribute('tabindex', '0');
+  holder.setAttribute('aria-label', 'Tap to hold the ticker still');
+  holder.addEventListener('click', function(){
+    var held = holder.classList.toggle('held');
+    holder.setAttribute('aria-pressed', String(held));
+  });
+})();
 </script>
 </body>
 </html>

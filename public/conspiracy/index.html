@@ -86,6 +86,9 @@ input[type=text]:focus{ outline:2px solid #E8C05A;outline-offset:-1px }
 @keyframes pull{ from{ stroke-dashoffset:var(--len) } to{ stroke-dashoffset:0 } }
 
 .pinboard{ position:relative;z-index:2;display:grid;gap:18px;grid-template-columns:1fr }
+/* Grid items default to min-width:auto, so the nowrap meter labels below were
+   sizing the whole board wider than a phone. */
+.pinboard > *{ min-width:0 }
 @media (min-width:660px){ .pinboard{ grid-template-columns:1fr 1fr } }
 
 .note, .card{
@@ -130,9 +133,9 @@ input[type=text]:focus{ outline:2px solid #E8C05A;outline-offset:-1px }
 }
 .note .collapse b{ color:var(--string) }
 
-.meter{ display:flex;align-items:center;gap:10px;margin-top:16px }
+.meter{ display:flex;align-items:center;gap:10px;margin-top:16px;flex-wrap:wrap }
 .meter .t{ font-family:var(--mono);font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:#8A7A5E;white-space:nowrap }
-.meter .track{ flex:1;height:5px;background:#E0D6BC;border-radius:3px;overflow:hidden }
+.meter .track{ flex:1 1 42px;min-width:42px;height:5px;background:#E0D6BC;border-radius:3px;overflow:hidden }
 .meter .track i{ display:block;height:100%;background:linear-gradient(90deg,#8AA06A,#D9A441,var(--string)) }
 
 .deck{ display:flex;gap:9px;flex-wrap:wrap;margin-top:18px }
@@ -154,6 +157,11 @@ footer{
 }
 footer a{ color:#FFF0CC }
 
+/* --- touch targets (sweep) --- */
+@media (pointer:coarse){
+  .btn, .chip{ min-height:44px }
+}
+
 #lc-back{
   position:fixed;left:14px;bottom:14px;z-index:9999;
   display:inline-flex;align-items:center;gap:0;overflow:hidden;
@@ -166,12 +174,21 @@ footer a{ color:#FFF0CC }
   box-shadow:0 4px 16px rgba(0,0,0,.3);
   transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
 }
+/* A 38px pill is under the 44px a fingertip needs. */
+@media (pointer:coarse){ #lc-back{ width:44px;height:44px } }
 #lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
 #lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
 #lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
 #lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
 #lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
 body{ padding-bottom:64px }
+@media (max-width:420px){
+  body{ padding-left:12px;padding-right:12px }
+  .board{ padding:18px 12px 22px }
+  .note{ padding:18px 16px 16px }
+  .card{ padding:13px 14px 12px }
+  .note, .card{ overflow-wrap:anywhere }
+}
 @media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
 @media print{ #lc-back{ display:none } }
 @media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } }

@@ -273,6 +273,16 @@ body.e13 #menu{ border:1px solid #E0DDD5;background:#fff;box-shadow:0 12px 30px 
 #switch button[aria-pressed="true"]{ background:#F2F3F4;color:#15161A;border-color:#F2F3F4 }
 #switch button:focus-visible{ outline:2px solid #7FD8FF;outline-offset:2px }
 
+/* --- touch targets (sweep) --- */
+/* A 44px title bar is not a title bar any more, so window chrome settles for a
+   close button big enough to hit without wrecking the era it is imitating.
+   Everything else in the OS gets the full 44. */
+@media (pointer:coarse){
+  #start, button{ min-height:44px }
+  .win .tb{ min-height:30px }
+  .win .tb button{ width:28px;min-height:24px;height:24px;font-size:13px }
+}
+
 #lc-back{
   position:absolute;left:10px;bottom:calc(var(--bar-h) + 10px);z-index:90;
   display:inline-flex;align-items:center;gap:0;overflow:hidden;
@@ -285,6 +295,8 @@ body.e13 #menu{ border:1px solid #E0DDD5;background:#fff;box-shadow:0 12px 30px 
   box-shadow:0 4px 16px rgba(0,0,0,.3);
   transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
 }
+/* A 38px pill is under the 44px a fingertip needs. */
+@media (pointer:coarse){ #lc-back{ width:44px;height:44px } }
 #lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
 #lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
 #lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
@@ -418,10 +430,17 @@ let z = 10, wins = [];
 function makeWindow(opts){
   const el = document.createElement('div');
   el.className = 'win' + (opts.paper ? ' paper' : '');
-  el.style.left = (opts.x || 90) + 'px';
-  el.style.top = (opts.y || 70) + 'px';
-  el.style.width = (opts.w || 340) + 'px';
-  el.style.height = (opts.h || 240) + 'px';
+  /* clamp to the viewport so a 350px window still fits a phone */
+  const M = 8;
+  const w = Math.min(opts.w || 340, Math.max(200, innerWidth - M * 2));
+  const x = Math.max(M, Math.min(opts.x || 90, innerWidth - w - M));
+  const y = opts.y || 70;
+  el.style.left = x + 'px';
+  el.style.top = y + 'px';
+  el.style.width = w + 'px';
+  el.style.height = typeof opts.h === 'number'
+    ? Math.min(opts.h, Math.max(140, innerHeight - y - 56)) + 'px'
+    : (opts.h || 240) + 'px';
   el.style.zIndex = ++z;
   el.innerHTML =
     '<div class="tb"><span class="t">' + esc(opts.title) + '</span>' +

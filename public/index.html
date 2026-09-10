@@ -148,6 +148,12 @@ h1{
   position:absolute;top:0;right:0;width:34px;height:34px;z-index:4;
   cursor:grab;touch-action:none;
 }
+/* A fingertip is about 44px and this corner is invisible, so on a touch
+   screen it gets a bigger target than the mouse needs. The visible peel
+   is unchanged — only the area that answers is larger. */
+@media (pointer: coarse){
+  .peel{ width:52px;height:52px }
+}
 .peel:active{ cursor:grabbing }
 .card-slot .lift{
   position:absolute;top:0;right:0;z-index:3;pointer-events:none;
@@ -433,6 +439,11 @@ footer{
   align-content:start;
   max-width:1400px;
 }
+/* the moment before an icon lifts, so a hold looks like it is doing
+   something rather than like a tap that did not register */
+.w98 .w98-icon.holding{ transform:scale(.9);transition:transform .18s ease }
+.w98 .w98-icon.dragging{ opacity:.4 }
+@media (prefers-reduced-motion: reduce){ .w98 .w98-icon.holding{ transition:none } }
 .w98-icon{
   display:flex;flex-direction:column;align-items:center;gap:4px;
   padding:6px 3px 7px;
@@ -3987,6 +3998,85 @@ footer{
   var ghost = null;
   var THRESHOLD = 5;
 
+  /* ---- touch: press and hold to pick an icon up ---------------------- *
+   *
+   *  The drag logic below is pointer-based and works with a touch pointer
+   *  as it stands — but on a phone the browser owns the gesture until
+   *  something says otherwise, so a drag scrolled the desktop and the
+   *  icon never moved. The obvious fix, touch-action:none on the icons,
+   *  is worse than the bug: there are 151 of them covering a surface
+   *  3400px tall, so it would leave almost nowhere to start a scroll.
+   *
+   *  So touch gets the gesture every phone home screen already uses:
+   *  hold for a moment and the icon lifts. Before the hold completes the
+   *  browser scrolls normally; after it, a non-passive touchmove listener
+   *  takes the gesture away mid-flight, which is the only thing that
+   *  reliably stops scrolling once it has begun. Moving early cancels the
+   *  hold, so a flick past an icon still scrolls.
+   *
+   *  Mouse and trackpad are untouched: they still pick up immediately.
+   * ------------------------------------------------------------------ */
+  var HOLD_MS = 380;
+  var HOLD_SLOP = 10;               // finger wander allowed before it is a scroll
+  var pending = null;               // a hold in progress, not yet a drag
+  var touchDragging = false;
+
+  function isTouchPointer(e){ return e.pointerType === 'touch' || e.pointerType === 'pen'; }
+
+  function cancelHold(){
+    if (pending && pending.timer) clearTimeout(pending.timer);
+    if (pending && pending.el) pending.el.classList.remove('holding');
+    pending = null;
+  }
+
+  /* Once a lift has happened the page must not scroll under it. Only a
+     non-passive touchmove can promise that, so one lives here for the
+     life of the page and does nothing at all unless a lift is live. */
+  document.addEventListener('touchmove', function(e){
+    if (touchDragging) e.preventDefault();
+  }, { passive: false });
+
+  function beginHold(e, el, fromFolderId){
+    cancelHold();
+    pending = {
+      el: el, from: fromFolderId, x: e.clientX, y: e.clientY,
+      pointerId: e.pointerId,
+      timer: setTimeout(function(){
+        if (!pending) return;
+        var p = pending;
+        pending = null;
+        p.el.classList.remove('holding');
+        touchDragging = true;
+        dragStart({ clientX: p.x, clientY: p.y }, p.el, p.from);
+        if (drag){
+          // the lift is worth showing: it is the only feedback that the
+          // hold worked, and without it people let go too early
+          drag.moved = true;
+          var g = ensureGhost();
+          var lbl = p.el.querySelector('.lbl');
+          g.innerHTML = p.el.querySelector('svg').outerHTML +
+                        '<span class="lbl">' + esc(lbl ? lbl.textContent : '') + '</span>';
+          g.hidden = false;
+          g.style.left = Math.round(p.x - drag.ox) + 'px';
+          g.style.top = Math.round(p.y - drag.oy) + 'px';
+          p.el.classList.add('dragging');
+          if (!p.from && !desk.free) enterFree();
+          if (navigator.vibrate) try { navigator.vibrate(12); } catch (err) {}
+        } else {
+          touchDragging = false;
+        }
+      }, HOLD_MS)
+    };
+    el.classList.add('holding');
+  }
+
+  /* A finger that wanders before the hold completes was scrolling. */
+  function holdMove(e){
+    if (!pending) return;
+    if (Math.abs(e.clientX - pending.x) > HOLD_SLOP ||
+        Math.abs(e.clientY - pending.y) > HOLD_SLOP) cancelHold();
+  }
+
   function ensureGhost(){
     if (ghost) return ghost;
     ghost = document.createElement('div');
@@ -4140,18 +4230,26 @@ footer{
     commitRename(e);
     var a = e.target.closest ? e.target.closest('.w98-icon') : null;
     if (!a) return;
+    if (isTouchPointer(e)){ beginHold(e, a, ''); return; }
     dragStart(e, a, '');
     if (drag) try { a.setPointerCapture(e.pointerId); } catch (err) {}
   });
-  iconWrap.addEventListener('pointermove', dragMove);
+  iconWrap.addEventListener('pointermove', function(e){
+    holdMove(e);
+    dragMove(e);
+  });
   iconWrap.addEventListener('pointerup', function(e){
+    cancelHold();
     var held = drag && drag.el;
     var wasDrag = drag && drag.moved;
     dragEnd(e);
+    touchDragging = false;
     if (wasDrag) suppressNextClick();
     if (held) try { held.releasePointerCapture(e.pointerId); } catch (err) {}
   });
-  iconWrap.addEventListener('pointercancel', function(e){ dragEnd(e); });
+  iconWrap.addEventListener('pointercancel', function(e){
+    cancelHold(); dragEnd(e); touchDragging = false;
+  });
 
   // A drag ends in a click event the browser still fires. It must not
   // navigate, and it must not deselect either.
@@ -4200,6 +4298,8 @@ footer{
 
     commitRename(e);
     if (icon){
+      // same rule as the desktop: a finger has to hold before it lifts
+      if (isTouchPointer(e)){ beginHold(e, icon, win.dataset.folder); return; }
       dragStart(e, icon, win.dataset.folder);
       // on the icon, for the same reason as on the desktop above
       if (drag) try { icon.setPointerCapture(e.pointerId); } catch (err) {}
@@ -4220,6 +4320,7 @@ footer{
 
   var winHold = null;
   shell.addEventListener('pointermove', function(e){
+    holdMove(e);
     if (drag){ dragMove(e); return; }
     if (!winHold) return;
     e.preventDefault();
@@ -4235,6 +4336,8 @@ footer{
     }
   });
   function endWin(e){
+    cancelHold();
+    touchDragging = false;
     if (drag){
       var held = drag.el;
       var wasDrag = drag.moved;
@@ -5674,6 +5777,7 @@ footer{
 })();
 </script>
 
+<script src="/shared/lc-swipe.js"></script>
 <script>
 /* ==================================================================== *
  *  Undocumented things.
@@ -5918,18 +6022,42 @@ footer{
     say('The cabinet has been reshuffled. It will sort itself out when you reload.', 4600);
   }
 
+  /* The code, checked once, whatever put the direction there. A keypress
+     and a swipe are the same event by the time they reach here — which is
+     the whole point: the sequence is the secret, not the input device. */
+  function feedKonami(key){
+    kbuf.push(key);
+    if (kbuf.length > KONAMI.length) kbuf.shift();
+    if (kbuf.length === KONAMI.length && kbuf.join(',') === KONAMI.join(',')){
+      kbuf = [];
+      about();
+      return true;
+    }
+    return false;
+  }
+
+  /* ---- the same code, for people without arrow keys ------------------ *
+   *  Four directions by swipe, then the b and the a. There are no letter
+   *  keys on a phone either, so the last two are a two-finger tap — which
+   *  is the closest thing a touchscreen has to "press two buttons".
+   * ------------------------------------------------------------------ */
+  if (window.LCSwipe && LCSwipe.available){
+    LCSwipe.on(function(dir){ feedKonami('arrow' + dir); });
+
+    document.addEventListener('touchstart', function(e){
+      if (e.touches && e.touches.length === 2){
+        // only counts while the arrows are already in the buffer
+        if (kbuf.length >= 8){ feedKonami('b'); feedKonami('a'); }
+      }
+    }, { passive: true });
+  }
+
   window.addEventListener('keydown', function(e){
     var t = e.target;
     if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
     var k = (e.key || '').toLowerCase();
 
-    kbuf.push(k);
-    if (kbuf.length > KONAMI.length) kbuf.shift();
-    if (kbuf.length === KONAMI.length && kbuf.join(',') === KONAMI.join(',')){
-      kbuf = [];
-      about();
-      return;
-    }
+    if (feedKonami(k)) return;
 
     if (k === 'escape'){ closeAbout(); return; }
 
@@ -5946,6 +6074,56 @@ footer{
           '<b>neal.fun</b>. If you have not been, go there instead of here.', 5200);
     }
   });
+
+  /* ---- shake the phone to shuffle the cabinet ------------------------ *
+   *  Typing "shuffle" is not available on a phone, and this is a better
+   *  gesture for it anyway: the drawers are being tipped out and put back
+   *  in a different order, which is a thing you do to a box by shaking it.
+   *
+   *  iOS requires the permission to be asked for from inside a real
+   *  gesture, so it is asked for on the first tap of the footer rather
+   *  than on load, and only once.
+   * ------------------------------------------------------------------ */
+  (function shakeToShuffle(){
+    if (typeof DeviceMotionEvent === 'undefined') return;
+
+    var last = 0, lastMag = 0, armed = false;
+
+    function onMotion(e){
+      var a = e.accelerationIncludingGravity;
+      if (!a) return;
+      var mag = Math.sqrt((a.x||0)*(a.x||0) + (a.y||0)*(a.y||0) + (a.z||0)*(a.z||0));
+      var jerk = Math.abs(mag - lastMag);
+      lastMag = mag;
+      var now = Date.now();
+      // one good jolt, then a second within the window: a shake, not a knock
+      if (jerk > 14 && now - last > 220){
+        if (now - last < 1400){ last = 0; shuffle(); }
+        else last = now;
+      }
+    }
+
+    function arm(){
+      if (armed) return;
+      armed = true;
+      window.addEventListener('devicemotion', onMotion);
+    }
+
+    if (typeof DeviceMotionEvent.requestPermission === 'function'){
+      var f = document.querySelector('footer');
+      if (f){
+        f.style.cursor = 'pointer';
+        f.addEventListener('click', function once(){
+          DeviceMotionEvent.requestPermission().then(function(r){
+            if (r === 'granted'){ arm(); say('Shake the cabinet to reshuffle it.', 3600); }
+          }).catch(function(){});
+          f.removeEventListener('click', once);
+        });
+      }
+    } else {
+      arm();
+    }
+  })();
 
   /* ---- 5. how many people are here ---------------------------------- *
    *  In-memory on the server and nowhere else: "right now" is a fact

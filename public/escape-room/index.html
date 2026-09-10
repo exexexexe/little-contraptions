@@ -91,6 +91,11 @@ h1{ font-size:14px;letter-spacing:.24em;text-transform:uppercase;margin:0;font-w
 .progress i{ flex:1;height:3px;background:var(--rule);border-radius:2px }
 .progress i.on{ background:var(--brass) }
 
+/* --- touch targets (sweep) --- */
+@media (pointer:coarse){
+  .btn{ min-height:44px }
+}
+
 #lc-back{
   position:fixed;left:14px;bottom:14px;z-index:9999;
   display:inline-flex;align-items:center;gap:0;overflow:hidden;
@@ -103,6 +108,8 @@ h1{ font-size:14px;letter-spacing:.24em;text-transform:uppercase;margin:0;font-w
   box-shadow:0 4px 16px rgba(0,0,0,.3);
   transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
 }
+/* A 38px pill is under the 44px a fingertip needs. */
+@media (pointer:coarse){ #lc-back{ width:44px;height:44px } }
 #lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
 #lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
 #lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
@@ -127,7 +134,7 @@ h1{ font-size:14px;letter-spacing:.24em;text-transform:uppercase;margin:0;font-w
     <div class="side">
       <div class="pane">
         <h2>What you are looking at</h2>
-        <div id="look">Click anything in the room. Everything that can be looked at will show you something.</div>
+        <div id="look"><span id="look-verb">Click</span> anything in the room. Everything that can be looked at will show you something.</div>
       </div>
       <div class="pane">
         <h2>Notebook</h2>
@@ -473,7 +480,7 @@ function setRoom(i){
   $('scene').innerHTML =
     '<svg viewBox="0 0 640 440" role="img" aria-label="' + esc(room.name) + '">' + room.svg + '</svg>' +
     '<div class="roomname">' + esc(room.name) + '</div>';
-  $('look').innerHTML = 'Click anything in the room.';
+  $('look').innerHTML = VERB + ' anything in the room.';
   $('notes').innerHTML = '';
   $('prompt').innerHTML = room.prompt;
   $('answer').value = '';
@@ -482,8 +489,15 @@ function setRoom(i){
   $('hinttext').textContent = '';
   $('roomno').textContent = 'room ' + (i + 1) + ' of 5';
   $('prog').innerHTML = BUILDERS.map((_, k) => '<i class="' + (k <= i ? 'on' : '') + '"></i>').join('');
-  $('answer').focus();
+  /* On a phone this jumped the page past the room and threw the keyboard up
+     before you had seen anything, so the cursor only lands itself where there
+     is a real one to land. */
+  if (!matchMedia('(hover: none)').matches) $('answer').focus();
 }
+
+/* Same instruction, whichever way the reader's device actually works. */
+const VERB = matchMedia('(hover: none)').matches ? 'Tap' : 'Click';
+{ const v = document.getElementById('look-verb'); if (v) v.textContent = VERB; }
 
 $('scene').addEventListener('click', (e) => {
   const g = e.target.closest('[data-o]');

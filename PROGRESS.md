@@ -2473,3 +2473,249 @@ All 22 loaded as real pages and driven through their actual controls.
 Dungeon Room of the Day generates **"There is four sconces, three of them lit."** — a subject/verb
 agreement bug in its existing word lists, nothing to do with this pass. Left alone rather than
 widening the scope of an ambience job, but it is a one-line fix for whoever is next in that file.
+
+---
+
+# The phone-friendliness pass — tier 1, the functional breaks
+
+Codebase state when this ran: **post-Phase-2** (the icon/folder desktop exists) and
+**pre-Phase-5** (no `/generator/`, so all 149 drawers were still separate). Every check below was
+run in a real touch context — Playwright's iPhone 13 device profile with `hasTouch` and `isMobile`
+set, driving actual CDP touch events — not a resized desktop window, because the two behave
+differently in exactly the ways that matter here.
+
+## 1. Dragging icons on the Windows 98 desktop — was broken, now fixed
+
+The brief expected HTML5 `draggable`/`dragstart`. It is not that: the desktop was already built on
+pointer events, which do fire for touch. The break was elsewhere and confirmed by measurement:
+
+- `.w98-icon` computed `touch-action: auto`, so the browser owned the gesture
+- the desktop scrolls — 3411px of content in an 814px viewport
+- so a drag scrolled the desktop and the icon never moved
+
+The obvious fix, `touch-action: none` on the icons, is worse than the bug: there are 151 of them
+covering that whole surface, which would leave almost nowhere to start a scroll. So touch now gets
+the gesture every phone home screen already uses: **press and hold for 380ms and the icon lifts.**
+Before the hold completes the browser scrolls normally; moving more than 10px cancels it, so a flick
+past an icon still scrolls. Once lifted, a non-passive `touchmove` listener takes the gesture away
+mid-flight, which is the only thing that reliably stops scrolling once it has begun. Mouse and
+trackpad are untouched and still pick up immediately. The same rule applies inside folder windows.
+
+Verified on the iPhone profile: a quick flick starting on an icon scrolled the desktop 463px and
+left the icon where it was; a press-and-hold showed the holding state at 200ms, lifted at 600ms
+(ghost visible, icon marked dragging), scrolled the desktop **0px** during the drag, and moved the
+icon 93×87px. No page errors.
+
+## 2. Keyboard-only easter eggs — was broken, now fixed
+
+Four things on the front door were unreachable on a phone, not awkward — unreachable: the Konami
+code (the credits overlay), and all five arrow-sequence stratagem codes added last session.
+
+`shared/lc-swipe.js` turns a swipe into the direction an arrow key would have given and hands it to
+whoever is listening. Both the Konami buffer and the stratagem matcher now take input from it, so
+the sequence is checked in exactly one place whatever produced it. The module only ever *watches* —
+nothing calls `preventDefault`, so scrolling is untouched; entering a code scrolls the page about as
+a side effect, which is the honest trade for not breaking scrolling everywhere to support an egg.
+
+The Konami code ends in `b` and `a`, and there are no letter keys on a phone either, so those two
+are a **two-finger tap**, only counted once the eight directions are already in the buffer.
+
+Typing `shuffle` had no phone equivalent, so shaking the phone now reshuffles the cabinet — a better
+gesture for it anyway, since what you are doing is tipping the drawers out and putting them back in
+a different order. On iOS the motion permission is asked for from a footer tap, because it can only
+be requested from inside a real gesture.
+
+Verified on the iPhone profile by real CDP flicks: eight swipes plus a two-finger tap opened the
+credits overlay; five swipes fired the MANAGED DEMOCRACY panel. Shake-to-shuffle verified on the
+ungated Android path — the card order changed — and confirmed correctly permission-gated on iOS.
+
+## 3. Hover-only interactions — one was already handled, three were not
+
+- **The San Francisco photo's corner reveal** already had a `@media (hover: none)` fallback from an
+  earlier session: the HUD and reticle are simply shown on a touch screen. Left alone.
+- **The hub's card-peel corner** is pointer-driven with `touch-action: none` and works on touch —
+  verified, the peel reached full progress under a finger. Its grip was 34×34px though, so on a
+  coarse pointer the *target* is now 52px while the visible peel is unchanged.
+- **Three tickers paused only on hover** — the good-news wire, the on-this-day crawl and the static
+  channel's roll. Holding a ticker still to read it is the one thing people want from a ticker, and
+  a phone could not. All three now toggle on tap, with a `role="button"` and a label. Verified:
+  `animation-play-state` goes running → paused → running on two taps, on all three.
+
+## 4. Arcade touch controls — already existed, now verified and two buttons fixed
+
+The brief expected these to be missing. They are not: a previous session built a touch pad, and
+`fit()` already reserves 210px of vertical space for it on a coarse pointer. All fourteen games
+route through one shared key map, and the pad feeds that same map — including the two that looked
+like exceptions. (The `click` in minesweeper is the word "click" in a comment about the first move
+being safe; billiards, the stacker and simon are all `A.hit()` like everything else.)
+
+So the work here was verification, which the brief rightly insisted on. **Three games played start
+to finish using only touch:**
+
+- **snake** — navigated the menu by touch, entered play, died, returned to the menu
+- **breakout** — entered play, died, went through to the score board
+- **HOISTER (the crane stacker)** — entered play, 13 drops on touch, died, reached name entry
+
+Zero page errors across all three. Two real defects found while doing it: the **ESC** and **P**
+buttons were 46×32 and 33×32 — under a fingertip, and they are precisely the two you do not want to
+miss, being how you leave a game and how you pause it. Both are 44px tall on a coarse pointer now.
+The d-pad (44×44) and the A/B buttons (54×54) were already fine.
+
+## 5. Mouse-drag toys — all already worked, all now verified
+
+Every one of these was built on pointer events with `touch-action` already set, so this was
+verification rather than repair. Driven with real CDP touch drags on the iPhone profile:
+
+| toy | what changed under a finger |
+|---|---|
+| marble run | drew a ramp (3 → 4 parts) |
+| dominoes | laid a run (21 → 31 tiles) |
+| two-knob screen | knob turned, 10 points drawn |
+| flip book | drew a stroke |
+| bubble wrap | popped 3 |
+| worry stone | 5 rubs registered |
+| gratitude jar | shake 0 → 29.2 |
+| snow globe | energy 0 → 81 |
+| theremin | pitch readout moved |
+| pixel canvas | budget 8 → 7, a pixel landed on the shared grid |
+
+Billiards cue aiming and the crane stacker's timing input are inside the arcade and go through the
+key map, covered by the play-throughs above. Two of my first probes were wrong rather than the toys
+being broken — the pixel canvas one counted every cell in a grid that is never empty — which is
+worth writing down, because a bad probe reads exactly like a broken toy.
+
+## 6. The microphone toy — it does not exist
+
+There is no `getUserMedia` anywhere in this repo. The three files that match "microphone" all
+contain the word in prose: a line of invented radio chatter, a sentence in Room Tone saying nothing
+was ever played into one, and a quiz question about how many devices in your home have one. The
+blow-out-the-candles toy has never been built. Nothing to test and nothing to fix — flagged rather
+than invented.
+
+## Also done: the accelerometer enhancement
+
+Layered on top of the existing mouse-shake, never instead of it. The snow globe already had tilt.
+**The gratitude jar now responds to shaking the actual phone** — it feeds the same `shake`
+accumulator the drag does, so the lid gives way at the same threshold and there is only one rule
+about how hard is hard enough, and the slips get a real shove so it looks shaken too. Verified on
+the ungated path: shake 0 → 13173, the hint moved to "the lid is not going to hold". iOS asks for
+permission on the first touch of the jar.
+
+# Phone-friendliness pass — tier 2 (the broad audit)
+
+Everything below was measured on a real 320px touch context (iPhone SE profile, `hasTouch` and
+`isMobile` both on), not by reading CSS. The whole cabinet was swept four times: once to find the
+problems, twice mid-repair, once at the end.
+
+## The sweep, start to finish
+
+| | before | after |
+|---|---|---|
+| toys overflowing the viewport | 5 | **0** |
+| toys that crashed or threw | 0 | 0 |
+| toys with a control under 44px | 148 | 98, and every one that is left is prose links or a listed exception |
+| worst single toy's small-target count | 28 | 11, of which 9 are inline links in body text |
+
+## The five that overflowed
+
+Each was measured to the exact element rather than guessed at.
+
+- **retro-os, 150px.** `makeWindow` wrote whatever width the caller asked for, so the 350px About
+  window opened at `left:120` on a 320px screen and two thirds of it was off the side. Windows now
+  clamp their width and x to the viewport, and their height to what is left below the title.
+- **conspiracy, 57px.** My own corkboard rebuild. Grid items default to `min-width:auto`, and the
+  meter's two `white-space:nowrap` labels were sizing the whole board. `min-width:0` on the board's
+  children, the meter wraps, and the note and card padding tightens under 420px.
+- **fiction-wiki, 63px.** A `<select>` takes its width from its longest `<option>`, and two of the
+  source titles are long. Capped, and on a phone the filter row goes full-width.
+- **arcade, 13px.** Two causes. `fit()` did `Math.max(1, Math.floor(scale))`, so below 1x the canvas
+  stayed pinned at its full 320px and hung off the side; under 1x it now takes the exact fractional
+  fit and above 1x it still snaps to whole integers, so the pixels stay crisp where it matters
+  (measured: 0.875x at 320, 1x at 390, 2x at 768, 3x at 1440). And the d-pad plus four face buttons
+  wanted 408px, so on a phone the face buttons wrap into two rows beside the d-pad.
+- **close-call, 14px.** Same `min-width:auto` grid trap, plus a `flex:none` row that could not
+  shrink to fit a long near-Earth-object name. Both fixed, names ellipsis now.
+- **on-this-day, 50px** — found on the re-sweep, not the first one, because it only appears once the
+  feed has loaded. The category strip is a segmented control, so it scrolls sideways rather than
+  wrapping and breaking its shared borders.
+
+## Touch targets
+
+The single highest-leverage fix was shared: **`#lc-back` was 38×38 in all 149 toys**, and the sound
+toggle in `lc-sound.js` was 38×38 everywhere it appears. Both are 44 on a coarse pointer now. That
+alone took 148 toys down to 134.
+
+The rest was done by profiling every undersized control across the cabinet by selector, then
+injecting a `@media (pointer:coarse)` block per toy — 107 toys patched from one measured plan rather
+than 107 guesses. Then re-measured, and the cases where a blanket `min-height` had distorted
+something got corrected by hand:
+
+- **boring-day: reverted.** A 366-cell year heatmap cannot have 44px cells; the squares became tall
+  rectangles and the calendar stopped reading as a calendar. Left at 20×20 deliberately.
+- **retro-os: a 44px title bar is not a title bar.** The window chrome settles for a 28×24 close
+  button in a 30px bar; everything else in that toy gets the full 44.
+- **marble-run's round swatches stayed round** (40×40) instead of becoming 26×44 ovals.
+- **The `#snd` icon toggle in seven toys** got a square 44 rather than a 15px-wide sliver.
+- **Checkboxes** (right-now, paper-airplane) stay 22px — a checkbox cannot usefully be 44 — and
+  their labels became the 44px target instead.
+
+## Wide-layout and mouse-only assumptions
+
+- **starship-scale.** Two real collisions: the tools stacked in the top-right corner ran straight
+  across the title, and the bottom rail was drawn underneath the back pill because the 62px reserve
+  that keeps them apart had been dropped on narrow screens. Tools are a full-width bar on a phone
+  now, the title sits below them, and the reserve is back.
+- **color-organ.** Its back pill lives top-left, and the centred title ran under it. Header offset.
+- **undersea-cables.** Said "**Hover** the map to pick out a cable" on a device with no hover.
+  Tapping already worked; the sentence now says whichever is true of the device reading it.
+- **escape-room.** Landed you 264px down the page with the keyboard up, because it focused the
+  answer field on every room build — so you never saw the room. The cursor only lands itself where
+  there is a real one, and "Click anything in the room" reads "Tap" on a phone.
+- I scraped the rendered text of all 149 toys for mouse-only instructions ("hover", "right-click",
+  "scroll wheel", "arrow keys"). Only those two were real. The rest were code comments, deliberate
+  copy (the button in useless-buttons that "cannot be caught by a mouse"), or already
+  device-agnostic ("click, tap or press space").
+
+## The fiction wiki's 500 entries
+
+The list itself was already fine on a phone — single column under 560px, 120 rows a page behind a
+48px "load more", a 16px input that will not trigger iOS zoom. The problem was the sticky control
+block: **366px of a 568px screen**, permanently. The search box stays put; the two selects, the
+shuffle button and the category chips fold behind a disclosure that says how many filters are on, so
+a folded panel is never the reason a search looks empty. **366px → 122px.** Verified the fold, the
+count, and that chip filtering still narrows the list (38 rows) with no errors.
+
+There is no 100-object museum in this repo; the nearest things are unknown-sport at 107 items and
+hidden-thing at 36, and neither has a list/search UI to fix. Flagged rather than invented.
+
+## Verification
+
+- **Three arcade games played start to finish on real touch** — Serpentine, Rally and Wallbreak,
+  driven through CDP touch events on the on-screen pad, not synthetic key presses. Menu navigation,
+  start, ten direction inputs each producing a distinct frame, pause, and ESC back to the menu all
+  work; snake was played to its actual death and the 2.6s game-over returned to the menu on its own.
+- **The Konami code by swipe** — eight real swipes (up up down down left right left right) followed
+  by a two-finger tap opened the about dialog. Instrumented the swipe listener to confirm all eight
+  directions were read correctly before the tap.
+- **A stratagem code by swipe** — right right up up down brought up MORNING BREW, fits a 320px
+  screen, attribution line intact.
+- **~22 toys looked at, not just measured**, across categories: chladni, tactical-loadout,
+  city-builder-map, rhythm-sequencer, apocalypse-quiz, starship-scale, espionage, liminal-swipe,
+  six-degrees, undersea-cables, boring-day, color-test, retro-os, pixel-canvas, color-organ,
+  marble-run, escape-room, arcade, fiction-wiki, on-this-day, plus the hub itself.
+- Final sweep: 149 audited, 0 overflowing, 0 crashed, 0 JS errors.
+
+## Where a touch equivalent could not be made to work
+
+Only three, and all three are deliberate:
+
+- **boring-day's heatmap cells** stay at 20×20. Thirty-one columns of a calendar year will not fit
+  44px cells on a phone, and stretching them vertically stopped it reading as a calendar.
+- **retro-os's window close button** stays at 28×24. A 44px title bar is not a 1991 title bar.
+- **Inline links inside body text** — source credits, licence lines, "where this data comes from"
+  footers — are 11-17px tall across about 90 toys. Making a link inside a sentence 44px tall would
+  break the sentence. These are what the remaining small-target count is almost entirely made of.
+
+## Still to do
+
+Nothing outstanding from the phone-friendliness brief. Not yet committed or deployed.

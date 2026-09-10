@@ -71,6 +71,11 @@ footer{
 }
 footer a{ color:#9FD0E4 }
 
+/* --- touch targets (sweep) --- */
+@media (pointer:coarse){
+  .btn{ min-height:44px }
+}
+
 #lc-back{
   position:fixed;left:14px;bottom:14px;z-index:9999;
   display:inline-flex;align-items:center;gap:0;overflow:hidden;
@@ -83,6 +88,8 @@ footer a{ color:#9FD0E4 }
   box-shadow:0 4px 16px rgba(0,0,0,.3);
   transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
 }
+/* A 38px pill is under the 44px a fingertip needs. */
+@media (pointer:coarse){ #lc-back{ width:44px;height:44px } }
 #lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
 #lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
 #lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
@@ -110,7 +117,7 @@ body{ padding-bottom:64px }
 
   <div class="mapbox"><canvas id="cv" width="1440" height="720" aria-label="World map of submarine communications cables"></canvas></div>
 
-  <div class="info" id="info"><div class="idle">Hover the map to pick out a cable, or search for one by name.</div></div>
+  <div class="info" id="info"><div class="idle" id="idle-copy">Hover the map to pick out a cable, or search for one by name.</div></div>
 </div>
 
 <footer>
@@ -195,7 +202,7 @@ function nearest(mx, my){
 }
 
 function showInfo(c){
-  if (!c){ $('info').innerHTML = '<div class="idle">Hover the map to pick out a cable, or search for one by name.</div>'; return; }
+  if (!c){ $('info').innerHTML = '<div class="idle">' + IDLE + '</div>'; return; }
   // landing points catalogued near either end — stated as proximity, not as a claim
   const near = [];
   c.ends.forEach(e => {
@@ -223,6 +230,13 @@ function fmtLL(xy){
   return Math.abs(lat).toFixed(1) + (lat >= 0 ? '°N' : '°S') + ' ' +
          Math.abs(lon).toFixed(1) + (lon >= 0 ? '°E' : '°W');
 }
+
+/* A phone has no hover, and tapping the map does the same job, so the one
+   instruction on screen should say whichever is true of the device reading it. */
+const IDLE = matchMedia('(hover: none)').matches
+  ? 'Tap the map to pick out a cable, or search for one by name.'
+  : 'Hover the map to pick out a cable, or search for one by name.';
+{ const el = document.getElementById('idle-copy'); if (el) el.textContent = IDLE; }
 
 cv.addEventListener('mousemove', (e) => {
   const r = cv.getBoundingClientRect();
