@@ -3,299 +3,32 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>The Chladni Plate</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23141414'/><rect x='6' y='6' width='20' height='20' fill='%232E2E2E'/><path d='M16 6v20M6 16h20' stroke='%23E8DCC0' stroke-width='2'/><circle cx='11' cy='11' r='2' fill='%23E8DCC0'/><circle cx='21' cy='21' r='2' fill='%23E8DCC0'/></svg>">
+<title>The Chladni Plate has moved</title>
+<link rel="canonical" href="/sound-lab/?instrument=chladni">
+<meta name="robots" content="noindex">
+<!-- Not gone, just filed differently. Anyone who bookmarked or linked
+     this still lands on the same thing. The script goes first and
+     replaces this entry in the history, so Back returns where they came
+     from rather than bouncing them through here again; the refresh is
+     the fallback for a browser with script off. -->
+<meta http-equiv="refresh" content="2;url=/sound-lab/?instrument=chladni">
 <style>
-:root{ color-scheme: dark; }
-:root{
-  --bg:#0E0E10;
-  --bg-2:#17171A;
-  --brass:#C9A227;
-  --sand:#EBDFC2;
-  --pale:#E6E4DE;
-  --dim:#87847C;
-  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
-  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
-}
-*{box-sizing:border-box}
-html,body{margin:0;padding:0}
-body{
-  background:radial-gradient(760px 620px at 50% 8%, var(--bg-2) 0%, var(--bg) 68%);
-  color:var(--pale);font-family:var(--serif);min-height:100vh;
-  padding:28px 16px 80px;display:flex;flex-direction:column;align-items:center;
-}
-.wrap{ max-width:640px;width:100% }
-header{ text-align:center;margin-bottom:20px }
-h1{
-  font-family:var(--mono);font-size:clamp(16px,3.8vw,22px);margin:0;
-  letter-spacing:.26em;text-transform:uppercase;color:var(--brass);font-weight:500;
-}
-.sub{ font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-top:10px }
-
-.plate{
-  position:relative;aspect-ratio:1/1;width:100%;
-  background:#1C1C1E;
-  box-shadow:0 18px 44px rgba(0,0,0,.6), inset 0 0 0 1px rgba(201,162,39,.22);
-}
-canvas{ display:block;width:100%;height:100% }
-.bolt{ position:absolute;width:9px;height:9px;border-radius:50%;background:#3A3A3C;box-shadow:inset 0 1px 0 #5A5A5C }
-.bolt.a{ left:9px;top:9px } .bolt.b{ right:9px;top:9px }
-.bolt.c{ left:9px;bottom:9px } .bolt.d{ right:9px;bottom:9px }
-
-.controls{ margin-top:22px;display:flex;flex-direction:column;gap:14px }
-.row{ display:flex;align-items:center;gap:14px;flex-wrap:wrap }
-label{ font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);flex:0 0 auto }
-input[type=range]{ flex:1 1 200px;min-width:150px;accent-color:var(--brass) }
-.readout{
-  font-family:var(--mono);font-size:12px;letter-spacing:.08em;color:var(--pale);
-  min-width:170px;text-align:right;font-variant-numeric:tabular-nums;
-}
-button{
-  font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;
-  background:transparent;color:var(--brass);border:1px solid var(--brass);
-  padding:10px 15px;cursor:pointer;
-}
-button:hover{ background:var(--brass);color:#17140A }
-button:focus-visible{ outline:2px solid var(--pale);outline-offset:3px }
-
-.note{
-  margin-top:26px;font-size:13.5px;line-height:1.7;color:var(--dim);
-}
-.note b{ color:var(--pale);font-weight:600 }
-
-/* --- touch targets (sweep) --- */
-@media (pointer:coarse){
-  #freq, #scatter, #sound{ min-height:44px }
-}
-
-#lc-back{
-  position:fixed;left:14px;bottom:14px;z-index:9999;
-  display:inline-flex;align-items:center;gap:0;overflow:hidden;
-  font:600 11px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
-  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
-  color:#F4F5F6;background:rgba(18,19,22,.82);
-  border:1px solid rgba(255,255,255,.3);border-radius:999px;
-  width:38px;height:38px;justify-content:center;
-  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
-  box-shadow:0 4px 16px rgba(0,0,0,.3);
-  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
-}
-/* A 38px pill is under the 44px a fingertip needs. */
-@media (pointer:coarse){ #lc-back{ width:44px;height:44px } }
-#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
-#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
-#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
-#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
-#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
-@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
-@media print{ #lc-back{ display:none } }
-@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } }
+:root{ color-scheme: light dark }
+body{ margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+  padding:28px;text-align:center;background:#15151b;color:#e8e6df;
+  font:400 15px/1.65 ui-sans-serif,system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif }
+.b{ max-width:30rem } h1{ font-size:20px;margin:0 0 12px;font-weight:600 }
+p{ margin:0 0 16px;opacity:.8 } a{ color:#e0c36a }
 </style>
 </head>
 <body>
-
-<div class="wrap">
-  <header>
-    <h1>The Chladni Plate</h1>
-    <p class="sub">Sand finds the parts that are not moving</p>
-  </header>
-
-  <div class="plate">
-    <canvas id="plate" width="620" height="620" role="img"
-            aria-label="A square plate scattered with sand. As the frequency changes the sand collects along the lines that are not vibrating."></canvas>
-    <span class="bolt a"></span><span class="bolt b"></span>
-    <span class="bolt c"></span><span class="bolt d"></span>
-  </div>
-
-  <div class="controls">
-    <div class="row">
-      <label for="freq">Frequency</label>
-      <input id="freq" type="range" min="0" max="100" value="18" step="1" aria-describedby="read">
-      <span class="readout" id="read">—</span>
-    </div>
-    <div class="row">
-      <button id="scatter" type="button">Scatter the sand</button>
-      <button id="sound" type="button">Sound on</button>
-    </div>
-  </div>
-
-  <p class="note">
-    The pattern is not decoration. Drive a plate at one of its resonant frequencies and parts of it
-    stand still while everything around them moves; sand skitters off the moving parts and piles up
-    along the still ones, so the <b>nodal lines</b> draw themselves. Ernst Chladni was doing this
-    with a violin bow in the 1780s.
-  </p>
-  <p class="note">
-    These are the nodal lines of an <b>ideal square plate</b>, from the standard model
-    <span style="font-family:var(--mono);font-size:12.5px">cos&#8202;n&pi;x&#8202;cos&#8202;m&pi;y &minus; cos&#8202;m&pi;x&#8202;cos&#8202;n&pi;y</span>,
-    and the frequency is scaled from the mode numbers so the slider covers an audible range.
-    A real plate of a particular size, thickness and metal has its own set of frequencies, and
-    they are not these — the shapes are the honest part, the numbers are a stand-in.
-  </p>
+<div class="b">
+  <h1>The Chladni Plate has moved</h1>
+  <p>It is part of <strong>The Sound Lab</strong> now, with the same room and the
+     same behaviour it always had.</p>
+  <p><a href="/sound-lab/?instrument=chladni">Go there now</a> &middot;
+     <a href="/">back to the cabinet</a></p>
 </div>
-
-<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
-
-<script>
-(function(){
-  'use strict';
-
-  var cv = document.getElementById('plate');
-  var ctx = cv.getContext('2d', { alpha: false });
-  var W = cv.width, H = cv.height;
-  var img = ctx.createImageData(W, H);
-  var freqEl = document.getElementById('freq');
-  var readEl = document.getElementById('read');
-  var scatterBtn = document.getElementById('scatter');
-  var soundBtn = document.getElementById('sound');
-  var calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  /* ---- the modes ---------------------------------------------------- *
-   * A square plate's nodal figure needs two different mode numbers: with
-   * m === n the expression is identically zero and there is no figure.
-   * Ordered by m^2 + n^2, which is what sets the pitch on the ideal
-   * plate, so sliding right really does mean "higher".                 */
-  var MODES = [];
-  for (var m = 1; m <= 8; m++){
-    for (var n = m + 1; n <= 9; n++) MODES.push({ m: m, n: n, k: m * m + n * n });
-  }
-  MODES.sort(function(a, b){ return a.k - b.k; });
-
-  var mode = MODES[0];
-  function pickMode(v){
-    var i = Math.min(MODES.length - 1, Math.round(v / 100 * (MODES.length - 1)));
-    return MODES[i];
-  }
-  // scaled from the mode number into something a speaker can actually play
-  function hzOf(md){ return Math.round(110 + md.k * 15.5); }
-
-  /* ---- the sand ------------------------------------------------------ */
-  var N = 14000;
-  var px = new Float32Array(N), py = new Float32Array(N);
-  function scatter(){
-    for (var i = 0; i < N; i++){ px[i] = Math.random(); py[i] = Math.random(); }
-  }
-  scatter();
-
-  // displacement of the plate at (x, y), both in 0..1
-  function amp(x, y){
-    var pm = Math.PI * mode.m, pn = Math.PI * mode.n;
-    return Math.cos(pn * x) * Math.cos(pm * y) - Math.cos(pm * x) * Math.cos(pn * y);
-  }
-
-  /* Grains are thrown about in proportion to how hard the plate is moving
-     under them, so they random-walk away from the antinodes and come to
-     rest wherever the movement is nearly nothing. That is the whole
-     mechanism — there is no attraction toward the lines. */
-  function settle(steps){
-    for (var s = 0; s < steps; s++){
-      for (var i = 0; i < N; i++){
-        var a = Math.abs(amp(px[i], py[i]));
-        var kick = a * 0.019 + 0.0004;
-        px[i] += (Math.random() - 0.5) * kick;
-        py[i] += (Math.random() - 0.5) * kick;
-        if (px[i] < 0.004) px[i] = 0.004; else if (px[i] > 0.996) px[i] = 0.996;
-        if (py[i] < 0.004) py[i] = 0.004; else if (py[i] > 0.996) py[i] = 0.996;
-      }
-    }
-  }
-
-  var PLATE = [28, 28, 30], GRAIN = [235, 223, 194];
-  function draw(){
-    var d = img.data;
-    for (var p = 0; p < d.length; p += 4){
-      d[p] = PLATE[0]; d[p + 1] = PLATE[1]; d[p + 2] = PLATE[2]; d[p + 3] = 255;
-    }
-    for (var i = 0; i < N; i++){
-      var x = (px[i] * W) | 0, y = (py[i] * H) | 0;
-      var o = (y * W + x) * 4;
-      // grains stack, so a pile reads brighter than a stray grain
-      d[o]     = Math.min(255, d[o] + 78);
-      d[o + 1] = Math.min(255, d[o + 1] + 74);
-      d[o + 2] = Math.min(255, d[o + 2] + 62);
-    }
-    ctx.putImageData(img, 0, 0);
-  }
-
-  /* ---- sound --------------------------------------------------------- */
-  var ac = null, osc = null, gain = null, soundOn = false;
-  function ensureAudio(){
-    if (ac) return true;
-    try {
-      ac = new (window.AudioContext || window.webkitAudioContext)();
-      osc = ac.createOscillator(); osc.type = 'sine';
-      gain = ac.createGain(); gain.gain.value = 0.0001;
-      osc.connect(gain); gain.connect(ac.destination);
-      osc.start();
-      return true;
-    } catch (e){ return false; }
-  }
-  function tune(){
-    if (!ac) return;
-    osc.frequency.setTargetAtTime(hzOf(mode), ac.currentTime, 0.04);
-  }
-  soundBtn.addEventListener('click', function(){
-    if (!soundOn){
-      if (!ensureAudio()){ soundBtn.textContent = 'no audio here'; soundBtn.disabled = true; return; }
-      if (ac.state === 'suspended') ac.resume();
-      soundOn = true;
-      tune();
-      gain.gain.setTargetAtTime(0.055, ac.currentTime, 0.06);
-      soundBtn.textContent = 'Sound off';
-    } else {
-      soundOn = false;
-      gain.gain.setTargetAtTime(0.0001, ac.currentTime, 0.06);
-      soundBtn.textContent = 'Sound on';
-    }
-  });
-
-  /* ---- wiring -------------------------------------------------------- */
-  function setMode(md){
-    mode = md;
-    readEl.textContent = hzOf(md) + ' Hz  ·  mode ' + md.m + ',' + md.n;
-    tune();
-  }
-
-  freqEl.addEventListener('input', function(){
-    var next = pickMode(+freqEl.value);
-    if (next !== mode){
-      setMode(next);
-      // a change of note throws everything loose again, as it does on a real plate
-      for (var i = 0; i < N; i++){
-        px[i] += (Math.random() - 0.5) * 0.09;
-        py[i] += (Math.random() - 0.5) * 0.09;
-      }
-    }
-  });
-  scatterBtn.addEventListener('click', function(){ scatter(); });
-
-  setMode(pickMode(+freqEl.value));
-
-  var running = true;
-  document.addEventListener('visibilitychange', function(){
-    var was = !running;
-    running = !document.hidden;
-    if (running && was) requestAnimationFrame(loop);
-  });
-  function loop(){
-    if (!running) return;
-    settle(calm ? 1 : 2);
-    draw();
-    requestAnimationFrame(loop);
-  }
-  settle(60);
-  draw();
-  requestAnimationFrame(loop);
-
-  window.__chladni = function(){
-    // how tightly the sand has gathered on the still parts
-    var tot = 0;
-    for (var i = 0; i < N; i++) tot += Math.abs(amp(px[i], py[i]));
-    return { mode: mode.m + ',' + mode.n, hz: hzOf(mode), grains: N,
-             meanAmplitudeUnderSand: +(tot / N).toFixed(4), sound: soundOn };
-  };
-  window.__setFreq = function(v){ freqEl.value = v; freqEl.dispatchEvent(new Event('input')); };
-})();
-</script>
+<script>location.replace('/sound-lab/?instrument=chladni');</script>
 </body>
 </html>

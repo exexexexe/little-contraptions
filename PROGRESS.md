@@ -3172,3 +3172,68 @@ Phase 1 through Phase 6 are all done. What remains is what those phases explicit
 other three consolidations (Design Studio, Sound Lab, History Desk), and the 97 toys that still
 make no sound and 59 that have no animation.
 
+---
+
+# The other three consolidations
+
+The last of Phase 5's list. **Thirteen more drawers became three.** The hub reads **126**.
+
+| Drawer | Was | No. |
+|---|---|---|
+| The Design Studio | album cover, wanted poster, vintage stamp, currency designer | 151 |
+| The Sound Lab | theremin, Chladni plate, colour organ, rhythm sequencer | 152 |
+| The History Desk | on this day, most boring day, closer than you'd think, what if, gaming history | 153 |
+
+**Three of the toys the brief named do not exist and never have**: the travel poster, the vinyl
+label designer, and the soundboard. Searched by slug and by title. So the Design Studio merges four
+rather than six, and the Sound Lab four rather than five.
+
+## One shell, not four copies
+
+The Generator's registry, CSS scoping, page variables and teardown are now
+`/shared/lc-shell.js`, and all four consolidated drawers use it. The Generator was moved onto it
+first and re-tested before anything new was built on it — fifteen voices, fifteen distinct
+backgrounds, no regression. `LCGen.voice()` stayed as the name the voice files already call, so
+fifteen modules did not have to be edited to move one function.
+
+## The hazard the Sound Lab introduced
+
+The other consolidations host toys that draw and print. This one hosts **four instruments that make
+continuous noise**, and an oscillator left running when you switch would follow you to the next
+one. Listeners and timers were already tracked; audio was not.
+
+Each Sound Lab part now patches `window.AudioContext` for its own lifetime, records every context
+opened, and closes them on the way out, restoring the original constructor. Verified by installing
+a recorder before any page script ran: the theremin's context reads **`running`** while it is
+playing and **`closed`** the moment you switch to the Chladni plate.
+
+## Two things the tests caught
+
+- **A data file that was fetched relatively.** The most boring day asks for `counts.json`, which
+  resolved against `/boring-day/` before and against `/history-desk/` after — a 404 and an empty
+  toy. The porter carried sibling *scripts* across but not runtime *data*. Now copied, and the
+  fetch made absolute.
+- **The sequencer loads Matter.js from a CDN**, which the porter first tried to copy as though it
+  were a sibling file. CDN sources are now separated from local ones and loaded by the shell.
+
+## Nothing thrown away, again
+
+All thirteen old URLs answer, each `location.replace()`-ing to its part. Verified: **all 13 land on
+the right part, mounted.** Two eggs moved house with their toys — the Anglo-Zanzibar comparison and
+the machine declining to imagine away the internet — and are re-filed in the catalogue under
+`history-desk`. Checked in place: the what-if egg still fires from inside the History Desk, and the
+catalogue still reads 43 of 43 wired.
+
+## Verified
+
+- All 13 parts mount, with **distinct page backgrounds within each drawer** (4 of 4, 4 of 4, 5 of 5).
+- Switching parts leaves exactly one room mounted and no audio running.
+- Hub at 126 cards with all three new drawers and **no stale cards**; the W98 desktop picked all
+  three up and holds no stale icons, without being told.
+- Full cabinet sweep: **153 pages, zero page errors, zero horizontal overflow.**
+
+## What is left
+
+Only the ambience gap: 97 toys that make no sound and 59 with no animation, both counted before
+this merge reduced the cabinet.
+

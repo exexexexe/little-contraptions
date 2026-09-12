@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Sound Lab</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='25' x='2' font-size='24'>🎛</text></svg>">
+<style>
+:root{ color-scheme: light; }
+*{ box-sizing:border-box }
+html,body{ margin:0;padding:0 }
+
+/* ------------------------------------------------------------------ *
+ *  This drawer is 4 former drawers under one roof, and it owns almost
+ *  nothing on purpose. Each part was a toy with a room built for it, so
+ *  it still brings its own palette, type, surround and behaviour. The
+ *  bar below reads its colours from whichever part is up, through the
+ *  custom properties that part sets — change part and the whole page
+ *  changes with it.
+ * ------------------------------------------------------------------ */
+body{
+  min-height:100vh;
+  background:var(--shell-bg,#15151b);
+  color:var(--shell-ink,#e8e6df);
+  font-family:var(--shell-body,ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif);
+  transition:background-color .5s ease,color .5s ease;
+}
+#shell-bar{
+  position:sticky;top:0;z-index:30;
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:10px 14px;
+  background:var(--shell-bar,rgba(0,0,0,.30));
+  border-bottom:1px solid var(--shell-rule,rgba(255,255,255,.14));
+  backdrop-filter:blur(7px);
+}
+#shell-bar .lab{
+  font:600 10.5px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  letter-spacing:.17em;text-transform:uppercase;opacity:.6;flex:none;
+}
+#shell-pick{
+  font:inherit;font-size:13px;padding:7px 10px;min-height:34px;
+  background:var(--shell-field,rgba(255,255,255,.07));
+  color:inherit;border:1px solid var(--shell-rule,rgba(255,255,255,.20));
+  border-radius:3px;cursor:pointer;max-width:min(320px,60vw);
+}
+#shell-blurb{ flex:1 1 240px;min-width:0;font-size:12px;opacity:.66;line-height:1.45 }
+@media (pointer:coarse){ #shell-pick{ min-height:44px } }
+
+#shell-room{ padding:26px 18px 90px }
+#shell-room > .room{ max-width:900px;margin:0 auto }
+#shell-room .shell-missing{
+  max-width:620px;margin:60px auto;padding:18px 20px;line-height:1.6;
+  border:1px solid var(--shell-rule,rgba(255,255,255,.20));border-radius:4px;
+}
+@media (prefers-reduced-motion: reduce){ body{ transition:none } }
+</style>
+</head>
+<body>
+
+<div id="shell-bar">
+  <span class="lab">Instrument</span>
+  <select id="shell-pick" aria-label="Which instrument"></select>
+  <p id="shell-blurb"></p>
+</div>
+
+<main id="shell-room" aria-live="polite"></main>
+
+<script src="/shared/lc-commons.js"></script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script src="/shared/lc-id.js"></script>
+<script src="/shared/lc-generate.js"></script>
+<script src="/shared/lc-achievements.js"></script>
+<script src="/shared/lc-shell.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+<script>
+/* One registry for all four consolidated drawers; see /shared/lc-shell.js.
+   LCPart is the shorthand the part files call. */
+var __S = LCShell.create({ key: "lc-lab-instrument", param: "instrument", title: "The Sound Lab" });
+window.LCPart = function (id, name, blurb, page, css, mount) {
+  __S.add({ id: id, name: name, blurb: blurb, page: page, css: css, mount: mount });
+};
+window.LCThisDrawer = __S;
+</script>
+
+<script src="/sound-lab/parts/theremin.js"></script>
+<script src="/sound-lab/parts/chladni.js"></script>
+<script src="/sound-lab/parts/organ.js"></script>
+<script src="/sound-lab/parts/sequencer.js"></script>
+<script>__S.boot();</script>
+</body>
+</html>
