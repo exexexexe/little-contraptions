@@ -4124,3 +4124,31 @@ Both findings checked against `git status` before being reported:
 - **`/reverse-turing/` logged two 429s — that is the rate limiter working.** `/api/generate` is
   capped at 20 requests per IP per hour and a 139-page sweep runs into it. Correct behaviour, not
   a defect.
+
+## Hotfix: the drift layer was painting the desktop icons over the Start menu
+
+Reported from a screenshot: the Start menu was open with desktop icons showing straight through
+it — labels and sprites drawn over the menu's list rows.
+
+**Mine, and from the drift layer.** To get the icons above the new backdrop I had written
+`#w98-icons, #w98-widgets{ position:relative; z-index:1 }`. But **`#w98-startmenu` has no
+z-index of its own** and never has: it is a later sibling and had always relied on document order
+to sit above the icons. Giving the icons a positive z-index beat it, and the menu lost.
+
+Fixed by not raising anything. `#w98-desktop` now makes itself a stacking context (`z-index:0`),
+which lets the drift layer sit at **`z-index:-1`** — above that element's own background, beneath
+everything inside it — and the rule that raised the icons is **deleted**. So the icons, the rail,
+the windows and the menus are all back to exactly the stacking they had before this feature
+existed, and the backdrop slots in underneath without anything else needing to know about it.
+(`z-index` alone does not change the containing block, so the layer's `fixed` still means fixed
+to the window rather than to the scrolling desktop.)
+
+The general shape of the mistake is worth keeping: **raising one thing to get above a new
+element silently lowers it relative to everything that was relying on document order.** Putting
+the new element underneath instead touches nothing.
+
+**Verified by hit-testing rather than by eye** — for every icon overlapping the open Start menu,
+asking the browser what is actually on top at that point: **0 icons painting over the menu**, at
+1280px and 1120px. Also confirmed still correct: folder windows, Display Properties, the context
+menu and the taskbar all layer above the desktop; a widget still sits above the backdrop; and the
+drift still paints in both density modes. Zero console errors.
