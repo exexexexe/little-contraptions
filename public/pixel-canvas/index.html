@@ -397,5 +397,19 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) refr
 window.__canvas = { grid: () => grid, look: lookForShapes,
                     force: (n) => { celebrated = false; celebrate(n || 'a heart', 0, 0, 7, 6); } };
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* One pixel placed. Small, bright, and entirely out of proportion to its size. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.blip(1568, { dur: 0.06, level: A.cap(0.035), type: 'square' });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest(".cell, canvas, button")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

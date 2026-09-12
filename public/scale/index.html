@@ -815,5 +815,20 @@ $('again').addEventListener('click', render);
 idx = Math.floor(Math.random() * CARDS.length);
 render();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* Two things put side by side, and the larger one arriving second. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.blip(392, { dur: 0.16, level: A.cap(0.04), type: 'sine' });
+    A.blip(196, { at: 0.14, dur: 0.42, level: A.cap(0.05), type: 'sine' });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("#next, #again")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

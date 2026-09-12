@@ -351,5 +351,20 @@ document.addEventListener('keydown', function(e){
 paint();
 newRound();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A lecture-room pointer tapped once against a board. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.burst('white', { type:'bandpass', freq: 2600, q: 5, dur: 0.022, level: A.cap(0.05), reverb: false });
+    A.burst('pink', { at: 0.03, type:'lowpass', freq: 700, dur: 0.09, level: A.cap(0.025) });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("button")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

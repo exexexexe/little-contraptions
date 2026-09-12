@@ -301,5 +301,20 @@ async function boot(){
 }
 boot();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A signal going a very long way through cold water and arriving anyway. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.blip(380, { dur: 0.5, glide: 760, level: A.cap(0.04), type: 'sine' });
+    A.burst('brown', { at: 0.05, type:'lowpass', freq: 220, dur: 0.45, level: A.cap(0.025), attack: 0.15 });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && e.target.closest("#rand, button")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

@@ -729,5 +729,20 @@ select.t{ max-width:210px }
   openingView();
 })();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A hull the size of a city, announcing itself from a long way off. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.blip(58, { dur: 0.8, glide: 44, level: A.cap(0.055), type: 'sine' });
+    A.blip(116, { at: 0.04, dur: 0.55, level: A.cap(0.025), type: 'sine' });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && e.target.closest("#fit, #zin, #zout, #prev, #next")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

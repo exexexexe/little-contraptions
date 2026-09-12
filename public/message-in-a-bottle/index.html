@@ -338,5 +338,21 @@ footer a{ color:var(--dim) }
   look();
 })();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* Glass entering water, and the water closing over it. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.blip(900, { dur: 0.09, glide: 420, level: A.cap(0.05), type: 'sine' });
+    A.burst('white', { at: 0.07, type:'bandpass', freq: 1400, q: 0.9, dur: 0.3, level: A.cap(0.04), attack: 0.03 });
+    A.burst('brown', { at: 0.12, type:'lowpass', freq: 300, dur: 0.4, level: A.cap(0.03), attack: 0.08 });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("#cast")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

@@ -981,5 +981,21 @@ window.__iss = {
 };
 </script>
 
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A telemetry ping from something a long way up and moving quickly. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.blip(1760, { dur: 0.10, level: A.cap(0.04), type: 'sine' });
+    A.blip(1760, { at: 0.18, dur: 0.10, level: A.cap(0.028), type: 'sine' });
+    A.burst('white', { at: 0.02, type:'highpass', freq: 6000, dur: 0.3, level: A.cap(0.012), attack: 0.08 });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("#find, #geo, #v-map, #v-globe")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

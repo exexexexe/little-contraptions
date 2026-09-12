@@ -313,5 +313,20 @@ h1{
   window.__next = nextRound;
 })();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A verdict committed to. One key, pressed firmly. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.burst('brown', { type:'lowpass', freq: 600, dur: 0.05, level: A.cap(0.06), reverb: false });
+    A.blip(294, { at: 0.04, dur: 0.14, level: A.cap(0.035), type: 'square' });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("#human, #machine, #next")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

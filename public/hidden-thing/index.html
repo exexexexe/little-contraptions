@@ -749,5 +749,20 @@ $('prev').addEventListener('click', () => { i = (i - 1 + THINGS.length) % THINGS
 i = Math.floor(Math.random() * THINGS.length);
 render();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A small mechanism doing the thing it was hiding: one click, revealed. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.burst('white', { type:'bandpass', freq: 3000, q: 8, dur: 0.018, level: A.cap(0.05), reverb: false });
+    A.blip(1480, { at: 0.05, dur: 0.22, level: A.cap(0.03), type: 'sine' });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("#next, #prev")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

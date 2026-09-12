@@ -362,5 +362,20 @@ window.__declass = { release, lines: () => lines, IDLE_MS,
                      forceIdle: () => { lastPoke = 0; },
                      fired: () => metaFired };
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A file pulled from a drawer and dropped on a desk. Paper, then the drawer closing. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.burst('pink', { type:'bandpass', freq: 2400, q: 0.9, dur: 0.14, level: A.cap(0.05), attack: 0.02 });
+    A.burst('brown', { at: 0.13, type:'lowpass', freq: 300, dur: 0.10, level: A.cap(0.06), reverb: false });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("#go, #more")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

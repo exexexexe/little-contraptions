@@ -427,5 +427,20 @@ floorSeen.observe($('floor'));
 
 update();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* Pressure. A long low note that goes further down than feels comfortable. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.blip(90, { dur: 0.9, glide: 55, level: A.cap(0.055), type: 'sine' });
+    A.burst('brown', { at: 0.05, type:'lowpass', freq: 180, dur: 0.7, level: A.cap(0.03), attack: 0.2 });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("#auto, #top")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

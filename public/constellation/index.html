@@ -559,5 +559,20 @@ window.addEventListener('keydown', (e) => {
 
 drawReg();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A line drawn between two stars: a thin chime, and a great deal of room around it. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.blip(1320, { dur: 0.42, level: A.cap(0.035), type: 'sine' });
+    A.blip(1976, { at: 0.05, dur: 0.5, level: A.cap(0.022), type: 'sine' });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("#shuffle, #break, #undo, #clear")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

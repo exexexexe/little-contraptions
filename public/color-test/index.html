@@ -385,5 +385,20 @@ h1{ font-size:clamp(19px,4.4vw,25px);font-weight:600;margin:0 0 6px;letter-spaci
   };
 })();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A glass cap set down on a lightbox. Small, hard, and in tune with nothing. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.blip(2100, { dur: 0.07, level: A.cap(0.03), type: 'sine' });
+    A.burst('white', { freq: 5200, q: 8, dur: 0.012, level: A.cap(0.02), reverb: false });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest(".cap, .swatch, li")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

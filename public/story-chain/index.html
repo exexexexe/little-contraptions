@@ -302,5 +302,20 @@ setInterval(() => { if (!document.hidden && !busy) load(); }, 20000);
 
 window.__story = { render: render, marker: markerFor };
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A sentence added to a story that was here before you and will outlast you: a typewriter key, once. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.burst('brown', { type:'lowpass', freq: 700, dur: 0.04, level: A.cap(0.06), reverb: false });
+    A.burst('white', { at: 0.02, freq: 3000, q: 6, dur: 0.014, level: A.cap(0.035), reverb: false });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && e.target.closest("#add")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

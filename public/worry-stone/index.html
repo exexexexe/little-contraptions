@@ -326,5 +326,19 @@ canvas{ display:block;width:100%;height:100% }
   };
 })();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A thumb over smooth stone. Almost nothing, repeated as long as you like. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.burst('brown', { type:'lowpass', freq: 420, q: 0.7, dur: 0.20, level: A.cap(0.03), attack: 0.06 });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && e.target.closest("#stage, canvas, .stone")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

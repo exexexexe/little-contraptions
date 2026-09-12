@@ -855,5 +855,20 @@ h1{ font-size:clamp(24px,5vw,34px);font-weight:400;letter-spacing:-.02em;margin:
   };
 })();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A switch on a laboratory bench. The trick goes off, or comes back. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.burst('white', { type:'bandpass', freq: 1500, q: 7, dur: 0.016, level: A.cap(0.045), reverb: false });
+    A.blip(210, { at: 0.02, dur: 0.06, level: A.cap(0.03), type: 'square' });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("button")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

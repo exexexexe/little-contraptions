@@ -307,5 +307,19 @@ body{
   };
 })();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* Almost nothing, because that is the toy: one soft mark that the clock is running. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.blip(320, { dur: 0.6, level: A.cap(0.022), type: 'sine' });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("body, .timer, button")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

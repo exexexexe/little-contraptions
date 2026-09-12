@@ -358,5 +358,20 @@ $('reset').addEventListener('click', () => {
 
 render();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A health bar taking a hit, in the register of a game that takes itself seriously. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.blip(320, { dur: 0.12, glide: 180, level: A.cap(0.06), type: 'sawtooth' });
+    A.burst('brown', { at: 0.04, type:'lowpass', freq: 220, dur: 0.22, level: A.cap(0.05), attack: 0.01 });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("#add, #reset")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

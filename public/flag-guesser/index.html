@@ -592,5 +592,20 @@ document.addEventListener('keydown', function(e){
 paintScore();
 newRound();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A desk bell of the kind that sits on a counter and is hit once. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.blip(1046, { dur: 0.55, level: A.cap(0.045), type: 'sine' });
+    A.blip(2093, { at: 0.005, dur: 0.35, level: A.cap(0.02), type: 'sine' });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("button")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

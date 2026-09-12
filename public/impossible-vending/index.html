@@ -252,5 +252,21 @@ $('coin').addEventListener('click', () => { credit++; updatePanel(); });
 $('vend').addEventListener('click', vend);
 updatePanel();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A coin down the slot, the mechanism thinking about it, and the spiral turning. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.blip(2400, { dur: 0.05, glide: 1400, level: A.cap(0.05), type: 'triangle' });
+    A.burst('white', { at: 0.08, type:'bandpass', freq: 900, q: 2.5, dur: 0.04, level: A.cap(0.04), reverb: false });
+    A.burst('brown', { at: 0.16, type:'lowpass', freq: 320, dur: 0.34, level: A.cap(0.045), attack: 0.05 });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("#coin, #vend")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

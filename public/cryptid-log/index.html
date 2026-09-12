@@ -289,5 +289,20 @@ feedEl.addEventListener('focusout', () => hold(false));
 for (let i = 0; i < 4; i++) file();
 schedule();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A handset keyed on a quiet channel: squelch, then the tape. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.burst('white', { type:'bandpass', freq: 1700, q: 2.2, dur: 0.07, level: A.cap(0.05) });
+    A.burst('white', { at: 0.09, type:'bandpass', freq: 900, q: 1.1, dur: 0.03, level: A.cap(0.03), reverb: false });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("#now, #pause")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

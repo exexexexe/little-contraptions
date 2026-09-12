@@ -435,5 +435,21 @@ $('clear').addEventListener('click', () => {
 
 newPassage();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A starting pistol for a race against yourself: two beeps and a go. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.blip(660, { dur: 0.09, level: A.cap(0.04), type: 'square' });
+    A.blip(660, { at: 0.16, dur: 0.09, level: A.cap(0.04), type: 'square' });
+    A.blip(990, { at: 0.32, dur: 0.2, level: A.cap(0.05), type: 'square' });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && e.target.closest("#again, #restart, #clear")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

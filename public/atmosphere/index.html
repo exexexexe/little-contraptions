@@ -495,5 +495,20 @@ $('stage').addEventListener('pointerup', function(e){
 
 enter('nostalgia');
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A needle finding a different band. Air, then something almost like a station. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.burst('white', { type:'bandpass', freq: 1300, q: 1.6, dur: 0.22, level: A.cap(0.045), attack: 0.03 });
+    A.blip(430, { at: 0.10, dur: 0.28, glide: 620, level: A.cap(0.025), type: 'sine' });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("button, #prev, #next")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

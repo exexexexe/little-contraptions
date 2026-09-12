@@ -325,5 +325,20 @@ document.addEventListener('keydown', function(e){
 
 next();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A gallery light coming on over the next painting along. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.burst('pink', { type:'lowpass', freq: 900, dur: 0.3, level: A.cap(0.03), attack: 0.09 });
+    A.blip(523, { at: 0.08, dur: 0.6, level: A.cap(0.03), type: 'sine' });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("#next, #open")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

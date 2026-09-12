@@ -480,5 +480,21 @@ renderCount();
 if (registry.length){ current = registry[0]; }
 renderSlab();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* An appraisal terminal accepting an item: a hard clack and a verdict tone. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.burst('white', { type:'bandpass', freq: 2000, q: 6, dur: 0.02, level: A.cap(0.05), reverb: false });
+    A.blip(392, { at: 0.06, dur: 0.13, level: A.cap(0.045), type: 'square' });
+    A.blip(587, { at: 0.15, dur: 0.22, level: A.cap(0.035), type: 'square' });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("#pull, #reroll, button")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

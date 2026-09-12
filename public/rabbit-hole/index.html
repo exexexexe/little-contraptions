@@ -354,5 +354,20 @@ $('reset').addEventListener('click', () => teleport(true));
 
 teleport(true);
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* Falling one link further in. A soft drop, not a crash. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.blip(620, { dur: 0.26, glide: 330, level: A.cap(0.04), type: 'sine' });
+    A.burst('pink', { at: 0.06, type:'lowpass', freq: 900, dur: 0.24, level: A.cap(0.02), attack: 0.05 });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("#back, #tele, #reset, a")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

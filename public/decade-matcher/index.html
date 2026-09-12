@@ -202,5 +202,20 @@ h1{
   };
 })();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A tape-deck button going down and staying down. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.burst('brown', { type:'lowpass', freq: 520, dur: 0.045, level: A.cap(0.08), reverb: false });
+    A.burst('white', { at: 0.03, freq: 2000, q: 4, dur: 0.015, level: A.cap(0.03), reverb: false });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("button")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

@@ -834,5 +834,20 @@ openAbout();
 })();
 </script>
 
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A beige machine acknowledging a click, in the only voice it has. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.blip(1046, { dur: 0.055, level: A.cap(0.045), type: 'square' });
+    A.blip(1568, { at: 0.055, dur: 0.09, level: A.cap(0.04), type: 'square' });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("button")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

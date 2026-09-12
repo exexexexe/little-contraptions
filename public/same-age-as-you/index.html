@@ -283,5 +283,20 @@ footer{
   window.__register = { first: FIRST, last: LAST, years: years.length, show: show };
 })();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A register drawer opened and a year found in it. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.burst('brown', { type:'lowpass', freq: 380, dur: 0.18, level: A.cap(0.05), attack: 0.03 });
+    A.blip(740, { at: 0.16, dur: 0.2, level: A.cap(0.03), type: 'triangle' });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("button")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

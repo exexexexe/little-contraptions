@@ -333,5 +333,20 @@ label{ display:block;margin-top:18px;font-family:var(--mono);font-size:10px;lett
   window.__mode = function(){ document.getElementById('next').click(); return MODES[mode]; };
 })();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A patch bay switched to another output. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.burst('white', { type:'bandpass', freq: 1700, q: 5, dur: 0.02, level: A.cap(0.045), reverb: false });
+    A.blip(880, { at: 0.04, dur: 0.12, glide: 1320, level: A.cap(0.035), type: 'triangle' });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("#play, #next, #auto")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

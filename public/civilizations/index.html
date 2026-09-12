@@ -868,5 +868,20 @@ addEventListener('scroll', () => {
 })();
 </script>
 
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* One rung further up: a low step, felt more than heard. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.blip(72, { dur: 0.5, glide: 108, level: A.cap(0.06), type: 'sine' });
+    A.burst('pink', { at: 0.02, type:'lowpass', freq: 400, dur: 0.2, level: A.cap(0.025), attack: 0.05 });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest(".rung, button, a.step")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

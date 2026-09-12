@@ -586,5 +586,21 @@ timer = setInterval(() => {
 
 setRoom(0);
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A key tried in a lock: the tumbler moves, and then does not. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.burst('white', { type:'bandpass', freq: 2800, q: 6, dur: 0.02, level: A.cap(0.05), reverb: false });
+    A.burst('brown', { at: 0.05, type:'lowpass', freq: 380, dur: 0.07, level: A.cap(0.05), reverb: false });
+    A.blip(140, { at: 0.09, dur: 0.12, level: A.cap(0.035), type: 'sine' });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("#try, #hintbtn")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>
