@@ -367,5 +367,20 @@ run().then(() => {
   setInterval(pollGrowth, 60000);
 });
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A field recorder switched on somewhere with a lot of air in it. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.burst('pink', { type:'highpass', freq: 2200, dur: 0.6, level: A.cap(0.03), attack: 0.2 });
+    A.blip(2100, { at: 0.14, dur: 0.12, glide: 2900, level: A.cap(0.022), type: 'sine' });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("#refresh")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

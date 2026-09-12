@@ -546,5 +546,20 @@ canvas{
   };
 })();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* Loose earth giving way — a short granular rustle, not a thud. Digging is quiet. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.burst('brown', { type:'bandpass', freq: 320, q: 1.4, dur: 0.13, level: A.cap(0.05), attack: 0.02 });
+    A.burst('pink', { at: 0.04, freq: 900, q: 2, dur: 0.06, level: A.cap(0.022), reverb: false });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest(".farm, canvas")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

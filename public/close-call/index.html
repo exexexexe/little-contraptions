@@ -393,5 +393,20 @@ $('refresh').addEventListener('click', run);
 $('reword').addEventListener('click', sayVerdict);
 run();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* An instrument needle swinging over and settling, the way a gauge does. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.blip(740, { dur: 0.20, glide: 520, level: A.cap(0.04), type: 'triangle' });
+    A.burst('white', { at: 0.19, freq: 2600, q: 7, dur: 0.015, level: A.cap(0.03), reverb: false });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("#refresh, #reword")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

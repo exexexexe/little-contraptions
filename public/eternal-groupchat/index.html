@@ -642,5 +642,20 @@ sysLine('You have 214 unread messages.');
 enqueueBeats();
 setTimeout(beat, 700);
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A message landing in a chat nobody has left for years. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.blip(1320, { dur: 0.09, level: A.cap(0.04), type: 'sine' });
+    A.blip(1760, { at: 0.07, dur: 0.14, level: A.cap(0.03), type: 'sine' });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("#send, #leave")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

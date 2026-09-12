@@ -322,5 +322,20 @@ $('chips').addEventListener('click', (e) => {
 setCategory();
 render();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A split taken: one hard click of a thumb on a timer. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.burst('white', { type:'bandpass', freq: 2800, q: 7, dur: 0.015, level: A.cap(0.055), reverb: false });
+    A.blip(1760, { at: 0.02, dur: 0.06, level: A.cap(0.03), type: 'square' });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && e.target.closest("#setcat, button")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

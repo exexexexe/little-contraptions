@@ -689,5 +689,20 @@ footer a{ color:var(--dim) }
   newRound();
 })();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A stylus set down on a moving record: the drop, then the groove. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.burst('white', { type:'bandpass', freq: 3600, q: 3, dur: 0.03, level: A.cap(0.05), reverb: false });
+    A.burst('pink', { at: 0.04, type:'bandpass', freq: 900, q: 0.8, dur: 0.35, level: A.cap(0.028), attack: 0.02 });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("#play, #pause, #submit, #skip")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

@@ -715,5 +715,20 @@ h1{
 
 })();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A projector starting: the lamp, then the gate taking the film. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.burst('brown', { type:'lowpass', freq: 200, dur: 0.5, level: A.cap(0.045), attack: 0.12 });
+    A.burst('white', { at: 0.12, type:'bandpass', freq: 1100, q: 2, dur: 0.05, level: A.cap(0.03), reverb: false });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("button")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

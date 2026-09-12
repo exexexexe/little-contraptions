@@ -534,5 +534,20 @@ window.__jar = {
 };
 </script>
 
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A folded note going into glass, and the lid set back on. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.burst('pink', { type:'bandpass', freq: 3000, q: 1.4, dur: 0.09, level: A.cap(0.04), attack: 0.015 });
+    A.blip(1500, { at: 0.10, dur: 0.16, level: A.cap(0.03), type: 'sine' });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("#add, #draw")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

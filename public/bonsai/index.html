@@ -532,5 +532,20 @@ h1{ font-size:clamp(20px,4.6vw,26px);font-weight:400;margin:0 0 6px;letter-spaci
   };
 })();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* Secateurs closing on green wood. One clean cut and a leaf letting go. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.burst('white', { type:'bandpass', freq: 3400, q: 6, dur: 0.025, level: A.cap(0.06), reverb: false });
+    A.burst('pink', { at: 0.06, type:'bandpass', freq: 1400, q: 1.1, dur: 0.14, level: A.cap(0.03), attack: 0.03 });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("#t-snip, #t-look, #btn-hemi, #btn-new")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

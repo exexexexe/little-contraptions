@@ -288,5 +288,20 @@ $('en').value = 'Meet me at the bridge at midnight. Bring the map.';
 paintTables();
 encode();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A rotor stepping round one position, the way a cipher machine does. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.burst('white', { type:'bandpass', freq: 2400, q: 5, dur: 0.016, level: A.cap(0.05), reverb: false });
+    A.burst('brown', { at: 0.03, type:'lowpass', freq: 420, dur: 0.06, level: A.cap(0.045), reverb: false });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("#swap, #clear")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

@@ -613,5 +613,20 @@ $('save').addEventListener('click', () => {
 
 renderScenarios();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A dry switch thrown on a panel that has been thrown a great many times. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.burst('white', { type:'bandpass', freq: 1800, q: 6, dur: 0.018, level: A.cap(0.05), reverb: false });
+    A.blip(150, { at: 0.02, dur: 0.07, level: A.cap(0.035), type: 'square' });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("button")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

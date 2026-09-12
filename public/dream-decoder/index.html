@@ -423,5 +423,21 @@ read();
 
 window.__dream = { read, isSelf: (s) => SELF.test(s), book: BOOK };
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* The sound a room makes when you are almost asleep in it. Nothing sharp. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.blip(180, { dur: 0.8, glide: 240, level: A.cap(0.045), type: 'sine' });
+    A.blip(271, { at: 0.12, dur: 0.9, level: A.cap(0.03), type: 'sine' });
+    A.burst('pink', { at: 0.05, type:'lowpass', freq: 520, dur: 0.5, level: A.cap(0.02), attack: 0.2 });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("#go, #rand, #book")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

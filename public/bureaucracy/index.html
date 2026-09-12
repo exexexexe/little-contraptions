@@ -391,5 +391,21 @@ $('fields').addEventListener('input', () => { capture(); stats(); });
 
 restart();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A rubber stamp coming down on a form, and the desk taking it. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.burst('white', { type:'lowpass', freq: 900, q: 0.8, dur: 0.05, level: A.cap(0.10), reverb: false });
+    A.blip(96, { at: 0.01, dur: 0.16, level: A.cap(0.07), type: 'sine' });
+    A.burst('pink', { at: 0.07, freq: 2600, q: 1.6, dur: 0.05, level: A.cap(0.025) });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("#submit, #restart")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

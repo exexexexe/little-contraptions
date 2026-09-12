@@ -274,5 +274,20 @@ $('rand').addEventListener('click', () => { surprise(); settle(); });
 
 state('', '<p>Two things. Any two things. It will pick one and defend the choice.</p>');
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A bell for a bout that nobody asked to be refereed. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.blip(1046, { dur: 0.45, level: A.cap(0.05), type: 'triangle' });
+    A.blip(1568, { at: 0.01, dur: 0.3, level: A.cap(0.025), type: 'sine' });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && e.target.closest("#go, #rand")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

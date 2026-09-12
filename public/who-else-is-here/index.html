@@ -295,5 +295,20 @@ footer a{ color:var(--dim) }
   setInterval(check, 45000);
 })();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* One more person arriving in a room that is mostly empty. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.blip(587, { dur: 0.14, level: A.cap(0.03), type: 'sine' });
+    A.blip(880, { at: 0.10, dur: 0.30, level: A.cap(0.022), type: 'sine' });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && e.target.closest(".who, li, button, a")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

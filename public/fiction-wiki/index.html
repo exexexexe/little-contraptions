@@ -465,5 +465,20 @@ footer a{ color:var(--dim) }
   render();
 })();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A card catalogue drawer running out and stopping against its rail. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.burst('brown', { type:'lowpass', freq: 420, dur: 0.20, level: A.cap(0.05), attack: 0.04 });
+    A.burst('white', { at: 0.19, freq: 1600, q: 3, dur: 0.02, level: A.cap(0.04), reverb: false });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("#lucky, #clear, #filters")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

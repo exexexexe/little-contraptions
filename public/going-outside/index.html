@@ -497,5 +497,20 @@ $('geo').addEventListener('click', askGeo);
 
 askGeo();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A door opening on weather, which is the whole question. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.burst('pink', { type:'highpass', freq: 1400, dur: 0.5, level: A.cap(0.035), attack: 0.18 });
+    A.burst('brown', { at: 0.02, type:'lowpass', freq: 200, dur: 0.4, level: A.cap(0.03), attack: 0.12 });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("#go, #geo, button")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

@@ -1748,5 +1748,20 @@ window.__future = {
 };
 </script>
 
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A timeline stepping on one notch. Brass, and quite pleased about it. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.blip(880, { dur: 0.16, level: A.cap(0.04), type: 'triangle' });
+    A.blip(1320, { at: 0.06, dur: 0.30, level: A.cap(0.025), type: 'sine' });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("button, a")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

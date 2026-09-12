@@ -313,5 +313,20 @@ $('copy').addEventListener('click', async () => {
 
 render();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A dossier stamped and slid across a metal table. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.burst('white', { type:'lowpass', freq: 800, dur: 0.045, level: A.cap(0.07), reverb: false });
+    A.burst('pink', { at: 0.07, type:'bandpass', freq: 2200, q: 1.0, dur: 0.2, level: A.cap(0.03), attack: 0.02 });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("#go, #copy")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

@@ -299,5 +299,20 @@ button.act:focus-visible{ outline:2px solid var(--amber);outline-offset:3px }
   };
 })();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* The opposite of an alarm: a note that tells you to stop rather than start. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.blip(660, { dur: 0.5, glide: 440, level: A.cap(0.04), type: 'sine' });
+    A.blip(440, { at: 0.18, dur: 0.6, level: A.cap(0.028), type: 'sine' });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("button")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

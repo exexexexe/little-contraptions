@@ -424,5 +424,20 @@ $('clear').addEventListener('click', () => {
 renderNotes();
 updateDeck();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* An atomiser, once, into still air. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.burst('white', { type:'highpass', freq: 4200, dur: 0.16, level: A.cap(0.05), attack: 0.006 });
+    A.burst('pink', { at: 0.10, type:'highpass', freq: 6000, dur: 0.35, level: A.cap(0.016), attack: 0.08 });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("button")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

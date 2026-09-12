@@ -364,5 +364,20 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) tick
 
 window.__daynight = { solar, isLit, terminatorPath, tick };
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* The terminator crossing somewhere: a slow swell as one half of the world tips into the other. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.blip(150, { dur: 0.9, glide: 200, level: A.cap(0.04), type: 'sine' });
+    A.burst('pink', { at: 0.08, type:'lowpass', freq: 700, dur: 0.7, level: A.cap(0.02), attack: 0.25 });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && e.target.closest("button, canvas, .map")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

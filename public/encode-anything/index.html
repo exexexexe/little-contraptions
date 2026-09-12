@@ -453,5 +453,20 @@ run();
 window.__encode = { toBinary, toHex, toB64, toMorse, toSemaphore, decode, sniff,
                     isEgg: (s) => EGG.test(s), run };
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* One short mark and one long one: the alphabet this toy is about. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.blip(700, { dur: 0.06, level: A.cap(0.05), type: 'square' });
+    A.blip(700, { at: 0.11, dur: 0.17, level: A.cap(0.05), type: 'square' });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("#mEnc, #mDec")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

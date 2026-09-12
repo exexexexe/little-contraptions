@@ -310,5 +310,20 @@ button.ask:focus-visible{ outline:2px solid var(--pale);outline-offset:3px }
   window.__ask = function(q){ input.value = q; form.dispatchEvent(new Event('submit', { cancelable: true })); };
 })();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A question going in. Nothing comes back, which is the toy. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.blip(330, { dur: 0.9, glide: 247, level: A.cap(0.04), type: 'sine' });
+    A.burst('pink', { at: 0.1, type:'lowpass', freq: 600, dur: 0.7, level: A.cap(0.018), attack: 0.3 });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && e.target.closest("button")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

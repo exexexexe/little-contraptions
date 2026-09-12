@@ -477,5 +477,20 @@ setInterval(function(){
 
 step();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A photographic plate slid out of a sleeve in a very quiet room. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.burst('pink', { type:'bandpass', freq: 3200, q: 0.9, dur: 0.24, level: A.cap(0.035), attack: 0.04 });
+    A.burst('brown', { at: 0.22, type:'lowpass', freq: 240, dur: 0.10, level: A.cap(0.03) });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && e.target.closest("#next, #open")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

@@ -376,5 +376,20 @@ ol.steps li::marker{ font-family:var(--mono);font-size:11px;color:var(--red) }
   window.__recipe = { ask: ask, cacheKey: cacheKey, choices: choices };
 })();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A card set down on a kitchen counter, near something that is already cooking. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.burst('pink', { type:'bandpass', freq: 2200, q: 1.0, dur: 0.10, level: A.cap(0.04), attack: 0.015 });
+    A.burst('white', { at: 0.12, type:'bandpass', freq: 5200, q: 0.7, dur: 0.30, level: A.cap(0.018), attack: 0.1 });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("#btn-another, #btn-print")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

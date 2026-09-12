@@ -478,5 +478,20 @@ found();
 
 window.__city = { found, build, paint, stockholmMatch, get city(){ return city; } };
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A surveyor setting a pencil down and drawing one confident line. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.burst('pink', { type:'bandpass', freq: 2100, q: 1.3, dur: 0.11, level: A.cap(0.04), attack: 0.015 });
+    A.blip(520, { at: 0.10, dur: 0.18, glide: 440, level: A.cap(0.03), type: 'sine' });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("#go, #grow, #name")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

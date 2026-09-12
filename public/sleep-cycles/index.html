@@ -433,5 +433,20 @@ svg.hyp{ flex:1 1 0;min-width:0;display:block;height:132px;overflow:hidden }
   window.__sleep = { options: options, cycle: CYCLE };
 })();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A bedside clock being set. Two soft presses and then quiet. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.blip(880, { dur: 0.06, level: A.cap(0.035), type: 'sine' });
+    A.blip(1174, { at: 0.10, dur: 0.30, level: A.cap(0.028), type: 'sine' });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("#m-wake, #m-bed, #btn-now, button")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

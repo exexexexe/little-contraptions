@@ -1041,5 +1041,20 @@ window.addEventListener('keydown', (e) => {
 
 start();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A strip light in an empty corridor, buzzing once as you decide. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.burst('white', { type:'bandpass', freq: 120, q: 0.6, dur: 0.28, level: A.cap(0.045), attack: 0.02 });
+    A.blip(100, { at: 0.02, dur: 0.24, level: A.cap(0.035), type: 'square' });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("#no, #yes")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

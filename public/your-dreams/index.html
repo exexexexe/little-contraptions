@@ -444,5 +444,20 @@ items = load();
 renderTiers();
 render();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A note pinned up where you will see it again. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.burst('white', { type:'bandpass', freq: 3400, q: 5, dur: 0.018, level: A.cap(0.045), reverb: false });
+    A.burst('pink', { at: 0.04, type:'bandpass', freq: 1500, q: 1.0, dur: 0.10, level: A.cap(0.025) });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && e.target.closest("#add, button")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

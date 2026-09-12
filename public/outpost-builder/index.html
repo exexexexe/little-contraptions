@@ -547,5 +547,20 @@ footer a{ color:var(--dim) }
   setInterval(step, TICK);
 })();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A module locking onto a frame somewhere with no air to carry the sound. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.burst('brown', { type:'lowpass', freq: 260, dur: 0.14, level: A.cap(0.06), attack: 0.008 });
+    A.blip(160, { at: 0.10, dur: 0.34, level: A.cap(0.03), type: 'sine' });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("button")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

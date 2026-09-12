@@ -169,6 +169,8 @@ body{
      and the rhythm sequencer both use it). Billiards degrades to a notice
      if the CDN is unreachable; nothing else depends on it. -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
 <script src="/shared/lc-id.js"></script>
 <script src="engine.js"></script>
 <script src="games/snake.js"></script>
@@ -187,5 +189,43 @@ body{
 <script src="games/racer.js"></script>
 <script src="/shared/lc-achievements.js"></script>
 <script>ARCADE.boot();</script>
+<script>
+(function(){
+  /* ---- the cabinet's own voice -------------------------------------- *
+   *  Per-game effects are a job of their own — fourteen games, fourteen
+   *  different vocabularies. What the cabinet was missing is smaller and
+   *  more obviously wrong to be without: moving through the menu and
+   *  choosing something made no noise at all, on a machine whose whole
+   *  form is a thing that beeps at you.
+   *
+   *  So: a short blip on a direction, a harder one on select. Square
+   *  waves, because that is what the hardware being imitated had.
+   * ------------------------------------------------------------------ */
+  var MOVE = { arrowup:1, arrowdown:1, arrowleft:1, arrowright:1, w:1, a:1, s:1, d:1 };
+  var PICK = { enter:1, ' ':1, z:1, x:1 };
+
+  function move(){ if (window.LCSound) LCSound.play(function(A){
+    A.blip(880, { dur: 0.035, level: A.cap(0.028), type: 'square' });
+  }); }
+  function pick(){ if (window.LCSound) LCSound.play(function(A){
+    A.blip(523, { dur: 0.05, level: A.cap(0.045), type: 'square' });
+    A.blip(1046, { at: 0.05, dur: 0.10, level: A.cap(0.04), type: 'square' });
+  }); }
+
+  document.addEventListener('keydown', function(e){
+    if (e.repeat) return;                       // held keys are one press
+    var k = (e.key || '').toLowerCase();
+    if (MOVE[k]) move(); else if (PICK[k]) pick();
+  });
+  document.addEventListener('click', function(e){
+    if (!e.target.closest || e.target.closest('#lc-sound-btn')) return;
+    var b = e.target.closest('.pad button, .pad-btn, button');
+    if (!b) return;
+    var t = (b.textContent || '').trim().toLowerCase();
+    (t === 'a' || t === 'b' || /start/.test(t)) ? pick() : move();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

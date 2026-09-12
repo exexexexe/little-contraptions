@@ -534,5 +534,20 @@ function tickClock(){
   }
 })();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A city afternoon from a window: traffic a long way down, and a door somewhere. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.burst('brown', { type:'lowpass', freq: 260, dur: 0.55, level: A.cap(0.04), attack: 0.16 });
+    A.burst('pink', { at: 0.20, type:'bandpass', freq: 1900, q: 1.2, dur: 0.09, level: A.cap(0.022) });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("#next, #reroll")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

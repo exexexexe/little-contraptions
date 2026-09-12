@@ -386,5 +386,20 @@ meditate();
 window.__paradox = { meditate: meditate, get lastFed(){ return lastFed; },
                      crashed: () => !!document.querySelector('.crash') };
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A machine given something it cannot finish: a tone that turns back on itself. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.blip(440, { dur: 0.34, glide: 311, level: A.cap(0.045), type: 'triangle' });
+    A.blip(311, { at: 0.14, dur: 0.34, glide: 440, level: A.cap(0.035), type: 'triangle' });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("#go, #clear, #mode, button")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

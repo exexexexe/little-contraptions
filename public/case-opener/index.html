@@ -346,5 +346,21 @@ $('clear').addEventListener('click', () => { inventory = []; renderInv(); });
 $('reel').innerHTML = Array.from({ length: 20 }, () => slotHTML(makeItem())).join('');
 renderInv();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A latch giving, then the lid, then whatever is inside catching the light. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.burst('white', { freq: 3200, q: 7, dur: 0.02, level: A.cap(0.055), reverb: false });
+    A.burst('brown', { at: 0.06, type:'lowpass', freq: 260, dur: 0.18, level: A.cap(0.06), attack: 0.02 });
+    A.blip(1180, { at: 0.16, dur: 0.34, glide: 1760, level: A.cap(0.04), type: 'triangle' });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("#open, #clear")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

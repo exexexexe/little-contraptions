@@ -319,5 +319,20 @@ $('clear').addEventListener('click', () => {
 connect();
 tickCounters();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A clock somewhere else, ticking at a time that is not yours. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.burst('white', { type:'bandpass', freq: 3000, q: 8, dur: 0.012, level: A.cap(0.04), reverb: false });
+    A.burst('white', { at: 0.30, type:'bandpass', freq: 2600, q: 8, dur: 0.012, level: A.cap(0.03), reverb: false });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("#pause, #clear")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

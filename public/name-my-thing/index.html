@@ -379,5 +379,20 @@ renderCats();
 renderList();
 renderKept();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A sign being hung on two hooks, and settling. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.burst('brown', { type:'lowpass', freq: 500, dur: 0.07, level: A.cap(0.05), reverb: false });
+    A.blip(330, { at: 0.09, dur: 0.30, glide: 300, level: A.cap(0.03), type: 'triangle' });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("button")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

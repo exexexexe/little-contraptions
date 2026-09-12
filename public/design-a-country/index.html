@@ -485,5 +485,20 @@ $('save').addEventListener('click', function(){
 $('name').value = 'Velesk';
 render();
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A flag caught once by the wind, and the halyard tapping the pole. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.burst('pink', { type:'bandpass', freq: 700, q: 0.7, dur: 0.22, level: A.cap(0.045), attack: 0.06 });
+    A.blip(880, { at: 0.18, dur: 0.09, level: A.cap(0.03), type: 'triangle' });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("#roll, button")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

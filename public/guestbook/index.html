@@ -343,5 +343,20 @@ $('who').value = LCId.handle();
 count();
 load(false);
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A fountain pen on heavy paper, and the book closing on it. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.burst('pink', { type:'bandpass', freq: 2600, q: 1.0, dur: 0.16, level: A.cap(0.04), attack: 0.02 });
+    A.burst('brown', { at: 0.19, type:'lowpass', freq: 300, dur: 0.12, level: A.cap(0.05) });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("#sign")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

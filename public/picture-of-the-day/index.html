@@ -400,5 +400,20 @@ load();
 
 window.__potd = { load: load, show: show, album: album, get current(){ return current; } };
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A slide carriage advancing one frame in a dark room. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.burst('brown', { type:'lowpass', freq: 480, dur: 0.07, level: A.cap(0.055), reverb: false });
+    A.burst('white', { at: 0.07, freq: 2200, q: 5, dur: 0.018, level: A.cap(0.035), reverb: false });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("#prev, #next, #save, #wall")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>

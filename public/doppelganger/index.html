@@ -332,5 +332,20 @@ document.addEventListener('paste', (e) => {
   for (const it of items) if (it.type && it.type.indexOf('image/') === 0) handleFile(it.getAsFile());
 });
 </script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* A gallery frame set down on a wall, and the room going quiet around it. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.burst('brown', { type:'lowpass', freq: 340, dur: 0.10, level: A.cap(0.055), attack: 0.015 });
+    A.blip(660, { at: 0.09, dur: 0.55, level: A.cap(0.028), type: 'sine' });
+  }); }
+  document.addEventListener('click', function(e){
+    if (e.target.closest && !e.target.closest('#lc-sound-btn') && e.target.closest("#another")) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
 </body>
 </html>
