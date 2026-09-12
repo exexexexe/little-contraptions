@@ -427,6 +427,12 @@ footer{
   padding:14px 10px 20px;
   background:#008080;
   display:flex;align-items:flex-start;gap:18px;
+  /* A stacking context, so the drift layer below can sit at z-index -1:
+     above this element's own background, beneath everything in it, and
+     without any of the icons, windows or menus needing a z-index of their
+     own. (z-index alone does not change the containing block, so the
+     layer's `fixed` still means fixed to the window.) */
+  z-index:0;
 }
 /* ---- the drift layer ---- *
  * A slow-moving background behind everything on the desktop. It is the
@@ -441,7 +447,7 @@ footer{
      with no sky at all. The wallpaper does not scroll, and neither should
      the thing drifting across it. Inset by the taskbar for the same
      reason the wallpaper credit is: nothing belongs underneath it. */
-  position:fixed;left:0;top:0;z-index:0;pointer-events:none;display:block;
+  position:fixed;left:0;top:0;z-index:-1;pointer-events:none;display:block;
   /* Size is set in script, not here. A <canvas> is a replaced element, so
      left/right insets do NOT stretch it — it keeps its intrinsic 300x150
      and the sky comes out as a small blurry rectangle in the corner. The
@@ -449,7 +455,6 @@ footer{
      scrollbar and the taskbar without either being hard-coded. */
 }
 #w98-drift[hidden]{ display:none }
-#w98-icons, #w98-widgets{ position:relative;z-index:1 }
 
 /* ---- the new peeks ---- */
 .w98-widget .peek{
