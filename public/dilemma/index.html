@@ -278,5 +278,32 @@ show();
   if (window.LCSound) LCSound.mount();
 })();
 </script>
+<style>
+/* The other side of the argument arriving, uninvited. */
+@keyframes lcf-settle{from{opacity:0;transform:translateY(-9px) rotate(-.5deg)}60%{opacity:1;transform:translateY(2px) rotate(.2deg)}to{opacity:1;transform:none}}
+.lc-flourish{animation:lcf-settle .42s cubic-bezier(.2,.9,.3,1.25) both}
+@media (prefers-reduced-motion: reduce){ .lc-flourish{animation:none} }
+</style>
+<script>
+(function(){
+  /* The thing this toy makes should arrive, not appear. Replaying the
+     animation means taking the class off, forcing a reflow, and putting
+     it back — without the reflow the browser coalesces the two changes
+     and nothing moves the second time. */
+  var SEL = ["#out",".out","#result",".result",".card",".sheet",".panel",".readout","main",".wrap"];
+  function flourish(){
+    var el = null;
+    for (var i = 0; i < SEL.length && !el; i++) el = document.querySelector(SEL[i]);
+    if (!el) return;
+    el.classList.remove("lc-flourish");
+    void el.offsetWidth;
+    el.classList.add("lc-flourish");
+  }
+  document.addEventListener('click', function(e){
+    if (!e.target.closest || e.target.closest('#lc-sound-btn')) return;
+    if (e.target.closest('button, .term, .cap, a, li, canvas')) setTimeout(flourish, 30);
+  });
+})();
+</script>
 </body>
 </html>

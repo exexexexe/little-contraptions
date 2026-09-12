@@ -3237,3 +3237,68 @@ catalogue still reads 43 of 43 wired.
 Only the ambience gap: 97 toys that make no sound and 59 with no animation, both counted before
 this merge reduced the cabinet.
 
+---
+
+# The ambience gap, closed
+
+The last thing the phases deferred. **Every drawer in the cabinet now makes a noise and every one
+has a flourish.** Sound: 88 silent toys to **0**. Animation: 47 real toys without one to **0**.
+
+## The cues are per toy, not per category
+
+The standing rule says deliberate and fitting, not generic, so each was written for the toy it is
+in. Loose earth giving way in the ant farm. A rotor stepping round one position in the cipher. A
+stylus set down on a moving record in the needle drop. Glass entering water and the water closing
+over it in the bottle. Pressure, in the descent, going further down than is comfortable. A strip
+light buzzing once in the corridor you are deciding whether to sleep in. An atomiser, once, into
+still air.
+
+All of them go through the shared bench, so the single mute switch reaches them, and all of them
+mount it. Measured: 178 unmuted, **0** muted, and a different toy opened afterwards comes up muted.
+
+## Two things found by measuring rather than looking
+
+- **`lc-sound.js` needs `lc-audio.js` and says nothing when it is missing.** The first twelve toys
+  mounted a switch that could never make a sound: `LCSound.play` checks for `LCAudio` and quietly
+  returns false. The switch appearing looks like success, which is exactly why it was caught by
+  measuring output instead.
+- **The mute button is a button.** A cue bound to `button` fired when you pressed the speaker to
+  turn the sound *off* — the one press in the cabinet that should be silent. Every cue now excludes
+  `#lc-sound-btn`. Fixed across 70 toys at once.
+
+## The flourishes
+
+Six characters, each with its own timing, assigned by what the toy actually produces: **settle**
+for things dealt onto a pile, **develop** for anything photographic, **stamp** for things pressed
+rather than printed, **unroll** for anything that arrives in order, **tick** for a needle or a
+page, **swell** for something large arriving.
+
+Replaying one means removing the class, forcing a reflow and re-adding it — without the reflow the
+browser coalesces the two changes and the second play does nothing.
+
+Each toy names its own output element, and the ones that guessed wrong were found by asserting that
+*something* took the class: seven toys were re-pointed, and they now land on `svg#map`, `IMG#mine`,
+`CANVAS#board`, `DIV#slab` and so on rather than on a wrapper.
+
+**Reduced motion is honoured** — verified both ways: `lcf-stamp` normally, `none` under
+`prefers-reduced-motion: reduce`.
+
+## Deliberately still silent
+
+Four toys are not on the shared mute: **conduct, the morse key, the radio and Room Tone**. Same
+line as before — the switch governs cues played at you, not an instrument you came to play or a
+player you started yourself.
+
+The arcade had no sound at all, which is odd for a machine whose whole form is a thing that beeps.
+Per-game effects are fourteen different vocabularies and a job of their own; what it has now is the
+cabinet's own voice — a short square blip on a direction, a harder one on select.
+
+## Verified
+
+- **0 toys with no sound, 0 real toys with no animation.** The 18 pages the audit still lists
+  without animation are the 16 redirect stubs, which are two-second redirects and should not
+  animate, and two consolidation shells whose animation lives in their parts.
+- Every cue measured for real output; every flourish asserted to reach an element and run.
+- Full sweep at 1280px and again at **a real 390px touch viewport**: 153 pages, zero page errors,
+  zero horizontal overflow at either width.
+

@@ -319,5 +319,32 @@ $('ref').innerHTML = Object.keys(M).map(k =>
 
 render();
 </script>
+<style>
+/* Marks arriving in the order they would be sent. */
+@keyframes lcf-unroll{from{opacity:0;clip-path:inset(0 100% 0 0)}to{opacity:1;clip-path:inset(0 0 0 0)}}
+.lc-flourish{animation:lcf-unroll .55s ease-out both}
+@media (prefers-reduced-motion: reduce){ .lc-flourish{animation:none} }
+</style>
+<script>
+(function(){
+  /* The thing this toy makes should arrive, not appear. Replaying the
+     animation means taking the class off, forcing a reflow, and putting
+     it back — without the reflow the browser coalesces the two changes
+     and nothing moves the second time. */
+  var SEL = [".code",".lamp",".panel","main"];
+  function flourish(){
+    var el = null;
+    for (var i = 0; i < SEL.length && !el; i++) el = document.querySelector(SEL[i]);
+    if (!el) return;
+    el.classList.remove("lc-flourish");
+    void el.offsetWidth;
+    el.classList.add("lc-flourish");
+  }
+  document.addEventListener('click', function(e){
+    if (!e.target.closest || e.target.closest('#lc-sound-btn')) return;
+    if (e.target.closest('button, .term, .cap, a, li, canvas')) setTimeout(flourish, 30);
+  });
+})();
+</script>
 </body>
 </html>

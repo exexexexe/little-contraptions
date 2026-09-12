@@ -379,5 +379,32 @@ window.__daynight = { solar, isLit, terminatorPath, tick };
   if (window.LCSound) LCSound.mount();
 })();
 </script>
+<style>
+/* The line moving on, which it does whether or not you watch. */
+@keyframes lcf-swell{from{opacity:0;transform:scale(.965)}to{opacity:1;transform:none}}
+.lc-flourish{animation:lcf-swell .5s cubic-bezier(.2,.8,.3,1) both}
+@media (prefers-reduced-motion: reduce){ .lc-flourish{animation:none} }
+</style>
+<script>
+(function(){
+  /* The thing this toy makes should arrive, not appear. Replaying the
+     animation means taking the class off, forcing a reflow, and putting
+     it back — without the reflow the browser coalesces the two changes
+     and nothing moves the second time. */
+  var SEL = ["svg","canvas","#map",".map","main"];
+  function flourish(){
+    var el = null;
+    for (var i = 0; i < SEL.length && !el; i++) el = document.querySelector(SEL[i]);
+    if (!el) return;
+    el.classList.remove("lc-flourish");
+    void el.offsetWidth;
+    el.classList.add("lc-flourish");
+  }
+  document.addEventListener('click', function(e){
+    if (!e.target.closest || e.target.closest('#lc-sound-btn')) return;
+    if (e.target.closest('button, .term, .cap, a, li, canvas')) setTimeout(flourish, 30);
+  });
+})();
+</script>
 </body>
 </html>
