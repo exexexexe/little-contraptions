@@ -1,0 +1,513 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fireplace Corner</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%2314100C'/><path d='M16 4c4 5 1 7 3 9s4-1 4-1c2 6-1 14-7 14S8 20 9 15c1 2 3 3 4 1s1-8 3-12z' fill='%23FF8A3C'/><path d='M16 14c2 3 1 5 2 6s2 3 0 5-5 0-5-3 2-5 3-8z' fill='%23FFE08A'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  /* A hearth at night. The darkest drawer in the cabinet, and the only
+     one lit from inside the picture. */
+  --soot:#14100C;
+  --soot-2:#0D0A07;
+  --brick:#3A2A22;
+  --ink:#EADFCE;
+  --ink-2:#B0A08A;
+  --dim:#7E7160;
+  --dimmer:#574C40;
+  --ember:#FF8A3C;
+  --ember-2:#FFC46A;
+  --line:#2B211A;
+  /* Old-style book serif: a room you read in. */
+  --serif:"Palatino Linotype","Book Antiqua",Palatino,"Hoefler Text",Georgia,serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;min-height:100%}
+body{
+  background:var(--soot-2);
+  background-image:radial-gradient(ellipse at 50% 62%, rgba(255,138,60,.10), transparent 58%);
+  color:var(--ink);font-family:var(--serif);
+  min-height:100vh;padding:26px 16px 84px;
+  display:flex;flex-direction:column;align-items:center;
+}
+.wrap{ width:min(700px,100%);display:flex;flex-direction:column;align-items:center }
+
+h1{ font-size:clamp(21px,4.8vw,28px);font-weight:400;margin:0 0 7px;letter-spacing:.03em;text-align:center }
+.tagline{ font-size:14px;line-height:1.75;color:var(--dim);margin:0 0 20px;text-align:center;max-width:44ch }
+
+.hearth{
+  position:relative;width:100%;border:1px solid var(--line);border-radius:3px;
+  box-shadow:0 18px 44px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.04);
+  overflow:hidden;background:#0A0806;
+}
+.hearth canvas{ display:block;width:100%;height:auto }
+
+.dials{ width:100%;margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:18px }
+@media (max-width:520px){ .dials{ grid-template-columns:1fr } }
+.dial .lab{ display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px;
+  font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--dimmer) }
+.dial .lab b{ color:var(--ember-2);font-weight:400;font-size:11px;letter-spacing:.04em }
+input[type=range]{ -webkit-appearance:none;appearance:none;width:100%;height:3px;
+  background:var(--line);border-radius:2px;outline:none }
+input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none;appearance:none;width:17px;height:17px;
+  border-radius:50%;background:var(--ember);cursor:pointer;border:2px solid var(--soot-2) }
+input[type=range]::-moz-range-thumb{ width:17px;height:17px;border-radius:50%;background:var(--ember);
+  cursor:pointer;border:2px solid var(--soot-2) }
+input[type=range]:focus-visible{ outline:2px solid var(--ember);outline-offset:4px }
+
+.bar{ display:flex;gap:10px;margin-top:20px;justify-content:center;width:100% }
+.bar button{
+  font:inherit;font-family:var(--serif);font-size:14.5px;cursor:pointer;
+  background:#1E1711;color:var(--ink);border:1px solid var(--line);border-radius:999px;
+  padding:10px 24px;transition:border-color .15s,color .15s,background .15s;
+}
+.bar button:hover{ border-color:var(--ember);color:var(--ember-2) }
+.bar button:focus-visible{ outline:2px solid var(--ember);outline-offset:2px }
+.bar button.on{ background:var(--ember);border-color:var(--ember);color:#1A0F06 }
+
+.said{ margin-top:15px;text-align:center;font-size:14px;line-height:1.8;color:var(--ink-2);
+  min-height:2.6em;max-width:48ch }
+
+.book{ margin-top:28px;padding-top:20px;border-top:1px solid var(--line);font-size:14px;
+  line-height:1.9;color:var(--ink-2);width:100% }
+.book p{ margin:0 0 12px } .book p:last-child{ margin:0 }
+.book b{ color:var(--ink);font-weight:600 }
+.book code{ font-family:var(--mono);font-size:12.5px;color:var(--ember-2) }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 var(--mono);
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#1A0F06;background:var(--ember);
+  border:1px solid rgba(0,0,0,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  box-shadow:0 5px 20px rgba(255,138,60,.28);
+  transition:width .18s ease, background .16s, gap .18s ease;
+}
+@media (pointer:coarse){ #lc-back{ width:44px;height:44px } }
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:var(--ember-2) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid var(--ember-2);outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Fireplace Corner</h1>
+<p class="tagline">No video, no photograph, no recording. Every flame is drawn and every crack is
+  made on the spot.</p>
+
+<div class="hearth">
+  <canvas id="cv" width="1000" height="640"></canvas>
+</div>
+
+<div class="dials">
+  <div class="dial">
+    <div class="lab"><span>logs on the fire</span><b id="v-logs">3</b></div>
+    <input type="range" id="logs" min="1" max="5" value="3" aria-label="Number of logs">
+  </div>
+  <div class="dial">
+    <div class="lab"><span>how high it is burning</span><b id="v-heat">medium</b></div>
+    <input type="range" id="heat" min="8" max="100" value="58" aria-label="Flame height">
+  </div>
+</div>
+
+<div class="bar">
+  <button type="button" id="btn-sound">Listen to it</button>
+  <button type="button" id="btn-poke">Poke it</button>
+</div>
+
+<p class="said" id="said">&nbsp;</p>
+
+<div class="book">
+  <p><b>The flame is a particle fire and nothing else.</b> Along the top of the logs, little
+  parcels of hot gas are released, given an upward push and a sideways drift, and then curled by
+  a slow-moving field so the column wanders instead of standing still. Each one is drawn as a
+  soft blob added to what is already there &mdash; <code>globalCompositeOperation = 'lighter'</code>
+  &mdash; which is why overlapping flames go white-hot in the middle without anybody painting a
+  white middle. Its colour is read off its own age, from pale yellow through orange to a dull red
+  and then to smoke, because that is what a cooling parcel of gas actually does.</p>
+  <p><b>The crackle is Web Audio, not a loop.</b> A crack is a few milliseconds of noise through a
+  sharp resonant filter, struck at a random rate; a pop is the same thing louder with a low thump
+  under it; and beneath both sits a filtered rumble that gets louder and broader as you push the
+  fire up. Turning the logs up makes the cracking busier, because more wood is more to crack.
+  Nothing here is sampled and no audio file is fetched.</p>
+  <p><b>Poking it does what poking a fire does</b> &mdash; a rush of sparks and a brief flare as
+  the bed is opened up, settling back down after a few seconds on its own.</p>
+  <p>There is nothing to achieve here. The fire does not go out, the logs do not need replacing,
+  and leaving the tab does not cost you anything.</p>
+</div>
+
+</div>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">&larr;</span><span class="w">cabinet</span></a>
+
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  var cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+  var W = cv.width, H = cv.height;
+  function E(id){ return document.getElementById(id); }
+  function say(s){ E('said').textContent = s || ' '; }
+
+  var logs = 3, heat = 0.58, poke = 0;
+  var parts = [], embers = [], t = 0;
+
+  var FLOOR = H * 0.80;
+
+  /* ---- the logs ------------------------------------------------------ *
+   *  Fixed once per log count, so they do not jitter about between frames.
+   * -------------------------------------------------------------------- */
+  var logDefs = [];
+  function layLogs(){
+    logDefs = [];
+    var rows = [[0], [-1, 1], [-1, 1, 0], [-1.4, -0.45, 0.45, 1.4], [-1.5, -0.6, 0.3, 1.2, 0.3]];
+    var set = rows[Math.max(0, Math.min(4, logs - 1))];
+    set.forEach(function(off, i){
+      var tier = (logs >= 3 && i >= 2) ? 1 : 0;
+      if (logs === 5 && i === 4) tier = 2;
+      logDefs.push({
+        x: W / 2 + off * 96,
+        y: FLOOR - tier * 34,
+        len: 150 + ((i * 37) % 60),
+        r: 19 + ((i * 13) % 7),
+        tilt: ((i % 2) ? 1 : -1) * (0.05 + (i % 3) * 0.045),
+        seed: i * 977
+      });
+    });
+  }
+
+  function drawLog(L){
+    ctx.save();
+    ctx.translate(L.x, L.y);
+    ctx.rotate(L.tilt);
+    /* the body */
+    var g = ctx.createLinearGradient(0, -L.r, 0, L.r);
+    g.addColorStop(0, '#4A3729'); g.addColorStop(.45, '#2E2119'); g.addColorStop(1, '#140E0A');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.roundRect(-L.len / 2, -L.r, L.len, L.r * 2, L.r * 0.7);
+    ctx.fill();
+    /* bark, and the charred underside */
+    for (var i = 0; i < 16; i++){
+      var px = -L.len / 2 + ((L.seed + i * 53) % L.len);
+      ctx.fillStyle = 'rgba(0,0,0,.32)';
+      ctx.fillRect(px, -L.r + 3, 1.6, L.r * 1.7);
+    }
+    /* the end grain, catching the light */
+    ctx.beginPath();
+    ctx.ellipse(L.len / 2 - 2, 0, 5, L.r * 0.92, 0, 0, 6.283);
+    ctx.fillStyle = '#5E4630'; ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(L.len / 2 - 2, 0, 3, L.r * 0.55, 0, 0, 6.283);
+    ctx.fillStyle = '#7A5B3C'; ctx.fill();
+    /* glowing where the flame is actually on it */
+    var lg = ctx.createLinearGradient(0, L.r, 0, -L.r);
+    lg.addColorStop(0, 'rgba(255,110,30,' + (0.34 * (0.4 + heat)) + ')');
+    lg.addColorStop(1, 'rgba(255,180,60,0)');
+    ctx.fillStyle = lg;
+    ctx.beginPath();
+    ctx.roundRect(-L.len / 2, -L.r, L.len, L.r * 2, L.r * 0.7);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  /* ---- the fire ------------------------------------------------------- */
+  function emit(){
+    var n = Math.round((1.4 + heat * 8) * (0.6 + logs * 0.24) * (1 + poke * 2.2));
+    for (var i = 0; i < n; i++){
+      var L = logDefs[Math.floor(Math.random() * logDefs.length)];
+      if (!L) continue;
+      var x = L.x + (Math.random() - .5) * L.len * 0.82;
+      var y = L.y - L.r * 0.6;
+      parts.push({
+        x: x, y: y,
+        vx: (Math.random() - .5) * 0.7,
+        vy: -(1.1 + Math.random() * 1.5) * (0.55 + heat) * (1 + poke * 0.8),
+        life: 0,
+        max: (34 + Math.random() * 46) * (0.5 + heat * 0.9),
+        r: 11 + Math.random() * 20,
+        wob: Math.random() * 6.283
+      });
+    }
+    /* embers, far rarer, and they survive much longer */
+    if (Math.random() < (0.10 + heat * 0.25 + poke * 0.9)){
+      var L2 = logDefs[Math.floor(Math.random() * logDefs.length)];
+      if (L2) embers.push({
+        x: L2.x + (Math.random() - .5) * L2.len * 0.7, y: L2.y - L2.r,
+        vx: (Math.random() - .5) * 1.1,
+        vy: -(1.4 + Math.random() * 2.4) * (0.6 + heat),
+        life: 0, max: 90 + Math.random() * 130, r: 1 + Math.random() * 1.8
+      });
+    }
+  }
+
+  /* a cheap moving field, so the column leans and curls rather than
+     rising in a straight line */
+  function curl(x, y){
+    return Math.sin(y * 0.013 + t * 0.021) * 0.55 +
+           Math.sin(x * 0.021 - t * 0.013) * 0.34;
+  }
+
+  function step(){
+    emit();
+    var out = [];
+    for (var i = 0; i < parts.length; i++){
+      var p = parts[i];
+      p.life++;
+      if (p.life > p.max) continue;
+      p.vy *= 0.985;
+      p.vy -= 0.026 * (0.5 + heat);            // buoyancy while it is still hot
+      p.vx += curl(p.x, p.y) * 0.055 + Math.sin(p.wob + t * 0.05) * 0.02;
+      p.vx *= 0.97;
+      p.x += p.vx; p.y += p.vy;
+      out.push(p);
+    }
+    parts = out.length > 1400 ? out.slice(out.length - 1400) : out;
+
+    var eo = [];
+    for (var k = 0; k < embers.length; k++){
+      var e = embers[k];
+      e.life++;
+      if (e.life > e.max) continue;
+      e.vy += 0.008;                            // they cool and start to fall
+      e.vx += curl(e.x, e.y) * 0.05;
+      e.x += e.vx; e.y += e.vy;
+      eo.push(e);
+    }
+    embers = eo;
+    if (poke > 0) poke = Math.max(0, poke - 0.012);
+    t++;
+  }
+
+  /* colour from age: yellow-white, orange, red, smoke — which is a
+     cooling parcel of gas, not a palette chosen by eye */
+  function flameColour(f){
+    if (f < 0.18) return [255, 244, 196];
+    if (f < 0.36) return [255, 206, 96];
+    if (f < 0.58) return [255, 138, 40];
+    if (f < 0.78) return [206, 62, 18];
+    return [74, 44, 36];
+  }
+
+  function draw(){
+    /* the back of the hearth */
+    var bg = ctx.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, '#100C09'); bg.addColorStop(.7, '#1A120D'); bg.addColorStop(1, '#0A0705');
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+
+    /* firebrick, just visible */
+    ctx.save();
+    ctx.globalAlpha = .5;
+    for (var r = 0; r < 9; r++){
+      for (var c = 0; c < 11; c++){
+        var bx = c * 96 - (r % 2 ? 48 : 0), by = r * 52;
+        if (by > FLOOR + 30) continue;
+        ctx.fillStyle = r % 2 ? '#241A14' : '#20170F';
+        ctx.fillRect(bx + 2, by + 2, 92, 48);
+      }
+    }
+    ctx.restore();
+
+    /* the light the fire throws on the back wall */
+    var glow = ctx.createRadialGradient(W / 2, FLOOR - 40, 10, W / 2, FLOOR - 40, 460);
+    glow.addColorStop(0, 'rgba(255,150,50,' + (0.30 * (0.3 + heat)) + ')');
+    glow.addColorStop(0.5, 'rgba(255,110,30,' + (0.10 * (0.3 + heat)) + ')');
+    glow.addColorStop(1, 'rgba(255,90,20,0)');
+    ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
+
+    /* the hearth floor and the ash on it */
+    ctx.fillStyle = '#161009';
+    ctx.fillRect(0, FLOOR + 12, W, H - FLOOR);
+    ctx.beginPath();
+    ctx.ellipse(W / 2, FLOOR + 16, 300, 30, 0, 0, 6.283);
+    ctx.fillStyle = 'rgba(90,78,66,.34)'; ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(W / 2, FLOOR + 14, 190, 19, 0, 0, 6.283);
+    ctx.fillStyle = 'rgba(255,110,36,' + (0.20 * (0.3 + heat)) + ')'; ctx.fill();
+
+    logDefs.forEach(drawLog);
+
+    /* the flames themselves, added rather than painted over */
+    ctx.globalCompositeOperation = 'lighter';
+    for (var i = 0; i < parts.length; i++){
+      var p = parts[i];
+      var f = p.life / p.max;
+      var col = flameColour(f);
+      var a = (1 - f) * 0.30 * (0.45 + heat * 0.8);
+      var rr = p.r * (0.5 + f * 1.5);
+      var g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, rr);
+      g.addColorStop(0, 'rgba(' + col[0] + ',' + col[1] + ',' + col[2] + ',' + a + ')');
+      g.addColorStop(1, 'rgba(' + col[0] + ',' + col[1] + ',' + col[2] + ',0)');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, rr, 0, 6.283);
+      ctx.fill();
+    }
+    for (var k = 0; k < embers.length; k++){
+      var e = embers[k];
+      var ef = e.life / e.max;
+      ctx.beginPath();
+      ctx.arc(e.x, e.y, e.r, 0, 6.283);
+      ctx.fillStyle = 'rgba(255,' + Math.round(180 - ef * 120) + ',' + Math.round(90 - ef * 70) +
+                      ',' + ((1 - ef) * 0.9) + ')';
+      ctx.fill();
+    }
+    ctx.globalCompositeOperation = 'source-over';
+  }
+
+  /* ================================================================== *
+   *  Sound: a rumble, cracks and pops. Nothing sampled.
+   * ================================================================== */
+  var A = null, bed = null, roar = null, on = false, crackTimer = null;
+
+  function build(){
+    A = LCAudio.get();
+    if (!A) return false;
+    A.resume();
+    bed = A.bus(0);
+    var n = bed.noise('brown');
+    var f = A.filt('lowpass', 240);
+    roar = A.gain(0);
+    A.chain(n, f, roar, bed);
+    /* a second, breathier band so it is not just a rumble */
+    var n2 = bed.noise('pink');
+    var f2 = A.filt('bandpass', 480, 0.6);
+    var g2 = A.gain(0.010);
+    A.chain(n2, f2, g2, bed);
+    bed.hiss = g2;
+    return true;
+  }
+
+  function crackle(){
+    clearTimeout(crackTimer);
+    if (!on || !A) return;
+    /* more wood is more to crack, and a hotter fire cracks faster */
+    var rate = (0.9 + logs * 0.55) * (0.45 + heat * 1.5) * (1 + poke * 3);
+    var pop = Math.random() < 0.055 + poke * 0.25;
+
+    if (pop){
+      A.burst('white', { type:'bandpass', freq: 700 + Math.random() * 900, q: 3.5,
+                         dur: 0.035, level: 0.085, to: bed, reverb: true });
+      A.burst('brown', { type:'lowpass', freq: 180, dur: 0.16, level: 0.075,
+                         attack: 0.004, to: bed, reverb: true });
+    } else {
+      A.burst('white', {
+        type: 'bandpass',
+        freq: 1400 + Math.random() * 3800,
+        q: 9 + Math.random() * 16,
+        dur: 0.004 + Math.random() * 0.016,
+        level: 0.018 + Math.random() * 0.035,
+        to: bed, reverb: Math.random() < 0.3
+      });
+    }
+    crackTimer = setTimeout(crackle, Math.max(18, (1000 / rate) * (0.15 + Math.random() * 1.9)));
+  }
+
+  function ramp(p, v, tm){
+    try {
+      var now = A.ctx.currentTime;
+      p.cancelScheduledValues(now);
+      p.setValueAtTime(p.value, now);
+      p.linearRampToValueAtTime(v, now + (tm || 0.4));
+    } catch (e) { p.value = v; }
+  }
+  function mix(){
+    if (!A || !bed) return;
+    ramp(roar.gain, 0.020 + heat * 0.055 + logs * 0.004, 0.6);
+    ramp(bed.gain, 1, 0.4);
+  }
+
+  function startSound(){
+    if (on) return;
+    if (!A && !build()){ say('No audio context here, so the fire is a silent one.'); return; }
+    A.resume();
+    on = true;
+    E('btn-sound').textContent = 'Quiet it';
+    E('btn-sound').className = 'on';
+    mix(); crackle();
+    say('Every crack is a few milliseconds of noise through a very sharp filter.');
+  }
+  function stopSound(){
+    on = false;
+    clearTimeout(crackTimer);
+    E('btn-sound').textContent = 'Listen to it';
+    E('btn-sound').className = '';
+    if (bed) ramp(bed.gain, 0, 0.5);
+  }
+
+  /* ---- controls ------------------------------------------------------ */
+  var HEAT_WORDS = [[0.22,'embers'],[0.42,'low'],[0.66,'medium'],[0.86,'high'],[1.01,'roaring']];
+  function heatWord(){
+    for (var i = 0; i < HEAT_WORDS.length; i++) if (heat <= HEAT_WORDS[i][0]) return HEAT_WORDS[i][1];
+    return 'roaring';
+  }
+  E('logs').addEventListener('input', function(){
+    logs = +this.value; E('v-logs').textContent = logs; layLogs(); mix();
+  });
+  E('heat').addEventListener('input', function(){
+    heat = this.value / 100; E('v-heat').textContent = heatWord(); mix();
+  });
+  E('btn-sound').addEventListener('click', function(){ on ? stopSound() : startSound(); });
+  E('btn-poke').addEventListener('click', function(){
+    poke = 1;
+    say('Sparks, and a flare while the bed is open. It settles by itself.');
+    if (on && A) A.burst('white', { type:'bandpass', freq: 2400, q: 2, dur: 0.22,
+                                    level: 0.06, attack: 0.01, to: bed, reverb: true });
+  });
+  if (window.LCSound) LCSound.onChange(function(o){ if (!o && on) stopSound(); });
+
+  function tick(){
+    if (!document.hidden){ step(); draw(); }
+    requestAnimationFrame(tick);
+  }
+  layLogs();
+  E('v-heat').textContent = heatWord();
+  requestAnimationFrame(tick);
+  if (window.LCSound) LCSound.mount();
+
+  window.__fire = {
+    parts: function(){ return parts.length; },
+    embers: function(){ return embers.length; },
+    logs: function(){ return logs; },
+    heat: function(){ return heat; },
+    sounding: function(){ return on; },
+    setLogs: function(n){ E('logs').value = n; E('logs').dispatchEvent(new Event('input')); },
+    setHeat: function(n){ E('heat').value = n; E('heat').dispatchEvent(new Event('input')); },
+    poke: function(){ E('btn-poke').click(); },
+    startSound: startSound, stopSound: stopSound,
+    step: step, draw: draw
+  };
+})();
+</script>
+<style>
+@keyframes lcf-swell{from{opacity:.3;transform:scale(.99)}to{opacity:1;transform:none}}
+.lc-flourish{animation:lcf-swell .5s ease both}
+@media (prefers-reduced-motion: reduce){ .lc-flourish{animation:none} }
+</style>
+<script>
+(function(){
+  function flourish(){
+    var el = document.querySelector('.hearth');
+    if (!el) return;
+    el.classList.remove('lc-flourish');
+    void el.offsetWidth;
+    el.classList.add('lc-flourish');
+  }
+  document.addEventListener('click', function(e){
+    if (!e.target.closest || e.target.closest('#lc-sound-btn')) return;
+    if (e.target.closest('.bar button')) setTimeout(flourish, 30);
+  });
+})();
+</script>
+</body>
+</html>

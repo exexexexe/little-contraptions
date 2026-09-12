@@ -151,6 +151,23 @@ function open() {
         at    INTEGER NOT NULL
       );
       CREATE INDEX IF NOT EXISTS story_at ON story(at DESC);
+
+      /* Postcards on a shared corkboard.
+         Note what is NOT in this table: anywhere the sender actually is.
+         The drawer is called Postcards from Nowhere and it means it — the
+         postmark is one of a fixed list of invented places chosen by the
+         sender, held here as a small integer, so there is no location to
+         leak, coarse or otherwise. The stamp is likewise an index into a
+         set of drawings, not anything about the person. */
+      CREATE TABLE IF NOT EXISTS postcards (
+        id       INTEGER PRIMARY KEY AUTOINCREMENT,
+        token    TEXT    NOT NULL,
+        text     TEXT    NOT NULL,
+        stamp    INTEGER NOT NULL DEFAULT 0,
+        postmark INTEGER NOT NULL DEFAULT 0,
+        at       INTEGER NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS postcards_at ON postcards(at DESC);
     `);
     reason = null;
     console.log('[store] open at %s', dbPath);
@@ -661,6 +678,72 @@ function story(token, from) {
   };
 }
 
+/* ------------------------------------------------------------------ *
+ *  Postcards from Nowhere
+ *
+ *  A shared corkboard. Same shape as the guestbook — one anonymous
+ *  browser-invented token, cleaned text, a per-browser cooldown — with
+ *  two differences: there is no handle, because the brief asked for
+ *  anonymous, and there is no location of any kind, because the postmark
+ *  is an invented place the sender picks rather than anywhere they are.
+ * ------------------------------------------------------------------- */
+const POSTCARD_PAGE = 60;
+const POSTCARD_MAX = 240;          // shorter than a bottle; it is a postcard
+const STAMPS = 6;
+const POSTMARKS = 10;
+
+function postcard(token, text, stamp, postmark) {
+  if (!ready()) return { ok: false, why: 'no_store' };
+  if (!okToken(token)) return { ok: false, why: 'bad_token' };
+
+  const c = cleanText(text);
+  if (!c.ok) return { ok: false, why: c.why };
+  if (c.text.length > POSTCARD_MAX) return { ok: false, why: 'too_long' };
+
+  // One card every three minutes per browser. A corkboard filled by one
+  // person is not a corkboard.
+  const recent = db.prepare(
+    'SELECT at FROM postcards WHERE token = ? ORDER BY at DESC LIMIT 1'
+  ).get(token);
+  if (recent && Date.now() - recent.at < 3 * 60 * 1000) {
+    return { ok: false, why: 'too_soon', wait: 3 * 60 * 1000 - (Date.now() - recent.at) };
+  }
+
+  // The two indexes come from the browser and are clamped here rather
+  // than trusted: they choose a drawing, and a number outside the set
+  // would render as nothing at all.
+  const st = Math.max(0, Math.min(STAMPS - 1, Math.round(Number(stamp) || 0)));
+  const pm = Math.max(0, Math.min(POSTMARKS - 1, Math.round(Number(postmark) || 0)));
+
+  const info = db.prepare(
+    'INSERT INTO postcards (token, text, stamp, postmark, at) VALUES (?, ?, ?, ?, ?)'
+  ).run(token, c.text, st, pm, Date.now());
+
+  return Object.assign({ ok: true, id: Number(info.lastInsertRowid) }, corkboard(token, 0));
+}
+
+function corkboard(token, before) {
+  if (!ready()) return { ok: false, why: 'no_store' };
+  const cursor = Number(before);
+  const hasCursor = Number.isFinite(cursor) && cursor > 0;
+  const stmt = db.prepare(
+    'SELECT id, text, stamp, postmark, at, token FROM postcards ' +
+    (hasCursor ? 'WHERE id < ? ' : '') +
+    'ORDER BY id DESC LIMIT ' + POSTCARD_PAGE
+  );
+  const rows = hasCursor ? stmt.all(cursor) : stmt.all();
+  const total = db.prepare('SELECT COUNT(*) AS n FROM postcards').get().n;
+
+  return {
+    ok: true, total,
+    cards: rows.map((r) => ({
+      id: r.id, text: r.text, stamp: r.stamp, postmark: r.postmark, at: r.at,
+      you: okToken(token) && r.token === token,
+    })),
+    more: rows.length === POSTCARD_PAGE,
+  };
+}
+
 module.exports = {
   ready, status, MAX_TEXT,
   castBottle, findBottle, markFound, bottleStats,
@@ -670,4 +753,5 @@ module.exports = {
   hallSign, hall,
   place, canvas, CANVAS_W, CANVAS_H, PALETTE_N,
   addSentence, story, SENTENCE_MAX,
+  postcard, corkboard, POSTCARD_MAX, STAMPS, POSTMARKS,
 };

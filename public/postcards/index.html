@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Postcards from Nowhere</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23A8763F'/><rect x='4' y='9' width='24' height='15' rx='1' fill='%23F6EEDC' stroke='%234A3620' stroke-width='1.2'/><rect x='20' y='11' width='6' height='5' fill='%23C4503C'/><path d='M7 19h8M7 16h6' stroke='%237A6448' stroke-width='1.2' stroke-linecap='round'/></svg>">
+<style>
+:root{ color-scheme: light; }
+:root{
+  /* A cork board in a hallway. Kraft, postal red, and typewriter ink. */
+  --cork:#A8763F;
+  --cork-2:#8E6132;
+  --card:#F6EEDC;
+  --card-2:#EDE2C9;
+  --ink:#3B2C1A;
+  --ink-2:#5E4830;
+  --dim:#8A7457;
+  --dimmer:#B3A184;
+  --post:#C4503C;
+  --postal:#2F5A86;
+  --line:#D8C7A4;
+  --mono:"Courier New",ui-monospace,"SF Mono",Menlo,monospace;
+  --hand:"Bradley Hand","Segoe Print","Comic Sans MS","Iowan Old Style",Georgia,cursive;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;min-height:100%}
+body{
+  background:var(--cork);
+  background-image:
+    radial-gradient(circle at 12% 18%, rgba(80,52,22,.18) 0 2px, transparent 3px),
+    radial-gradient(circle at 62% 48%, rgba(120,88,40,.16) 0 2px, transparent 3px),
+    radial-gradient(circle at 84% 78%, rgba(70,45,18,.14) 0 1.5px, transparent 2.6px),
+    linear-gradient(160deg,#B5813F,#95672F);
+  background-size:17px 17px, 23px 23px, 29px 29px, 100% 100%;
+  color:var(--ink);font-family:var(--mono);
+  min-height:100vh;padding:26px 16px 84px;
+  display:flex;flex-direction:column;align-items:center;
+}
+.wrap{ width:min(860px,100%);display:flex;flex-direction:column;align-items:center }
+
+h1{ font-size:clamp(19px,4.4vw,25px);font-weight:700;margin:0 0 7px;text-align:center;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--card) }
+.tagline{ font-size:13px;line-height:1.8;color:rgba(246,238,220,.72);margin:0 0 22px;
+  text-align:center;max-width:46ch }
+
+/* ---- writing one ------------------------------------------------------ */
+.desk{
+  width:min(560px,100%);background:var(--card);border-radius:2px;padding:0;
+  box-shadow:0 14px 34px rgba(50,30,10,.35), 0 1px 0 rgba(255,255,255,.5) inset;
+  transform:rotate(-.5deg);
+}
+.desk .top{ display:flex;border-bottom:1px dashed var(--line) }
+.desk .write{ flex:1;padding:16px 16px 10px;min-width:0 }
+.desk .right{ width:150px;flex:0 0 auto;padding:14px 14px 10px;border-left:1px dashed var(--line);
+  display:flex;flex-direction:column;align-items:center;gap:9px }
+@media (max-width:520px){ .desk .top{ flex-direction:column-reverse }
+  .desk .right{ width:100%;border-left:0;border-bottom:1px dashed var(--line);flex-direction:row;
+    justify-content:space-around;align-items:flex-start } }
+
+textarea{
+  width:100%;min-height:118px;resize:vertical;border:0;outline:none;background:transparent;
+  font:inherit;font-family:var(--hand);font-size:17px;line-height:1.75;color:var(--ink);
+  padding:0;
+}
+textarea::placeholder{ color:var(--dimmer);font-style:italic }
+.count{ font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dimmer);
+  text-align:right;margin-top:6px }
+.count.over{ color:var(--post) }
+
+/* the stamp corner */
+.stamps{ display:grid;grid-template-columns:1fr 1fr;gap:5px }
+.stamps button{
+  padding:0;border:0;background:transparent;cursor:pointer;line-height:0;border-radius:2px;
+  transition:transform .12s;
+}
+.stamps button:hover{ transform:scale(1.07) }
+.stamps button[aria-pressed="true"]{ outline:2px solid var(--post);outline-offset:2px }
+.stamps button:focus-visible{ outline:2px solid var(--postal);outline-offset:2px }
+.stamps svg{ width:46px;height:54px;display:block }
+.picklab{ font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--dimmer);
+  text-align:center }
+
+.marks{ width:100%;padding:12px 16px 14px;display:flex;flex-wrap:wrap;gap:5px;align-items:center }
+.marks button{
+  font:inherit;font-family:var(--mono);font-size:10.5px;cursor:pointer;letter-spacing:.04em;
+  background:transparent;color:var(--dim);border:1px solid var(--line);border-radius:999px;
+  padding:5px 11px;transition:border-color .14s,color .14s;
+}
+.marks button:hover{ border-color:var(--post);color:var(--ink) }
+.marks button[aria-pressed="true"]{ background:var(--post);border-color:var(--post);color:#fff }
+.marks button:focus-visible{ outline:2px solid var(--postal);outline-offset:2px }
+
+.send{ width:100%;padding:0 16px 16px;display:flex;gap:10px;align-items:center }
+.send button{
+  font:inherit;font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;
+  cursor:pointer;background:var(--post);color:#fff;border:0;border-radius:2px;padding:12px 22px;
+  transition:opacity .14s;
+}
+.send button:hover:not(:disabled){ opacity:.88 }
+.send button:disabled{ opacity:.4;cursor:default }
+.send button:focus-visible{ outline:2px solid var(--postal);outline-offset:2px }
+.send .msg{ font-size:11px;line-height:1.6;color:var(--dim);flex:1 }
+.send .msg.bad{ color:var(--post) }
+
+/* ---- the board -------------------------------------------------------- */
+.boardhead{ width:100%;margin:32px 0 14px;display:flex;justify-content:space-between;
+  align-items:baseline;color:rgba(246,238,220,.8);font-size:10px;letter-spacing:.2em;
+  text-transform:uppercase }
+.board{ width:100%;display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:18px }
+.pc{
+  position:relative;background:var(--card);border-radius:2px;padding:14px 14px 34px;
+  box-shadow:0 7px 18px rgba(50,30,10,.32);
+  min-height:150px;display:flex;flex-direction:column;
+}
+.pc .st{ position:absolute;right:9px;top:9px;width:34px;height:40px }
+.pc .st svg{ width:100%;height:100% }
+.pc .body{ font-family:var(--hand);font-size:15px;line-height:1.65;color:var(--ink);
+  padding-right:40px;flex:1;word-wrap:break-word;overflow-wrap:break-word }
+.pc .mark{
+  position:absolute;left:12px;bottom:10px;font-size:8.5px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--post);border:1.4px solid var(--post);border-radius:999px;
+  padding:3px 8px;opacity:.72;transform:rotate(-3deg);
+}
+.pc .when{ position:absolute;right:12px;bottom:13px;font-size:8.5px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--dimmer) }
+.pc.mine{ box-shadow:0 7px 18px rgba(50,30,10,.32), 0 0 0 2px var(--postal) }
+.pc .pin{ position:absolute;left:50%;top:-7px;transform:translateX(-50%);width:14px;height:14px;
+  border-radius:50%;box-shadow:0 2px 4px rgba(0,0,0,.35) }
+
+.state{ width:100%;background:rgba(246,238,220,.94);border-radius:2px;padding:20px 22px;
+  font-size:13px;line-height:1.8;color:var(--ink-2) }
+.state b{ color:var(--ink) }
+
+.more{ width:100%;text-align:center;margin-top:20px }
+.more button{ font:inherit;font-family:var(--mono);font-size:10.5px;letter-spacing:.18em;
+  text-transform:uppercase;cursor:pointer;background:transparent;color:var(--card);
+  border:1px solid rgba(246,238,220,.5);border-radius:999px;padding:10px 22px }
+.more button:hover{ background:rgba(246,238,220,.14) }
+
+.book{ margin-top:30px;padding-top:20px;border-top:1px solid rgba(246,238,220,.28);
+  font-size:12.5px;line-height:1.9;color:rgba(246,238,220,.78);width:100% }
+.book p{ margin:0 0 12px } .book p:last-child{ margin:0 }
+.book b{ color:var(--card) }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 var(--mono);
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:var(--card);background:var(--post);
+  border:1px solid rgba(0,0,0,.2);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  box-shadow:0 5px 16px rgba(0,0,0,.35);
+  transition:width .18s ease, background .16s, gap .18s ease;
+}
+@media (pointer:coarse){ #lc-back{ width:44px;height:44px } }
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:#A8402E }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid var(--card);outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Postcards from Nowhere</h1>
+<p class="tagline">Write a short one and pin it up. Everybody who comes here sees the same board.
+  No names, no accounts, and no idea where anybody is.</p>
+
+<div class="desk" id="desk">
+  <div class="top">
+    <div class="write">
+      <textarea id="text" maxlength="240" rows="5"
+        placeholder="A thought, a wish, a wish-you-were-here&hellip;"></textarea>
+      <div class="count" id="count">240 left</div>
+    </div>
+    <div class="right">
+      <div class="picklab">stamp</div>
+      <div class="stamps" id="stamps"></div>
+    </div>
+  </div>
+  <div class="marks" id="marks"></div>
+  <div class="send">
+    <button type="button" id="btn-send">Pin it up</button>
+    <div class="msg" id="msg">Nothing is kept about you but a random string your browser invented.</div>
+  </div>
+</div>
+
+<div class="boardhead">
+  <span>the board</span>
+  <span id="total">&nbsp;</span>
+</div>
+
+<div id="board-wrap">
+  <div class="state" id="state">Looking at the board&hellip;</div>
+  <div class="board" id="board"></div>
+</div>
+
+<div class="more"><button type="button" id="btn-more" hidden>Older postcards</button></div>
+
+<div class="book">
+  <p><b>There is no location on these, coarse or otherwise.</b> The drawer is called Postcards
+  from Nowhere and it means it: the postmark is one of ten invented places you pick yourself, held
+  in the database as a small number. Nothing about where you actually are is asked for, looked up
+  or stored. The one thing kept alongside your card is the same anonymous random string every
+  shared drawer in this cabinet uses &mdash; invented by your own browser, never derived from
+  your address, and never shown to anybody.</p>
+  <p><b>The stamps are drawn for this page.</b> Six of them, made of simple shapes with a real
+  perforated edge punched round the outside, so they are nobody else's artwork.</p>
+  <p>One card every three minutes per browser, no links, and 240 characters &mdash; the same rules
+  the guestbook and the bottles run under, for the same reason. It is a shared wall, not a
+  moderated one, and it does not pretend otherwise.</p>
+</div>
+
+</div>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">&larr;</span><span class="w">cabinet</span></a>
+
+<script src="/shared/lc-id.js"></script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  var MAX = 240;
+  function E(id){ return document.getElementById(id); }
+
+  /* ================================================================== *
+   *  Six stamps, drawn here out of simple shapes. Each gets a real
+   *  perforated edge — a row of little bites taken out of the border
+   *  with the background colour — rather than a dashed line pretending
+   *  to be one.
+   * ================================================================== */
+  var STAMP_ART = [
+    // a lighthouse
+    '<rect x="0" y="0" width="44" height="52" fill="#2F5A86"/>' +
+    '<path d="M22 10l5 26H17z" fill="#F6EEDC"/><rect x="18" y="20" width="8" height="3" fill="#C4503C"/>' +
+    '<circle cx="22" cy="13" r="3.4" fill="#F0C26A"/>' +
+    '<path d="M22 13l-13-5M22 13l13-5" stroke="#F0C26A" stroke-width="1.4"/>' +
+    '<path d="M4 40q9-4 18 0t18 0v6H4z" fill="#7FB0A6"/>',
+    // a whale
+    '<rect x="0" y="0" width="44" height="52" fill="#4E7C96"/>' +
+    '<path d="M6 32q8-12 20-10t12 10q-6 7-16 7T6 32z" fill="#F6EEDC"/>' +
+    '<path d="M38 32l5-7 1 12z" fill="#F6EEDC"/><circle cx="15" cy="28" r="1.6" fill="#2F4654"/>' +
+    '<path d="M22 20q0-6 4-8" stroke="#F6EEDC" stroke-width="2" fill="none" stroke-linecap="round"/>',
+    // a paper plane
+    '<rect x="0" y="0" width="44" height="52" fill="#C4503C"/>' +
+    '<path d="M6 26l32-12-11 28-6-10z" fill="#F6EEDC"/>' +
+    '<path d="M21 32l17-18-11 24z" fill="#D9CBAB"/>' +
+    '<path d="M8 40q6-2 10-6" stroke="#F6EEDC" stroke-width="1.3" fill="none" stroke-dasharray="2 3"/>',
+    // a comet
+    '<rect x="0" y="0" width="44" height="52" fill="#2E2A46"/>' +
+    '<circle cx="29" cy="18" r="6" fill="#F0C26A"/>' +
+    '<path d="M25 22L7 42" stroke="#F0C26A" stroke-width="3.4" stroke-linecap="round" opacity=".8"/>' +
+    '<path d="M28 25L16 41" stroke="#F6EEDC" stroke-width="1.6" stroke-linecap="round" opacity=".6"/>' +
+    '<circle cx="10" cy="14" r="1.3" fill="#F6EEDC"/><circle cx="36" cy="38" r="1.1" fill="#F6EEDC"/>',
+    // a teacup
+    '<rect x="0" y="0" width="44" height="52" fill="#7FA05E"/>' +
+    '<path d="M11 24h20v9a10 10 0 0 1-20 0z" fill="#F6EEDC"/>' +
+    '<path d="M31 26h4a4 4 0 0 1 0 8h-4" fill="none" stroke="#F6EEDC" stroke-width="2.2"/>' +
+    '<rect x="7" y="43" width="28" height="3" rx="1.5" fill="#F6EEDC"/>' +
+    '<path d="M18 18q0-3 2-4M24 18q0-3 2-4" stroke="#F6EEDC" stroke-width="1.6" fill="none" stroke-linecap="round"/>',
+    // a mountain at night
+    '<rect x="0" y="0" width="44" height="52" fill="#3E5A62"/>' +
+    '<circle cx="32" cy="13" r="5" fill="#F6EEDC"/>' +
+    '<path d="M2 44l13-20 8 11 6-8 13 17z" fill="#22383E"/>' +
+    '<path d="M15 24l4 6h-8z" fill="#F6EEDC"/>'
+  ];
+  function stampSvg(i, w, h){
+    var art = STAMP_ART[i % STAMP_ART.length];
+    /* the perforation: bites out of the edge, in the card colour */
+    var holes = '';
+    for (var x = 0; x <= 44; x += 5.5) holes += '<circle cx="' + x + '" cy="0" r="2.1" fill="#F6EEDC"/>' +
+                                                '<circle cx="' + x + '" cy="52" r="2.1" fill="#F6EEDC"/>';
+    for (var y = 0; y <= 52; y += 5.2) holes += '<circle cx="0" cy="' + y + '" r="2.1" fill="#F6EEDC"/>' +
+                                               '<circle cx="44" cy="' + y + '" r="2.1" fill="#F6EEDC"/>';
+    return '<svg viewBox="0 0 44 52" width="' + (w || 44) + '" height="' + (h || 52) + '" aria-hidden="true">' +
+           art + holes + '</svg>';
+  }
+
+  /* Ten invented places. None of them is anywhere. */
+  var MARKS = [
+    'Nowhere in Particular', 'The Far Side of Tuesday', 'The Long Way Round',
+    'Somewhere Quiet', 'The Slow Coast', 'Last Stop But One',
+    'Off the Map', 'The Quiet Part', 'Further Than It Looks', 'Here, More or Less'
+  ];
+  var PINS = ['#C4503C','#2F5A86','#7FA05E','#F0C26A','#8E5E8A','#4E7C96'];
+
+  var stamp = 0, mark = 0, oldest = 0, loading = false;
+
+  /* ---- the pickers ---------------------------------------------------- */
+  function paintStamps(){
+    E('stamps').innerHTML = '';
+    STAMP_ART.forEach(function(_, i){
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.setAttribute('aria-pressed', String(i === stamp));
+      b.setAttribute('aria-label', 'Stamp ' + (i + 1));
+      b.innerHTML = stampSvg(i, 46, 54);
+      b.addEventListener('click', function(){ stamp = i; paintStamps(); cueTick(); });
+      E('stamps').appendChild(b);
+    });
+  }
+  function paintMarks(){
+    E('marks').innerHTML = '<span class="picklab" style="width:100%;text-align:left">postmark</span>';
+    MARKS.forEach(function(m, i){
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = m;
+      b.setAttribute('aria-pressed', String(i === mark));
+      b.addEventListener('click', function(){ mark = i; paintMarks(); cueTick(); });
+      E('marks').appendChild(b);
+    });
+  }
+
+  E('text').addEventListener('input', function(){
+    var left = MAX - this.value.length;
+    E('count').textContent = left + ' left';
+    E('count').className = 'count' + (left < 20 ? ' over' : '');
+    E('btn-send').disabled = !this.value.trim();
+  });
+
+  /* ---- the board ------------------------------------------------------ */
+  function when(ts){
+    var d = Math.floor((Date.now() - ts) / 60000);
+    if (d < 1) return 'just now';
+    if (d < 60) return d + 'm ago';
+    if (d < 1440) return Math.floor(d / 60) + 'h ago';
+    return Math.floor(d / 1440) + 'd ago';
+  }
+  function esc(s){
+    return String(s).replace(/[&<>"]/g, function(c){
+      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c];
+    });
+  }
+
+  function render(cards, append){
+    if (!append) E('board').innerHTML = '';
+    cards.forEach(function(c, n){
+      var d = document.createElement('div');
+      d.className = 'pc' + (c.you ? ' mine' : '');
+      d.style.transform = 'rotate(' + (((c.id * 37) % 7) - 3) * 0.42 + 'deg)';
+      d.innerHTML =
+        '<div class="pin" style="background:' + PINS[c.id % PINS.length] + '"></div>' +
+        '<div class="st">' + stampSvg(c.stamp, 34, 40) + '</div>' +
+        '<div class="body">' + esc(c.text) + '</div>' +
+        '<div class="mark">' + esc(MARKS[c.postmark] || MARKS[0]) + '</div>' +
+        '<div class="when">' + when(c.at) + '</div>';
+      E('board').appendChild(d);
+    });
+  }
+
+  function show(state){
+    E('state').style.display = state ? 'block' : 'none';
+    if (state) E('state').innerHTML = state;
+  }
+
+  function loadBoard(before, append){
+    if (loading) return;
+    loading = true;
+    LCId.get('/api/postcards' + (before ? '?before=' + before : ''))
+      .then(function(d){
+        loading = false;
+        if (!d || !d.ok){
+          show('<b>There is no shared board today.</b><br>' + LCId.why(d && d.why));
+          E('btn-send').disabled = true;
+          E('total').textContent = '';
+          return;
+        }
+        show(d.total === 0
+          ? '<b>Nothing on the board yet.</b> Whatever you write will be the first thing anybody ' +
+            'coming here sees.'
+          : '');
+        E('total').textContent = d.total + (d.total === 1 ? ' card' : ' cards');
+        render(d.cards, append);
+        if (d.cards.length) oldest = d.cards[d.cards.length - 1].id;
+        E('btn-more').hidden = !d.more;
+      });
+  }
+
+  E('btn-more').addEventListener('click', function(){ loadBoard(oldest, true); });
+
+  E('btn-send').addEventListener('click', function(){
+    var text = E('text').value.trim();
+    if (!text) return;
+    E('btn-send').disabled = true;
+    E('msg').className = 'msg';
+    E('msg').textContent = 'Pinning it up…';
+    LCId.post('/api/postcards', { text: text, stamp: stamp, postmark: mark })
+      .then(function(d){
+        if (!d || !d.ok){
+          E('msg').className = 'msg bad';
+          E('msg').textContent = d && d.why === 'too_soon'
+            ? 'One card every three minutes. ' + Math.ceil((d.wait || 0) / 1000) + 's to go.'
+            : LCId.why(d && d.why);
+          E('btn-send').disabled = false;
+          return;
+        }
+        E('text').value = '';
+        E('count').textContent = MAX + ' left';
+        E('msg').className = 'msg';
+        E('msg').textContent = 'Up it goes. It is on the board for everybody now.';
+        E('total').textContent = d.total + (d.total === 1 ? ' card' : ' cards');
+        show('');
+        render(d.cards, false);
+        if (d.cards.length) oldest = d.cards[d.cards.length - 1].id;
+        cuePin();
+      });
+  });
+
+  function cueTick(){
+    if (!window.LCSound) return;
+    LCSound.play(function(A){
+      A.burst('white', { type:'bandpass', freq: 2400, q: 7, dur: 0.018, level: A.cap(0.03) });
+    });
+  }
+  function cuePin(){
+    if (!window.LCSound) return;
+    LCSound.play(function(A){
+      /* a drawing pin going into cork: a tap, and then the board */
+      A.burst('white', { type:'bandpass', freq: 3200, q: 5, dur: 0.02, level: A.cap(0.055) });
+      A.burst('brown', { at: 0.012, type:'lowpass', freq: 420, dur: 0.09,
+                         level: A.cap(0.045), attack: 0.003 });
+    });
+  }
+
+  paintStamps(); paintMarks();
+  E('btn-send').disabled = true;
+  loadBoard(0, false);
+  if (window.LCSound) LCSound.mount();
+
+  window.__postcards = {
+    stamps: STAMP_ART.length,
+    marks: MARKS,
+    pick: function(s, m){ stamp = s; mark = m; paintStamps(); paintMarks(); },
+    write: function(t){
+      E('text').value = t;
+      E('text').dispatchEvent(new Event('input'));
+    },
+    send: function(){ E('btn-send').click(); },
+    reload: function(){ loadBoard(0, false); },
+    count: function(){ return E('board').children.length; },
+    total: function(){ return E('total').textContent; },
+    msg: function(){ return E('msg').textContent; }
+  };
+})();
+</script>
+<style>
+@keyframes lcf-stamp{from{opacity:0;transform:scale(1.12) rotate(-2deg)}to{opacity:1;transform:none}}
+.lc-flourish{animation:lcf-stamp .34s cubic-bezier(.2,.9,.3,1) both}
+@media (prefers-reduced-motion: reduce){ .lc-flourish{animation:none} }
+</style>
+<script>
+(function(){
+  function flourish(){
+    var el = document.querySelector('.board .pc');
+    if (!el) return;
+    el.classList.remove('lc-flourish');
+    void el.offsetWidth;
+    el.classList.add('lc-flourish');
+  }
+  document.addEventListener('click', function(e){
+    if (!e.target.closest || e.target.closest('#lc-sound-btn')) return;
+    if (e.target.closest('#btn-send')) setTimeout(flourish, 260);
+  });
+})();
+</script>
+</body>
+</html>

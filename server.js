@@ -1692,6 +1692,23 @@ async function handleApi(req, res, url) {
       url.searchParams.get('t') || '', url.searchParams.get('from') || 0));
   }
 
+  // --- the corkboard ------------------------------------------------
+  if (path === '/api/postcards') {
+    if (!store.ready()) return sendJson(res, 200, { ok: false, why: 'no_store' });
+
+    if (req.method === 'POST') {
+      const gate = castCheck(clientIp(req));      // same gate as the guestbook
+      if (!gate.ok) return sendJson(res, 429, { ok: false, why: 'too_many', retryAfter: gate.retryAfter });
+      let body = {};
+      try { body = JSON.parse(await readBody(req) || '{}'); }
+      catch (e) { return sendJson(res, 400, { ok: false, why: 'bad_body' }); }
+      const out = store.postcard(body.token, body.text, body.stamp, body.postmark);
+      return sendJson(res, out.ok ? 200 : 400, out);
+    }
+    return sendJson(res, 200, store.corkboard(
+      url.searchParams.get('t') || '', url.searchParams.get('before') || 0));
+  }
+
   // --- which optional keys are configured --------------------------
   // Lets a toy render an honest "needs a key" state instead of failing.
   if (path === '/api/keys') {
@@ -1714,7 +1731,7 @@ const server = http.createServer((req, res) => {
   // is still read-only, as it was.
   const WRITABLE = ['/api/generate', '/api/presence', '/api/bottle', '/api/bottle/found',
                    '/api/scores', '/api/guestbook', '/api/pixels', '/api/story',
-                   '/api/hall'];
+                   '/api/hall', '/api/postcards'];
   const writable = req.method === 'POST' && WRITABLE.includes(parsed.pathname);
   if (req.method !== 'GET' && req.method !== 'HEAD' && !writable) {
     res.writeHead(405).end('Method not allowed');

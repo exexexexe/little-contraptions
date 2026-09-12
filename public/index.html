@@ -428,6 +428,87 @@ footer{
   background:#008080;
   display:flex;align-items:flex-start;gap:18px;
 }
+/* ---- the drift layer ---- *
+ * A slow-moving background behind everything on the desktop. It is the
+ * one "widget" that is not in the rail, because it has no box: it is the
+ * sky the icons sit on. Pointer-transparent and out of the a11y tree, so
+ * it cannot get between anybody and a drawer.
+ */
+#w98-drift{
+  /* FIXED, not absolute. The desktop scrolls — 139 icons is a good deal
+     taller than a window — and an absolutely positioned layer inside it
+     scrolls away with them, leaving the bottom two thirds of the desktop
+     with no sky at all. The wallpaper does not scroll, and neither should
+     the thing drifting across it. Inset by the taskbar for the same
+     reason the wallpaper credit is: nothing belongs underneath it. */
+  position:fixed;left:0;top:0;z-index:0;pointer-events:none;display:block;
+  /* Size is set in script, not here. A <canvas> is a replaced element, so
+     left/right insets do NOT stretch it — it keeps its intrinsic 300x150
+     and the sky comes out as a small blurry rectangle in the corner. The
+     desktop's own client box is measured instead, which also excludes its
+     scrollbar and the taskbar without either being hard-coded. */
+}
+#w98-drift[hidden]{ display:none }
+#w98-icons, #w98-widgets{ position:relative;z-index:1 }
+
+/* ---- the new peeks ---- */
+.w98-widget .peek{
+  display:flex;align-items:center;gap:calc(7px * var(--wg-s));
+  padding:calc(2px * var(--wg-s)) 0;
+}
+.w98-widget .peek canvas{ display:block;image-rendering:pixelated;flex:0 0 auto }
+.w98-widget .peek .txt{ min-width:0;flex:1;line-height:1.3 }
+.w98-widget .peek .txt b{ display:block;font-weight:700;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap }
+.w98-widget .peek .txt i{ display:block;font-style:normal;opacity:.72;
+  font-size:calc(9.5px * var(--wg-s));overflow:hidden;text-overflow:ellipsis;white-space:nowrap }
+.w98-widget .go{
+  display:block;width:100%;text-align:center;cursor:pointer;text-decoration:none;
+  color:inherit;font-size:calc(9px * var(--wg-s));opacity:.62;
+  padding-top:calc(3px * var(--wg-s));
+}
+.w98-widget .go:hover{ opacity:1;text-decoration:underline }
+/* A widget switched off keeps its place and its size; it is simply not
+   drawn and not ticked. `!important` because the rail's own free mode
+   sets display on these elements. */
+.w98-widget.wg-off, .w98-note.wg-off{ display:none !important }
+
+.wg-card{ font-size:calc(10px * var(--wg-s));line-height:1.45;opacity:.9;
+  min-height:calc(34px * var(--wg-s)) }
+.wg-card .mk{ display:block;opacity:.6;font-size:calc(8.5px * var(--wg-s));
+  letter-spacing:.1em;text-transform:uppercase;margin-top:calc(3px * var(--wg-s)) }
+.wg-pulse{ display:flex;align-items:center;gap:calc(8px * var(--wg-s)) }
+.wg-pulse .dot{
+  width:calc(9px * var(--wg-s));height:calc(9px * var(--wg-s));border-radius:50%;
+  background:#3CE06A;box-shadow:0 0 calc(5px * var(--wg-s)) #3CE06A;flex:0 0 auto;
+  animation:w98pulse 2.4s ease-in-out infinite;
+}
+.wg-pulse .dot.cold{ background:#9AA6A0;box-shadow:none;animation:none }
+@keyframes w98pulse{ 0%,100%{ opacity:.35;transform:scale(.85) } 50%{ opacity:1;transform:scale(1.15) } }
+@media (prefers-reduced-motion: reduce){ .wg-pulse .dot{ animation:none;opacity:.9 } }
+
+/* ---- the per-widget switchboard in Display Properties ---- */
+.wg-list{ display:flex;flex-direction:column;gap:1px;max-height:270px;overflow:auto;
+  background:var(--w98-dark,#808080);padding:1px }
+.wg-row{
+  display:flex;align-items:center;gap:8px;padding:5px 7px;
+  background:var(--w98-face,#C0C0C0);
+}
+.wg-row .who{ flex:1;min-width:0;line-height:1.3 }
+.wg-row .who b{ display:block;font-weight:700 }
+.wg-row .who i{ display:block;font-style:normal;opacity:.7;font-size:10px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap }
+.wg-row button{
+  flex:0 0 auto;min-width:46px;font:inherit;font-size:11px;cursor:pointer;padding:3px 8px;
+  background:var(--w98-face,#C0C0C0);color:var(--w98-text,#000);
+  border:2px solid;border-color:var(--w98-lite,#FFF) var(--w98-dark,#000) var(--w98-dark,#000) var(--w98-lite,#FFF);
+}
+.wg-row button[aria-pressed="true"]{
+  border-color:var(--w98-dark,#000) var(--w98-lite,#FFF) var(--w98-lite,#FFF) var(--w98-dark,#000);
+  background:var(--w98-hi,#DFDFDF);font-weight:700;
+}
+.wg-row button:focus-visible{ outline:1px dotted var(--w98-text,#000);outline-offset:-4px }
+
 /* the wallpaper credit, when the desktop is somebody's photograph */
 #w98-wallcredit{
   /* on the shell rather than inside the scrolling desktop, so it sits
@@ -2437,10 +2518,10 @@ footer{
 
     <div class="card-slot fade">
       <div class="stack"></div>
-      <a class="card" href="/bonsai/">
+      <a class="card" href="/windowsill/">
         <div class="num">No. 145</div>
-        <h2>A Tree That Takes Its Time</h2>
-        <p>Its whole shape is settled the day it is planted; the calendar decides how much of it has happened yet. Pruning takes a branch and gives the rest a day&rsquo;s vigour.</p>
+        <h2>The Windowsill</h2>
+        <p>A bonsai, a pot of basil and a succulent, each growing at its own real speed by the calendar rather than the visit. Nothing here needs you and nothing here can die.</p>
         <span class="tag">reflection</span>
       </a>
     </div>
@@ -2525,8 +2606,138 @@ footer{
       </a>
     </div>
 
+    <div class="card-slot fade">
+      <div class="stack"></div>
+      <a class="card" href="/kintsugi/">
+        <div class="num">No. 154</div>
+        <h2>Kintsugi Mender</h2>
+        <p>Break a bowl on purpose, gather the pieces back, then run gold down every crack. The shards are real Voronoi cells, so the seams meet exactly.</p>
+        <span class="tag">toy</span>
+      </a>
+    </div>
+
+    <div class="card-slot fade">
+      <div class="stack"></div>
+      <a class="card" href="/rain-machine/">
+        <div class="num">No. 155</div>
+        <h2>Rain Sound Machine</h2>
+        <p>The weather actually falling on you, from Open-Meteo, turned into five layers of generated noise. Nothing is sampled. No rain gets you a clear-sky hum instead.</p>
+        <span class="tag">sound</span>
+      </a>
+    </div>
+
+    <div class="card-slot fade">
+      <div class="stack"></div>
+      <a class="card" href="/species-of-the-day/">
+        <div class="num">No. 156</div>
+        <h2>Species of the Day</h2>
+        <p>One real species a day on a specimen card. The only thing written into the page is the name &mdash; the Red List category, the classification and the records all come from GBIF as you open it.</p>
+        <span class="tag">real data</span>
+      </a>
+    </div>
+
+    <div class="card-slot fade">
+      <div class="stack"></div>
+      <a class="card" href="/silhouette/">
+        <div class="num">No. 157</div>
+        <h2>Silhouette Guesser</h2>
+        <p>Eighty real coastlines, islands and lakes from public-domain survey data, with everything but the outline taken away. Every shape drawn the same size, so size is not a clue.</p>
+        <span class="tag">game</span>
+      </a>
+    </div>
+
+    <div class="card-slot fade">
+      <div class="stack"></div>
+      <a class="card" href="/slow-reveal/">
+        <div class="num">No. 158</div>
+        <h2>The Slow Reveal</h2>
+        <p>One real public-domain painting from the Met, uncovering itself square by square over seven real days. There is deliberately nothing to press.</p>
+        <span class="tag">real data</span>
+      </a>
+    </div>
+
+    <div class="card-slot fade">
+      <div class="stack"></div>
+      <a class="card" href="/fireplace/">
+        <div class="num">No. 159</div>
+        <h2>Fireplace Corner</h2>
+        <p>A particle fire drawn from scratch and a crackle made out of noise and a very sharp filter. Adjustable logs and flame height, nothing to achieve, and it never goes out.</p>
+        <span class="tag">sound</span>
+      </a>
+    </div>
+
+    <div class="card-slot fade">
+      <div class="stack"></div>
+      <a class="card" href="/tea-timer/">
+        <div class="num">No. 160</div>
+        <h2>Tea Steeping Timer</h2>
+        <p>Eleven teas with the steeping ranges that are actually published for them, and a cup whose colour arrives over the real minutes. Matcha is on the list and is honest about not being steeped.</p>
+        <span class="tag">reference</span>
+      </a>
+    </div>
+
+    <div class="card-slot fade">
+      <div class="stack"></div>
+      <a class="card" href="/nightlight/">
+        <div class="num">No. 161</div>
+        <h2>The Nightlight</h2>
+        <p>A soft glow that drifts along the real blackbody curve, tied to your actual sunrise and sunset. Everything but the light fades away if you leave it alone.</p>
+        <span class="tag">reflection</span>
+      </a>
+    </div>
+
+    <div class="card-slot fade">
+      <div class="stack"></div>
+      <a class="card" href="/endless-coil/">
+        <div class="num">No. 162</div>
+        <h2>Endless Coil</h2>
+        <p>A rainbow spring you can stretch, twist and send down the stairs. It manages a step or two end over end and then thinks better of it, which is what real ones do.</p>
+        <span class="tag">toy</span>
+      </a>
+    </div>
+
+    <div class="card-slot fade">
+      <div class="stack"></div>
+      <a class="card" href="/comfort-jar/">
+        <div class="num">No. 163</div>
+        <h2>The Comfort Jar</h2>
+        <p>Sixty-three folded notes, one a day. Written for this jar and attributed to nobody, because nobody else said them.</p>
+        <span class="tag">reflection</span>
+      </a>
+    </div>
+
+    <div class="card-slot fade">
+      <div class="stack"></div>
+      <a class="card" href="/postcards/">
+        <div class="num">No. 164</div>
+        <h2>Postcards from Nowhere</h2>
+        <p>Write a short anonymous one, pick a stamp and an invented postmark, and pin it to a board everybody shares. No names, no accounts, and no location of any kind.</p>
+        <span class="tag">real data</span>
+      </a>
+    </div>
+
+    <div class="card-slot fade">
+      <div class="stack"></div>
+      <a class="card" href="/blanket-fort/">
+        <div class="num">No. 165</div>
+        <h2>Blanket Fort Builder</h2>
+        <p>Thirteen things in a box &mdash; chairs, quilts, fairy lights, a sleeping cat &mdash; and a dim room to build in. The lamp is a real light, so moving it changes everything.</p>
+        <span class="tag">toy</span>
+      </a>
+    </div>
+
+    <div class="card-slot fade">
+      <div class="stack"></div>
+      <a class="card" href="/ocean-mixer/">
+        <div class="num">No. 166</div>
+        <h2>Ocean Sound Mixer</h2>
+        <p>Four real NOAA hydrophone recordings and two generated beds, layered at their own depths. Every channel says which of the two it is.</p>
+        <span class="tag">sound</span>
+      </a>
+    </div>
+
     <div class="ghost fade">
-      <p>Drawer 154 is still<br>being built.</p>
+      <p>Drawer 167 is still<br>being built.</p>
     </div>
   </div>
 
@@ -2539,6 +2750,7 @@ footer{
      so a new drawer needs no change here. -->
 <div id="w98" hidden>
   <div id="w98-desktop">
+    <canvas id="w98-drift" aria-hidden="true" hidden></canvas>
     <div id="w98-icons" role="list"></div>
 
     <!-- Ornaments. Purely decorative, so the rail is hidden from the
@@ -2658,6 +2870,80 @@ footer{
 
       <div class="w98-note p3" data-wg="note"><span class="note-text">back in five minutes</span><div class="wg-grip"></div></div>
 
+      <!-- ============================================================ *
+           The live peeks. Each one is an ordinary .w98-widget, so the
+           rail's existing drag, resize, swell and remembered-position
+           machinery picks them up without being told they exist. What is
+           new is that each has its own switch in Display Properties, and
+           its own little loop that keeps it current.
+           ============================================================ -->
+
+      <div class="w98-widget p1 wg-off" data-wg="sill">
+        <div class="bar"><span>Windowsill</span></div>
+        <div class="body">
+          <div class="peek">
+            <canvas id="wg-sill-cv" width="40" height="44"></canvas>
+            <span class="txt"><b id="wg-sill-n">&mdash;</b><i id="wg-sill-s">&nbsp;</i></span>
+          </div>
+          <a class="go" href="/windowsill/">open the sill</a>
+        </div>
+        <div class="wg-grip"></div>
+      </div>
+
+      <div class="w98-widget p2 wg-off" data-wg="hearth">
+        <div class="bar"><span>Hearth</span></div>
+        <div class="body">
+          <div class="w98-sunk">
+            <canvas id="wg-fire-cv" width="84" height="46"></canvas>
+          </div>
+          <a class="go" href="/fireplace/">sit by it</a>
+        </div>
+        <div class="wg-grip"></div>
+      </div>
+
+      <div class="w98-widget p2 wg-off" data-wg="coil">
+        <div class="bar"><span>Coil</span></div>
+        <div class="body">
+          <div class="w98-sunk">
+            <canvas id="wg-coil-cv" width="84" height="70"></canvas>
+          </div>
+          <div class="cradle-cap">give it a boop</div>
+        </div>
+        <div class="wg-grip"></div>
+      </div>
+
+      <div class="w98-widget p3 wg-off" data-wg="postcard">
+        <div class="bar"><span>Postcards</span></div>
+        <div class="body">
+          <div class="wg-card" id="wg-pc-text">reading the board&hellip;</div>
+          <a class="go" href="/postcards/">the whole board</a>
+        </div>
+        <div class="wg-grip"></div>
+      </div>
+
+      <div class="w98-widget p3 wg-off" data-wg="species">
+        <div class="bar"><span>Species of the Day</span></div>
+        <div class="body">
+          <div class="peek">
+            <canvas id="wg-sp-cv" width="40" height="40"></canvas>
+            <span class="txt"><b id="wg-sp-n">&mdash;</b><i id="wg-sp-c">&nbsp;</i></span>
+          </div>
+          <a class="go" href="/species-of-the-day/">the whole card</a>
+        </div>
+        <div class="wg-grip"></div>
+      </div>
+
+      <div class="w98-widget p3 wg-off" data-wg="here">
+        <div class="bar"><span>Who Else Is Here</span></div>
+        <div class="body">
+          <div class="wg-pulse">
+            <span class="dot cold" id="wg-here-dot"></span>
+            <span class="txt" id="wg-here-t">counting&hellip;</span>
+          </div>
+        </div>
+        <div class="wg-grip"></div>
+      </div>
+
     </div>
   </div>
 
@@ -2701,6 +2987,7 @@ footer{
         <button role="tab" aria-selected="true" aria-controls="w98-p-appear">Appearance</button>
         <button role="tab" aria-selected="false" aria-controls="w98-p-back">Background</button>
         <button role="tab" aria-selected="false" aria-controls="w98-p-icons">Icons</button>
+        <button role="tab" aria-selected="false" aria-controls="w98-p-widgets">Widgets</button>
         <button role="tab" aria-selected="false" aria-controls="w98-p-other">Settings</button>
       </menu>
 
@@ -2725,6 +3012,10 @@ footer{
         </div>
 
         <div class="pane" id="w98-p-icons" role="tabpanel" hidden>
+          <fieldset><legend>Desktop layout</legend>
+            <div class="w98-row" id="w98-density" role="group" aria-label="Desktop layout"></div>
+            <p class="w98-note" id="w98-densitynote"></p>
+          </fieldset>
           <fieldset><legend>Icon style</legend>
             <div class="w98-row" id="w98-iconstyles" role="group" aria-label="Icon style"></div>
           </fieldset>
@@ -2733,6 +3024,16 @@ footer{
           </fieldset>
           <fieldset><legend>Font</legend>
             <div class="w98-row" id="w98-fonts" role="group" aria-label="Font"></div>
+          </fieldset>
+        </div>
+
+        <div class="pane" id="w98-p-widgets" role="tabpanel" hidden>
+          <fieldset><legend>On the desktop</legend>
+            <div class="wg-list" id="w98-widgetlist" role="group" aria-label="Desktop widgets"></div>
+            <p class="w98-note" id="w98-wgroom"></p>
+            <p class="w98-note">Each one switches on its own. Drift sits behind everything and
+              takes no room at all. A rail with more in it than fits can also be dragged apart
+              &mdash; pick a widget up by its title bar and put it anywhere.</p>
           </fieldset>
         </div>
 
@@ -3316,7 +3617,20 @@ footer{
     'paper-airplane':'ruler', 'hourglass':'clock', 'dominoes':'dice',
     'marble-run':'gear', 'balance-scale':'ruler', 'flip-book':'frame',
     'bubble-wrap':'dice', 'etch-a-sketch':'frame', 'whack-a-mole':'game',
-    'bonsai':'nature', 'color-test':'eye', 'shadow-puppets':'ghost',
+    'kintsugi':'flask',
+    'rain-machine':'weather',
+    'species-of-the-day':'nature',
+    'silhouette':'globe',
+    'slow-reveal':'frame',
+    'fireplace':'weather',
+    'tea-timer':'clock',
+    'nightlight':'eye',
+    'endless-coil':'gear',
+    'comfort-jar':'heart',
+    'postcards':'mail',
+    'blanket-fort':'heart',
+    'ocean-mixer':'ocean',
+    'windowsill':'nature', 'color-test':'eye', 'shadow-puppets':'ghost',
     'illusions':'eye', 'recipe-of-the-day':'doc'
   };
 
@@ -3426,7 +3740,89 @@ footer{
     iconWrap.style.setProperty('--w98-cell-w', CELL_W + 'px');
   }
 
-  var desk = { free: false, messy: false, pos: {}, folders: [] };
+  /* ================================================================== *
+   *  Desktop density: Icons, or Folders.
+   *
+   *  Two presentations of the SAME set of drawers. Icons is what the
+   *  desktop has always been — every drawer loose on the surface. Folders
+   *  puts all of them into eight fixed category folders and leaves the
+   *  desktop nearly bare.
+   *
+   *  These category folders are NOT the folders a visitor makes. They are
+   *  computed from the toy list every time they are drawn and hold no
+   *  state of their own, which is what makes the switch purely a
+   *  presentation change: `desk.folders`, `desk.pos` and everything else
+   *  are untouched by it, and switching back finds the desktop exactly as
+   *  it was left. They carry `data-cat` rather than `data-folder` so that
+   *  every handler that files, renames or deletes a real folder simply
+   *  does not see them — there is no guard to forget.
+   *
+   *  WHERE A NEW DRAWER LANDS. Its home is worked out from the tag it
+   *  already carries on its hub card, with a short list of per-slug
+   *  exceptions for the ones whose natural home is not their tag's. So a
+   *  drawer added next year is filed correctly the moment its card
+   *  exists, with nothing to remember — rather than falling into an
+   *  "Uncategorised" folder that somebody has to notice and empty. The
+   *  exception list is the only thing that ever needs editing, and only
+   *  when a drawer's home genuinely differs from its tag.
+   * ================================================================== */
+  var CATS = [
+    { id:'games',    name:'Games & Arcade',     icon:'game' },
+    { id:'gen',      name:'Generators',         icon:'dice' },
+    { id:'data',     name:'Real Data',          icon:'globe' },
+    { id:'ref',      name:'Reference Desk',     icon:'book' },
+    { id:'toys',     name:'Toys & Contraptions',icon:'gear' },
+    { id:'cozy',     name:'Ambience & Cozy',    icon:'music' },
+    { id:'personal', name:'Personal & Kept',    icon:'heart' },
+    { id:'social',   name:'Social & Shared',    icon:'chat' }
+  ];
+  var CAT_BY_TAG = {
+    'game':'games', 'generator':'gen', 'real data':'data',
+    'reference':'ref', 'scroll story':'ref',
+    'toy':'toys', 'reflection':'personal', 'sound':'cozy'
+  };
+  /* The exceptions: drawers whose home is not the one their tag implies. */
+  var CAT_OVERRIDE = {
+    // the ones that touch other people, wherever they are tagged
+    'guestbook':'social', 'pixel-canvas':'social', 'story-chain':'social',
+    'message-in-a-bottle':'social', 'who-else-is-here':'social', 'postcards':'social',
+    // ambience, whatever they are tagged
+    'windowsill':'cozy', 'nightlight':'cozy', 'comfort-jar':'cozy', 'slow-reveal':'cozy',
+    'tea-timer':'cozy', 'blanket-fort':'cozy', 'room-tone':'cozy', 'snow-globe':'cozy',
+    'aquarium':'cozy', 'worry-stone':'cozy', 'do-nothing':'cozy', 'ant-farm':'cozy',
+    // things you keep, rather than things you look up
+    'same-age-as-you':'personal', 'sleep-cycles':'personal', 'reverse-alarm':'personal'
+  };
+  var CAT_FALLBACK = 'toys';
+
+  function categoryOf(t){
+    return CAT_OVERRIDE[t.slug] || CAT_BY_TAG[t.tag] || CAT_FALLBACK;
+  }
+  function catById(id){
+    for (var i = 0; i < CATS.length; i++) if (CATS[i].id === id) return CATS[i];
+    return null;
+  }
+  function catItems(id){
+    return toys.filter(function(t){ return categoryOf(t) === id; });
+  }
+  /* A category folder wearing the same shape as a real one, so the window
+     chrome can open it without knowing the difference. Built fresh each
+     time; the only thing remembered about it is how big its window was. */
+  function catFolder(id){
+    var c = catById(id);
+    if (!c) return null;
+    var sz = desk.catwin[id] || {};
+    return { id: 'cat:' + id, name: c.name, cat: true,
+             items: catItems(id).map(function(t){ return t.slug; }),
+             w: Number(sz.w) || 380, h: Number(sz.h) || 280 };
+  }
+  /* Either kind, by id. `cat:` ids only ever come from our own markup. */
+  function anyFolder(id){
+    if (typeof id === 'string' && id.indexOf('cat:') === 0) return catFolder(id.slice(4));
+    return folderById(id);
+  }
+
+  var desk = { free: false, messy: false, density: 'icons', pos: {}, folders: [], catwin: {} };
   var deskTop = 300;                 // z-index counter for folder windows
 
   function deskLoad(){
@@ -3435,6 +3831,8 @@ footer{
       if (!j || typeof j !== 'object') return;
       desk.free = !!j.free;
       desk.messy = !!j.messy;
+      desk.density = (j.density === 'folders') ? 'folders' : 'icons';
+      desk.catwin = (j.catwin && typeof j.catwin === 'object') ? j.catwin : {};
       desk.pos = (j.pos && typeof j.pos === 'object') ? j.pos : {};
       desk.folders = Array.isArray(j.folders) ? j.folders.filter(function(f){
         return f && typeof f.id === 'string' && typeof f.name === 'string';
@@ -3455,7 +3853,8 @@ footer{
   function deskSave(){
     try {
       localStorage.setItem(DESK_KEY, JSON.stringify({
-        free: desk.free, messy: desk.messy, pos: desk.pos, folders: desk.folders
+        free: desk.free, messy: desk.messy, density: desk.density,
+        pos: desk.pos, folders: desk.folders, catwin: desk.catwin
       }));
     } catch (e) { /* storage refused: the desktop still works, it just forgets */ }
   }
@@ -3465,10 +3864,22 @@ footer{
      what happened the first time, because the class was being removed by
      the one caller that remembered to. Now it cannot be got wrong. */
   function deskForget(){
-    desk = { free: false, pos: {}, folders: [] };
+    /* Density survives a reset on purpose: it is which way you like to
+       look at the desktop, not an arrangement of it. Resetting the
+       desktop should put the drawers back, not change the view. */
+    var keepDensity = desk.density;
+    desk = { free: false, messy: false, density: keepDensity, pos: {}, folders: [], catwin: {} };
     iconWrap.classList.remove('free');
     deskIcons().forEach(function(el){ el.style.left = el.style.top = ''; });
-    try { localStorage.removeItem(DESK_KEY); } catch (e) {}
+    /* Written back rather than removed. Clearing the record outright left
+       the kept density in memory and nothing on disk, so a reset while in
+       Folders mode looked right until the next reload and then quietly
+       reverted to Icons — the one thing this reset is not supposed to
+       change. Saving keeps the two in agreement. */
+    try {
+      if (keepDensity === 'folders') deskSave();
+      else localStorage.removeItem(DESK_KEY);
+    } catch (e) {}
   }
 
   function folderById(id){
@@ -3500,11 +3911,26 @@ footer{
            svg('folder') + '<span class="lbl">' + esc(f.name) + '</span></a>';
   }
 
+  function catIconHTML(c){
+    var n = catItems(c.id).length;
+    return '<a class="w98-icon" role="listitem" href="#" data-cat="' + esc(c.id) + '" ' +
+           'title="' + esc(c.name) + ' — ' + n + (n === 1 ? ' drawer' : ' drawers') + '">' +
+           svg(c.icon) + '<span class="lbl">' + esc(c.name) + '</span></a>';
+  }
+
   function buildIcons(){
     var html = '';
-    // folders first, the way a directory listing puts them first
-    desk.folders.forEach(function(f){ html += folderIconHTML(f); });
-    toys.forEach(function(t){ if (!folderOf(t.slug)) html += iconHTML(t); });
+    if (desk.density === 'folders'){
+      /* The whole cabinet, in eight folders, and nothing else loose. The
+         visitor's own folders are not shown here — they are a way of
+         tidying the icons view and they are still there, untouched,
+         waiting on the other side of the switch. */
+      CATS.forEach(function(c){ html += catIconHTML(c); });
+    } else {
+      // folders first, the way a directory listing puts them first
+      desk.folders.forEach(function(f){ html += folderIconHTML(f); });
+      toys.forEach(function(t){ if (!folderOf(t.slug)) html += iconHTML(t); });
+    }
     // Not a drawer. It is at the end of the desktop where a system icon
     // would be, it is not in the Start menu, and it does exactly what you
     // would expect a machine of this vintage to do when you open it.
@@ -3534,6 +3960,7 @@ footer{
      are not drawers, so they get their own namespace rather than sharing
      one with a slug that might later exist. */
   function posKey(el){
+    if (el.dataset.cat) return 'cat:' + el.dataset.cat;
     if (el.dataset.folder) return 'folder:' + el.dataset.folder;
     if (el.dataset.egg) return 'egg:' + el.dataset.egg;
     if (el.dataset.open) return 'open:' + el.dataset.open;
@@ -3712,6 +4139,38 @@ footer{
 
   /* The switch lives in Display Properties, which is a different closure.
      An event is the whole contract between them. */
+  /* ---- density ------------------------------------------------------ *
+   *  Purely presentation. Nothing here touches desk.folders, desk.pos or
+   *  anything else the visitor has arranged — the two views are drawn from
+   *  the same record and switching between them is a redraw, not a
+   *  migration. No reload: buildIcons() is the whole of it.
+   * -------------------------------------------------------------------- */
+  function publishDensity(){
+    document.documentElement.dataset.w98Density = desk.density;
+  }
+  function setDensity(mode){
+    var want = (mode === 'folders') ? 'folders' : 'icons';
+    if (want === desk.density) return desk.density;
+    desk.density = want;
+    /* Windows belonging to the view being left are closed; a category
+       window hanging about in Icons mode would be a window onto something
+       not on screen any more. */
+    Object.keys(openWindows).forEach(function(id){
+      var isCat = id.indexOf('cat:') === 0;
+      if (isCat !== (want === 'folders')) closeFolder(id);
+    });
+    publishDensity();
+    buildIcons();
+    deskSave();
+    say(want === 'folders'
+      ? 'Folders. Every drawer is in one of eight.'
+      : 'Icons. Every drawer on the desktop.');
+    return desk.density;
+  }
+  document.addEventListener('w98:density', function(e){
+    setDensity(e && e.detail && e.detail.mode);
+  });
+
   document.addEventListener('w98:messy', function(e){
     var want = !!(e.detail && e.detail.on);
     if (want === desk.messy) return;
@@ -3807,7 +4266,7 @@ footer{
 
   function refreshFolders(){
     Object.keys(openWindows).forEach(function(id){
-      var f = folderById(id), win = openWindows[id];
+      var f = anyFolder(id), win = openWindows[id];
       if (!f || !win) return;
       win.querySelector('.body').innerHTML = folderBody(f);
       win.querySelector('.bar .t').textContent = f.name;
@@ -3817,7 +4276,7 @@ footer{
   }
 
   function openFolder(id){
-    var f = folderById(id);
+    var f = anyFolder(id);
     if (!f) return;
     if (openWindows[id]){ raiseWindow(openWindows[id]); return; }
 
@@ -3927,6 +4386,7 @@ footer{
 
   function openIcon(a){
     if (a.dataset.egg){ if (window.LCAch) LCAch.fire('desk.bluescreen'); blueScreen(); return; }
+    if (a.dataset.cat){ openFolder('cat:' + a.dataset.cat); return; }
     if (a.dataset.folder){ openFolder(a.dataset.folder); return; }
     if (a.dataset.open === 'display'){
       document.dispatchEvent(new CustomEvent('w98:display'));
@@ -4038,13 +4498,15 @@ footer{
 
   function dragStart(e, el, fromFolderId){
     var isFolder = !!el.dataset.folder;
+    var isCat = !!el.dataset.cat;
     var slug = el.dataset.slug || '';
     // System and Display are furniture: they can be selected and opened,
     // but they are not drawers and they do not get carried about.
-    if (!slug && !isFolder) return;
+    if (!slug && !isFolder && !isCat) return;
     var r = el.getBoundingClientRect();
     drag = {
       el: el, slug: slug, folderId: el.dataset.folder || '',
+      catId: el.dataset.cat || '',
       from: fromFolderId || '',
       ox: e.clientX - r.left, oy: e.clientY - r.top,
       sx: e.clientX, sy: e.clientY,
@@ -4083,6 +4545,9 @@ footer{
     var el = document.elementFromPoint(x, y);
     if (!el) return null;
     var win = el.closest ? el.closest('.w98-folder') : null;
+    /* A category window is not a filing target: dropping a drawer into one
+       would have to change the drawer's tag to mean anything. */
+    if (win && String(win.dataset.folder).indexOf('cat:') === 0) return { kind: 'desktop' };
     if (win) return { kind: 'window', id: win.dataset.folder, el: win };
     var icon = el.closest ? el.closest('.w98-icon[data-folder]') : null;
     if (icon && icon !== carried) return { kind: 'icon', id: icon.dataset.folder, el: icon };
@@ -4114,6 +4579,16 @@ footer{
     if (ghost) ghost.hidden = true;
     d.el.classList.remove('dragging');
     if (!d.moved) return;                    // a press that never went anywhere
+
+    /* A category folder is only ever moved. It cannot be filed into
+       anything and nothing can be filed into it — it is a view of the
+       cabinet, not a place things are kept. */
+    if (d.catId){
+      var pc = snapFromPage(e.clientX, e.clientY, d.ox, d.oy);
+      place(d.el, pc.x, pc.y);
+      deskSave();
+      return;
+    }
 
     // A folder cannot be put inside a folder. One level is the whole
     // point: a desktop you can tidy, not a filesystem to get lost in.
@@ -4248,6 +4723,9 @@ footer{
 
     commitRename(e);
     if (icon){
+      /* Nothing comes out of a category window by dragging. Its contents
+         are computed, so there is nothing an unfiling could change. */
+      if (String(win.dataset.folder).indexOf('cat:') === 0) return;
       // same rule as the desktop: a finger has to hold before it lifts
       if (isTouchPointer(e)){ beginHold(e, icon, win.dataset.folder); return; }
       dragStart(e, icon, win.dataset.folder);
@@ -4296,10 +4774,19 @@ footer{
       try { held.releasePointerCapture(e.pointerId); } catch (err) {}
     }
     if (winHold){
-      var f = folderById(winHold.win.dataset.folder);
+      var wid = winHold.win.dataset.folder;
+      var f = anyFolder(wid);
       if (f){
-        f.w = Math.round(parseFloat(winHold.win.style.width) || f.w);
-        f.h = Math.round(parseFloat(winHold.win.style.height) || f.h);
+        var nw = Math.round(parseFloat(winHold.win.style.width) || f.w);
+        var nh = Math.round(parseFloat(winHold.win.style.height) || f.h);
+        if (f.cat){
+          /* A category folder is rebuilt from the toy list every time, so
+             it has nowhere of its own to keep this — its window size is
+             the one thing about it that is remembered. */
+          desk.catwin[wid.slice(4)] = { w: nw, h: nh };
+        } else {
+          f.w = nw; f.h = nh;
+        }
         deskSave();
       }
       winHold = null;
@@ -4371,7 +4858,15 @@ footer{
     menuAt = { x: x, y: y };
     var rows = [];
 
-    if (el && el.dataset.folder){
+    if (el && el.dataset.cat){
+      /* A category folder has no rename and no delete, because there is
+         nothing underneath it to rename or delete — it is computed. */
+      var c = catById(el.dataset.cat);
+      rows.push('<div class="head">' + esc(c ? c.name : 'Folder') + '</div>');
+      rows.push(btn('open', '', 'Open'));
+      rows.push('<hr>');
+      rows.push(btn('density', 'icons', 'Show every drawer instead'));
+    } else if (el && el.dataset.folder){
       var f = folderById(el.dataset.folder);
       rows.push('<div class="head">' + esc(f ? f.name : 'Folder') + '</div>');
       rows.push(btn('open', '', 'Open'));
@@ -4429,6 +4924,7 @@ footer{
       moveToFolder(arg, f.id);
     }
     else if (act === 'newfolder') newFolder(menuAt.x, menuAt.y);
+    else if (act === 'density') setDensity(arg);
     else if (act === 'arrange'){ arrangeIcons(); say('Icons auto-arranged.'); }
     else if (act === 'lineup'){ lineUpIcons(); say('Icons lined up.'); }
     else if (act === 'properties') document.dispatchEvent(new CustomEvent('w98:display'));
@@ -4494,6 +4990,7 @@ footer{
   });
 
   deskLoad();
+  publishDensity();     // so the settings panel can read it back on open
 
   // handy from the console, and what the tests drive
   window.__w98desk = {
@@ -4505,7 +5002,45 @@ footer{
     windows: function(){ return openWindows; },
     menu: function(x, y, el){ showMenu(x || 40, y || 40, el || null); },
     action: runAction, forget: deskForget, enterFree: enterFree,
-    icons: deskIcons, select: select
+    icons: deskIcons, select: select,
+    /* density */
+    density: function(){ return desk.density; },
+    setDensity: setDensity,
+    cats: CATS,
+    categoryOf: categoryOf,
+    catItems: function(id){ return catItems(id).map(function(t){ return t.slug; }); },
+    /* every drawer's home, for checking the mapping covers the cabinet */
+    homes: function(){
+      var out = {};
+      toys.forEach(function(t){ out[t.slug] = categoryOf(t); });
+      return out;
+    },
+    /* widgets */
+    widgets: function(){ return WG_REG.map(function(w){ return w.id; }); },
+    widgetReg: function(){ return WG_REG; },
+    widgetOn: function(id){ return wgIsOn(id); },
+    setWidget: wgSet,
+    widgetState: function(){
+      var o = {};
+      WG_REG.forEach(function(w){
+        var el = wgWrap && wgWrap.querySelector('[data-wg="' + w.id + '"]');
+        var peek = PEEKS[w.id] || (w.id === 'drift' ? drift : null);
+        o[w.id] = {
+          on: wgIsOn(w.id),
+          visible: w.id === 'drift'
+            ? !(document.getElementById('w98-drift') || {}).hidden
+            : !!(el && !el.classList.contains('wg-off')),
+          running: peek && peek.running ? peek.running() : null
+        };
+      });
+      return o;
+    },
+    /* Accessors, not references. This hook object is built earlier in the
+       closure than the widget section that fills these in, so capturing
+       them by value here caught `undefined` and nothing else. */
+    peeks: function(){ return PEEKS; },
+    drift: function(){ return drift; },
+    paintWidgetList: function(){ return paintWidgetList(); }
   };
   /* ---- the start menu -------------------------------------------- */
   var startBtn = document.getElementById('w98-start');
@@ -4715,16 +5250,618 @@ footer{
     }
   }
 
+  /* ================================================================== *
+   *  The widget switchboard.
+   *
+   *  Every ornament on this desktop — the six that were always here and
+   *  the seven live peeks added beside them — has its OWN switch, kept
+   *  per visitor. Deliberately not one master "widgets on/off": the point
+   *  of a rail you can edit is that you choose what is in it.
+   *
+   *  WHY SO FEW ARE ON TO BEGIN WITH. Measured rather than guessed: at a
+   *  1280x860 window the original six already stand 763px tall in the
+   *  816px the rail has, so there is room for about one more. Switching
+   *  the new peeks on by default would have overflowed the rail on the
+   *  first load for most people. So the peeks arrive off, the drift layer
+   *  — which has no box and costs the rail nothing — arrives on, and the
+   *  settings pane says plainly that turning one on may mean turning
+   *  another off.
+   * ================================================================== */
+  var WG_ON_KEY = 'lc-w98-wg-on';
+  var WG_REG = [
+    { id:'weather',  n:'Weather Monitor',   d:'The real sky where you are.', on:true },
+    { id:'cradle',   n:'Desk Toy',          d:'Five real pendulums. Drag a ball.', on:true },
+    { id:'camera',   n:'camera_01',         d:'A camera watching nothing.', on:true },
+    { id:'defrag',   n:'Defragmenting C:',  d:'Tidying a drive that does not exist.', on:true },
+    { id:'meter',    n:'Resource Meter',    d:'Measuring nothing, convincingly.', on:true },
+    { id:'note',     n:'Sticky note',       d:'From whoever left.', on:true },
+    { id:'drift',    n:'Drift',             d:'Slow cloud and stars behind everything. Takes no room in the rail.', on:true },
+    { id:'sill',     n:'Windowsill peek',   d:'Whichever plant you are tending, and how far along it really is.', on:false },
+    { id:'hearth',   n:'Hearth peek',       d:'A small fire, burning on its own.', on:false },
+    { id:'coil',     n:'Coil',              d:'The idle coil. Click it for a boop.', on:false },
+    { id:'postcard', n:'Postcards peek',    d:'Recent cards from the shared board.', on:false },
+    { id:'species',  n:'Species badge',     d:'Today\'s species, with its real Red List category.', on:false },
+    { id:'here',     n:'Who else is here',  d:'How many people are on the hub right now.', on:false }
+  ];
+
+  var wgOn = {};
+  function wgOnLoad(){
+    wgOn = {};
+    WG_REG.forEach(function(w){ wgOn[w.id] = w.on; });
+    try {
+      var j = JSON.parse(localStorage.getItem(WG_ON_KEY) || 'null');
+      if (j && typeof j === 'object'){
+        WG_REG.forEach(function(w){ if (typeof j[w.id] === 'boolean') wgOn[w.id] = j[w.id]; });
+      }
+    } catch (e) { /* the defaults stand */ }
+  }
+  function wgOnSave(){
+    try { localStorage.setItem(WG_ON_KEY, JSON.stringify(wgOn)); } catch (e) {}
+  }
+  function wgIsOn(id){ return !!wgOn[id]; }
+
+  /* Show or hide one ornament, and start or stop whatever it was doing.
+     A switched-off widget must cost nothing — not a timer, not a frame —
+     which is also what makes "turn one off and the rest keep running"
+     something worth checking rather than obvious. */
+  function wgApplyOne(id){
+    var on = wgIsOn(id);
+    if (id === 'drift'){
+      var dc = document.getElementById('w98-drift');
+      if (dc) dc.hidden = !on;
+      on ? drift.start() : drift.stop();
+      return;
+    }
+    var el = wgWrap && wgWrap.querySelector('[data-wg="' + id + '"]');
+    if (el) el.classList.toggle('wg-off', !on);
+    var peek = PEEKS[id];
+    if (peek){ on ? peek.start() : peek.stop(); }
+  }
+  function wgApplyAll(){ WG_REG.forEach(function(w){ wgApplyOne(w.id); }); }
+
+  function wgSet(id, on){
+    if (!(id in wgOn)) return null;
+    wgOn[id] = !!on;
+    wgOnSave();
+    wgApplyOne(id);
+    return wgOn[id];
+  }
+  document.addEventListener('w98:widget', function(e){
+    var d = e && e.detail;
+    if (d && d.id) wgSet(d.id, d.on);
+  });
+
+  /* ================================================================== *
+   *  The peeks themselves.
+   *
+   *  Each is the same shape — start(), stop() — and each keeps itself
+   *  current without being touched: a real clock, real shared data, or
+   *  its own idle animation. None of them polls anything while the tab is
+   *  hidden or while its own switch is off.
+   * ================================================================== */
+  var PEEKS = {};
+
+  /* Two peeks are built on a shared file loaded further down the page, so
+     a peek switched on in the first moments of a visit can start before
+     its file has arrived. Returning quietly in that case left the species
+     badge blank for a full ten minutes — its own retry interval — which
+     looked exactly like a widget that does not work. This waits for the
+     thing, briefly, and then gives up honestly. */
+  function whenReady(test, then, onGiveUp){
+    var tries = 0;
+    (function go(){
+      if (test()) return then();
+      if (++tries > 25) { if (onGiveUp) onGiveUp(); return; }
+      setTimeout(go, 400);
+    })();
+  }
+
+  function peekLoop(draw, ms){
+    var t = null;
+    return {
+      start: function(){
+        if (t) return;
+        draw();
+        t = setInterval(function(){ if (!document.hidden) draw(); }, ms);
+      },
+      stop: function(){ if (t) clearInterval(t); t = null; },
+      running: function(){ return !!t; },
+      poke: draw
+    };
+  }
+
+  /* ---- the windowsill -------------------------------------------- *
+   *  Reads the same three records the drawer writes — this is the same
+   *  browser, so the plant on the desktop is the visitor's actual plant,
+   *  at its actual age. The stage thresholds are the drawer's own.
+   * ---------------------------------------------------------------- */
+  PEEKS.sill = (function(){
+    var PLANTS = {
+      tree:  { key:'lc-bonsai',       n:'Bonsai tree' },
+      basil: { key:'lc-sill-basil',   n:'Herb pot' },
+      succ:  { key:'lc-sill-succ',    n:'Succulent' }
+    };
+    function daysSince(iso){
+      var p = String(iso).split('-');
+      var then = new Date(+p[0], +p[1] - 1, +p[2]); then.setHours(0,0,0,0);
+      var n = new Date();
+      return Math.max(0, Math.round((new Date(n.getFullYear(), n.getMonth(), n.getDate()) - then) / 86400000));
+    }
+    function read(which){
+      try {
+        var j = JSON.parse(localStorage.getItem(PLANTS[which].key) || 'null');
+        if (j && typeof j.planted === 'string') return j;
+      } catch (e) {}
+      return null;
+    }
+    function stageOf(which, d, rec){
+      if (which === 'basil'){
+        if (d < 7) return 'sown';
+        if (d < 14) return 'seed leaves';
+        var pinches = (rec && rec.pinches) || [];
+        var from = pinches.length ? pinches[pinches.length - 1] : 0;
+        if (d - from >= 70) return 'flowering';
+        var born = pinches.length ? pinches[pinches.length - 1] : 14;
+        var pairs = Math.min(9, 1 + Math.floor((d - born) / 7));
+        return pairs >= 4 ? 'pickable' : 'true leaves';
+      }
+      if (which === 'succ'){
+        var leaves = Math.min(34, 6 + Math.floor(d / 18));
+        if (d >= 130) return 'with offsets';
+        if (leaves < 9) return 'young rosette';
+        return leaves < 18 ? 'filling out' : 'established';
+      }
+      var m = new Date().getMonth();
+      if (rec && rec.south) m = (m + 6) % 12;
+      return ['deep winter','late winter','early spring','spring','late spring','summer',
+              'high summer','late summer','early autumn','autumn','late autumn','winter'][m];
+    }
+    function draw(){
+      var which = 'tree';
+      try {
+        var w = localStorage.getItem('lc-windowsill-tab');
+        if (w === 'tree' || w === 'basil' || w === 'succ') which = w;
+      } catch (e) {}
+      var rec = read(which);
+      var cv = document.getElementById('wg-sill-cv');
+      var nEl = document.getElementById('wg-sill-n'), sEl = document.getElementById('wg-sill-s');
+      if (!cv || !nEl) return;
+
+      if (!rec){
+        nEl.textContent = 'Nothing planted';
+        sEl.textContent = 'open it to start one';
+      } else {
+        var d = daysSince(rec.planted);
+        nEl.textContent = PLANTS[which].n;
+        sEl.textContent = stageOf(which, d, rec) + ' \u00b7 ' +
+          (d === 0 ? 'planted today' : d + (d === 1 ? ' day' : ' days'));
+      }
+
+      var g = cv.getContext('2d');
+      var W = cv.width, H = cv.height;
+      g.clearRect(0, 0, W, H);
+      var grown = rec ? Math.min(1, daysSince(rec.planted) / 40) : 0;
+      // the pot
+      g.fillStyle = '#B9704F';
+      g.beginPath();
+      g.moveTo(8, H - 15); g.lineTo(W - 8, H - 15);
+      g.lineTo(W - 12, H - 2); g.lineTo(12, H - 2); g.closePath(); g.fill();
+      g.fillStyle = '#8E4F34'; g.fillRect(7, H - 18, W - 14, 4);
+      if (!rec) return;
+      var soil = H - 18;
+      if (which === 'succ'){
+        for (var i = 0; i < 7; i++){
+          var a = i * 2.399;
+          var rr = (4 + grown * 7);
+          g.beginPath();
+          g.ellipse(W/2 + Math.cos(a) * rr * 0.7, soil - 5 + Math.sin(a) * rr * 0.4,
+                    3 + grown * 2, 2 + grown, a, 0, 6.283);
+          g.fillStyle = i % 2 ? '#8FA87E' : '#A3BC90'; g.fill();
+        }
+      } else if (which === 'basil'){
+        var hgt = 6 + grown * 18;
+        g.strokeStyle = '#547F3C'; g.lineWidth = 2;
+        g.beginPath(); g.moveTo(W/2, soil); g.lineTo(W/2, soil - hgt); g.stroke();
+        for (var k = 0; k < 3; k++){
+          var y = soil - 4 - k * (hgt / 3.2);
+          if (y > soil - 2) continue;
+          g.fillStyle = '#5E8A44';
+          g.beginPath(); g.ellipse(W/2 - 6, y, 6, 3, -0.3, 0, 6.283); g.fill();
+          g.beginPath(); g.ellipse(W/2 + 6, y, 6, 3, 0.3, 0, 6.283); g.fill();
+        }
+      } else {
+        var th = 8 + grown * 20;
+        g.strokeStyle = '#3E332A'; g.lineWidth = 2.4; g.lineCap = 'round';
+        g.beginPath(); g.moveTo(W/2, soil); g.lineTo(W/2 - 1, soil - th); g.stroke();
+        g.lineWidth = 1.6;
+        g.beginPath(); g.moveTo(W/2 - 1, soil - th * .6); g.lineTo(W/2 - 9, soil - th * .95); g.stroke();
+        g.beginPath(); g.moveTo(W/2 - 1, soil - th * .75); g.lineTo(W/2 + 8, soil - th * 1.05); g.stroke();
+        var leaf = stageOf('tree', 0, rec);
+        var col = /winter/.test(leaf) ? null : /autumn/.test(leaf) ? '#B47A26' : '#5E8A44';
+        if (col){
+          g.fillStyle = col;
+          g.beginPath(); g.ellipse(W/2 - 9, soil - th * .98, 7, 5, 0, 0, 6.283); g.fill();
+          g.beginPath(); g.ellipse(W/2 + 8, soil - th * 1.08, 7.5, 5, 0, 0, 6.283); g.fill();
+        }
+      }
+    }
+    return peekLoop(draw, 30000);
+  })();
+
+  /* ---- the hearth: the fireplace's particle flame, in miniature ---- */
+  PEEKS.hearth = (function(){
+    var raf = null, parts = [], t = 0;
+    function frame(){
+      var cv = document.getElementById('wg-fire-cv');
+      if (!cv){ raf = null; return; }
+      var g = cv.getContext('2d'), W = cv.width, H = cv.height;
+      g.fillStyle = '#140E0A'; g.fillRect(0, 0, W, H);
+      // logs
+      g.fillStyle = '#3A2A1E';
+      g.fillRect(W/2 - 22, H - 10, 44, 6);
+      g.fillRect(W/2 - 14, H - 15, 30, 5);
+      for (var i = 0; i < 3; i++){
+        parts.push({ x: W/2 + (Math.random() - .5) * 26, y: H - 14,
+                     vy: -(0.5 + Math.random() * 0.9), vx: (Math.random() - .5) * 0.3,
+                     life: 0, max: 20 + Math.random() * 22, r: 3 + Math.random() * 5 });
+      }
+      var keep = [];
+      g.globalCompositeOperation = 'lighter';
+      for (var k = 0; k < parts.length; k++){
+        var p = parts[k];
+        p.life++; if (p.life > p.max) continue;
+        p.vx += Math.sin(t * 0.04 + p.y * 0.1) * 0.02;
+        p.x += p.vx; p.y += p.vy; p.vy *= 0.985;
+        var f = p.life / p.max;
+        var c = f < .2 ? [255,244,196] : f < .45 ? [255,206,96] :
+                f < .7 ? [255,138,40] : [176,52,16];
+        var rr = p.r * (0.5 + f);
+        var grd = g.createRadialGradient(p.x, p.y, 0, p.x, p.y, rr);
+        grd.addColorStop(0, 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + ((1 - f) * 0.34) + ')');
+        grd.addColorStop(1, 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',0)');
+        g.fillStyle = grd;
+        g.beginPath(); g.arc(p.x, p.y, rr, 0, 6.283); g.fill();
+        keep.push(p);
+      }
+      g.globalCompositeOperation = 'source-over';
+      parts = keep.length > 150 ? keep.slice(keep.length - 150) : keep;
+      t++;
+      raf = requestAnimationFrame(frame);
+    }
+    return {
+      start: function(){ if (!raf) raf = requestAnimationFrame(frame); },
+      stop: function(){ if (raf) cancelAnimationFrame(raf); raf = null; parts = []; },
+      running: function(){ return !!raf; }
+    };
+  })();
+
+  /* ---- the coil: the component built alongside the toy, reused ----- */
+  PEEKS.coil = (function(){
+    var inst = null;
+    return {
+      start: function(){
+        if (inst) return;
+        var self = this;
+        whenReady(function(){ return !!window.LCCoilIdle; }, function(){
+          if (inst) return;
+          var cv = document.getElementById('wg-coil-cv');
+          /* only if the switch is still on — somebody may have turned it
+             straight back off while the file was in the air */
+          if (cv && wgIsOn('coil')) inst = LCCoilIdle.create(cv, { coils: 9 });
+        });
+      },
+      stop: function(){ if (inst && inst.destroy) inst.destroy(); inst = null; },
+      running: function(){ return !!inst; },
+      boop: function(){ if (inst) inst.boop(); },
+      inst: function(){ return inst; }
+    };
+  })();
+
+  /* ---- postcards: real cards off the shared board ------------------ */
+  PEEKS.postcard = (function(){
+    var cards = [], at = 0, fetched = 0;
+    var MARKS = ['Nowhere in Particular','The Far Side of Tuesday','The Long Way Round',
+                 'Somewhere Quiet','The Slow Coast','Last Stop But One','Off the Map',
+                 'The Quiet Part','Further Than It Looks','Here, More or Less'];
+    function show(){
+      var el = document.getElementById('wg-pc-text');
+      if (!el) return;
+      if (!cards.length){ return; }
+      var c = cards[at % cards.length];
+      at++;
+      var txt = String(c.text || '');
+      if (txt.length > 96) txt = txt.slice(0, 95) + '\u2026';
+      el.innerHTML = esc(txt) + '<span class="mk">' +
+        esc(MARKS[c.postmark] || MARKS[0]) + '</span>';
+    }
+    function pull(){
+      var el = document.getElementById('wg-pc-text');
+      if (!el) return;
+      var t = (window.LCId && LCId.id) ? LCId.id() : '';
+      fetch('/api/postcards?t=' + encodeURIComponent(t))
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          if (!d || !d.ok){
+            el.textContent = d && d.why === 'no_store'
+              ? 'no shared board today' : 'could not reach the board';
+            cards = []; return;
+          }
+          cards = (d.cards || []).slice(0, 12);
+          at = 0;
+          if (!cards.length) el.textContent = 'nothing on the board yet';
+          else show();
+        })
+        .catch(function(){ el.textContent = 'could not reach the board'; });
+    }
+    var cycle = null, poll = null;
+    return {
+      start: function(){
+        if (cycle) return;
+        pull(); fetched = Date.now();
+        cycle = setInterval(function(){ if (!document.hidden) show(); }, 9000);
+        poll = setInterval(function(){ if (!document.hidden) pull(); }, 180000);
+      },
+      stop: function(){
+        if (cycle) clearInterval(cycle); cycle = null;
+        if (poll) clearInterval(poll); poll = null;
+      },
+      running: function(){ return !!cycle; },
+      cards: function(){ return cards; },
+      poke: show
+    };
+  })();
+
+  /* ---- the species badge ------------------------------------------ *
+   *  The name comes from the list shared with the drawer; the category
+   *  is fetched from GBIF, exactly as the drawer does it, so the badge
+   *  never states a category nobody published.
+   * ---------------------------------------------------------------- */
+  PEEKS.species = (function(){
+    var CATCOL = { LC:'#60C659', NT:'#CCE226', VU:'#F9E814', EN:'#FC7F3F',
+                   CR:'#D81E05', EW:'#542344', EX:'#000000' };
+    var CATNAME = { LC:'Least Concern', NT:'Near Threatened', VU:'Vulnerable',
+                    EN:'Endangered', CR:'Critically Endangered',
+                    EW:'Extinct in the Wild', EX:'Extinct' };
+    var shownFor = null;
+    function paintDot(code){
+      var cv = document.getElementById('wg-sp-cv');
+      if (!cv) return;
+      var g = cv.getContext('2d'), W = cv.width, H = cv.height;
+      g.clearRect(0, 0, W, H);
+      g.fillStyle = CATCOL[code] || '#8A8A8A';
+      g.beginPath(); g.arc(W/2, H/2, 13, 0, 6.283); g.fill();
+      g.strokeStyle = 'rgba(0,0,0,.45)'; g.lineWidth = 1.5; g.stroke();
+      g.fillStyle = (code === 'VU' || code === 'NT') ? '#1A1A1A' : '#FFFFFF';
+      g.font = 'bold 11px "Pixelated MS Sans Serif","MS Sans Serif",Tahoma,sans-serif';
+      g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.fillText(code || '?', W/2, H/2 + 1);
+      g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+    }
+    function draw(){
+      if (!window.LCSpecies){
+        var cEl0 = document.getElementById('wg-sp-c');
+        whenReady(function(){ return !!window.LCSpecies; }, draw, function(){
+          if (cEl0) cEl0.textContent = 'the species list did not load';
+        });
+        return;
+      }
+      var day = LCSpecies.dayNumber();
+      if (shownFor === day) return;            // one lookup a day, not one a tick
+      var sp = LCSpecies.today();
+      var nEl = document.getElementById('wg-sp-n'), cEl = document.getElementById('wg-sp-c');
+      if (!nEl || !sp) return;
+      shownFor = day;
+      nEl.textContent = sp[2];
+      cEl.textContent = 'looking it up\u2026';
+      paintDot('');
+      fetch('https://api.gbif.org/v1/species/' + sp[0] + '/iucnRedListCategory')
+        .then(function(r){ return r.ok ? r.json() : null; })
+        .then(function(j){
+          if (!j || !j.code){
+            cEl.textContent = 'no category came back';
+            paintDot('?');
+            return;
+          }
+          cEl.textContent = CATNAME[j.code] || j.code;
+          paintDot(j.code);
+        })
+        .catch(function(){
+          cEl.textContent = 'could not reach the register';
+          paintDot('?');
+          shownFor = null;                     // so it tries again later
+        });
+    }
+    return peekLoop(draw, 600000);
+  })();
+
+  /* ---- who else is here ------------------------------------------- *
+   *  The same in-memory /api/here the card catalogue's footer uses.
+   *  Nothing is written down anywhere; it is a fact about the last
+   *  ninety seconds and nothing longer.
+   * ---------------------------------------------------------------- */
+  PEEKS.here = (function(){
+    function draw(){
+      var dot = document.getElementById('wg-here-dot');
+      var t = document.getElementById('wg-here-t');
+      if (!t) return;
+      var id = (window.LCId && LCId.id) ? LCId.id() : '';
+      fetch('/api/here?t=' + encodeURIComponent(id))
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          if (!d || !d.ok){ t.textContent = 'cannot tell'; if (dot) dot.className = 'dot cold'; return; }
+          var n = d.here || 0;
+          var others = Math.max(0, n - 1);
+          t.textContent = others === 0 ? 'just you, right now'
+            : others === 1 ? '1 other here right now'
+            : others + ' others here right now';
+          if (dot) dot.className = 'dot' + (others ? '' : ' cold');
+        })
+        .catch(function(){ t.textContent = 'cannot tell'; if (dot) dot.className = 'dot cold'; });
+    }
+    return peekLoop(draw, 45000);
+  })();
+
+  /* ---- the drift layer -------------------------------------------- *
+   *  Not in the rail and not in a box: slow cloud, and stars behind it
+   *  when the wallpaper is a dark one. Decorative, pointer-transparent,
+   *  and it stops dead when the tab is hidden or the switch is off.
+   * ---------------------------------------------------------------- */
+  var drift = (function(){
+    var raf = null, t = 0, stars = [], clouds = [], sized = 0;
+    function build(cv){
+      var W = cv.width, H = cv.height;
+      stars = []; clouds = [];
+      for (var i = 0; i < 60; i++){
+        stars.push({ x: Math.random() * W, y: Math.random() * H * 0.8,
+                     r: 0.6 + Math.random() * 1.2, p: Math.random() * 6.283,
+                     sp: 0.4 + Math.random() * 0.8 });
+      }
+      for (var k = 0; k < 7; k++){
+        clouds.push({ x: Math.random() * W, y: 30 + Math.random() * H * 0.55,
+                      w: 120 + Math.random() * 260, h: 26 + Math.random() * 40,
+                      v: 0.06 + Math.random() * 0.16, a: 0.03 + Math.random() * 0.05 });
+      }
+      sized = W;
+    }
+    function frame(){
+      var cv = document.getElementById('w98-drift');
+      if (!cv || cv.hidden){ raf = null; return; }
+      /* The desktop's visible box: the layer is fixed to the window while
+         the desktop itself is a scrolling surface much taller than it.
+         clientWidth/Height give the area inside any scrollbar and above
+         the taskbar, which is exactly the piece of sky wanted. */
+      var host = cv.parentNode;
+      var w = host.clientWidth, h = host.clientHeight;
+      if (!w || !h){ raf = requestAnimationFrame(frame); return; }
+      if (cv.width !== w || cv.height !== h){
+        cv.width = w; cv.height = h;
+        cv.style.width = w + 'px'; cv.style.height = h + 'px';
+        build(cv);
+      }
+      if (!sized) build(cv);
+      var g = cv.getContext('2d');
+      g.clearRect(0, 0, cv.width, cv.height);
+
+      /* Stars only over a dark wallpaper, where they would actually show.
+         Read off the desk colour rather than guessed, so it follows
+         whatever the visitor has chosen. */
+      var deskCol = getComputedStyle(document.documentElement)
+                      .getPropertyValue('--w98-desk').trim() || '#008080';
+      var lum = 0.5;
+      var m = /^#?([0-9a-f]{6})$/i.exec(deskCol);
+      if (m){
+        var v = parseInt(m[1], 16);
+        lum = (0.2126 * ((v >> 16) & 255) + 0.7152 * ((v >> 8) & 255) + 0.0722 * (v & 255)) / 255;
+      }
+      if (lum < 0.34){
+        for (var i = 0; i < stars.length; i++){
+          var st = stars[i];
+          var tw = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(t * 0.012 * st.sp + st.p));
+          g.beginPath(); g.arc(st.x, st.y, st.r, 0, 6.283);
+          g.fillStyle = 'rgba(255,255,255,' + (tw * 0.55) + ')'; g.fill();
+        }
+      }
+      for (var k = 0; k < clouds.length; k++){
+        var c = clouds[k];
+        c.x += c.v;
+        if (c.x - c.w > cv.width) c.x = -c.w;
+        var grd = g.createRadialGradient(c.x, c.y, 2, c.x, c.y, c.w / 2);
+        grd.addColorStop(0, 'rgba(255,255,255,' + c.a + ')');
+        grd.addColorStop(1, 'rgba(255,255,255,0)');
+        g.fillStyle = grd;
+        g.beginPath(); g.ellipse(c.x, c.y, c.w / 2, c.h, 0, 0, 6.283); g.fill();
+      }
+      t++;
+      raf = requestAnimationFrame(function(){
+        if (document.hidden){ raf = null; setTimeout(function(){ if (!document.hidden) drift.start(); }, 800); return; }
+        frame();
+      });
+    }
+    return {
+      start: function(){ if (!raf) raf = requestAnimationFrame(frame); },
+      stop: function(){
+        if (raf) cancelAnimationFrame(raf); raf = null;
+        var cv = document.getElementById('w98-drift');
+        if (cv && cv.getContext) cv.getContext('2d').clearRect(0, 0, cv.width, cv.height);
+      },
+      running: function(){ return !!raf; }
+    };
+  })();
+
+  /* ---- the switchboard's own rows ---------------------------------- *
+   *  Drawn here rather than in the Display Properties closure, because
+   *  this is where the register of widgets lives and a second copy of it
+   *  over there would be a second copy to keep in step. That closure owns
+   *  the panel; this one owns what goes in this fieldset.
+   * ------------------------------------------------------------------ */
+  function paintWidgetList(){
+    var host = document.getElementById('w98-widgetlist');
+    if (!host) return;
+    host.innerHTML = WG_REG.map(function(w){
+      var on = wgIsOn(w.id);
+      return '<div class="wg-row">' +
+        '<span class="who"><b>' + esc(w.n) + '</b><i>' + esc(w.d) + '</i></span>' +
+        '<button type="button" data-wgid="' + esc(w.id) + '" aria-pressed="' + on + '" ' +
+        'aria-label="' + esc(w.n) + (on ? ' is on' : ' is off') + '">' +
+        (on ? 'On' : 'Off') + '</button></div>';
+    }).join('');
+    paintRoom();
+  }
+
+  /* How much rail is left, said out loud. The column can hold about six of
+     these, and switching on a seventh pushes the last one down behind the
+     taskbar — which looks like a bug rather than a full shelf. Measuring it
+     and saying so is cheaper than inventing a cap, and it leaves the choice
+     where it belongs. */
+  function paintRoom(){
+    var el = document.getElementById('w98-wgroom');
+    if (!el || !wgWrap) return;
+    if (wgFree){
+      el.textContent = 'The widgets have been moved about by hand, so the rail is not holding ' +
+                       'them any more and there is no shelf to run out of.';
+      return;
+    }
+    var r = wgWrap.getBoundingClientRect();
+    var room = Math.round(window.innerHeight - 30 - r.top);
+    var used = Math.round(r.height);
+    var over = used - room;
+    el.textContent = over > 4
+      ? 'The rail is over-full by about ' + over + ' pixels, so the bottom one is behind the ' +
+        'taskbar. Turn something off, or drag them out of the rail.'
+      : 'About ' + Math.max(0, room - used) + ' pixels of rail left.';
+  }
+  (function wireWidgetList(){
+    var host = document.getElementById('w98-widgetlist');
+    if (!host) return;
+    host.addEventListener('click', function(e){
+      var b = e.target.closest ? e.target.closest('[data-wgid]') : null;
+      if (!b) return;
+      wgSet(b.dataset.wgid, b.getAttribute('aria-pressed') !== 'true');
+      /* after a frame, so the rail has actually reflowed before it is measured */
+      requestAnimationFrame(function(){ paintWidgetList(); });
+      var again = host.querySelector('[data-wgid="' + b.dataset.wgid + '"]');
+      if (again) again.focus();
+    });
+  })();
+  // the panel's open event is the cue to make sure the rows are current
+  document.addEventListener('w98:display', function(){ paintWidgetList(); });
+  window.addEventListener('resize', function(){ paintRoom(); });
+
   function startWidgets(){
     if (wgTimer) clearInterval(wgTimer);
     widgetTick();
     wgTimer = setInterval(widgetTick, 1000);
     startLive();
+    wgOnLoad();
+    wgApplyAll();
+    paintWidgetList();
   }
   function stopWidgets(){
     if (wgTimer) clearInterval(wgTimer);
     wgTimer = null;
     stopLive();
+    Object.keys(PEEKS).forEach(function(k){ PEEKS[k].stop(); });
+    drift.stop();
   }
 
   /* ---- the live ornaments ------------------------------------------ *
@@ -5774,6 +6911,8 @@ footer{
 </script>
 
 <script src="/shared/lc-id.js"></script>
+<script src="/shared/lc-species.js"></script>
+<script src="/shared/lc-coil-idle.js"></script>
 <script src="/shared/lc-achievements.js"></script>
 <script src="/shared/lc-achievements-ui.js"></script>
 <script src="/shared/lc-swipe.js"></script>
@@ -6358,6 +7497,13 @@ footer{
     tiles:'48px 24px', weave:'12px 12px', waves:'26px 26px', dawn:'100% 100%'
   };
 
+  /* Two presentations of the same cabinet. Not a pref this closure owns —
+     see the note where it is wired — only the labels for the buttons. */
+  var DENSITY = [
+    { id:'icons',   n:'Icons' },
+    { id:'folders', n:'Folders' }
+  ];
+
   var LAYOUTS = [
     { id:'compact',  n:'Compact',  min:'72px',  gy:'2px',  gx:'0px', size:'26px', label:'10px' },
     { id:'normal',   n:'Normal',   min:'88px',  gy:'6px',  gx:'2px', size:'32px', label:'11px' },
@@ -6672,6 +7818,19 @@ footer{
     var lever = document.getElementById('w98-messy');
     if (lever) lever.setAttribute('aria-pressed',
       document.documentElement.dataset.w98Messy === '1' ? 'true' : 'false');
+
+    /* Same rule as the messy switch: the desktop owns which layout it is
+       in, so this reads the answer back rather than keeping its own copy. */
+    var dens = document.documentElement.dataset.w98Density === 'folders' ? 'folders' : 'icons';
+    var drow = document.getElementById('w98-density');
+    if (drow) drow.innerHTML = DENSITY.map(function(o){
+      return chip(o, o.id === dens);
+    }).join('');
+    var dnote = document.getElementById('w98-densitynote');
+    if (dnote) dnote.textContent = dens === 'folders'
+      ? 'Every drawer filed into one of eight folders. Your own folders and icon ' +
+        'positions are kept, and come back with Icons.'
+      : 'Every drawer loose on the desktop, and any folders you have made yourself.';
   }
 
   function wire(id, key, isIndex){
@@ -6703,6 +7862,21 @@ footer{
     beep('tick');
   });
   wire('w98-sounds', 'sound', false);
+
+  /* The layout switch reports too. Which way the desktop is drawn is the
+     desktop's fact — it is stored with the desktop's own record, not in
+     this panel's prefs — so this asks and then reads the answer back. It
+     is deliberately not in `Restore defaults` either: that button restores
+     the *appearance*, and throwing somebody back to 139 loose icons
+     because they wanted the teal scheme back would be a surprise. */
+  var drow = document.getElementById('w98-density');
+  if (drow) drow.addEventListener('click', function(e){
+    var b = e.target.closest ? e.target.closest('.w98-sw') : null;
+    if (!b) return;
+    document.dispatchEvent(new CustomEvent('w98:density', { detail: { mode: b.dataset.id } }));
+    paint();
+    beep('tick');
+  });
 
   /* ---- tabs ---- */
   var tabs = document.getElementById('w98-dtabs');

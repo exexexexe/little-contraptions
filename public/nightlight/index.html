@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Nightlight</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23090707'/><circle cx='16' cy='16' r='9' fill='%23FFB46A' opacity='.35'/><circle cx='16' cy='16' r='5' fill='%23FFD9A8'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  --void:#090707;
+  --ink:#C8B9A6;
+  --dim:#6E6155;
+  --dimmer:#463E36;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --sans:"Avenir Next",Avenir,"Helvetica Neue",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%;overflow:hidden}
+body{
+  background:var(--void);
+  color:var(--ink);font-family:var(--sans);
+  height:100vh;display:flex;align-items:center;justify-content:center;
+  cursor:default;
+}
+#glow{ position:fixed;inset:0;display:block }
+
+/* Everything but the light fades away if you leave it alone. */
+.chrome{ position:fixed;inset:0;pointer-events:none;transition:opacity 1.4s ease;opacity:1 }
+.chrome.away{ opacity:0 }
+.chrome > *{ pointer-events:auto }
+
+.read{
+  position:fixed;left:0;right:0;bottom:70px;text-align:center;
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.26em;text-transform:uppercase;
+  color:var(--dim);pointer-events:none;line-height:2.2;
+}
+.read b{ color:var(--ink);font-weight:400 }
+
+.dimmer{
+  position:fixed;left:50%;transform:translateX(-50%);bottom:30px;width:min(220px,52vw);
+}
+input[type=range]{ -webkit-appearance:none;appearance:none;width:100%;height:2px;
+  background:rgba(200,185,166,.22);border-radius:2px;outline:none }
+input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none;appearance:none;width:14px;height:14px;
+  border-radius:50%;background:#C8B9A6;cursor:pointer;border:0;opacity:.7 }
+input[type=range]::-moz-range-thumb{ width:14px;height:14px;border-radius:50%;background:#C8B9A6;
+  cursor:pointer;border:0;opacity:.7 }
+input[type=range]:focus-visible{ outline:1px solid #C8B9A6;outline-offset:6px }
+
+.tell{
+  position:fixed;right:16px;top:16px;font-family:var(--mono);font-size:9px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--dimmer);max-width:40vw;text-align:right;line-height:1.9;
+}
+.tell a{ color:var(--dim) }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 var(--mono);
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#090707;background:#C8B9A6;
+  border:1px solid rgba(0,0,0,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;opacity:.55;
+  transition:width .18s ease, background .16s, gap .18s ease, opacity .3s;
+}
+#lc-back:hover{ opacity:1 }
+@media (pointer:coarse){ #lc-back{ width:44px;height:44px } }
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;opacity:1 }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid #C8B9A6;outline-offset:3px }
+</style>
+</head>
+<body>
+
+<canvas id="glow"></canvas>
+
+<div class="chrome" id="chrome">
+  <p class="read" id="read">&nbsp;</p>
+  <div class="dimmer">
+    <input type="range" id="dim" min="4" max="100" value="62" aria-label="How bright">
+  </div>
+  <p class="tell" id="tell">&nbsp;</p>
+  <a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">&larr;</span><span class="w">cabinet</span></a>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  var cv = document.getElementById('glow'), ctx = cv.getContext('2d');
+  function E(id){ return document.getElementById(id); }
+
+  var bright = 0.62;
+  try {
+    var b = parseFloat(localStorage.getItem('lc-nightlight'));
+    if (b >= 0.04 && b <= 1) bright = b;
+  } catch (e) {}
+  E('dim').value = Math.round(bright * 100);
+
+  var sun = null;         /* { sunrise, sunset, place } once it arrives */
+  var W = 0, HH = 0, t = 0;
+
+  function size(){
+    var dpr = Math.min(2, window.devicePixelRatio || 1);
+    W = window.innerWidth; HH = window.innerHeight;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(HH * dpr);
+    cv.style.width = W + 'px'; cv.style.height = HH + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  window.addEventListener('resize', size);
+  size();
+
+  /* ================================================================== *
+   *  Colour temperature to RGB.
+   *
+   *  The standard piecewise approximation to the Planckian locus that
+   *  everybody uses for this (Tanner Helland's fit to Mitchell Charity's
+   *  blackbody table), valid from about 1000 K to 40000 K. It matters that
+   *  this is a real curve rather than a hand-picked gradient: a nightlight
+   *  drifting along the blackbody locus is drifting the way a dimmed
+   *  filament or a setting sun actually does, and hand-picked warm colours
+   *  drift through muddy greens on the way.
+   * ================================================================== */
+  function kelvin(K){
+    K = Math.max(1000, Math.min(40000, K)) / 100;
+    var r, g, b;
+    if (K <= 66) r = 255;
+    else r = 329.698727446 * Math.pow(K - 60, -0.1332047592);
+    if (K <= 66) g = 99.4708025861 * Math.log(K) - 161.1195681661;
+    else g = 288.1221695283 * Math.pow(K - 60, -0.0755148492);
+    if (K >= 66) b = 255;
+    else if (K <= 19) b = 0;
+    else b = 138.5177312231 * Math.log(K - 10) - 305.0447927307;
+    return [
+      Math.max(0, Math.min(255, r)),
+      Math.max(0, Math.min(255, g)),
+      Math.max(0, Math.min(255, b))
+    ];
+  }
+
+  /* ---- where the sun is, if we were told ----------------------------- *
+   *  Open-Meteo gives sunrise and sunset with no key. If that does not
+   *  answer, the drift falls back to a plain clock: warm and low at
+   *  night, palest around the middle of the day. The light never fails
+   *  to a broken state, because a nightlight that fails is not a
+   *  nightlight.
+   * ------------------------------------------------------------------- */
+  function askSun(){
+    fetch('/api/where').then(function(r){ return r.json(); }).then(function(w){
+      if (!w || !w.ok) throw 0;
+      return fetch('https://api.open-meteo.com/v1/forecast?latitude=' + w.lat +
+                   '&longitude=' + w.lon + '&daily=sunrise,sunset&timezone=auto')
+        .then(function(r){ return r.json(); })
+        .then(function(m){
+          if (!m || !m.daily || !m.daily.sunrise) throw 0;
+          sun = {
+            rise: m.daily.sunrise[0],
+            set: m.daily.sunset[0],
+            place: w.city || ''
+          };
+          tell();
+        });
+    }).catch(function(){
+      sun = null;
+      E('tell').innerHTML = 'drifting on the clock<br>(no sun times today)';
+    });
+  }
+
+  function hhmm(iso){ return String(iso || '').slice(11, 16); }
+  function minutesOf(iso){
+    var s = hhmm(iso).split(':');
+    return (+s[0]) * 60 + (+s[1]);
+  }
+  function tell(){
+    if (!sun) return;
+    E('tell').innerHTML = (sun.place ? sun.place + '<br>' : '') +
+      'sunrise ' + hhmm(sun.rise) + ' · sunset ' + hhmm(sun.set);
+  }
+
+  /* 0 at deep night, 1 at the middle of the day, with the transitions
+     sitting on the real sunrise and sunset when we have them */
+  function daylight(){
+    var now = new Date();
+    var mins = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
+    var rise = 6 * 60, set = 18 * 60;
+    if (sun){ rise = minutesOf(sun.rise); set = minutesOf(sun.set); }
+    if (set <= rise){ rise = 6 * 60; set = 18 * 60; }
+
+    var TW = 55;                         /* the softness either side, in minutes */
+    if (mins < rise - TW || mins > set + TW) return 0;
+    if (mins < rise + TW) return smooth((mins - (rise - TW)) / (TW * 2));
+    if (mins > set - TW) return smooth(((set + TW) - mins) / (TW * 2));
+    /* between the two, arch gently to the middle of the day */
+    var mid = (rise + set) / 2, half = (set - rise) / 2;
+    return 0.72 + 0.28 * Math.cos((mins - mid) / half * Math.PI * 0.5);
+  }
+  function smooth(x){ x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x); }
+
+  /* ---- the light ------------------------------------------------------ */
+  function draw(){
+    var d = daylight();
+    /* 1700 K at the bottom of the night, about 4200 K at noon — a warm
+       lamp, never a cold one, because this is a nightlight */
+    var K = 1700 + d * 2500;
+    var c = kelvin(K);
+
+    /* a very slow breath, a little over a minute, so it is alive without
+       ever being something you would notice moving */
+    var breath = 0.94 + 0.06 * Math.sin(t * 0.0016) + 0.02 * Math.sin(t * 0.00061 + 1.3);
+    var amp = bright * (0.28 + d * 0.52) * breath;
+
+    ctx.fillStyle = '#090707';
+    ctx.fillRect(0, 0, W, HH);
+
+    var cx = W / 2 + Math.sin(t * 0.00042) * W * 0.035;
+    var cy = HH / 2 + Math.cos(t * 0.00035) * HH * 0.045;
+    var R = Math.max(W, HH) * (0.52 + 0.05 * Math.sin(t * 0.00075));
+
+    var g = ctx.createRadialGradient(cx, cy, 0, cx, cy, R);
+    g.addColorStop(0,    'rgba(' + (c[0]|0) + ',' + (c[1]|0) + ',' + (c[2]|0) + ',' + (amp) + ')');
+    g.addColorStop(0.28, 'rgba(' + (c[0]|0) + ',' + (c[1]|0) + ',' + (c[2]|0) + ',' + (amp * 0.46) + ')');
+    g.addColorStop(0.62, 'rgba(' + (c[0]*0.72|0) + ',' + (c[1]*0.52|0) + ',' + (c[2]*0.45|0) + ',' + (amp * 0.15) + ')');
+    g.addColorStop(1,    'rgba(0,0,0,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, HH);
+
+    /* a second, smaller core so the middle has somewhere to be */
+    var g2 = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * 0.22);
+    g2.addColorStop(0, 'rgba(255,' + Math.min(255, c[1] + 40 | 0) + ',' + Math.min(255, c[2] + 50 | 0) + ',' + (amp * 0.42) + ')');
+    g2.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g2;
+    ctx.fillRect(0, 0, W, HH);
+
+    var words = d < 0.04 ? 'night' : d < 0.3 ? 'first light' : d < 0.62 ? 'morning' :
+                d < 0.95 ? 'day' : 'full day';
+    E('read').innerHTML = '<b>' + Math.round(K) + ' K</b> · ' + words;
+
+    t++;
+  }
+
+  var raf;
+  function loop(){
+    if (!document.hidden) draw();
+    raf = requestAnimationFrame(loop);
+  }
+  loop();
+
+  E('dim').addEventListener('input', function(){
+    bright = this.value / 100;
+    try { localStorage.setItem('lc-nightlight', String(bright)); } catch (e) {}
+    wake();
+  });
+
+  /* everything but the light gets out of the way after a while */
+  var idle = null;
+  function wake(){
+    E('chrome').className = 'chrome';
+    clearTimeout(idle);
+    idle = setTimeout(function(){ E('chrome').className = 'chrome away'; }, 5200);
+  }
+  ['pointermove','pointerdown','keydown','wheel','touchstart'].forEach(function(ev){
+    window.addEventListener(ev, wake, { passive: true });
+  });
+  wake();
+
+  askSun();
+  /* the sun times are for today; pick up tomorrow's if anyone leaves it on */
+  setInterval(askSun, 6 * 60 * 60 * 1000);
+
+  window.__nightlight = {
+    daylight: daylight,
+    kelvin: kelvin,
+    sun: function(){ return sun; },
+    bright: function(){ return bright; },
+    /* pretend it is another time of day, to see the whole drift */
+    at: function(h, m){
+      var real = Date.prototype.getHours, realM = Date.prototype.getMinutes;
+      Date.prototype.getHours = function(){ return h; };
+      Date.prototype.getMinutes = function(){ return m || 0; };
+      var d = daylight(), K = 1700 + d * 2500;
+      Date.prototype.getHours = real; Date.prototype.getMinutes = realM;
+      return { daylight: +d.toFixed(3), kelvin: Math.round(K), rgb: kelvin(K).map(Math.round) };
+    }
+  };
+})();
+</script>
+</body>
+</html>

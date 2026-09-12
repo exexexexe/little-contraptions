@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Comfort Jar</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23F7EFEC'/><path d='M11 6h10v3l2 3v13a2 2 0 0 1-2 2H11a2 2 0 0 1-2-2V12l2-3z' fill='none' stroke='%236B4A52' stroke-width='1.6'/><rect x='11.5' y='16' width='4' height='3' rx='.6' fill='%23D98C96'/><rect x='16.5' y='20' width='4' height='3' rx='.6' fill='%23E8B4A0'/><rect x='12' y='21' width='4' height='3' rx='.6' fill='%23C9A2C4'/></svg>">
+<style>
+:root{ color-scheme: light; }
+:root{
+  /* Blush and dusty rose. The softest thing in the cabinet, and the only
+     drawer that is mostly an italic. */
+  --blush:#F7EFEC;
+  --blush-2:#EFE2DE;
+  --ink:#4A3138;
+  --ink-2:#6B4A52;
+  --dim:#9B7A80;
+  --dimmer:#C2A5A8;
+  --rose:#D98C96;
+  --peach:#E8B4A0;
+  --lilac:#C9A2C4;
+  --sage:#A8BCA1;
+  --line:#E2CFCB;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Hoefler Text",Georgia,serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;min-height:100%}
+body{
+  background:var(--blush);
+  background-image:
+    radial-gradient(ellipse at 50% 0%, rgba(255,255,255,.9), transparent 55%),
+    radial-gradient(circle at 18% 72%, rgba(217,140,150,.07), transparent 42%);
+  color:var(--ink);font-family:var(--serif);
+  min-height:100vh;padding:28px 16px 84px;
+  display:flex;flex-direction:column;align-items:center;
+}
+.wrap{ width:min(640px,100%);display:flex;flex-direction:column;align-items:center }
+
+h1{ font-size:clamp(23px,5.2vw,31px);font-weight:400;margin:0 0 8px;text-align:center;letter-spacing:.01em }
+.tagline{ font-size:14px;line-height:1.8;color:var(--dim);margin:0 0 24px;text-align:center;
+  max-width:40ch;font-style:italic }
+
+.jarwrap{ position:relative;width:min(320px,72vw) }
+.jarwrap canvas{ display:block;width:100%;height:auto;cursor:pointer }
+.jarwrap canvas:focus-visible{ outline:2px solid var(--rose);outline-offset:6px;border-radius:8px }
+
+/* ---- the note --------------------------------------------------------- */
+.note{
+  width:100%;margin-top:26px;position:relative;
+  background:#FFFBF8;border:1px solid var(--line);border-radius:2px;
+  padding:34px 32px;text-align:center;
+  box-shadow:0 8px 22px rgba(120,80,80,.10);
+  opacity:0;transform:translateY(-8px) scale(.985);
+  transition:opacity .5s ease, transform .5s cubic-bezier(.2,.8,.3,1);
+}
+.note.on{ opacity:1;transform:none }
+/* the creases it was folded along */
+.note::before, .note::after{
+  content:'';position:absolute;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(180,140,140,.22) 12%,rgba(180,140,140,.22) 88%,transparent);
+  pointer-events:none;
+}
+.note::before{ top:33.33% } .note::after{ top:66.66% }
+.note p{ margin:0;font-size:clamp(17px,3.6vw,20.5px);line-height:1.75;font-style:italic;color:var(--ink) }
+@media (max-width:520px){ .note{ padding:26px 20px } }
+
+.meta{ margin-top:14px;text-align:center;font-family:var(--mono);font-size:9px;
+  letter-spacing:.22em;text-transform:uppercase;color:var(--dimmer);line-height:2 }
+
+.bar{ display:flex;gap:9px;margin-top:18px;justify-content:center;width:100% }
+.bar button{
+  font:inherit;font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;
+  cursor:pointer;background:transparent;color:var(--dim);border:1px solid var(--line);
+  border-radius:999px;padding:10px 18px;transition:border-color .15s,color .15s;
+}
+.bar button:hover{ border-color:var(--rose);color:var(--ink-2) }
+.bar button:focus-visible{ outline:2px solid var(--rose);outline-offset:2px }
+.bar button[hidden]{ display:none }
+
+/* ---- the ones you have had ------------------------------------------- */
+.kept{ width:100%;margin-top:26px;display:none }
+.kept.on{ display:block }
+.kept h2{ font-family:var(--mono);font-size:9px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--dimmer);font-weight:400;margin:0 0 12px;text-align:center }
+.kept ul{ list-style:none;margin:0;padding:0 }
+.kept li{ font-size:14px;line-height:1.7;font-style:italic;color:var(--ink-2);
+  padding:10px 0;border-top:1px solid var(--line) }
+.kept li span{ display:block;font-family:var(--mono);font-style:normal;font-size:8.5px;
+  letter-spacing:.18em;text-transform:uppercase;color:var(--dimmer);margin-bottom:4px }
+
+.book{ margin-top:28px;padding-top:20px;border-top:1px solid var(--line);font-size:13.5px;
+  line-height:1.9;color:var(--ink-2);width:100% }
+.book p{ margin:0 0 12px } .book p:last-child{ margin:0 }
+.book b{ color:var(--ink);font-weight:600 }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 var(--mono);
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#fff;background:var(--rose);
+  border:1px solid rgba(0,0,0,.1);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  box-shadow:0 5px 16px rgba(217,140,150,.4);
+  transition:width .18s ease, background .16s, gap .18s ease;
+}
+@media (pointer:coarse){ #lc-back{ width:44px;height:44px } }
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:#C5757F }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid var(--ink);outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>The Comfort Jar</h1>
+<p class="tagline">One folded note a day. Nothing to solve, nothing to get right, and no reason
+  to hurry back.</p>
+
+<div class="jarwrap">
+  <canvas id="jar" width="640" height="760" tabindex="0"
+          role="button" aria-label="A jar of folded notes. Take one."></canvas>
+</div>
+
+<div class="note" id="note"><p id="note-text">&nbsp;</p></div>
+<p class="meta" id="meta">&nbsp;</p>
+
+<div class="bar">
+  <button type="button" id="btn-kept" hidden>The ones you have had</button>
+</div>
+
+<div class="kept" id="kept">
+  <h2>Already unfolded</h2>
+  <ul id="kept-list"></ul>
+</div>
+
+<div class="book">
+  <p><b>These were written for this jar.</b> Nowhere else in the cabinet does that &mdash;
+  everything else here that states something is sourced, checked and linked, and inventing the
+  content would be the whole problem. This drawer is the one exception, and deliberately so: a
+  reassurance is not a fact, it has no source to cite, and a quotation lifted off the internet
+  and misattributed would be exactly the failure the rest of the cabinet is built to avoid. So
+  none of these is attributed to anybody, because nobody else said them.</p>
+  <p><b>One a day, decided by the date.</b> Everyone opening the jar on the same day gets the
+  same note, and it changes at your own midnight rather than somebody else's. The jar does not
+  run out &mdash; it comes round again eventually, and a note you have had before is not a fault.</p>
+  <p>What you have already unfolded is kept in this browser and nowhere else. There is no
+  account, nothing is sent anywhere, and clearing your browser data is the only thing that
+  empties it.</p>
+</div>
+
+</div>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">&larr;</span><span class="w">cabinet</span></a>
+
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  /* ================================================================== *
+   *  The notes. Written for this jar and attributed to nobody, because
+   *  nobody else said them. The register is deliberately quiet — closer
+   *  to something a friend would actually say than to a poster.
+   * ================================================================== */
+  var NOTES = [
+    'You are allowed to find this harder than other people seem to.',
+    'Nothing has to be decided today.',
+    'The version of you that got through last year would be impressed by this one.',
+    'Being tired is a reason. It does not have to be a good enough reason.',
+    'You can put it down and pick it up again. It will still be yours.',
+    'Somebody would be glad to hear from you, and is not expecting you to be interesting.',
+    'You have not wasted the day. Days are not the sort of thing that can be wasted.',
+    'It is fine to have needed the whole morning to start.',
+    'The thing you are dreading is usually smaller once it has a shape.',
+    'Nobody is keeping the score you think they are keeping.',
+    'You are permitted to change your mind about something you were sure of.',
+    'Rest is not the reward for finishing. It is part of how the finishing happens.',
+    'You do not have to want to. You can just do a small part of it anyway, and stop.',
+    'Whatever you did not get to is still there. That is the good news, not the bad.',
+    'There is no correct pace, and nobody has been given the real one.',
+    'You are not behind. There is no line.',
+    'The room being untidy is not a statement about you.',
+    'It is alright to be looking forward to going to bed. That is a plan, not a failure.',
+    'You have survived every single one of your worst days so far.',
+    'Some things only get easier by being done badly a few times first.',
+    'You are allowed to not have an opinion on it.',
+    'The feeling will move. It always has, even when it did not seem to be going to.',
+    'It was brave to try that, and it stays brave whether or not it worked.',
+    'Drink some water. That is all. That is the whole note.',
+    'You can leave early.',
+    'Not everything you carry is yours to carry.',
+    'Nobody remembers the thing you are still embarrassed about.',
+    'Small and kept is better than large and abandoned.',
+    'You are not too much. You may simply be near somebody with a smaller cup.',
+    'Being unsure is an honest place to stand, and you are allowed to stand there a while.',
+    'The days you do not remember were still days you lived.',
+    'You are allowed to want something without having earned it first.',
+    'If it helps, none of them know what they are doing either.',
+    'Go outside for four minutes. It is a stupidly effective trick and it keeps working.',
+    'The hard part is nearly always starting, and you have started before.',
+    'You are not the worst thing you have ever done.',
+    'Let it be a draft.',
+    'Somebody has thought about you kindly today without telling you.',
+    'You do not have to perform being fine for people who love you.',
+    'It is not too late, and it is also alright if it is.',
+    'You can want to go home even when you are home. That is not a sign of anything.',
+    'Half of it done is half of it done.',
+    'The standard you are holding yourself to was not agreed with anybody.',
+    'You are allowed to be proud of something nobody else noticed.',
+    'Try the easiest one first. It is not cheating.',
+    'A quiet life is a real answer, not a consolation prize.',
+    'Whatever you are putting off will take less time than you have spent dreading it.',
+    'You are allowed to be a beginner at something at any age at all.',
+    'Not every feeling needs to be understood. Some just need to be waited out.',
+    'The care you give other people is also a description of what you deserve.',
+    'You did not imagine it, and you were not being dramatic.',
+    'Today can be a maintenance day. Those count.',
+    'You can say "I need a minute" and then take rather more than a minute.',
+    'Things you enjoy do not have to be good for you or good at.',
+    'There is no test at the end of this.',
+    'It is enough to have been kind once today.',
+    'You are allowed to keep something just because you like it.',
+    'The future you is not waiting to be disappointed. They are on your side.',
+    'Asking was the hard part and you already did it.',
+    'You can start again on a Wednesday. It does not have to be a Monday, or a January.',
+    'Some days the win is simply that it is now the evening.',
+    'You are doing a difficult thing in an ordinary way, which is the only way anybody does it.',
+    'Nothing in this jar is a task.'
+  ];
+
+  var KEY = 'lc-comfort-jar';
+  var cv = document.getElementById('jar'), ctx = cv.getContext('2d');
+  var W = cv.width, H = cv.height;
+  function E(id){ return document.getElementById(id); }
+
+  var state = { last: null, seen: [] };
+  try {
+    var raw = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (raw && Array.isArray(raw.seen)) state = { last: raw.last || null, seen: raw.seen.slice(0, 400) };
+  } catch (e) {}
+  function save(){ try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+
+  /* the day, at the visitor's own midnight */
+  function dayNumber(){
+    var n = new Date();
+    var l = new Date(n.getFullYear(), n.getMonth(), n.getDate());
+    return Math.floor(l.getTime() / 86400000 - l.getTimezoneOffset() / 1440);
+  }
+  /* Spread the days across the jar rather than walking the list in order,
+     so consecutive days are not neighbours on the page. 23 is coprime with
+     63, so every note comes up before any repeats. */
+  function indexFor(day){
+    var n = NOTES.length;
+    var stride = 23 % n === 0 ? 1 : 23;
+    return (((day * stride) % n) + n) % n;
+  }
+  function dateKey(){
+    var n = new Date();
+    return n.getFullYear() + '-' + String(n.getMonth() + 1).padStart(2, '0') + '-' +
+           String(n.getDate()).padStart(2, '0');
+  }
+
+  /* ---- the jar ------------------------------------------------------- */
+  var TONES = ['#D98C96','#E8B4A0','#C9A2C4','#A8BCA1','#E6C98A','#B6AEDA','#E3A6AE'];
+  var slips = [];
+  function fillJar(){
+    slips = [];
+    var rnd = (function(){ var s = 20250912; return function(){
+      s ^= s << 13; s >>>= 0; s ^= s >> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; }; })();
+    for (var i = 0; i < 46; i++){
+      slips.push({
+        x: 0.16 + rnd() * 0.68,
+        y: 0.40 + rnd() * 0.52,
+        w: 0.10 + rnd() * 0.075,
+        h: 0.038 + rnd() * 0.028,
+        a: (rnd() - .5) * 1.5,
+        c: TONES[Math.floor(rnd() * TONES.length)]
+      });
+    }
+    slips.sort(function(a, b){ return a.y - b.y; });
+  }
+
+  var lift = 0, t = 0;
+
+  function draw(){
+    ctx.clearRect(0, 0, W, H);
+    var jx = W * 0.13, jw = W * 0.74;
+    var jy = H * 0.18, jh = H * 0.74;
+
+    /* the shelf shadow */
+    ctx.beginPath();
+    ctx.ellipse(W / 2, jy + jh + 8, jw * 0.52, 16, 0, 0, 6.283);
+    ctx.fillStyle = 'rgba(150,110,110,.16)'; ctx.fill();
+
+    /* glass body */
+    ctx.beginPath();
+    ctx.moveTo(jx, jy + 40);
+    ctx.quadraticCurveTo(jx, jy + jh, jx + jw * 0.16, jy + jh);
+    ctx.lineTo(jx + jw * 0.84, jy + jh);
+    ctx.quadraticCurveTo(jx + jw, jy + jh, jx + jw, jy + 40);
+    ctx.lineTo(jx + jw, jy + 26);
+    ctx.lineTo(jx, jy + 26);
+    ctx.closePath();
+    var g = ctx.createLinearGradient(jx, 0, jx + jw, 0);
+    g.addColorStop(0, 'rgba(226,236,232,.72)');
+    g.addColorStop(.28, 'rgba(246,250,248,.42)');
+    g.addColorStop(.72, 'rgba(226,236,232,.46)');
+    g.addColorStop(1, 'rgba(206,220,216,.70)');
+    ctx.fillStyle = g; ctx.fill();
+    ctx.save(); ctx.clip();
+
+    /* the notes inside */
+    slips.forEach(function(s, i){
+      var bob = Math.sin(t * 0.008 + i) * 1.4;
+      var sx = jx + s.x * jw, sy = jy + s.y * jh + bob;
+      ctx.save();
+      ctx.translate(sx, sy);
+      ctx.rotate(s.a);
+      var sw = jw * s.w, sh = jh * s.h;
+      ctx.fillStyle = s.c;
+      ctx.beginPath(); ctx.roundRect(-sw / 2, -sh / 2, sw, sh, 3); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,.42)';
+      ctx.fillRect(-sw / 2, -sh / 2, sw, sh * 0.3);
+      ctx.strokeStyle = 'rgba(90,60,60,.16)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.roundRect(-sw / 2, -sh / 2, sw, sh, 3); ctx.stroke();
+      ctx.restore();
+    });
+    ctx.restore();
+
+    /* the one coming out, if one is */
+    if (lift > 0){
+      var ly = jy + 30 - lift * 120;
+      ctx.save();
+      ctx.translate(W / 2, ly);
+      ctx.rotate(Math.sin(lift * 5) * 0.14);
+      var lw = jw * 0.20, lh = jh * 0.062;
+      ctx.shadowColor = 'rgba(120,80,80,.3)'; ctx.shadowBlur = 12; ctx.shadowOffsetY = 4;
+      ctx.fillStyle = '#FFFBF8';
+      ctx.beginPath(); ctx.roundRect(-lw / 2, -lh / 2, lw, lh, 3); ctx.fill();
+      ctx.shadowColor = 'transparent';
+      ctx.strokeStyle = 'rgba(180,140,140,.4)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(-lw / 2, 0); ctx.lineTo(lw / 2, 0); ctx.stroke();
+      ctx.restore();
+    }
+
+    /* glass highlights and the rim */
+    ctx.fillStyle = 'rgba(255,255,255,.55)';
+    ctx.fillRect(jx + jw * 0.10, jy + 44, 9, jh * 0.72);
+    ctx.fillStyle = 'rgba(255,255,255,.28)';
+    ctx.fillRect(jx + jw * 0.86, jy + 54, 5, jh * 0.6);
+
+    /* lid */
+    ctx.beginPath();
+    ctx.roundRect(jx - 8, jy - 6, jw + 16, 36, 6);
+    var lg = ctx.createLinearGradient(jx, 0, jx + jw, 0);
+    lg.addColorStop(0, '#B99098'); lg.addColorStop(.4, '#E0B9BE'); lg.addColorStop(1, '#A97F88');
+    ctx.fillStyle = lg; ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.3)';
+    ctx.fillRect(jx - 4, jy - 2, jw + 8, 6);
+    /* a paper label */
+    ctx.save();
+    ctx.translate(W / 2, jy + jh * 0.30);
+    ctx.rotate(-0.018);
+    ctx.fillStyle = 'rgba(255,252,248,.88)';
+    ctx.beginPath(); ctx.roundRect(-jw * 0.30, -34, jw * 0.60, 68, 4); ctx.fill();
+    ctx.strokeStyle = 'rgba(180,140,140,.35)'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.fillStyle = '#9B7A80';
+    ctx.font = 'italic 25px "Iowan Old Style", Palatino, Georgia, serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('for when', 0, -4);
+    ctx.fillText('you need one', 0, 25);
+    ctx.restore();
+    ctx.textAlign = 'left';
+
+    t++;
+    if (lift > 0 && lift < 1) lift = Math.min(1, lift + 0.045);
+  }
+
+  /* ---- taking one ---------------------------------------------------- */
+  function present(i, replay){
+    E('note-text').textContent = NOTES[i];
+    E('note').className = 'note';
+    void E('note').offsetWidth;
+    E('note').className = 'note on';
+    E('meta').innerHTML = 'note ' + (i + 1) + ' of ' + NOTES.length +
+      ' &nbsp;·&nbsp; ' + (replay ? 'today&rsquo;s note' : 'unfolded just now') +
+      '<br>another one tomorrow';
+    paintKept();
+  }
+
+  function take(){
+    var day = dayNumber(), i = indexFor(day), today = dateKey();
+    var replay = state.last === today;
+    if (!replay){
+      state.last = today;
+      if (state.seen.indexOf(i) < 0) state.seen.push(i);
+      save();
+    }
+    lift = 0.001;
+    cue();
+    setTimeout(function(){ present(i, replay); }, 420);
+  }
+
+  function paintKept(){
+    var btn = E('btn-kept');
+    btn.hidden = state.seen.length < 2;
+    E('kept-list').innerHTML = state.seen.slice().reverse().map(function(i){
+      return '<li><span>no. ' + (i + 1) + '</span>' + NOTES[i] + '</li>';
+    }).join('');
+  }
+  E('btn-kept').addEventListener('click', function(){
+    var k = E('kept');
+    var on = k.className.indexOf('on') >= 0;
+    k.className = on ? 'kept' : 'kept on';
+    this.textContent = on ? 'The ones you have had' : 'Put them away';
+  });
+
+  function cue(){
+    if (!window.LCSound) return;
+    LCSound.play(function(A){
+      /* a lid, and paper */
+      A.burst('white', { type:'bandpass', freq: 2600, q: 4, dur: 0.05, level: A.cap(0.035) });
+      A.burst('pink', { at: 0.12, type:'highpass', freq: 3200, dur: 0.22,
+                        level: A.cap(0.022), attack: 0.05 });
+      A.blip(A.note(4), { at: 0.16, type:'sine', dur: 0.5, level: A.cap(0.028), reverb: true });
+    });
+  }
+
+  cv.addEventListener('click', take);
+  cv.addEventListener('keydown', function(e){
+    if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); take(); }
+  });
+
+  fillJar();
+  paintKept();
+  (function loop(){ if (!document.hidden) draw(); requestAnimationFrame(loop); })();
+  if (window.LCSound) LCSound.mount();
+
+  window.__jar = {
+    notes: NOTES,
+    count: NOTES.length,
+    day: dayNumber,
+    indexFor: indexFor,
+    today: function(){ return NOTES[indexFor(dayNumber())]; },
+    take: take,
+    seen: function(){ return state.seen.slice(); },
+    /* prove the whole jar is reachable before anything repeats */
+    cycle: function(days){
+      var out = {}, n = days || NOTES.length;
+      for (var d = 0; d < n; d++) out[indexFor(d)] = (out[indexFor(d)] || 0) + 1;
+      return { distinct: Object.keys(out).length, of: NOTES.length };
+    }
+  };
+})();
+</script>
+<style>
+@keyframes lcf-unroll{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.lc-flourish{animation:lcf-unroll .5s ease both}
+@media (prefers-reduced-motion: reduce){ .lc-flourish{animation:none} }
+</style>
+</body>
+</html>

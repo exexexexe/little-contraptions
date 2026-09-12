@@ -1,0 +1,862 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kintsugi Mender</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23191A22'/><path d='M5 12h22l-4 13H9z' fill='%23E6DFD0'/><path d='M16 12l-2 13M16 18l6-6M16 20l-5 5' stroke='%23D4A828' stroke-width='1.7' fill='none' stroke-linecap='round'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  /* Lacquer and gold. Nothing else in the cabinet is this dark with this
+     much warmth in the highlight. */
+  --lacquer:#191A22;
+  --lacquer-2:#22232E;
+  --ink:#EDE7DA;
+  --ink-2:#B6AF9F;
+  --dim:#807A6C;
+  --dimmer:#5B5648;
+  --gold:#D4A828;
+  --gold-2:#F0CE68;
+  --gold-3:#8A6A16;
+  --clay:#E6DFD0;
+  --line:#33343F;
+  /* A Mincho serif: brush-cut, and nothing else here uses it. */
+  --serif:"Hiragino Mincho ProN","Yu Mincho","Songti SC","Source Han Serif",Georgia,"Times New Roman",serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;min-height:100%}
+body{
+  background:var(--lacquer);
+  background-image:
+    radial-gradient(ellipse at 50% 18%, rgba(212,168,40,.09), transparent 62%),
+    linear-gradient(180deg,#1D1E28 0%,#141520 100%);
+  color:var(--ink);font-family:var(--serif);
+  min-height:100vh;padding:26px 16px 84px;
+  display:flex;flex-direction:column;align-items:center;
+}
+.wrap{ width:min(760px,100%);display:flex;flex-direction:column;align-items:center }
+
+h1{ font-size:clamp(21px,4.8vw,28px);font-weight:400;margin:0 0 6px;letter-spacing:.06em;text-align:center }
+.tagline{ font-size:14px;line-height:1.75;color:var(--dim);margin:0 0 18px;text-align:center;max-width:44ch }
+
+.stage{
+  position:relative;width:100%;
+  background:radial-gradient(ellipse at 50% 34%, #262735 0%, #16171F 72%);
+  border:1px solid var(--line);border-radius:3px;
+  box-shadow:0 18px 44px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.05);
+  overflow:hidden;
+}
+.stage canvas{ display:block;width:100%;height:auto;touch-action:none;cursor:crosshair }
+.stage.whole canvas{ cursor:pointer }
+.stage.gild canvas{ cursor:none }
+.phase{
+  position:absolute;left:13px;top:11px;
+  font-family:var(--mono);font-size:9px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--dimmer);pointer-events:none;
+}
+.mark{
+  position:absolute;right:13px;bottom:12px;
+  font-family:var(--serif);font-size:20px;color:rgba(212,168,40,.30);pointer-events:none;
+}
+
+.meter{
+  width:100%;display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));
+  gap:1px;background:var(--line);border:1px solid var(--line);margin-top:16px;border-radius:3px;overflow:hidden;
+}
+.meter div{ background:#1E1F29;padding:11px 8px;text-align:center }
+.meter .k{ display:block;font-family:var(--mono);font-size:8.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--dimmer);margin-bottom:5px }
+.meter .v{ font-size:17px;color:var(--ink) }
+.meter .v small{ font-size:11px;color:var(--dim) }
+.meter .v.au{ color:var(--gold-2) }
+
+.bar{ display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;justify-content:center;width:100% }
+.bar button{
+  font:inherit;font-family:var(--serif);font-size:14.5px;cursor:pointer;letter-spacing:.03em;
+  background:#23242F;color:var(--ink);border:1px solid var(--line);border-radius:3px;
+  padding:9px 18px;transition:border-color .15s,background .15s,color .15s;
+}
+.bar button:hover:not(:disabled){ border-color:var(--gold-3);color:var(--gold-2) }
+.bar button:disabled{ opacity:.35;cursor:default }
+.bar button:focus-visible{ outline:2px solid var(--gold);outline-offset:2px }
+.bar button.gold{ border-color:var(--gold-3);color:var(--gold-2) }
+.bar button.gold:hover:not(:disabled){ background:#2C2716 }
+
+.said{
+  margin-top:15px;text-align:center;font-size:14.5px;line-height:1.8;color:var(--ink-2);
+  min-height:3.4em;max-width:50ch;
+}
+.said em{ color:var(--gold-2);font-style:normal }
+
+.book{ margin-top:26px;padding-top:19px;border-top:1px solid var(--line);font-size:14px;line-height:1.85;color:var(--ink-2);width:100% }
+.book p{ margin:0 0 12px } .book p:last-child{ margin:0 }
+.book b{ color:var(--ink);font-weight:600 }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 var(--mono);
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:var(--lacquer);background:var(--gold);
+  border:1px solid rgba(0,0,0,.35);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  box-shadow:0 5px 18px rgba(0,0,0,.5);
+  transition:width .18s ease, background .16s, gap .18s ease;
+}
+@media (pointer:coarse){ #lc-back{ width:44px;height:44px } }
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:var(--gold-2) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid var(--gold-2);outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Kintsugi Mender</h1>
+<p class="tagline">Break it on purpose. Put it back. Then run gold down every crack, so that the
+  breaking is the most beautiful thing about it.</p>
+
+<div class="stage whole" id="stage">
+  <canvas id="cv" width="1000" height="720"></canvas>
+  <div class="phase" id="phase">whole</div>
+  <div class="mark">金継ぎ</div>
+</div>
+
+<div class="meter">
+  <div><span class="k">pieces</span><span class="v" id="m-pieces">&mdash;</span></div>
+  <div><span class="k">back in place</span><span class="v" id="m-placed">&mdash;</span></div>
+  <div><span class="k">seams gilded</span><span class="v au" id="m-gold">&mdash;</span></div>
+  <div><span class="k">bowls mended</span><span class="v" id="m-done">0</span></div>
+</div>
+
+<div class="bar">
+  <button type="button" id="btn-smash">Break it</button>
+  <button type="button" id="btn-gather" disabled>Gather the pieces</button>
+  <button type="button" class="gold" id="btn-gild" disabled>Take up the gold</button>
+  <button type="button" id="btn-again" disabled>A new bowl</button>
+</div>
+
+<p class="said" id="said">&nbsp;</p>
+
+<div class="book">
+  <p><b>Kintsugi is a real repair, not a metaphor somebody invented later.</b> Japanese lacquerers
+  have mended broken ceramics with <i>urushi</i> lacquer dusted with powdered gold since around the
+  fifteenth century. The join is deliberately not hidden. A mended bowl is worth keeping precisely
+  because you can see where it went, and how carefully somebody brought it back.</p>
+  <p><b>The pieces here are real Voronoi cells, which is why the seams fit.</b> The bowl is a convex
+  outline; a scatter of points is dropped into it, weighted towards wherever you struck it; and each
+  shard is the outline clipped against the perpendicular bisector between its own point and every
+  other one. Two neighbouring cells therefore share an <i>exact</i> edge rather than two edges that
+  nearly meet &mdash; so when the gold goes down the crack it goes down one line, not a gap.</p>
+  <p>Drop a piece near where it belongs and it will settle itself the rest of the way. There is no
+  timer, no score and nothing you can do wrong &mdash; and when it is whole again you can break it
+  once more, which is the only thing this drawer is for.</p>
+</div>
+
+</div>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">&larr;</span><span class="w">cabinet</span></a>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  var HAVE = typeof Matter !== 'undefined';
+  var KEY = 'lc-kintsugi';
+  var cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+  var W = cv.width, H = cv.height;
+  var FLOOR = H - 26;
+
+  var mended = 0;
+  try {
+    var raw = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (raw && typeof raw.mended === 'number') mended = raw.mended;
+  } catch (e) {}
+  function save(){ try { localStorage.setItem(KEY, JSON.stringify({ mended: mended })); } catch (e) {} }
+
+  function E(id){ return document.getElementById(id); }
+  function say(s){ E('said').innerHTML = s || '&nbsp;'; }
+
+  /* ================================================================== *
+   *  The bowl.
+   *
+   *  Deliberately CONVEX. The shattering below clips the outline against
+   *  half-planes, and half-plane clipping is only well behaved when the
+   *  shape being cut is convex — a concave silhouette (a vase with a
+   *  waist, say) comes back with spurious edges joining the parts. A tea
+   *  bowl is convex anyway, so the constraint costs nothing.
+   * ================================================================== */
+  var CX = W / 2, RIM_Y = H * 0.30, FOOT_Y = H * 0.72;
+  var RIM_W = 232, FOOT_W = 88;
+
+  function bowlPoly(){
+    var p = [], i, t;
+    /* left side: rim down to foot, bulging outward, which keeps it convex */
+    for (i = 0; i <= 16; i++){
+      t = i / 16;
+      var lx = quad(-RIM_W, -RIM_W - 34, -FOOT_W, t);
+      var ly = quad(RIM_Y, (RIM_Y + FOOT_Y) / 2 + 16, FOOT_Y, t);
+      p.push({ x: CX + lx, y: ly });
+    }
+    /* the foot */
+    p.push({ x: CX + FOOT_W, y: FOOT_Y });
+    /* right side back up */
+    for (i = 16; i >= 0; i--){
+      t = i / 16;
+      var rx = quad(RIM_W, RIM_W + 34, FOOT_W, t);
+      var ry = quad(RIM_Y, (RIM_Y + FOOT_Y) / 2 + 16, FOOT_Y, t);
+      p.push({ x: CX + rx, y: ry });
+    }
+    /* dedupe the two foot corners that the loops both produce */
+    return p.filter(function(q, i2, arr){
+      var prev = arr[(i2 - 1 + arr.length) % arr.length];
+      return Math.hypot(q.x - prev.x, q.y - prev.y) > 0.5;
+    });
+  }
+  function quad(a, b, c, t){
+    var u = 1 - t;
+    return u * u * a + 2 * u * t * b + t * t * c;
+  }
+
+  var BOWL = bowlPoly();
+
+  /* ---- geometry helpers -------------------------------------------- */
+  function inPoly(p, poly){
+    var inside = false;
+    for (var i = 0, j = poly.length - 1; i < poly.length; j = i++){
+      var a = poly[i], b = poly[j];
+      if (((a.y > p.y) !== (b.y > p.y)) &&
+          (p.x < (b.x - a.x) * (p.y - a.y) / (b.y - a.y) + a.x)) inside = !inside;
+    }
+    return inside;
+  }
+  function polyArea(poly){
+    var s = 0;
+    for (var i = 0, j = poly.length - 1; i < poly.length; j = i++)
+      s += (poly[j].x + poly[i].x) * (poly[j].y - poly[i].y);
+    return Math.abs(s / 2);
+  }
+  function centroid(poly){
+    var a = 0, cx = 0, cy = 0;
+    for (var i = 0, j = poly.length - 1; i < poly.length; j = i++){
+      var f = poly[j].x * poly[i].y - poly[i].x * poly[j].y;
+      a += f; cx += (poly[j].x + poly[i].x) * f; cy += (poly[j].y + poly[i].y) * f;
+    }
+    a *= 0.5;
+    if (Math.abs(a) < 1e-9){
+      var sx = 0, sy = 0;
+      poly.forEach(function(q){ sx += q.x; sy += q.y; });
+      return { x: sx / poly.length, y: sy / poly.length };
+    }
+    return { x: cx / (6 * a), y: cy / (6 * a) };
+  }
+  /* Sutherland–Hodgman against one half-plane: keep everything on the
+     near side of the bisector between two seeds. */
+  function clipHalf(poly, mx, my, nx, ny){
+    var out = [];
+    for (var i = 0; i < poly.length; i++){
+      var a = poly[i], b = poly[(i + 1) % poly.length];
+      var da = (a.x - mx) * nx + (a.y - my) * ny;
+      var db = (b.x - mx) * nx + (b.y - my) * ny;
+      if (da <= 0) out.push(a);
+      if ((da <= 0) !== (db <= 0)){
+        var t = da / (da - db);
+        out.push({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t });
+      }
+    }
+    return out;
+  }
+  function segDist(px, py, x1, y1, x2, y2){
+    var dx = x2 - x1, dy = y2 - y1;
+    var t = ((px - x1) * dx + (py - y1) * dy) / (dx * dx + dy * dy || 1);
+    t = Math.max(0, Math.min(1, t));
+    return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
+  }
+  function distToBoundary(p, poly){
+    var best = Infinity;
+    for (var i = 0; i < poly.length; i++){
+      var a = poly[i], b = poly[(i + 1) % poly.length];
+      best = Math.min(best, segDist(p.x, p.y, a.x, a.y, b.x, b.y));
+    }
+    return best;
+  }
+
+  /* ================================================================== *
+   *  Shattering
+   * ================================================================== */
+  var engine = null, world = null, walls = [];
+  var shards = [], seams = [];
+  var phase = 'whole';                 /* whole | broken | gilding | done */
+  var brush = null;
+
+  function seeds(hit){
+    var pts = [], tries = 0;
+    var minx = Infinity, maxx = -Infinity, miny = Infinity, maxy = -Infinity;
+    BOWL.forEach(function(q){
+      if (q.x < minx) minx = q.x; if (q.x > maxx) maxx = q.x;
+      if (q.y < miny) miny = q.y; if (q.y > maxy) maxy = q.y;
+    });
+    /* A ring of points close around the strike, then a general scatter.
+       Real impact damage is finest where it was hit and coarsens outward,
+       and a flat scatter does not look like anything that was struck. */
+    var near = 7;
+    for (var i = 0; i < near; i++){
+      var a = (i / near) * 6.283 + Math.random() * .6;
+      var r = 20 + Math.random() * 52;
+      var p = { x: hit.x + Math.cos(a) * r, y: hit.y + Math.sin(a) * r };
+      if (inPoly(p, BOWL)) pts.push(p);
+    }
+    while (pts.length < 20 && tries++ < 900){
+      var q = { x: minx + Math.random() * (maxx - minx), y: miny + Math.random() * (maxy - miny) };
+      if (!inPoly(q, BOWL)) continue;
+      var ok = true;
+      for (var k = 0; k < pts.length; k++){
+        if (Math.hypot(q.x - pts[k].x, q.y - pts[k].y) < 44){ ok = false; break; }
+      }
+      if (ok) pts.push(q);
+    }
+    return pts;
+  }
+
+  function shatter(hit){
+    var pts = seeds(hit);
+    shards = []; seams = [];
+
+    pts.forEach(function(si, i){
+      var poly = BOWL;
+      for (var j = 0; j < pts.length; j++){
+        if (j === i) continue;
+        var sj = pts[j];
+        var nx = sj.x - si.x, ny = sj.y - si.y;
+        var L = Math.hypot(nx, ny) || 1;
+        poly = clipHalf(poly, (si.x + sj.x) / 2, (si.y + sj.y) / 2, nx / L, ny / L);
+        if (poly.length < 3) break;
+      }
+      if (poly.length < 3 || polyArea(poly) < 260) return;
+      var c = centroid(poly);
+      shards.push({
+        poly: poly,
+        local: poly.map(function(q){ return { x: q.x - c.x, y: q.y - c.y }; }),
+        home: { x: c.x, y: c.y },
+        placed: false, body: null,
+        tone: Math.random()
+      });
+    });
+
+    /* Seams: every shard edge that is not on the bowl's own outline is an
+       internal crack. Each appears on two shards, so they are deduped by
+       rounded midpoint. */
+    var byMid = {};
+    shards.forEach(function(sh, si){
+      for (var i = 0; i < sh.poly.length; i++){
+        var a = sh.poly[i], b = sh.poly[(i + 1) % sh.poly.length];
+        if (Math.hypot(b.x - a.x, b.y - a.y) < 3) continue;
+        var mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+        if (distToBoundary(mid, BOWL) < 2.5) continue;        // the rim or the wall
+        var k = Math.round(mid.x) + ':' + Math.round(mid.y);
+        if (byMid[k]){ byMid[k].sides.push(si); continue; }
+        byMid[k] = { a: a, b: b, sides: [si] };
+      }
+    });
+    Object.keys(byMid).forEach(function(k){
+      var e = byMid[k];
+      /* chopped into short runs so the brush can fill a crack gradually
+         rather than all at once */
+      var len = Math.hypot(e.b.x - e.a.x, e.b.y - e.a.y);
+      var n = Math.max(1, Math.round(len / 7));
+      for (var i = 0; i < n; i++){
+        var t0 = i / n, t1 = (i + 1) / n;
+        seams.push({
+          x1: e.a.x + (e.b.x - e.a.x) * t0, y1: e.a.y + (e.b.y - e.a.y) * t0,
+          x2: e.a.x + (e.b.x - e.a.x) * t1, y2: e.a.y + (e.b.y - e.a.y) * t1,
+          sides: e.sides, gilded: false, w: 0
+        });
+      }
+    });
+
+    /* bodies, thrown outward from the strike */
+    shards.forEach(function(sh){
+      var b = Matter.Bodies.fromVertices(sh.home.x, sh.home.y, [sh.poly], {
+        friction: 0.62, frictionAir: 0.012, restitution: 0.18, density: 0.0022
+      });
+      if (!b) return;
+      Matter.Body.setPosition(b, { x: sh.home.x, y: sh.home.y });
+      sh.body = b;
+      var dx = sh.home.x - hit.x, dy = sh.home.y - hit.y;
+      var d = Math.hypot(dx, dy) || 1;
+      var force = 13 / (1 + d / 70);
+      Matter.Body.setVelocity(b, {
+        x: (dx / d) * force + (Math.random() - .5) * 2,
+        y: (dy / d) * force - 3.4 - Math.random() * 2
+      });
+      Matter.Body.setAngularVelocity(b, (Math.random() - .5) * 0.34);
+      Matter.Composite.add(world, b);
+    });
+
+    phase = 'broken';
+    E('stage').className = 'stage';
+    chrome();
+    say('Broken. Now pick the pieces up and put them back &mdash; drop one anywhere near where it ' +
+        'belongs and it will settle the rest of the way itself.');
+  }
+
+  /* ================================================================== *
+   *  Placing, and the gold
+   * ================================================================== */
+  function placedCount(){
+    var n = 0;
+    shards.forEach(function(s){ if (s.placed) n++; });
+    return n;
+  }
+  function allPlaced(){ return shards.length > 0 && placedCount() === shards.length; }
+  function gildedCount(){
+    var n = 0;
+    seams.forEach(function(s){ if (s.gilded) n++; });
+    return n;
+  }
+
+  function place(sh){
+    sh.placed = true;
+    if (sh.body){
+      Matter.Body.setPosition(sh.body, { x: sh.home.x, y: sh.home.y });
+      Matter.Body.setAngle(sh.body, 0);
+      Matter.Body.setVelocity(sh.body, { x: 0, y: 0 });
+      Matter.Body.setAngularVelocity(sh.body, 0);
+      Matter.Body.setStatic(sh.body, true);
+    }
+    cueClick();
+    if (allPlaced()){
+      phase = 'gilding';
+      E('stage').className = 'stage gild';
+      E('btn-gild').disabled = false;
+      say('Whole again, and every crack still showing. <em>Now take up the gold</em> and run it ' +
+          'down the seams.');
+    }
+    chrome();
+  }
+
+  function gildAt(x, y, r){
+    var any = false;
+    seams.forEach(function(s){
+      if (s.gilded) return;
+      var mx = (s.x1 + s.x2) / 2, my = (s.y1 + s.y2) / 2;
+      if (Math.hypot(mx - x, my - y) <= r){ s.gilded = true; any = true; }
+    });
+    if (any){
+      cueGild();
+      chrome();
+      if (gildedCount() === seams.length && phase === 'gilding'){
+        phase = 'done';
+        mended++; save();
+        E('stage').className = 'stage';
+        E('btn-again').disabled = false;
+        E('btn-gild').disabled = true;
+        cueDone();
+        /* the tally is bumped after chrome() ran above, so it has to be
+           repainted or the count stays a bowl behind for ever */
+        chrome();
+        say('Mended. The bowl is worth more attention than it was before it broke, and that is the ' +
+            'whole of the idea. <em>Break it again whenever you like.</em>');
+      }
+    }
+    return any;
+  }
+
+  function chrome(){
+    E('m-pieces').textContent = shards.length || '—';
+    E('m-placed').textContent = shards.length ? placedCount() + ' / ' + shards.length : '—';
+    E('m-gold').textContent = seams.length
+      ? Math.round(gildedCount() / seams.length * 100) + '%' : '—';
+    E('m-done').textContent = mended;
+    E('phase').textContent = phase;
+    E('btn-smash').disabled = phase !== 'whole';
+    E('btn-gather').disabled = !(phase === 'broken' && !allPlaced());
+    E('btn-again').disabled = phase !== 'done';
+  }
+
+  /* ================================================================== *
+   *  Drawing
+   * ================================================================== */
+  function shardPath(sh, px, py, ang){
+    ctx.beginPath();
+    for (var i = 0; i < sh.local.length; i++){
+      var p = sh.local[i];
+      var x = px + p.x * Math.cos(ang) - p.y * Math.sin(ang);
+      var y = py + p.x * Math.sin(ang) + p.y * Math.cos(ang);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+  }
+
+  function paintClay(sh, px, py, ang){
+    shardPath(sh, px, py, ang);
+    var g = ctx.createLinearGradient(px - 90, py - 90, px + 90, py + 90);
+    var t = sh.tone;
+    g.addColorStop(0, 'rgb(' + (238 - t * 10) + ',' + (231 - t * 10) + ',' + (215 - t * 12) + ')');
+    g.addColorStop(1, 'rgb(' + (205 - t * 14) + ',' + (197 - t * 14) + ',' + (180 - t * 14) + ')');
+    ctx.fillStyle = g; ctx.fill();
+    ctx.strokeStyle = 'rgba(120,112,96,.55)'; ctx.lineWidth = 1.1; ctx.stroke();
+  }
+
+  function draw(){
+    ctx.clearRect(0, 0, W, H);
+
+    /* the shelf the bowl stands on */
+    var sg = ctx.createLinearGradient(0, FLOOR - 8, 0, H);
+    sg.addColorStop(0, '#2B2C38'); sg.addColorStop(1, '#15161E');
+    ctx.fillStyle = sg; ctx.fillRect(0, FLOOR - 6, W, H - FLOOR + 6);
+    ctx.strokeStyle = 'rgba(212,168,40,.12)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, FLOOR - 6); ctx.lineTo(W, FLOOR - 6); ctx.stroke();
+
+    if (phase === 'whole'){
+      ctx.beginPath();
+      BOWL.forEach(function(p, i){ i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y); });
+      ctx.closePath();
+      var g = ctx.createLinearGradient(CX - RIM_W, RIM_Y, CX + RIM_W, FOOT_Y);
+      g.addColorStop(0, '#F2ECDF'); g.addColorStop(.55, '#E3DCCC'); g.addColorStop(1, '#C9C2B0');
+      ctx.fillStyle = g; ctx.fill();
+      ctx.strokeStyle = 'rgba(120,112,96,.6)'; ctx.lineWidth = 1.4; ctx.stroke();
+      /* a celadon shadow inside the rim, so it reads as a bowl and not a bucket */
+      ctx.save(); ctx.clip();
+      ctx.beginPath();
+      ctx.ellipse(CX, RIM_Y + 12, RIM_W - 6, 26, 0, 0, 6.283);
+      ctx.fillStyle = 'rgba(150,162,148,.34)'; ctx.fill();
+      ctx.restore();
+      ctx.font = '15px ' + getComputedStyle(document.body).fontFamily;
+      ctx.fillStyle = 'rgba(180,172,156,.5)'; ctx.textAlign = 'center';
+      ctx.fillText('click the bowl', CX, FOOT_Y + 54);
+      ctx.textAlign = 'left';
+      return;
+    }
+
+    /* where the unplaced pieces belong: a faint ghost of the whole bowl */
+    if (phase === 'broken'){
+      shards.forEach(function(sh){
+        if (sh.placed) return;
+        shardPath(sh, sh.home.x, sh.home.y, 0);
+        ctx.fillStyle = 'rgba(230,223,208,.045)'; ctx.fill();
+        ctx.strokeStyle = 'rgba(230,223,208,.14)';
+        ctx.setLineDash([4, 5]); ctx.lineWidth = 1; ctx.stroke(); ctx.setLineDash([]);
+      });
+    }
+
+    /* the pieces themselves */
+    shards.forEach(function(sh){
+      if (!sh.body) return;
+      var p = sh.placed ? sh.home : sh.body.position;
+      var a = sh.placed ? 0 : sh.body.angle;
+      if (sh === dragging){
+        ctx.save();
+        ctx.shadowColor = 'rgba(0,0,0,.55)'; ctx.shadowBlur = 22; ctx.shadowOffsetY = 8;
+        paintClay(sh, p.x, p.y, a);
+        ctx.restore();
+      } else {
+        paintClay(sh, p.x, p.y, a);
+      }
+    });
+
+    /* The gold, over the joins.
+       Every gilded run goes into ONE path per layer. Stroking each seven-
+       pixel segment on its own — which is what the first version did —
+       puts a round cap on both ends of every one of them, and a line of
+       round caps at that scale reads as a dotted line rather than a poured
+       seam. Batched, the segments meet and the crack fills. */
+    if (gildedCount()){
+      var layers = [
+        ['rgba(120,92,18,.9)', 5.6],     // the lacquer under the metal
+        ['#C99C22',            3.6],     // the gold itself
+        ['rgba(244,214,120,.75)', 1.5]   // and where the light catches it
+      ];
+      ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      for (var li = 0; li < layers.length; li++){
+        ctx.beginPath();
+        for (var si2 = 0; si2 < seams.length; si2++){
+          var sm = seams[si2];
+          if (!sm.gilded) continue;
+          ctx.moveTo(sm.x1, sm.y1); ctx.lineTo(sm.x2, sm.y2);
+        }
+        ctx.strokeStyle = layers[li][0];
+        ctx.lineWidth = layers[li][1];
+        ctx.stroke();
+      }
+    }
+
+    /* the ungilded cracks, so you can see what is left to do */
+    if (phase === 'gilding'){
+      seams.forEach(function(s){
+        if (s.gilded) return;
+        ctx.beginPath();
+        ctx.moveTo(s.x1, s.y1); ctx.lineTo(s.x2, s.y2);
+        ctx.strokeStyle = 'rgba(60,54,42,.5)'; ctx.lineWidth = 1.6; ctx.stroke();
+      });
+      if (brush){
+        ctx.beginPath();
+        ctx.arc(brush.x, brush.y, BRUSH, 0, 6.283);
+        ctx.strokeStyle = 'rgba(212,168,40,.5)'; ctx.lineWidth = 1.2; ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(brush.x, brush.y, 3, 0, 6.283);
+        ctx.fillStyle = 'rgba(240,206,104,.85)'; ctx.fill();
+      }
+    }
+  }
+
+  /* ================================================================== *
+   *  Pointer
+   * ================================================================== */
+  var BRUSH = 30, SNAP = 52;
+  var dragging = null, grab = { x:0, y:0 }, painting = false;
+
+  function localPt(e){
+    var r = cv.getBoundingClientRect();
+    return { x: (e.clientX - r.left) / r.width * W, y: (e.clientY - r.top) / r.height * H };
+  }
+  function hitShard(p){
+    for (var i = shards.length - 1; i >= 0; i--){
+      var sh = shards[i];
+      if (sh.placed || !sh.body) continue;
+      var dx = p.x - sh.body.position.x, dy = p.y - sh.body.position.y;
+      var a = -sh.body.angle;
+      var lx = dx * Math.cos(a) - dy * Math.sin(a);
+      var ly = dx * Math.sin(a) + dy * Math.cos(a);
+      if (inPoly({ x: lx, y: ly }, sh.local)) return sh;
+    }
+    return null;
+  }
+
+  cv.addEventListener('pointerdown', function(e){
+    var p = localPt(e);
+    cv.setPointerCapture(e.pointerId);
+    if (phase === 'whole'){
+      if (inPoly(p, BOWL)) { cueSmash(); shatter(p); }
+      return;
+    }
+    if (phase === 'gilding'){
+      painting = true; brush = p; gildAt(p.x, p.y, BRUSH);
+      return;
+    }
+    if (phase !== 'broken') return;
+    var sh = hitShard(p);
+    if (!sh) return;
+    dragging = sh;
+    grab.x = p.x - sh.body.position.x;
+    grab.y = p.y - sh.body.position.y;
+    Matter.Body.setStatic(sh.body, true);
+  });
+
+  cv.addEventListener('pointermove', function(e){
+    var p = localPt(e);
+    if (phase === 'gilding'){
+      brush = p;
+      if (painting) gildAt(p.x, p.y, BRUSH);
+      return;
+    }
+    if (!dragging) return;
+    Matter.Body.setPosition(dragging.body, { x: p.x - grab.x, y: p.y - grab.y });
+  });
+
+  function release(){
+    painting = false;
+    if (!dragging) return;
+    var sh = dragging; dragging = null;
+    var d = Math.hypot(sh.body.position.x - sh.home.x, sh.body.position.y - sh.home.y);
+    if (d < SNAP){
+      place(sh);
+    } else {
+      Matter.Body.setStatic(sh.body, false);
+      Matter.Body.setVelocity(sh.body, { x: 0, y: 0 });
+    }
+  }
+  cv.addEventListener('pointerup', release);
+  cv.addEventListener('pointercancel', release);
+  cv.addEventListener('pointerleave', function(){ brush = null; });
+
+  /* ================================================================== *
+   *  Sound — ceramic, and then gold leaf. Nothing sampled.
+   * ================================================================== */
+  function cueSmash(){
+    if (!window.LCSound) return;
+    LCSound.play(function(A){
+      /* the strike itself: a hard, bright crack */
+      A.burst('white', { type:'bandpass', freq: 5200, q: 1.4, dur: 0.05, level: A.cap(0.12), reverb: true });
+      A.burst('white', { type:'highpass', freq: 2600, dur: 0.30, level: A.cap(0.07), attack: 0.002, reverb: true });
+      /* and then the pieces landing, scattered over a third of a second */
+      for (var i = 0; i < 9; i++){
+        A.burst('white', {
+          at: 0.05 + Math.random() * 0.34,
+          type: 'bandpass', freq: 2600 + Math.random() * 4200, q: 7,
+          dur: 0.02 + Math.random() * 0.03, level: A.cap(0.035 + Math.random() * 0.03)
+        });
+      }
+      A.blip(96, { type:'sine', dur: 0.24, level: A.cap(0.05), glide: 62, reverb: true });
+    });
+  }
+  function cueClick(){
+    if (!window.LCSound) return;
+    LCSound.play(function(A){
+      A.burst('white', { type:'bandpass', freq: 3100, q: 9, dur: 0.022, level: A.cap(0.055), reverb: false });
+      A.blip(1480, { type:'sine', dur: 0.05, level: A.cap(0.025) });
+    });
+  }
+  var lastGild = 0;
+  function cueGild(){
+    /* the brush passes over many segments in one stroke; a cue per segment
+       would be a swarm, so they are thinned to one every 90ms */
+    var now = Date.now();
+    if (now - lastGild < 90) return;
+    lastGild = now;
+    if (!window.LCSound) return;
+    LCSound.play(function(A){
+      A.blip(2100 + Math.random() * 900, { type:'sine', dur: 0.13, level: A.cap(0.028), reverb: true });
+      A.burst('pink', { type:'highpass', freq: 4200, dur: 0.10, level: A.cap(0.016), attack: 0.03 });
+    });
+  }
+  function cueDone(){
+    if (!window.LCSound) return;
+    LCSound.play(function(A){
+      A.chord([A.note(4), A.note(11), A.note(16), A.note(23)],
+              { type:'sine', dur: 2.3, level: A.cap(0.075), spread: 0.075, reverb: true });
+    });
+  }
+
+  /* ================================================================== *
+   *  Buttons
+   * ================================================================== */
+  E('btn-smash').addEventListener('click', function(){
+    if (phase !== 'whole') return;
+    cueSmash();
+    shatter({ x: CX + (Math.random() - .5) * 150, y: (RIM_Y + FOOT_Y) / 2 + (Math.random() - .5) * 90 });
+  });
+  E('btn-gather').addEventListener('click', function(){
+    /* for anybody who would rather have the mending than the fetching —
+       and for a pointer that cannot easily drag */
+    var left = shards.filter(function(s){ return !s.placed; });
+    if (!left.length) return;
+    place(left[0]);
+    say(left.length > 1
+      ? 'One piece back. ' + (left.length - 1) + ' still on the shelf.'
+      : 'The last piece.');
+  });
+  E('btn-gild').addEventListener('click', function(){
+    say('Drag across the cracks to lay the gold in. It goes on where the brush passes.');
+  });
+  E('btn-again').addEventListener('click', function(){ reset(); });
+
+  function reset(){
+    shards.forEach(function(s){ if (s.body) Matter.Composite.remove(world, s.body); });
+    shards = []; seams = []; dragging = null; brush = null;
+    phase = 'whole';
+    E('stage').className = 'stage whole';
+    E('btn-gild').disabled = true;
+    chrome();
+    say('A new bowl, and nothing wrong with it yet.');
+  }
+
+  /* ================================================================== */
+  function tick(){
+    if (HAVE && !document.hidden){
+      Matter.Engine.update(engine, 1000 / 60);
+      /* a piece that has left the shelf entirely comes back rather than
+         being lost — there is nothing to fail at in this drawer */
+      shards.forEach(function(s){
+        if (!s.body || s.placed || s === dragging) return;
+        var p = s.body.position;
+        if (p.y > H + 200 || p.x < -300 || p.x > W + 300){
+          Matter.Body.setPosition(s.body, { x: CX + (Math.random() - .5) * 300, y: 60 });
+          Matter.Body.setVelocity(s.body, { x: 0, y: 0 });
+        }
+      });
+    }
+    draw();
+    requestAnimationFrame(tick);
+  }
+
+  if (!HAVE){
+    ctx.fillStyle = '#16171F'; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#EDE7DA'; ctx.font = '34px Georgia,serif'; ctx.textAlign = 'center';
+    ctx.fillText('The physics library did not load,', W / 2, H / 2 - 22);
+    ctx.fillText('so there is nothing here to break.', W / 2, H / 2 + 26);
+    say('Physics unavailable. Nothing else in the cabinet is affected.');
+    E('btn-smash').disabled = true;
+  } else {
+    engine = Matter.Engine.create();
+    engine.gravity.y = 1.5;
+    world = engine.world;
+    var opt = { isStatic: true, friction: 0.7, restitution: 0.1 };
+    walls = [
+      Matter.Bodies.rectangle(W / 2, FLOOR + 40, W + 400, 80, opt),
+      Matter.Bodies.rectangle(-40, H / 2, 80, H * 3, opt),
+      Matter.Bodies.rectangle(W + 40, H / 2, 80, H * 3, opt)
+    ];
+    Matter.Composite.add(world, walls);
+    chrome();
+    requestAnimationFrame(tick);
+  }
+
+  if (window.LCSound) LCSound.mount();
+
+  /* ---- hooks for verification ------------------------------------- */
+  window.__kintsugi = {
+    phase: function(){ return phase; },
+    shards: function(){ return shards.length; },
+    seams: function(){ return seams.length; },
+    placed: placedCount,
+    gilded: gildedCount,
+    smash: function(){ if (phase === 'whole') shatter({ x: CX, y: (RIM_Y + FOOT_Y) / 2 }); },
+    placeAll: function(){ shards.forEach(function(s){ if (!s.placed) place(s); }); },
+    gildAll: function(){
+      seams.forEach(function(s){ gildAt((s.x1 + s.x2) / 2, (s.y1 + s.y2) / 2, 2); });
+    },
+    reset: reset,
+    /* one loose piece, in canvas coordinates, so a real pointer drag can
+       be driven at it rather than at a guess */
+    loose: function(){
+      for (var i = 0; i < shards.length; i++){
+        var sh = shards[i];
+        if (sh.placed || !sh.body) continue;
+        return { at: { x: sh.body.position.x, y: sh.body.position.y },
+                 home: { x: sh.home.x, y: sh.home.y } };
+      }
+      return null;
+    },
+    /* the geometric claim the page makes, checkable: every internal edge
+       is shared by exactly two shards */
+    seamSides: function(){
+      var counts = {};
+      seams.forEach(function(s){ counts[s.sides.length] = (counts[s.sides.length] || 0) + 1; });
+      return counts;
+    },
+    area: function(){
+      var a = 0; shards.forEach(function(s){ a += polyArea(s.poly); });
+      return { shards: Math.round(a), bowl: Math.round(polyArea(BOWL)) };
+    }
+  };
+})();
+</script>
+<style>
+@keyframes lcf-settle{from{opacity:0;transform:translateY(-7px)}to{opacity:1;transform:none}}
+.lc-flourish{animation:lcf-settle .42s cubic-bezier(.2,.85,.3,1) both}
+@media (prefers-reduced-motion: reduce){ .lc-flourish{animation:none} }
+</style>
+<script>
+(function(){
+  function flourish(){
+    var el = document.querySelector('.meter');
+    if (!el) return;
+    el.classList.remove('lc-flourish');
+    void el.offsetWidth;
+    el.classList.add('lc-flourish');
+  }
+  document.addEventListener('click', function(e){
+    if (!e.target.closest || e.target.closest('#lc-sound-btn')) return;
+    if (e.target.closest('.bar button, canvas')) setTimeout(flourish, 30);
+  });
+})();
+</script>
+</body>
+</html>

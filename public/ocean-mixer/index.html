@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ocean Sound Mixer</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23061A24'/><path d='M3 12q5-4 10 0t10 0 6-2' stroke='%237FD1C4' stroke-width='2' fill='none'/><path d='M3 19q5-4 10 0t10 0 6-2' stroke='%237FD1C4' stroke-width='2' fill='none' opacity='.6'/><path d='M3 26q5-4 10 0t10 0 6-2' stroke='%23E8A13C' stroke-width='2' fill='none' opacity='.8'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  /* A research vessel at night: black water, one amber instrument lamp. */
+  --deep:#061A24;
+  --deep-2:#0A2833;
+  --panel:#0E2E3A;
+  --ink:#DCE9EA;
+  --ink-2:#9DBABE;
+  --dim:#6A8B92;
+  --dimmer:#48656C;
+  --aqua:#7FD1C4;
+  --amber:#E8A13C;
+  --real:#E8A13C;
+  --made:#7FD1C4;
+  --line:#173E4B;
+  --sans:"Helvetica Neue",Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;min-height:100%}
+body{
+  background:var(--deep);
+  background-image:linear-gradient(180deg,#0C3040 0%,#04141C 100%);
+  color:var(--ink);font-family:var(--sans);
+  min-height:100vh;padding:26px 16px 84px;
+  display:flex;flex-direction:column;align-items:center;
+}
+.wrap{ width:min(820px,100%);display:flex;flex-direction:column;align-items:center }
+
+h1{ font-size:clamp(21px,4.8vw,28px);font-weight:400;margin:0 0 7px;letter-spacing:.02em;text-align:center }
+.tagline{ font-size:13.5px;line-height:1.75;color:var(--dim);margin:0 0 18px;text-align:center;max-width:48ch }
+
+/* ---- the water -------------------------------------------------------- */
+.sea{
+  position:relative;width:100%;border:1px solid var(--line);border-radius:3px;overflow:hidden;
+  box-shadow:0 14px 34px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.04);
+}
+.sea canvas{ display:block;width:100%;height:auto }
+
+.master{ width:100%;display:flex;gap:10px;align-items:center;margin-top:16px }
+.master button{
+  font:inherit;font-family:var(--mono);font-size:11px;letter-spacing:.17em;text-transform:uppercase;
+  cursor:pointer;background:var(--aqua);color:var(--deep);border:0;border-radius:999px;
+  padding:12px 26px;transition:opacity .15s;
+}
+.master button:hover{ opacity:.88 }
+.master button.off{ background:transparent;color:var(--aqua);border:1px solid var(--aqua) }
+.master button:focus-visible{ outline:2px solid var(--amber);outline-offset:2px }
+.master .note{ font-size:11.5px;color:var(--dim);line-height:1.6;flex:1 }
+
+/* ---- the channels ----------------------------------------------------- */
+.desk{ width:100%;margin-top:16px;border:1px solid var(--line);border-radius:3px;overflow:hidden }
+.ch{ display:grid;grid-template-columns:1fr 168px;gap:14px;align-items:center;
+  padding:13px 16px;background:var(--panel);border-bottom:1px solid var(--line) }
+.ch:last-child{ border-bottom:0 }
+.ch.on{ background:#123845 }
+@media (max-width:560px){ .ch{ grid-template-columns:1fr;gap:9px } }
+
+.ch .who{ min-width:0 }
+.ch .nm{ font-size:15px;margin:0 0 3px;display:flex;align-items:center;gap:8px;flex-wrap:wrap }
+.ch .badge{
+  font-family:var(--mono);font-size:7.5px;letter-spacing:.18em;text-transform:uppercase;
+  padding:3px 6px;border-radius:2px;flex:0 0 auto;
+}
+.ch .badge.real{ background:rgba(232,161,60,.18);color:var(--real);border:1px solid rgba(232,161,60,.45) }
+.ch .badge.made{ background:rgba(127,209,196,.14);color:var(--made);border:1px solid rgba(127,209,196,.4) }
+.ch .src{ font-size:11.5px;line-height:1.6;color:var(--dim);margin:0 }
+.ch .src a{ color:var(--ink-2) }
+.ch .src.bad{ color:var(--real) }
+
+.ch .fader{ display:flex;align-items:center;gap:9px }
+input[type=range]{ -webkit-appearance:none;appearance:none;flex:1;height:3px;
+  background:var(--line);border-radius:2px;outline:none }
+input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none;appearance:none;width:16px;height:16px;
+  border-radius:50%;background:var(--aqua);cursor:pointer;border:2px solid var(--panel) }
+input[type=range]::-moz-range-thumb{ width:16px;height:16px;border-radius:50%;background:var(--aqua);
+  cursor:pointer;border:2px solid var(--panel) }
+input[type=range]:focus-visible{ outline:2px solid var(--amber);outline-offset:4px }
+.ch .val{ font-family:var(--mono);font-size:10px;color:var(--dimmer);width:26px;text-align:right;flex:0 0 auto }
+
+.said{ margin-top:15px;text-align:center;font-size:13.5px;line-height:1.75;color:var(--ink-2);
+  min-height:2.6em;max-width:52ch }
+
+.book{ margin-top:26px;padding-top:19px;border-top:1px solid var(--line);font-size:13.5px;
+  line-height:1.9;color:var(--ink-2);width:100% }
+.book p{ margin:0 0 12px } .book p:last-child{ margin:0 }
+.book b{ color:var(--ink);font-weight:600 }
+.book a{ color:var(--aqua) }
+.book code{ font-family:var(--mono);font-size:12px;color:var(--amber) }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 var(--mono);
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:var(--deep);background:var(--aqua);
+  border:1px solid rgba(0,0,0,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  box-shadow:0 5px 18px rgba(0,0,0,.5);
+  transition:width .18s ease, background .16s, gap .18s ease;
+}
+@media (pointer:coarse){ #lc-back{ width:44px;height:44px } }
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:#A5E3D8 }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid var(--amber);outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Ocean Sound Mixer</h1>
+<p class="tagline">Four real hydrophone recordings from NOAA, and two beds generated here. Which
+  is which is written on every channel, because the difference matters.</p>
+
+<div class="sea">
+  <canvas id="cv" width="1000" height="440"></canvas>
+</div>
+
+<div class="master">
+  <button type="button" id="btn-play">Put it in the water</button>
+  <div class="note" id="note">Nothing plays until you ask &mdash; and the recordings are streamed
+    straight from NOAA's own server, never copied into this site.</div>
+</div>
+
+<div class="desk" id="desk"></div>
+
+<p class="said" id="said">&nbsp;</p>
+
+<div class="book">
+  <p><b>The four recordings are real, and they are public domain.</b> They come from
+  <a href="https://www.pmel.noaa.gov/acoustics/multimedia.html" rel="noopener">NOAA's Pacific
+  Marine Environmental Laboratory Acoustics Program</a>. Works of the U.S. federal government are
+  not under copyright, so no attribution is strictly required &mdash; it is given on every channel
+  anyway, because it is the right thing to do and it costs nothing.</p>
+  <p><b>They are streamed from NOAA and never copied here.</b> The audio is not proxied, cached or
+  re-served by this site; your browser fetches it from <code>pmel.noaa.gov</code> directly, which
+  is the same rule the song guesser's previews run under. There is still no audio file in this
+  repository.</p>
+  <p><b>This is the one drawer in the cabinet that plays a recording at all</b>, and that is worth
+  saying plainly. Everything else here is generated &mdash; oscillators and noise buffers, made at
+  the moment you hear it. Real hydrophone data cannot be synthesised honestly: a made-up whale is
+  not a whale. So this drawer carries real recordings and labels every channel
+  <span style="color:var(--real)">RECORDING</span> or
+  <span style="color:var(--made)">GENERATED</span>, and never lets you mistake one for the other.</p>
+  <p><b>Why the mixing is simple.</b> NOAA's server sends no
+  <code>Access-Control-Allow-Origin</code> header, so these files can be played but cannot be read
+  into Web Audio &mdash; anything fancier than a level fader would silently produce silence. The
+  faders are therefore plain element volume, and the cabinet's mute switch is wired to them by
+  hand rather than through the shared bench.</p>
+  <p>The clips are short &mdash; between nine and thirty-five seconds &mdash; and loop. Two are
+  recorded at a 5&nbsp;kHz sample rate, so they only carry sound below about 2.5&nbsp;kHz and will
+  sound muffled. That is not a fault in the playback; that is what the hydrophone recorded.</p>
+</div>
+
+</div>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">&larr;</span><span class="w">cabinet</span></a>
+
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  var NOAA = 'https://www.pmel.noaa.gov/acoustics/multimedia/';
+  function E(id){ return document.getElementById(id); }
+  function say(s){ E('said').textContent = s || ' '; }
+
+  /* ================================================================== *
+   *  The channels.
+   *
+   *  `kind` is the whole point of this drawer's honesty: 'rec' is a real
+   *  hydrophone recording fetched from NOAA, 'gen' is made here out of
+   *  noise. Every channel wears its own label on the page.
+   * ================================================================== */
+  var CH = [
+    { id:'blue', kind:'rec', n:'Blue whale',
+      file:'NETS_bluWhale.wav', depth:0.62, hue:'#6FA8E0',
+      src:'Northeast Pacific. NOAA PMEL Acoustics — public domain.', v:0.7 },
+    { id:'hb1', kind:'rec', n:'Humpback, and a ship',
+      file:'HB-ship-SBNMS.wav', depth:0.34, hue:'#7FD1C4',
+      src:'Stellwagen Bank National Marine Sanctuary. NOAA PMEL Acoustics — public domain.', v:0.5 },
+    { id:'hb2', kind:'rec', n:'Humpback, and a ship (Samoa)',
+      file:'HB-ship-AMSNP.wav', depth:0.46, hue:'#9BC9E8',
+      src:'National Park of American Samoa. NOAA PMEL Acoustics — public domain. 5 kHz.', v:0.0 },
+    { id:'reef', kind:'rec', n:'Damselfish on a reef',
+      file:'Damselfish Clip_American Samoa Hydrophone.wav', depth:0.20, hue:'#E8C87F',
+      src:'American Samoa hydrophone. NOAA PMEL Acoustics — public domain. 5 kHz.', v:0.45 },
+    { id:'swell', kind:'gen', n:'Surface swell',
+      depth:0.04, hue:'#BFE4E0',
+      src:'Generated here — filtered noise under a slow swell. Not a recording.', v:0.6 },
+    { id:'abyss', kind:'gen', n:'The deep',
+      depth:0.90, hue:'#3E6E8E',
+      src:'Generated here — a low drone, the pressure of a lot of water. Not a recording.', v:0.4 }
+  ];
+
+  var playing = false, els = {}, gen = null, A = null;
+
+  /* ---- the real ones: plain elements, because Web Audio cannot have
+     them (no CORS header on NOAA's server) ------------------------- */
+  function makeEl(c){
+    var a = new Audio();
+    a.loop = true;
+    a.preload = 'none';
+    a.src = NOAA + encodeURIComponent(c.file);
+    a.volume = 0;
+    a.addEventListener('error', function(){
+      c.failed = true;
+      var s = document.querySelector('#src-' + c.id);
+      if (s){
+        s.className = 'src bad';
+        s.textContent = 'This one would not load from NOAA just now. The others are unaffected.';
+      }
+    });
+    return a;
+  }
+
+  /* ---- the generated ones: on the house bench -------------------- */
+  function buildGen(){
+    A = LCAudio.get();
+    if (!A) return false;
+    A.resume();
+    var bus = A.bus(1);
+
+    /* surface swell: band-passed noise breathing slowly */
+    var sn = bus.noise('pink');
+    var sf = A.filt('bandpass', 520, 0.5);
+    var sg = A.gain(0);
+    A.chain(sn, sf, sg, bus);
+    var lfo = bus.osc('sine', 0.085);
+    var lg = A.gain(0.5);
+    lfo.connect(lg); lg.connect(sg.gain);
+
+    /* the deep: a low drone and a slow beat under it */
+    var dn = bus.noise('brown');
+    var df = A.filt('lowpass', 130);
+    var dg = A.gain(0);
+    A.chain(dn, df, dg, bus);
+    var o1 = bus.osc('sine', 46);
+    var o2 = bus.osc('sine', 46.7);
+    var og = A.gain(0);
+    o1.connect(og); o2.connect(og); og.connect(bus);
+
+    gen = { bus: bus, swell: sg, deep: dg, drone: og };
+    return true;
+  }
+
+  function applyGen(){
+    if (!gen || !A) return;
+    var sw = CH.filter(function(c){ return c.id === 'swell'; })[0];
+    var ab = CH.filter(function(c){ return c.id === 'abyss'; })[0];
+    function ramp(p, v){
+      try {
+        var t = A.ctx.currentTime;
+        p.cancelScheduledValues(t); p.setValueAtTime(p.value, t);
+        p.linearRampToValueAtTime(v, t + 0.4);
+      } catch (e) { p.value = v; }
+    }
+    var on = playing && !muted;
+    ramp(gen.swell.gain, on ? sw.v * 0.075 : 0);
+    ramp(gen.deep.gain,  on ? ab.v * 0.085 : 0);
+    ramp(gen.drone.gain, on ? ab.v * 0.030 : 0);
+  }
+
+  /* ---- the cabinet's mute, wired by hand ------------------------- *
+   *  The recordings do not pass through LCAudio's bench, so the shared
+   *  gate cannot reach them. Rather than let this be the one drawer
+   *  that ignores the switch, the switch is wired straight to the
+   *  element volumes here.
+   * ---------------------------------------------------------------- */
+  var muted = false;
+  try { muted = localStorage.getItem('lc-sound') === 'off'; } catch (e) {}
+
+  function applyVolumes(){
+    CH.forEach(function(c){
+      if (c.kind !== 'rec') return;
+      var a = els[c.id];
+      if (!a) return;
+      a.volume = (playing && !muted) ? Math.max(0, Math.min(1, c.v)) : 0;
+      if (playing && !muted && c.v > 0.001){
+        if (a.paused) a.play().catch(function(){});
+      } else if (!playing || muted){
+        if (!a.paused) a.pause();
+      }
+    });
+    applyGen();
+    paintDesk();
+  }
+
+  if (window.LCSound) LCSound.onChange(function(on){
+    muted = !on;
+    applyVolumes();
+    if (muted && playing) say('Muted from the cabinet switch. The mix is still set up.');
+  });
+
+  /* ---- the desk -------------------------------------------------- */
+  function paintDesk(){
+    CH.forEach(function(c){
+      var row = document.querySelector('#ch-' + c.id);
+      if (row) row.className = 'ch' + ((playing && !muted && c.v > 0.02 && !c.failed) ? ' on' : '');
+      var v = document.querySelector('#val-' + c.id);
+      if (v) v.textContent = Math.round(c.v * 100);
+    });
+  }
+
+  function buildDesk(){
+    E('desk').innerHTML = '';
+    CH.forEach(function(c){
+      var row = document.createElement('div');
+      row.className = 'ch';
+      row.id = 'ch-' + c.id;
+      row.innerHTML =
+        '<div class="who">' +
+          '<p class="nm">' + c.n +
+            '<span class="badge ' + (c.kind === 'rec' ? 'real">recording' : 'made">generated') +
+            '</span></p>' +
+          '<p class="src" id="src-' + c.id + '">' + c.src + '</p>' +
+        '</div>' +
+        '<div class="fader">' +
+          '<input type="range" min="0" max="100" value="' + Math.round(c.v * 100) +
+            '" id="f-' + c.id + '" aria-label="' + c.n + ' level">' +
+          '<span class="val" id="val-' + c.id + '">' + Math.round(c.v * 100) + '</span>' +
+        '</div>';
+      E('desk').appendChild(row);
+      row.querySelector('input').addEventListener('input', function(){
+        c.v = this.value / 100;
+        applyVolumes();
+      });
+    });
+  }
+
+  /* ---- the water ------------------------------------------------- */
+  var cv = E('cv'), ctx = cv.getContext('2d');
+  var W = cv.width, H = cv.height, t = 0;
+
+  function draw(){
+    var g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, '#12556B'); g.addColorStop(.35, '#0A3040');
+    g.addColorStop(1, '#030E14');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+
+    /* the surface, from above the waterline */
+    ctx.strokeStyle = 'rgba(191,228,224,.42)'; ctx.lineWidth = 2;
+    for (var s = 0; s < 3; s++){
+      ctx.beginPath();
+      for (var x = 0; x <= W; x += 8){
+        var y = 16 + s * 7 + Math.sin(x * 0.011 + t * 0.018 + s) * 5 +
+                Math.sin(x * 0.027 - t * 0.011) * 2.5;
+        x ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+      }
+      ctx.globalAlpha = 0.5 - s * 0.14;
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+
+    /* shafts of light coming down through it */
+    for (var b = 0; b < 5; b++){
+      var bx = (b * 227 + Math.sin(t * 0.004 + b) * 40) % W;
+      var lg = ctx.createLinearGradient(bx, 0, bx + 60, H * 0.7);
+      lg.addColorStop(0, 'rgba(160,220,230,.10)');
+      lg.addColorStop(1, 'rgba(160,220,230,0)');
+      ctx.fillStyle = lg;
+      ctx.beginPath();
+      ctx.moveTo(bx, 0); ctx.lineTo(bx + 34, 0);
+      ctx.lineTo(bx + 92, H * 0.78); ctx.lineTo(bx + 20, H * 0.78);
+      ctx.closePath(); ctx.fill();
+    }
+
+    /* each channel sits at its own depth, and glows when it is up */
+    CH.forEach(function(c, i){
+      var y = 40 + c.depth * (H - 70);
+      var lvl = (playing && !muted && !c.failed) ? c.v : 0;
+      var pulse = 0.55 + 0.45 * Math.sin(t * (0.02 + i * 0.006) + i * 1.7);
+
+      /* the depth line */
+      ctx.strokeStyle = 'rgba(220,233,234,.07)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+
+      if (lvl > 0.02){
+        /* a slow band of sound spreading at that depth */
+        var rad = 60 + lvl * 190 * pulse;
+        var cxp = W * (0.18 + i * 0.14);
+        var rg = ctx.createRadialGradient(cxp, y, 4, cxp, y, rad);
+        rg.addColorStop(0, c.hue + Math.round(lvl * 90 + 30).toString(16).padStart(2,'0'));
+        rg.addColorStop(1, c.hue + '00');
+        ctx.fillStyle = rg;
+        ctx.beginPath(); ctx.ellipse(cxp, y, rad, rad * 0.42, 0, 0, 6.283); ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(cxp, y, 3 + lvl * 4, 0, 6.283);
+        ctx.fillStyle = c.hue; ctx.fill();
+      }
+
+      /* the label down the side */
+      ctx.font = '9px ui-monospace, Menlo, monospace';
+      ctx.fillStyle = lvl > 0.02 ? c.hue : 'rgba(220,233,234,.20)';
+      ctx.fillText(c.n.toUpperCase(), 12, y - 6);
+      ctx.fillStyle = 'rgba(220,233,234,.14)';
+      ctx.fillText(Math.round(c.depth * 1200) + ' m', W - 56, y - 6);
+    });
+
+    if (!playing){
+      ctx.font = '15px "Helvetica Neue", system-ui, sans-serif';
+      ctx.fillStyle = 'rgba(220,233,234,.42)'; ctx.textAlign = 'center';
+      ctx.fillText('nothing in the water yet', W / 2, H - 22);
+      ctx.textAlign = 'left';
+    }
+    t++;
+  }
+
+  /* ---- go --------------------------------------------------------- */
+  E('btn-play').addEventListener('click', function(){
+    if (playing){
+      playing = false;
+      this.textContent = 'Put it in the water';
+      this.className = 'off';
+      applyVolumes();
+      say('Out of the water.');
+      return;
+    }
+    if (!gen) buildGen();
+    if (A) A.resume();
+    CH.forEach(function(c){
+      if (c.kind === 'rec' && !els[c.id]) els[c.id] = makeEl(c);
+    });
+    playing = true;
+    this.textContent = 'Take it out';
+    this.className = '';
+    applyVolumes();
+    say('The recordings are coming from NOAA’s own server as you listen. Push the faders about.');
+  });
+
+  buildDesk();
+  paintDesk();
+  (function loop(){ if (!document.hidden) draw(); requestAnimationFrame(loop); })();
+  if (window.LCSound) LCSound.mount();
+
+  window.__ocean = {
+    channels: CH,
+    playing: function(){ return playing; },
+    muted: function(){ return muted; },
+    real: function(){ return CH.filter(function(c){ return c.kind === 'rec'; }).length; },
+    generated: function(){ return CH.filter(function(c){ return c.kind === 'gen'; }).length; },
+    start: function(){ if (!playing) E('btn-play').click(); },
+    stop: function(){ if (playing) E('btn-play').click(); },
+    set: function(id, v){
+      var f = document.querySelector('#f-' + id);
+      if (f){ f.value = Math.round(v * 100); f.dispatchEvent(new Event('input')); }
+    },
+    volumes: function(){
+      var o = {};
+      CH.forEach(function(c){
+        o[c.id] = c.kind === 'rec'
+          ? (els[c.id] ? +els[c.id].volume.toFixed(3) : null)
+          : c.v;
+      });
+      return o;
+    },
+    elements: function(){ return els; },
+    failed: function(){ return CH.filter(function(c){ return c.failed; }).map(function(c){ return c.id; }); }
+  };
+})();
+</script>
+<style>
+@keyframes lcf-swell{from{opacity:.4;transform:scale(.995)}to{opacity:1;transform:none}}
+.lc-flourish{animation:lcf-swell .55s ease both}
+@media (prefers-reduced-motion: reduce){ .lc-flourish{animation:none} }
+</style>
+<script>
+(function(){
+  function flourish(){
+    var el = document.querySelector('.sea');
+    if (!el) return;
+    el.classList.remove('lc-flourish');
+    void el.offsetWidth;
+    el.classList.add('lc-flourish');
+  }
+  document.addEventListener('click', function(e){
+    if (!e.target.closest || e.target.closest('#lc-sound-btn')) return;
+    if (e.target.closest('.master button')) setTimeout(flourish, 30);
+  });
+})();
+</script>
+</body>
+</html>
