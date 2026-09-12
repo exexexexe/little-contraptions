@@ -33,7 +33,7 @@ body{
 }
 
 /* ---- the door ---- */
-#gen-bar{
+#shell-bar{
   position:sticky;top:0;z-index:30;
   display:flex;align-items:center;gap:10px;flex-wrap:wrap;
   padding:10px 14px;
@@ -41,25 +41,25 @@ body{
   border-bottom:1px solid var(--gen-rule,rgba(255,255,255,.14));
   backdrop-filter:blur(7px);
 }
-#gen-bar .lab{
+#shell-bar .lab{
   font:600 10.5px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
   letter-spacing:.17em;text-transform:uppercase;opacity:.6;flex:none;
 }
-#gen-pick{
+#shell-pick{
   font:inherit;font-size:13px;padding:7px 10px;min-height:34px;
   background:var(--gen-field,rgba(255,255,255,.07));
   color:inherit;border:1px solid var(--gen-rule,rgba(255,255,255,.20));
   border-radius:3px;cursor:pointer;max-width:min(320px,60vw);
 }
-#gen-blurb{ flex:1 1 240px;min-width:0;font-size:12px;opacity:.66;line-height:1.45 }
-@media (pointer:coarse){ #gen-pick{ min-height:44px } }
+#shell-blurb{ flex:1 1 240px;min-width:0;font-size:12px;opacity:.66;line-height:1.45 }
+@media (pointer:coarse){ #shell-pick{ min-height:44px } }
 
 /* ---- where a voice lives ---- */
-#gen-room{ padding:26px 18px 90px }
-#gen-room > .room{ max-width:760px;margin:0 auto }
+#shell-room{ padding:26px 18px 90px }
+#shell-room > .room{ max-width:760px;margin:0 auto }
 
 /* A voice that has not loaded is a fact to state, not a blank page. */
-#gen-room .gen-missing{
+#shell-room .shell-missing{
   max-width:620px;margin:60px auto;padding:18px 20px;line-height:1.6;
   border:1px solid var(--gen-rule,rgba(255,255,255,.20));border-radius:4px;
 }
@@ -70,13 +70,13 @@ body{
 </head>
 <body>
 
-<div id="gen-bar">
+<div id="shell-bar">
   <span class="lab">Voice</span>
-  <select id="gen-pick" aria-label="Which voice"></select>
-  <p id="gen-blurb"></p>
+  <select id="shell-pick" aria-label="Which voice"></select>
+  <p id="shell-blurb"></p>
 </div>
 
-<main id="gen-room" aria-live="polite"></main>
+<main id="shell-room" aria-live="polite"></main>
 
 <script src="/shared/lc-commons.js"></script>
 <script src="/shared/lc-audio.js"></script>
@@ -84,130 +84,22 @@ body{
 <script src="/shared/lc-achievements.js"></script>
 <script src="/shared/lc-generate.js"></script>
 
+<script src="/shared/lc-shell.js"></script>
 <script>
-/* ==================================================================== *
- *  The registry.
- *
- *  A voice is the old toy with its <head> taken off: its own CSS, its
- *  own markup, its own behaviour. It registers itself and the shell
- *  never looks inside it again.
- *
- *      LCGen.voice({
- *        id, name, blurb,
- *        page,                    // the few variables the PAGE reads
- *        css,                     // injected once, scoped by the shell
- *        mount(root)              // build your DOM in here; return
- *      })                         // optionally a teardown function
- *
- *  `page` exists because the voice's CSS is scoped into the room, which
- *  is the only way two voices can both style .sheet without colliding —
- *  but that scoping puts the voice's :root variables on the room rather
- *  than the document, so the page behind it kept the shell's default
- *  and only the middle of the screen changed. These few go on the root
- *  element instead, and are cleared between voices.
- *
- *  Only one voice is mounted at a time and the room is emptied between
- *  them, so a voice that starts a timer or a listener hands back a
- *  teardown rather than leaving it running behind the next one.
- * ==================================================================== */
+/* The registry and the door between parts are /shared/lc-shell.js now,
+   because the Design Studio, the Sound Lab and the History Desk are the
+   same shape as this and there is no reason for four copies of it.
+
+   LCGen.voice() is kept as the name the voice files already call, so
+   fifteen modules did not have to be edited to move one function. */
 window.LCGen = (function () {
   'use strict';
-
-  var voices = [], byId = {}, injected = {};
-  var current = null, teardown = null, pageVars = [];
-  var KEY = 'lc-generator-voice';
-
-  function setPage(def) {
-    var root = document.documentElement;
-    pageVars.forEach(function (k) { root.style.removeProperty(k); });
-    pageVars = [];
-    var p = def.page || {};
-    for (var k in p) {
-      if (!Object.prototype.hasOwnProperty.call(p, k)) continue;
-      root.style.setProperty(k, p[k]);
-      pageVars.push(k);
-    }
-  }
-
-  function voice(def) {
-    if (!def || !def.id || byId[def.id]) return;
-    byId[def.id] = def;
-    voices.push(def);
-  }
-
-  /* A voice's CSS is written against .room, and is given its own
-     namespace on the way in so two voices can both style .card without
-     ever meeting. */
-  function inject(def) {
-    if (injected[def.id] || !def.css) return;
-    injected[def.id] = true;
-    var s = document.createElement('style');
-    s.setAttribute('data-voice', def.id);
-    s.textContent = def.css.replace(/(^|\})([^@{}]+)\{/g, function (m, close, sel) {
-      if (/^\s*(from|to|\d+%)\s*$/.test(sel)) return m;          // keyframe stops
-      var scoped = sel.split(',').map(function (p) {
-        p = p.trim();
-        if (!p) return p;
-        if (/^:root$/.test(p)) return '#gen-room[data-voice="' + def.id + '"]';
-        return '#gen-room[data-voice="' + def.id + '"] ' + p;
-      }).join(',');
-      return close + scoped + '{';
-    });
-    document.head.appendChild(s);
-  }
-
-  function show(id) {
-    var def = byId[id] || voices[0];
-    if (!def) return;
-    if (teardown) { try { teardown(); } catch (e) {} teardown = null; }
-
-    var room = document.getElementById('gen-room');
-    room.innerHTML = '';
-    room.dataset.voice = def.id;
-    inject(def);
-    setPage(def);
-    current = def;
-
-    try { localStorage.setItem(KEY, def.id); } catch (e) {}
-    document.getElementById('gen-pick').value = def.id;
-    document.getElementById('gen-blurb').textContent = def.blurb || '';
-    document.title = def.name + ' — The Generator';
-
-    var host = document.createElement('div');
-    host.className = 'room';
-    room.appendChild(host);
-    try {
-      teardown = def.mount(host) || null;
-    } catch (e) {
-      room.innerHTML = '<div class="gen-missing"><strong>' + def.name +
-        '</strong> did not start: ' + String(e && e.message || e) + '</div>';
-    }
-  }
-
-  function boot() {
-    var pick = document.getElementById('gen-pick');
-    if (!voices.length) {
-      document.getElementById('gen-room').innerHTML =
-        '<div class="gen-missing">No voices loaded. The Generator is a shell ' +
-        'and its voices are separate files; none of them answered.</div>';
-      return;
-    }
-    pick.innerHTML = voices.map(function (v) {
-      return '<option value="' + v.id + '">' + v.name + '</option>';
-    }).join('');
-    pick.addEventListener('change', function () { show(pick.value); });
-
-    var want = null;
-    try { want = localStorage.getItem(KEY); } catch (e) {}
-    var q = new URLSearchParams(location.search).get('voice');
-    show((q && byId[q]) ? q : (want && byId[want]) ? want : voices[0].id);
-
-    if (window.LCSound) LCSound.mount();
-  }
-
-  return { voice: voice, show: show, boot: boot,
-           get voices() { return voices.slice(); },
-           get current() { return current && current.id; } };
+  var S = LCShell.create({ key: 'lc-generator-voice', param: 'voice', title: 'The Generator' });
+  return {
+    voice: S.add, show: S.show, boot: S.boot,
+    get voices() { return S.parts; },
+    get current() { return S.current; },
+  };
 })();
 </script>
 

@@ -3,257 +3,32 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>The Quietest Day</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23F2F0EA'/><rect x='7' y='8' width='18' height='17' fill='%23fff' stroke='%23555'/><path d='M7 13h18M12 5v5M20 5v5' stroke='%23555' stroke-width='1.6'/></svg>">
+<title>The Most Boring Day has moved</title>
+<link rel="canonical" href="/history-desk/?tab=boring">
+<meta name="robots" content="noindex">
+<!-- Not gone, just filed differently. Anyone who bookmarked or linked
+     this still lands on the same thing. The script goes first and
+     replaces this entry in the history, so Back returns where they came
+     from rather than bouncing them through here again; the refresh is
+     the fallback for a browser with script off. -->
+<meta http-equiv="refresh" content="2;url=/history-desk/?tab=boring">
 <style>
-:root{ color-scheme: light; }
-:root{
-  --paper:#F2F0EA;
-  --card:#FFFFFF;
-  --ink:#211F1A;
-  --ink-2:#54514A;
-  --dim:#8B887F;
-  --quiet:#4E7C5C;
-  --rule:#DAD6CA;
-  --sans:ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif;
-  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
-  --serif:"Iowan Old Style","Palatino Linotype",Georgia,serif;
-  --display:"Avenir Next Condensed","Roboto Condensed","Arial Narrow",var(--sans);
-}
-*{box-sizing:border-box}
-html,body{margin:0;padding:0}
-body{ background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:26px 18px 70px }
-.wrap{ max-width:860px;margin:0 auto }
-h1{ font-family:var(--display);font-size:clamp(26px,5.6vw,42px);margin:0;letter-spacing:.03em;text-transform:uppercase;font-weight:700 }
-.sub{ font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-top:8px }
-
-/* ---- the year ---- */
-.year{ margin-top:22px;overflow-x:auto;padding-bottom:4px }
-table{ border-collapse:collapse;font-family:var(--mono);font-size:10px }
-th{ font-weight:400;color:var(--dim);letter-spacing:.09em;text-transform:uppercase;padding:0 5px 6px;text-align:left }
-th.n{ text-align:center;padding:0 0 6px;width:20px }
-td.m{ color:var(--ink-2);padding-right:8px;white-space:nowrap;letter-spacing:.07em }
-td.c{ padding:1px }
-.cell{
-  width:20px;height:20px;border-radius:2px;cursor:pointer;position:relative;
-  display:flex;align-items:center;justify-content:center;
-}
-.cell.blank{ background:none;cursor:default }
-.cell:hover{ outline:2px solid var(--ink);outline-offset:-1px }
-.cell.min{ outline:2px solid var(--quiet);outline-offset:-1px }
-.cell.on{ outline:2px solid var(--ink);outline-offset:-1px }
-.cell:focus-visible{ outline:2px solid var(--ink);outline-offset:1px }
-
-.key{ display:flex;align-items:center;gap:7px;margin-top:12px;font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);flex-wrap:wrap }
-.key i{ width:18px;height:12px;border-radius:2px;display:inline-block }
-
-/* ---- the day ---- */
-.result{ margin-top:22px;background:var(--card);border:1px solid var(--rule);border-radius:4px;padding:22px 24px;min-height:120px }
-.result .lbl{ font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--quiet);margin-bottom:9px }
-.result h2{ font-family:var(--serif);font-size:clamp(23px,5vw,34px);margin:0 0 6px }
-.result .cnt{ font-family:var(--mono);font-size:11.5px;color:var(--dim);letter-spacing:.07em;margin-bottom:16px;line-height:1.7 }
-.result .cnt b{ color:var(--ink) }
-.result h3{ font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);font-weight:400;margin:0 0 11px;border-top:1px solid var(--rule);padding-top:15px }
-.result ul{ margin:0;padding-left:19px }
-.result li{ font-family:var(--serif);font-size:15.5px;line-height:1.68;color:var(--ink-2);margin-bottom:9px }
-.result li b{ color:var(--ink);font-family:var(--mono);font-size:12px;margin-right:7px }
-.result .loading{ font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:.1em }
-
-.caveat{
-  margin-top:18px;border-left:3px solid var(--rule);padding:13px 16px;background:#EDEBE4;
-  font-size:13.5px;line-height:1.75;color:var(--ink-2);
-}
-.caveat b{ color:var(--ink) }
-
-footer{
-  max-width:860px;margin:22px auto 0;padding-top:14px;border-top:1px solid var(--rule);
-  font-family:var(--mono);font-size:10.5px;line-height:1.9;color:var(--dim);
-}
-footer a{ color:var(--ink-2) }
-
-#lc-back{
-  position:fixed;left:14px;bottom:14px;z-index:9999;
-  display:inline-flex;align-items:center;gap:0;overflow:hidden;
-  font:600 11px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
-  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
-  color:#F4F5F6;background:rgba(18,19,22,.82);
-  border:1px solid rgba(255,255,255,.3);border-radius:999px;
-  width:38px;height:38px;justify-content:center;
-  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
-  box-shadow:0 4px 16px rgba(0,0,0,.3);
-  transition:width .18s ease, background .16s, border-color .16s, gap .18s ease;
-}
-/* A 38px pill is under the 44px a fingertip needs. */
-@media (pointer:coarse){ #lc-back{ width:44px;height:44px } }
-#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
-#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
-#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:rgba(18,19,22,.96);border-color:rgba(255,255,255,.6) }
-#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
-#lc-back:focus-visible{ outline:2px solid #7FD8FF;outline-offset:3px }
-@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
-@media (prefers-reduced-motion: reduce){ #lc-back{ transition:none } }
+:root{ color-scheme: light dark }
+body{ margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+  padding:28px;text-align:center;background:#15151b;color:#e8e6df;
+  font:400 15px/1.65 ui-sans-serif,system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif }
+.b{ max-width:30rem } h1{ font-size:20px;margin:0 0 12px;font-weight:600 }
+p{ margin:0 0 16px;opacity:.8 } a{ color:#e0c36a }
 </style>
 </head>
 <body>
-<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">←</span><span class="w">cabinet</span></a>
-
-<div class="wrap">
-  <h1>The Quietest Day</h1>
-  <div class="sub">the opposite of on this day</div>
-
-  <div class="year" id="year"></div>
-  <div class="key">
-    <span>fewest entries</span>
-    <i style="background:#EDEAE1"></i><i style="background:#D6DCCF"></i><i style="background:#B2C4AE"></i>
-    <i style="background:#85A388"></i><i style="background:#5A8064"></i><i style="background:#33553F"></i>
-    <span>most</span>
-    <span style="margin-left:8px">· click any day to read what is on it</span>
-  </div>
-
-  <div class="result" id="result"></div>
-
-  <div class="caveat">
-    <b>What this actually measures.</b> The colours count how many entries Wikipedia's editors have
-    written for each date — not how much happened on it. A quiet day here is a day that was
-    <em>recorded</em> less, which is a fact about the encyclopedia rather than a fact about history.
-    Coverage leans heavily towards the last few centuries and the English-speaking world, and the lean
-    is visible in the grid: the first of January is the darkest square of the year, which tells you
-    something about record-keeping and nothing at all about the first of January.
-  </div>
+<div class="b">
+  <h1>The Most Boring Day has moved</h1>
+  <p>It is part of <strong>The History Desk</strong> now, with the same room and the
+     same behaviour it always had.</p>
+  <p><a href="/history-desk/?tab=boring">Go there now</a> &middot;
+     <a href="/">back to the cabinet</a></p>
 </div>
-
-<footer>
-  Counts were taken from Wikimedia's on-this-day feed on 9 September 2026 and are stored beside this
-  page, which is why the whole year appears at once. The events listed for a day you click are fetched
-  live, so those are current. <a href="/">← back to the cabinet</a>
-</footer>
-
-<script>
-'use strict';
-
-const $ = (id) => document.getElementById(id);
-const esc = (s) => String(s == null ? '' : s)
-  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-const pad = (n) => String(n).padStart(2, '0');
-
-const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-const SHORT  = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-const DAYS_IN = [31,29,31,30,31,30,31,31,30,31,30,31];   // the feed carries a 29 February
-
-// Six steps, dark for busy. Counting entries is a rough measure and six
-// buckets is about as fine as it deserves to be read.
-const SCALE = ['#EDEAE1','#D6DCCF','#B2C4AE','#85A388','#5A8064','#33553F'];
-
-let counts = {};
-
-fetch('counts.json')
-  .then(r => r.json())
-  .then(j => { counts = j; render(); showQuietest(); })
-  .catch(() => {
-    $('year').innerHTML = '<p style="font-family:var(--mono);font-size:12px;color:var(--dim)">' +
-      'could not load the year</p>';
-  });
-
-const values = () => Object.values(counts).filter(v => typeof v === 'number');
-
-function colourFor(v, lo, hi){
-  const t = (v - lo) / Math.max(1, hi - lo);
-  return SCALE[Math.min(SCALE.length - 1, Math.floor(t * SCALE.length))];
-}
-
-function render(){
-  const vals = values();
-  const lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
-  const minKeys = Object.keys(counts).filter(k => counts[k] === lo);
-
-  let html = '<table><thead><tr><th></th>';
-  for (let d = 1; d <= 31; d++) html += '<th class="n">' + (d === 1 || d % 5 === 0 ? d : '') + '</th>';
-  html += '</tr></thead><tbody>';
-  for (let m = 1; m <= 12; m++){
-    html += '<tr><td class="m">' + SHORT[m - 1] + '</td>';
-    for (let d = 1; d <= 31; d++){
-      if (d > DAYS_IN[m - 1]){ html += '<td class="c"><div class="cell blank"></div></td>'; continue; }
-      const key = pad(m) + '-' + pad(d);
-      const v = counts[key];
-      html += '<td class="c"><div class="cell' + (minKeys.indexOf(key) >= 0 ? ' min' : '') +
-        '" data-k="' + key + '" title="' + MONTHS[m - 1] + ' ' + d + ' · ' + v + ' entries"' +
-        ' tabindex="0" role="button" aria-label="' + MONTHS[m - 1] + ' ' + d + ', ' + v + ' entries"' +
-        ' style="background:' + colourFor(v, lo, hi) + '"></div></td>';
-    }
-    html += '</tr>';
-  }
-  html += '</tbody></table>';
-  $('year').innerHTML = html;
-}
-
-$('year').addEventListener('click', (e) => {
-  const c = e.target.closest('.cell[data-k]');
-  if (c) openDay(c.dataset.k);
-});
-$('year').addEventListener('keydown', (e) => {
-  if (e.key !== 'Enter' && e.key !== ' ') return;
-  const c = e.target.closest('.cell[data-k]');
-  if (c){ e.preventDefault(); openDay(c.dataset.k); }
-});
-
-function showQuietest(){
-  const vals = values();
-  const lo = Math.min.apply(null, vals);
-  const ties = Object.keys(counts).filter(k => counts[k] === lo).sort();
-  openDay(ties[0], {
-    lead: ties.length > 1
-      ? 'joint quietest day of the year'
-      : 'the quietest day of the year',
-    also: ties.slice(1),
-  });
-}
-
-// The feed gives years before the common era as negative numbers.
-const year = (y) => (y == null ? '—' : y < 0 ? (-y) + ' BC' : String(y));
-
-const pretty = (k) => {
-  const [m, d] = k.split('-').map(Number);
-  return MONTHS[m - 1] + ' ' + d;
-};
-
-async function openDay(key, opts){
-  opts = opts || {};
-  const [m, d] = key.split('-').map(Number);
-  const v = counts[key];
-  const vals = values();
-  const hi = Math.max.apply(null, vals);
-  const busiest = Object.keys(counts).filter(k => counts[k] === hi).sort()[0];
-  const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
-
-  document.querySelectorAll('.cell.on').forEach(c => c.classList.remove('on'));
-  const cell = document.querySelector('.cell[data-k="' + key + '"]');
-  if (cell) cell.classList.add('on');
-
-  $('result').innerHTML =
-    '<div class="lbl">' + esc(opts.lead || 'one day of the year') + '</div>' +
-    '<h2>' + pretty(key) + '</h2>' +
-    '<div class="cnt"><b>' + v + '</b> recorded events' +
-      (opts.also && opts.also.length
-        ? ' &nbsp;·&nbsp; tied with ' + opts.also.map(pretty).join(', ')
-        : '') +
-      ' &nbsp;·&nbsp; the year averages ' + mean.toFixed(0) +
-      ' &nbsp;·&nbsp; the busiest day is ' + pretty(busiest) + ', with ' + hi +
-    '</div>' +
-    '<h3>everything the encyclopedia has for that date</h3>' +
-    '<div class="loading" id="ev">reading the entries…</div>';
-
-  try {
-    const r = await fetch('/api/onthisday?month=' + m + '&day=' + d);
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    const j = await r.json();
-    const items = j.items || [];
-    $('ev').outerHTML = '<ul>' + items.map(it =>
-      '<li><b>' + esc(year(it.year)) + '</b>' +
-      esc(it.text || '') + '</li>').join('') + '</ul>';
-  } catch (e) {
-    $('ev').textContent = 'could not reach the feed just now — the count above is from the snapshot';
-  }
-}
-</script>
+<script>location.replace('/history-desk/?tab=boring');</script>
 </body>
 </html>
