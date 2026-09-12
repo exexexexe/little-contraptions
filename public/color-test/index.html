@@ -400,5 +400,32 @@ h1{ font-size:clamp(19px,4.4vw,25px);font-weight:600;margin:0 0 6px;letter-spaci
   if (window.LCSound) LCSound.mount();
 })();
 </script>
+<style>
+/* A cap put down in a new place in the row. */
+@keyframes lcf-tick{from{transform:translateX(-4px)}60%{transform:translateX(2px)}to{transform:none}}
+.lc-flourish{animation:lcf-tick .22s ease-out both}
+@media (prefers-reduced-motion: reduce){ .lc-flourish{animation:none} }
+</style>
+<script>
+(function(){
+  /* The thing this toy makes should arrive, not appear. Replaying the
+     animation means taking the class off, forcing a reflow, and putting
+     it back — without the reflow the browser coalesces the two changes
+     and nothing moves the second time. */
+  var SEL = [".row",".caps","#caps","main"];
+  function flourish(){
+    var el = null;
+    for (var i = 0; i < SEL.length && !el; i++) el = document.querySelector(SEL[i]);
+    if (!el) return;
+    el.classList.remove("lc-flourish");
+    void el.offsetWidth;
+    el.classList.add("lc-flourish");
+  }
+  document.addEventListener('click', function(e){
+    if (!e.target.closest || e.target.closest('#lc-sound-btn')) return;
+    if (e.target.closest('button, .term, .cap, a, li, canvas')) setTimeout(flourish, 30);
+  });
+})();
+</script>
 </body>
 </html>
