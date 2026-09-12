@@ -1,0 +1,689 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rain Sound Machine</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23253239'/><path d='M9 14a5 5 0 0 1 9.6-2A4 4 0 1 1 20 20H10a4 4 0 0 1-1-6z' fill='%238FA3AD'/><path d='M11 23l-1.5 4M16 23l-1.5 4M21 23l-1.5 4' stroke='%235FC7C0' stroke-width='2' stroke-linecap='round'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  /* Overcast, seen from inside. Nothing else in the cabinet is this
+     particular wet slate, and the one warm thing is the lamp behind you. */
+  --slate:#253239;
+  --slate-2:#1B252B;
+  --slate-3:#2F3E46;
+  --ink:#DCE4E7;
+  --ink-2:#9FB0B7;
+  --dim:#6E828B;
+  --dimmer:#4E6169;
+  --teal:#5FC7C0;
+  --teal-2:#8FE0DA;
+  --lamp:#E8B96A;
+  --line:#38484F;
+  /* Geometric sans: flat, quiet, nothing like the Mincho next door. */
+  --sans:"Avenir Next",Avenir,"Futura","Century Gothic","Trebuchet MS",sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;min-height:100%}
+body{
+  background:var(--slate-2);
+  background-image:
+    radial-gradient(ellipse at 50% 110%, rgba(232,185,106,.07), transparent 58%),
+    linear-gradient(180deg,#2A3841 0%,#171F25 100%);
+  color:var(--ink);font-family:var(--sans);
+  min-height:100vh;padding:26px 16px 84px;
+  display:flex;flex-direction:column;align-items:center;
+}
+.wrap{ width:min(760px,100%);display:flex;flex-direction:column;align-items:center }
+
+h1{ font-size:clamp(21px,4.8vw,28px);font-weight:500;margin:0 0 6px;letter-spacing:.02em;text-align:center }
+.tagline{ font-size:14px;line-height:1.7;color:var(--dim);margin:0 0 18px;text-align:center;max-width:46ch }
+
+/* ---- the window ------------------------------------------------------- */
+.pane{
+  position:relative;width:100%;
+  border:1px solid var(--line);border-radius:3px;
+  box-shadow:0 16px 40px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.05);
+  overflow:hidden;background:#1A242A;
+}
+.pane canvas{ display:block;width:100%;height:auto }
+.frame{
+  position:absolute;inset:0;pointer-events:none;
+  border:10px solid #33434B;border-radius:2px;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.4), inset 0 0 40px rgba(0,0,0,.45);
+}
+.frame::after{
+  content:'';position:absolute;left:50%;top:0;bottom:0;width:9px;margin-left:-4.5px;
+  background:#33434B;box-shadow:0 0 0 1px rgba(0,0,0,.35);
+}
+.now{
+  position:absolute;left:20px;top:18px;z-index:2;pointer-events:none;
+  font-family:var(--mono);font-size:9px;letter-spacing:.2em;text-transform:uppercase;
+  color:rgba(220,228,231,.45);
+}
+
+/* ---- the reading ------------------------------------------------------- */
+.reading{
+  width:100%;margin-top:16px;border:1px solid var(--line);border-radius:3px;
+  background:#202A30;padding:15px 17px;
+}
+.reading .where{ font-size:17px;margin:0 0 3px }
+.reading .what{ font-size:14px;color:var(--ink-2);margin:0 0 11px;line-height:1.6 }
+.reading .what b{ color:var(--teal-2);font-weight:500 }
+.nums{ display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:1px;background:var(--line);
+  border:1px solid var(--line);border-radius:3px;overflow:hidden }
+.nums div{ background:#1B242A;padding:9px 8px;text-align:center }
+.nums .k{ display:block;font-family:var(--mono);font-size:8px;letter-spacing:.17em;text-transform:uppercase;color:var(--dimmer);margin-bottom:4px }
+.nums .v{ font-size:15px;color:var(--ink) }
+.nums .v small{ font-size:10.5px;color:var(--dim) }
+.reading.bad .what{ color:var(--lamp) }
+
+.bar{ display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;justify-content:center;align-items:center;width:100% }
+.bar button{
+  font:inherit;font-family:var(--sans);font-size:14.5px;cursor:pointer;font-weight:500;
+  background:#2B3940;color:var(--ink);border:1px solid var(--line);border-radius:999px;
+  padding:10px 22px;transition:border-color .15s,background .15s,color .15s;
+}
+.bar button:hover{ border-color:var(--teal);color:var(--teal-2) }
+.bar button:focus-visible{ outline:2px solid var(--teal);outline-offset:2px }
+.bar button.on{ background:var(--teal);border-color:var(--teal);color:#10221F }
+
+.slider{ width:100%;margin-top:18px;display:flex;flex-direction:column;gap:7px }
+.slider .lab{ display:flex;justify-content:space-between;align-items:baseline;
+  font-family:var(--mono);font-size:9px;letter-spacing:.17em;text-transform:uppercase;color:var(--dimmer) }
+.slider .lab em{ font-style:normal;color:var(--teal-2);letter-spacing:.04em;text-transform:none;font-size:11.5px }
+input[type=range]{ -webkit-appearance:none;appearance:none;width:100%;height:3px;background:var(--line);border-radius:2px;outline:none }
+input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none;appearance:none;width:17px;height:17px;border-radius:50%;
+  background:var(--teal);cursor:pointer;border:2px solid #1B252B }
+input[type=range]::-moz-range-thumb{ width:17px;height:17px;border-radius:50%;background:var(--teal);cursor:pointer;border:2px solid #1B252B }
+input[type=range]:focus-visible{ outline:2px solid var(--teal);outline-offset:4px }
+
+.said{ margin-top:14px;text-align:center;font-size:14px;line-height:1.75;color:var(--ink-2);min-height:2.8em;max-width:50ch }
+
+.book{ margin-top:26px;padding-top:19px;border-top:1px solid var(--line);font-size:14px;line-height:1.85;color:var(--ink-2);width:100% }
+.book p{ margin:0 0 12px } .book p:last-child{ margin:0 }
+.book b{ color:var(--ink);font-weight:600 }
+.book code{ font-family:var(--mono);font-size:12.5px;color:var(--teal-2) }
+.book a{ color:var(--teal-2) }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 var(--mono);
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#12201E;background:var(--teal);
+  border:1px solid rgba(0,0,0,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  box-shadow:0 5px 18px rgba(0,0,0,.45);
+  transition:width .18s ease, background .16s, gap .18s ease;
+}
+@media (pointer:coarse){ #lc-back{ width:44px;height:44px } }
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:var(--teal-2) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid var(--teal-2);outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Rain Sound Machine</h1>
+<p class="tagline">Whatever is actually falling where you are, turned into a sound. Nothing here is
+  a recording &mdash; every drop is made up out of noise and a filter at the moment you hear it.</p>
+
+<div class="pane">
+  <canvas id="cv" width="1000" height="600"></canvas>
+  <div class="frame"></div>
+  <div class="now" id="now">looking outside&hellip;</div>
+</div>
+
+<div class="reading" id="reading">
+  <p class="where" id="r-where">Finding out where you are&hellip;</p>
+  <p class="what" id="r-what">&nbsp;</p>
+  <div class="nums">
+    <div><span class="k">precipitation</span><span class="v" id="r-mm">&mdash;</span></div>
+    <div><span class="k">wmo code</span><span class="v" id="r-code">&mdash;</span></div>
+    <div><span class="k">temperature</span><span class="v" id="r-temp">&mdash;</span></div>
+    <div><span class="k">observed</span><span class="v" id="r-when">&mdash;</span></div>
+  </div>
+</div>
+
+<div class="bar">
+  <button type="button" id="btn-play">Listen</button>
+  <button type="button" id="btn-refresh">Look again</button>
+</div>
+
+<div class="slider">
+  <div class="lab"><span>how hard it is coming down</span><em id="s-lab">&mdash;</em></div>
+  <input type="range" id="rate" min="0" max="100" value="0" aria-label="Rain intensity">
+  <div class="lab"><span id="s-note">the real reading is marked as you move it</span></div>
+</div>
+
+<p class="said" id="said">&nbsp;</p>
+
+<div class="book">
+  <p><b>The reading is real and the sound is not a recording.</b> Your rough position comes from
+  the same keyless <code>/api/where</code> the desktop's weather widget uses &mdash; city level at
+  best, nothing stored &mdash; and the weather itself from
+  <a href="https://open-meteo.com/" rel="noopener">Open-Meteo</a>, which needs no key.
+  <b>Weather data by Open-Meteo.com, used under CC&nbsp;BY&nbsp;4.0.</b> The panel above prints the
+  actual millimetres and the actual WMO code rather than a word chosen to match the sound.</p>
+  <p><b>How millimetres become a noise.</b> The intensity bands are the standard meteorological
+  ones, not invented: under <code>2.5&nbsp;mm/h</code> is light, <code>2.5&ndash;7.6</code> is
+  moderate, and over <code>7.6</code> is heavy. That number sets five layers, all generated here:
+  a wide band of filtered noise for the hiss of many drops at once; a mid band around
+  <code>600&nbsp;Hz</code> for the body of it; a low brown-noise rumble that only comes in when it
+  is really coming down; individual droplet impacts, scheduled at a rate that follows the
+  intensity, each a few milliseconds of noise through a sharp resonant filter; and the occasional
+  slower plink of water falling into water that has already collected.</p>
+  <p><b>When it is not raining you get a clear-sky hum instead</b> &mdash; two sine tones a fraction
+  apart, beating slowly against each other, under a breath of filtered air. An empty panel would
+  be the honest thing to show and a bad thing to listen to. Thunder is only ever armed when the
+  real WMO code is one of the thunderstorm ones (<code>95</code>, <code>96</code>, <code>99</code>),
+  so you will not get a storm that is not happening.</p>
+  <p>The slider moves the sound, never the reading. Wherever you push it, the panel goes on saying
+  what is actually falling on you.</p>
+</div>
+
+</div>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">&larr;</span><span class="w">cabinet</span></a>
+
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  var cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+  var W = cv.width, H = cv.height;
+  function E(id){ return document.getElementById(id); }
+  function say(s){ E('said').innerHTML = s || '&nbsp;'; }
+
+  /* ================================================================== *
+   *  The official WMO 4677 weather codes as Open-Meteo returns them.
+   *  Copied from their documentation rather than paraphrased, because the
+   *  panel prints the code next to the words and the two must agree.
+   * ================================================================== */
+  var WMO = {
+    0:'Clear sky', 1:'Mainly clear', 2:'Partly cloudy', 3:'Overcast',
+    45:'Fog', 48:'Depositing rime fog',
+    51:'Light drizzle', 53:'Moderate drizzle', 55:'Dense drizzle',
+    56:'Light freezing drizzle', 57:'Dense freezing drizzle',
+    61:'Slight rain', 63:'Moderate rain', 65:'Heavy rain',
+    66:'Light freezing rain', 67:'Heavy freezing rain',
+    71:'Slight snow fall', 73:'Moderate snow fall', 75:'Heavy snow fall',
+    77:'Snow grains',
+    80:'Slight rain showers', 81:'Moderate rain showers', 82:'Violent rain showers',
+    85:'Slight snow showers', 86:'Heavy snow showers',
+    95:'Thunderstorm', 96:'Thunderstorm with slight hail', 99:'Thunderstorm with heavy hail'
+  };
+  var THUNDER = { 95:1, 96:1, 99:1 };
+
+  /* Standard rain-rate bands. Light under 2.5 mm/h, moderate to 7.6,
+     heavy above — the classification every met service uses, so the
+     wording on the page is not something this toy made up. */
+  function band(mm){
+    if (mm <= 0) return 'none';
+    if (mm < 2.5) return 'light';
+    if (mm < 7.6) return 'moderate';
+    return 'heavy';
+  }
+  /* mm/h to a 0..1 the synthesiser can use. Codes carry a floor, because
+     Open-Meteo can report drizzle with 0.0 mm in the accumulating field
+     and "it is drizzling but silent" would be wrong. */
+  function intensityFrom(mm, code){
+    var i = 0;
+    if (mm > 0) i = Math.min(0.94, 0.17 + Math.sqrt(mm / 9) * 0.83);
+    var floor = 0;
+    if (code >= 51 && code <= 57) floor = 0.17;         // drizzle
+    else if (code === 61 || code === 80) floor = 0.34;  // slight rain / showers
+    else if (code === 63 || code === 81) floor = 0.56;  // moderate
+    else if (code === 65 || code === 82) floor = 0.80;  // heavy / violent
+    else if (code >= 66 && code <= 67) floor = 0.5;
+    else if (code >= 95) floor = 0.72;                  // thunderstorm
+    return Math.max(i, floor);
+  }
+
+  /* ================================================================== *
+   *  State
+   * ================================================================== */
+  var real = null;            // the actual reading, never overwritten by the slider
+  var intensity = 0;          // what is being played
+  var realIntensity = 0;
+  var thunderArmed = false;
+  var playing = false;
+
+  /* ================================================================== *
+   *  The weather
+   * ================================================================== */
+  function fmtWhen(iso){
+    if (!iso) return '—';
+    var t = String(iso).replace('T', ' ').slice(11, 16);
+    return t || '—';
+  }
+
+  function load(){
+    E('r-where').textContent = 'Finding out where you are…';
+    E('r-what').innerHTML = '&nbsp;';
+    E('reading').className = 'reading';
+
+    fetch('/api/where').then(function(r){ return r.json(); }).then(function(w){
+      if (!w || !w.ok) throw new Error('not_located');
+      var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + w.lat +
+                '&longitude=' + w.lon +
+                '&current=precipitation,rain,showers,snowfall,weather_code,temperature_2m' +
+                '&timezone=auto';
+      return fetch(url).then(function(r){ return r.json(); }).then(function(m){
+        if (!m || !m.current) throw new Error('no_weather');
+        var c = m.current;
+        real = {
+          city: w.city, country: w.country,
+          mm: Number(c.precipitation) || 0,
+          rain: Number(c.rain) || 0,
+          showers: Number(c.showers) || 0,
+          snow: Number(c.snowfall) || 0,
+          code: Number(c.weather_code),
+          temp: c.temperature_2m,
+          unit: (m.current_units && m.current_units.temperature_2m) || '°C',
+          mmUnit: (m.current_units && m.current_units.precipitation) || 'mm',
+          when: c.time
+        };
+        paintReading();
+      });
+    }).catch(function(){
+      real = null;
+      E('reading').className = 'reading bad';
+      E('r-where').textContent = 'Could not find out what it is doing where you are.';
+      E('r-what').innerHTML = 'The locator or the weather service did not answer. Nothing is broken ' +
+        'and nothing else in the cabinet is affected &mdash; <b>the machine still works</b>, it is ' +
+        'just no longer reporting on your actual window. Move the slider and it will rain anyway.';
+      E('r-mm').textContent = '—'; E('r-code').textContent = '—';
+      E('r-temp').textContent = '—'; E('r-when').textContent = '—';
+      realIntensity = 0; thunderArmed = false;
+      setIntensity(0.42, true);
+      E('now').textContent = 'no reading';
+    });
+  }
+
+  function paintReading(){
+    var r = real;
+    var desc = WMO[r.code] !== undefined ? WMO[r.code] : 'Unknown code';
+    realIntensity = intensityFrom(r.mm, r.code);
+    thunderArmed = !!THUNDER[r.code];
+
+    E('r-where').textContent = (r.city ? r.city : 'Where you are') +
+      (r.country ? ', ' + r.country : '');
+    var b = band(r.mm);
+    var line = '<b>' + desc + '</b>';
+    if (r.mm > 0) line += ' — ' + b + ' rain by the standard bands, at ' + r.mm + ' ' + r.mmUnit + ' in the last hour.';
+    else if (realIntensity > 0) line += ' — nothing measurable has accumulated, but the code says it is falling.';
+    else line += ' — nothing falling. You get the clear-sky hum instead.';
+    if (thunderArmed) line += ' <b>Thunder armed.</b>';
+    E('r-what').innerHTML = line;
+
+    E('r-mm').innerHTML = r.mm + ' <small>' + r.mmUnit + '</small>';
+    E('r-code').innerHTML = r.code + ' <small>wmo</small>';
+    E('r-temp').innerHTML = (r.temp != null ? r.temp : '—') + ' <small>' + r.unit + '</small>';
+    E('r-when').innerHTML = fmtWhen(r.when) + ' <small>local</small>';
+    E('now').textContent = desc.toLowerCase();
+
+    setIntensity(realIntensity, true);
+    E('s-note').textContent = 'the real reading here is ' + Math.round(realIntensity * 100) +
+      ' — the slider moves the sound, never the reading';
+  }
+
+  /* ================================================================== *
+   *  The rain, made rather than played back.
+   *
+   *  Five layers and nothing sampled:
+   *    hiss    white noise, high-passed — many small drops at once
+   *    body    pink noise through a mid band — the bulk of the sound
+   *    rumble  brown noise, low-passed — only when it is really coming down
+   *    drops   scheduled bursts through a sharp resonant filter
+   *    plink   water falling into water that has already collected
+   *
+   *  Everything hangs off LCAudio's bus, which hangs off the bench master
+   *  — so the cabinet's mute switch reaches all of it for free.
+   * ================================================================== */
+  var A = null, bed = null, nodes = {}, dropTimer = null, thunderTimer = null;
+
+  function build(){
+    A = LCAudio.get();
+    if (!A) return false;
+    A.resume();
+    bed = A.bus(0);                       // brought up by setIntensity
+
+    /* hiss */
+    var hn = bed.noise('white');
+    var hf = A.filt('highpass', 2000);
+    var hg = A.gain(0);
+    A.chain(hn, hf, hg, bed);
+
+    /* body */
+    var bn = bed.noise('pink');
+    var bf = A.filt('bandpass', 620, 0.7);
+    var bg = A.gain(0);
+    A.chain(bn, bf, bg, bed);
+
+    /* rumble */
+    var rn = bed.noise('brown');
+    var rf = A.filt('lowpass', 190);
+    var rg = A.gain(0);
+    A.chain(rn, rf, rg, bed);
+
+    /* a slow breath across all of it, so it is never a flat wall */
+    var lfo = bed.osc('sine', 0.055);
+    var lfoG = A.gain(0.22);
+    lfo.connect(lfoG);
+    lfoG.connect(bg.gain);
+
+    /* the clear-sky hum: two sines a fraction apart, beating slowly */
+    var o1 = bed.osc('sine', 62);
+    var o2 = bed.osc('sine', 62.9);
+    var cg = A.gain(0);
+    o1.connect(cg); o2.connect(cg);
+    var air = bed.noise('pink');
+    var af = A.filt('lowpass', 420);
+    var ag = A.gain(0);
+    A.chain(air, af, ag, bed);
+    cg.connect(bed);
+
+    /* where the drops and the thunder are mixed in */
+    var dg = A.gain(1); dg.connect(bed);
+    var tg = A.gain(1); tg.connect(bed);
+
+    nodes = { hg:hg, bg:bg, rg:rg, cg:cg, ag:ag, dg:dg, tg:tg, bf:bf, hf:hf };
+    return true;
+  }
+
+  function ramp(p, v, t){
+    try {
+      var now = A.ctx.currentTime;
+      p.cancelScheduledValues(now);
+      p.setValueAtTime(p.value, now);
+      p.linearRampToValueAtTime(v, now + (t || 0.35));
+    } catch (e) { p.value = v; }
+  }
+
+  function applyMix(){
+    if (!A || !bed) return;
+    var i = intensity;
+    var wet = i > 0.01;
+    ramp(nodes.hg.gain, wet ? 0.020 + i * 0.085 : 0, 0.6);
+    ramp(nodes.bg.gain, wet ? 0.030 + i * 0.115 : 0, 0.6);
+    ramp(nodes.rg.gain, wet ? Math.max(0, i - 0.42) * 0.16 : 0, 0.8);
+    /* heavier rain is brighter as well as louder — more small fast drops */
+    try {
+      nodes.bf.frequency.setTargetAtTime(520 + i * 520, A.ctx.currentTime, 0.4);
+      nodes.hf.frequency.setTargetAtTime(2400 - i * 900, A.ctx.currentTime, 0.4);
+    } catch (e) {}
+    /* the clear-sky hum, only when there is nothing falling */
+    ramp(nodes.cg.gain, wet ? 0 : 0.030, 1.2);
+    ramp(nodes.ag.gain, wet ? 0 : 0.012, 1.2);
+    ramp(bed.gain, 1, 0.4);
+  }
+
+  /* drops: a look-ahead-free scheduler, because the gaps are meant to be
+     irregular and a metronomic drop sounds like a dripping tap */
+  function scheduleDrops(){
+    clearTimeout(dropTimer);
+    if (!playing || !A) return;
+    var i = intensity;
+    if (i > 0.02){
+      var perSec = 2 + i * i * 90;
+      var n = 1 + Math.floor(Math.random() * (1 + i * 3));
+      for (var k = 0; k < n; k++){
+        var near = Math.random() < 0.16;         // a few land close to the glass
+        A.burst('white', {
+          at: Math.random() * 0.05,
+          type: 'bandpass',
+          freq: near ? 620 + Math.random() * 700 : 1300 + Math.random() * 3400,
+          q: near ? 4 + Math.random() * 5 : 7 + Math.random() * 12,
+          dur: near ? 0.02 + Math.random() * 0.05 : 0.004 + Math.random() * 0.016,
+          level: (near ? 0.055 : 0.022) * (0.4 + i * 0.9) * (0.5 + Math.random()),
+          to: nodes.dg,
+          reverb: near
+        });
+      }
+      /* the slower plink of water into standing water */
+      if (Math.random() < 0.03 + i * 0.05){
+        A.blip(700 + Math.random() * 900, {
+          type: 'sine', dur: 0.11 + Math.random() * 0.1,
+          glide: 260 + Math.random() * 200,
+          level: 0.030 * (0.5 + i), to: nodes.dg, reverb: true
+        });
+      }
+      dropTimer = setTimeout(scheduleDrops, Math.max(14, (1000 / perSec) * (0.35 + Math.random() * 1.5)));
+    } else {
+      dropTimer = setTimeout(scheduleDrops, 700);
+    }
+  }
+
+  /* Thunder is only ever armed by a real thunderstorm code. */
+  function scheduleThunder(){
+    clearTimeout(thunderTimer);
+    if (!playing) return;
+    thunderTimer = setTimeout(function(){
+      if (playing && thunderArmed && A){
+        var far = Math.random() < 0.6;
+        A.burst('brown', {
+          type: 'lowpass', freq: far ? 110 : 260, q: 0.6,
+          dur: far ? 2.6 : 1.5, attack: far ? 0.34 : 0.02,
+          level: far ? 0.10 : 0.15, to: nodes.tg, reverb: true
+        });
+        if (!far) A.burst('white', {
+          type:'highpass', freq: 900, dur: 0.22, level: 0.05, to: nodes.tg, reverb: true
+        });
+        flash = far ? 0.35 : 1;
+      }
+      scheduleThunder();
+    }, 9000 + Math.random() * 26000);
+  }
+
+  function start(){
+    if (playing) return;
+    if (!A && !build()){
+      say('This browser will not give the page an audio context, so there is nothing to hear. ' +
+          'The window still rains.');
+      return;
+    }
+    A.resume();
+    playing = true;
+    E('btn-play').textContent = 'Stop';
+    E('btn-play').className = 'on';
+    applyMix();
+    scheduleDrops();
+    scheduleThunder();
+    say(intensity > 0.01
+      ? 'Every drop you are hearing is a few milliseconds of noise through a filter, made up as it goes.'
+      : 'Nothing is falling, so this is the clear-sky hum: two sine tones a fraction apart, beating.');
+  }
+  function stop(){
+    playing = false;
+    clearTimeout(dropTimer); clearTimeout(thunderTimer);
+    E('btn-play').textContent = 'Listen';
+    E('btn-play').className = '';
+    if (bed) ramp(bed.gain, 0, 0.5);
+  }
+
+  function setIntensity(v, fromReal){
+    intensity = Math.max(0, Math.min(1, v));
+    E('rate').value = Math.round(intensity * 100);
+    var b = intensity <= 0.01 ? 'dry'
+      : intensity < 0.28 ? 'drizzle'
+      : intensity < 0.5 ? 'light'
+      : intensity < 0.74 ? 'moderate'
+      : 'heavy';
+    E('s-lab').textContent = b + (fromReal ? ' · the real reading' : '');
+    applyMix();
+  }
+
+  E('rate').addEventListener('input', function(){
+    setIntensity(this.value / 100, false);
+    if (!playing) return;
+  });
+  E('btn-play').addEventListener('click', function(){ playing ? stop() : start(); });
+  E('btn-refresh').addEventListener('click', function(){ load(); say('Looking again.'); });
+
+  /* ================================================================== *
+   *  The glass
+   * ================================================================== */
+  var drops = [], flash = 0, t0 = Date.now();
+
+  function spawn(){
+    var i = intensity;
+    var want = Math.floor(i * i * 150);
+    while (drops.length < want){
+      drops.push({
+        x: Math.random() * W, y: Math.random() * H,
+        r: 1.2 + Math.random() * (1.6 + i * 4),
+        v: 0, trail: 0, stuck: Math.random() < 0.55
+      });
+    }
+    while (drops.length > want) drops.pop();
+  }
+
+  function drawGlass(){
+    var i = intensity;
+    var T = (Date.now() - t0) / 1000;
+
+    /* what is out there: an overcast wall of weather, darker the heavier
+       it is, with a suggestion of a horizon */
+    var g = ctx.createLinearGradient(0, 0, 0, H);
+    var lift = 1 - i * 0.45;
+    g.addColorStop(0, 'rgb(' + Math.round(74 * lift) + ',' + Math.round(94 * lift) + ',' + Math.round(106 * lift) + ')');
+    g.addColorStop(0.62, 'rgb(' + Math.round(50 * lift) + ',' + Math.round(66 * lift) + ',' + Math.round(76 * lift) + ')');
+    g.addColorStop(1, 'rgb(' + Math.round(28 * lift) + ',' + Math.round(38 * lift) + ',' + Math.round(44 * lift) + ')');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+
+    /* a soft far-off skyline, blurred by the wet */
+    ctx.save();
+    ctx.globalAlpha = 0.30 - i * 0.14;
+    ctx.fillStyle = '#0E161A';
+    for (var b = 0; b < 13; b++){
+      var bw = 40 + ((b * 37) % 70);
+      var bx = (b * 83) % (W + 60) - 30;
+      var bh = 50 + ((b * 53) % 130) + Math.sin(b) * 16;
+      ctx.fillRect(bx, H * 0.70 - bh, bw, bh + 90);
+    }
+    ctx.restore();
+
+    /* lightning, only ever from a real thunderstorm code */
+    if (flash > 0){
+      ctx.fillStyle = 'rgba(210,228,236,' + (flash * 0.5) + ')';
+      ctx.fillRect(0, 0, W, H);
+      flash -= 0.045;
+    }
+
+    if (i <= 0.01){
+      /* a clear sky: one slow band of light moving across, and nothing else */
+      var cxp = (Math.sin(T * 0.06) * 0.5 + 0.5) * W;
+      var rg = ctx.createRadialGradient(cxp, H * 0.3, 10, cxp, H * 0.3, W * 0.55);
+      rg.addColorStop(0, 'rgba(232,240,242,.12)');
+      rg.addColorStop(1, 'rgba(232,240,242,0)');
+      ctx.fillStyle = rg; ctx.fillRect(0, 0, W, H);
+      ctx.font = '15px ' + getComputedStyle(document.body).fontFamily;
+      ctx.fillStyle = 'rgba(220,228,231,.32)'; ctx.textAlign = 'center';
+      ctx.fillText('dry', W / 2, H - 34);
+      ctx.textAlign = 'left';
+      return;
+    }
+
+    /* streaks: the fine falling stuff behind the glass */
+    ctx.strokeStyle = 'rgba(210,228,236,' + (0.05 + i * 0.13) + ')';
+    ctx.lineWidth = 1;
+    var n = Math.floor(30 + i * 320);
+    ctx.beginPath();
+    for (var s = 0; s < n; s++){
+      var sx = ((s * 137.5 + T * (120 + i * 460)) % (W + 200)) - 100;
+      var sy = ((s * 271.3 + T * (420 + i * 900)) % (H + 200)) - 100;
+      var len = 8 + i * 30;
+      ctx.moveTo(sx, sy); ctx.lineTo(sx - 3 - i * 5, sy + len);
+    }
+    ctx.stroke();
+
+    /* and the drops actually on the pane */
+    spawn();
+    drops.forEach(function(d){
+      if (d.stuck){
+        /* beads sit until something bigger runs into them */
+        if (Math.random() < 0.0016 * (1 + i * 5)) d.stuck = false;
+      } else {
+        d.v += 0.10 + d.r * 0.028;
+        d.y += d.v;
+        d.trail = Math.min(70, d.trail + d.v * 0.7);
+        if (d.y > H + 20){
+          d.y = -10; d.x = Math.random() * W; d.v = 0; d.trail = 0;
+          d.stuck = Math.random() < 0.5;
+          d.r = 1.2 + Math.random() * (1.6 + i * 4);
+        }
+      }
+      if (d.trail > 2){
+        var tg2 = ctx.createLinearGradient(d.x, d.y - d.trail, d.x, d.y);
+        tg2.addColorStop(0, 'rgba(198,222,230,0)');
+        tg2.addColorStop(1, 'rgba(198,222,230,.22)');
+        ctx.strokeStyle = tg2; ctx.lineWidth = d.r * 0.85;
+        ctx.beginPath(); ctx.moveTo(d.x, d.y - d.trail); ctx.lineTo(d.x, d.y); ctx.stroke();
+      }
+      ctx.beginPath();
+      ctx.arc(d.x, d.y, d.r, 0, 6.283);
+      ctx.fillStyle = 'rgba(214,234,240,.38)'; ctx.fill();
+      ctx.beginPath();
+      ctx.arc(d.x - d.r * 0.3, d.y - d.r * 0.35, d.r * 0.34, 0, 6.283);
+      ctx.fillStyle = 'rgba(255,255,255,.5)'; ctx.fill();
+    });
+  }
+
+  function tick(){
+    if (!document.hidden) drawGlass();
+    requestAnimationFrame(tick);
+  }
+
+  load();
+  requestAnimationFrame(tick);
+  if (window.LCSound) LCSound.mount();
+  /* stopping the bed when the switch goes off is not enough on its own —
+     the scheduler would go on making drops into a muted gate — but the
+     gate is upstream of everything here, so this is only about not
+     burning the timer for nothing */
+  if (window.LCSound) LCSound.onChange(function(on){ if (!on && playing) stop(); });
+
+  window.__rain = {
+    real: function(){ return real; },
+    intensity: function(){ return intensity; },
+    realIntensity: function(){ return realIntensity; },
+    playing: function(){ return playing; },
+    thunder: function(){ return thunderArmed; },
+    set: function(v){ setIntensity(v, false); },
+    start: start, stop: stop,
+    wmo: WMO, band: band, intensityFrom: intensityFrom,
+    drops: function(){ return drops.length; }
+  };
+})();
+</script>
+<style>
+@keyframes lcf-develop{from{opacity:.15;filter:blur(5px)}to{opacity:1;filter:none}}
+.lc-flourish{animation:lcf-develop .6s ease both}
+@media (prefers-reduced-motion: reduce){ .lc-flourish{animation:none} }
+</style>
+<script>
+(function(){
+  function flourish(){
+    var el = document.querySelector('.reading');
+    if (!el) return;
+    el.classList.remove('lc-flourish');
+    void el.offsetWidth;
+    el.classList.add('lc-flourish');
+  }
+  document.addEventListener('click', function(e){
+    if (!e.target.closest || e.target.closest('#lc-sound-btn')) return;
+    if (e.target.closest('.bar button')) setTimeout(flourish, 30);
+  });
+})();
+</script>
+</body>
+</html>

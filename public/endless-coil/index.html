@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Endless Coil</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23E8E6F2'/><ellipse cx='16' cy='9' rx='9' ry='3.2' fill='none' stroke='%23E4453F' stroke-width='2'/><ellipse cx='16' cy='14' rx='9' ry='3.2' fill='none' stroke='%23E8912F' stroke-width='2'/><ellipse cx='16' cy='19' rx='9' ry='3.2' fill='none' stroke='%2334A353' stroke-width='2'/><ellipse cx='16' cy='24' rx='9' ry='3.2' fill='none' stroke='%232F6FE0' stroke-width='2'/></svg>">
+<style>
+:root{ color-scheme: light; }
+:root{
+  /* A toy on a wooden floor in a lilac room. The only saturated drawer
+     in tonight's set, and the only rounded type. */
+  --room:#E8E6F2;
+  --room-2:#DAD7EA;
+  --ink:#2E2A3D;
+  --ink-2:#57516E;
+  --dim:#867FA0;
+  --dimmer:#ADA6C2;
+  --wood:#C89A63;
+  --pop:#E4453F;
+  --line:#CCC7DF;
+  --sans:ui-rounded,"SF Pro Rounded","Nunito","Varela Round","Trebuchet MS",system-ui,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;min-height:100%}
+body{
+  background:var(--room);
+  background-image:radial-gradient(ellipse at 50% 0%, rgba(255,255,255,.85), transparent 58%);
+  color:var(--ink);font-family:var(--sans);
+  min-height:100vh;padding:26px 16px 84px;
+  display:flex;flex-direction:column;align-items:center;
+}
+.wrap{ width:min(760px,100%);display:flex;flex-direction:column;align-items:center }
+
+h1{ font-size:clamp(23px,5.2vw,31px);font-weight:700;margin:0 0 7px;letter-spacing:-.01em;text-align:center }
+.tagline{ font-size:14.5px;line-height:1.7;color:var(--dim);margin:0 0 18px;text-align:center;max-width:44ch }
+
+.floor{
+  position:relative;width:100%;border:1px solid var(--line);border-radius:12px;
+  box-shadow:0 14px 34px rgba(60,50,90,.16), inset 0 1px 0 #fff;
+  overflow:hidden;background:#F2F0F8;
+}
+.floor canvas{ display:block;width:100%;height:auto;touch-action:none;cursor:grab }
+.floor canvas:active{ cursor:grabbing }
+.hint{
+  position:absolute;left:14px;top:12px;pointer-events:none;
+  font-family:var(--mono);font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--dimmer);
+}
+
+.bar{ display:flex;flex-wrap:wrap;gap:9px;margin-top:16px;justify-content:center;width:100% }
+.bar button{
+  font:inherit;font-family:var(--sans);font-size:14.5px;font-weight:600;cursor:pointer;
+  background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:999px;
+  padding:11px 22px;transition:transform .1s,border-color .15s,background .15s;
+  box-shadow:0 2px 0 rgba(60,50,90,.09);
+}
+.bar button:hover{ border-color:var(--ink-2) }
+.bar button:active{ transform:translateY(2px);box-shadow:none }
+.bar button:focus-visible{ outline:2px solid var(--pop);outline-offset:2px }
+.bar button.go{ background:var(--pop);border-color:var(--pop);color:#fff }
+
+.dials{ width:100%;margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:18px }
+@media (max-width:520px){ .dials{ grid-template-columns:1fr } }
+.dial .lab{ display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px;
+  font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--dimmer) }
+.dial .lab b{ color:var(--pop);font-weight:400;font-size:11.5px;letter-spacing:.03em }
+input[type=range]{ -webkit-appearance:none;appearance:none;width:100%;height:4px;
+  background:var(--room-2);border-radius:3px;outline:none }
+input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none;appearance:none;width:18px;height:18px;
+  border-radius:50%;background:var(--pop);cursor:pointer;border:2px solid #fff;
+  box-shadow:0 1px 3px rgba(0,0,0,.2) }
+input[type=range]::-moz-range-thumb{ width:18px;height:18px;border-radius:50%;background:var(--pop);
+  cursor:pointer;border:2px solid #fff }
+input[type=range]:focus-visible{ outline:2px solid var(--pop);outline-offset:4px }
+
+.said{ margin-top:15px;text-align:center;font-size:14.5px;line-height:1.75;color:var(--ink-2);
+  min-height:3em;max-width:50ch }
+
+/* ---- the idle widget, shown here so it can be seen working ---------- */
+.widget-demo{
+  width:100%;margin-top:30px;padding:20px;border:1px dashed var(--line);border-radius:12px;
+  background:rgba(255,255,255,.55);text-align:center;
+}
+.widget-demo h2{ font-size:15px;margin:0 0 6px;font-weight:700 }
+.widget-demo p{ font-size:13px;color:var(--dim);margin:0 0 14px;line-height:1.7 }
+#coil-widget{ display:inline-block;width:150px;height:150px;cursor:pointer;
+  border-radius:10px;background:#fff;box-shadow:0 2px 10px rgba(60,50,90,.12) }
+
+.book{ margin-top:28px;padding-top:20px;border-top:1px solid var(--line);font-size:14px;
+  line-height:1.9;color:var(--ink-2);width:100% }
+.book p{ margin:0 0 12px } .book p:last-child{ margin:0 }
+.book b{ color:var(--ink);font-weight:700 }
+.book code{ font-family:var(--mono);font-size:12.5px;color:var(--pop) }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 var(--mono);
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#fff;background:var(--pop);
+  border:1px solid rgba(0,0,0,.15);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  box-shadow:0 5px 16px rgba(228,69,63,.35);
+  transition:width .18s ease, background .16s, gap .18s ease;
+}
+@media (pointer:coarse){ #lc-back{ width:44px;height:44px } }
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:#C63530 }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid var(--ink);outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Endless Coil</h1>
+<p class="tagline">Grab it anywhere and pull. Then put it at the top of the stairs and see whether
+  it can be bothered.</p>
+
+<div class="floor">
+  <canvas id="cv" width="1000" height="640"></canvas>
+  <div class="hint">drag it about</div>
+</div>
+
+<div class="bar">
+  <button type="button" class="go" id="btn-walk">Send it down</button>
+  <button type="button" id="btn-top">Put it back at the top</button>
+  <button type="button" id="btn-stairs">Hide the stairs</button>
+  <button type="button" id="btn-reset">New coil</button>
+</div>
+
+<div class="dials">
+  <div class="dial">
+    <div class="lab"><span>coils</span><b id="v-n">26</b></div>
+    <input type="range" id="n" min="12" max="40" value="26" aria-label="Number of coils">
+  </div>
+  <div class="dial">
+    <div class="lab"><span>how springy</span><b id="v-k">medium</b></div>
+    <input type="range" id="k" min="6" max="60" value="24" aria-label="Springiness">
+  </div>
+</div>
+
+<p class="said" id="said">&nbsp;</p>
+
+<div class="widget-demo">
+  <h2>The idle one</h2>
+  <p>The same coil as a small self-contained component, wobbling on its own.
+     <b>Click it to give it a boop.</b> It is built here so it can be seen working &mdash;
+     it is not wired into the desktop, which is a job for its own session.</p>
+  <canvas id="coil-widget" width="300" height="300" aria-label="A small coil. Click to boop it."></canvas>
+</div>
+
+<div class="book">
+  <p><b>It is a chain of rings with springs between them.</b> Each coil is a small body; every
+  neighbouring pair is joined by a soft constraint that sets how far apart they want to sit, and
+  every <i>second</i> pair by a much weaker one. That second set is what stops it behaving like a
+  bit of rope &mdash; it gives the coil a faint memory of being straight, which is exactly what a
+  real spring has and a rope does not.</p>
+  <p><b>The rainbow is not painted on, it is worked out.</b> Each ring is drawn as an ellipse
+  squashed across whatever direction the coil is travelling at that point, so the coil turns its
+  rings to face you as it bends. The hue comes off the ring's own index.</p>
+  <p><b>About the walking, honestly.</b> A real slinky walks because it is a long soft spring on
+  stairs of very nearly the right height, and it is fussy about it &mdash; the wrong stairs and a
+  real one just sits there too. This one is given a shove at the top and will usually take the
+  first step or two end over end and then run out of enthusiasm, which is roughly what happens on
+  a carpeted staircase. It is not a perpetual motion machine and it is not pretending to be.
+  Nudge it again.</p>
+</div>
+
+</div>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">&larr;</span><span class="w">cabinet</span></a>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+<script src="/shared/lc-coil-idle.js"></script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  var HAVE = typeof Matter !== 'undefined';
+  var cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+  var W = cv.width, H = cv.height;
+  function E(id){ return document.getElementById(id); }
+  function say(s){ E('said').textContent = s || ' '; }
+
+  var N = 26, springy = 24, showStairs = true;
+  var engine, world, rings = [], links = [], stairs = [], mouse, mc;
+
+  var FLOOR_Y = H - 40;
+  /* Step geometry is the thing that decides whether a slinky walks at
+     all — a real one needs stairs that are shallow relative to its own
+     length, and on tall steps it just flops onto the first one and stops.
+     Tuning air resistance, damping, gravity and the size of the shove all
+     left it stopping on step one; shortening the rise is what let it keep
+     going. */
+  var STEP_W = 104, STEP_H = 32, STEPS = 6;
+
+  /* ---- the staircase --------------------------------------------- *
+   *  Built from the bottom-left up to the top-right, so the coil comes
+   *  down towards the viewer's right.
+   * ----------------------------------------------------------------- */
+  function stairTop(i){ return FLOOR_Y - (STEPS - i) * STEP_H; }
+  function buildStairs(){
+    stairs.forEach(function(s){ Matter.Composite.remove(world, s); });
+    stairs = [];
+    if (!showStairs) return;
+    for (var i = 0; i < STEPS; i++){
+      var top = stairTop(i);
+      var x = 140 + i * STEP_W;
+      var b = Matter.Bodies.rectangle(
+        x + STEP_W / 2, (top + FLOOR_Y + 40) / 2, STEP_W, (FLOOR_Y + 40 - top),
+        { isStatic: true, friction: 0.7, restitution: 0.02 });
+      b.stepIndex = i;
+      stairs.push(b);
+      Matter.Composite.add(world, b);
+    }
+  }
+
+  function startPoint(){
+    return showStairs
+      ? { x: 140 + STEP_W * 0.5, y: stairTop(0) - 20 }
+      : { x: W * 0.34, y: FLOOR_Y - 190 };
+  }
+
+  /* ---- the coil ---------------------------------------------------- */
+  function buildCoil(){
+    rings.forEach(function(r){ Matter.Composite.remove(world, r); });
+    links.forEach(function(l){ Matter.Composite.remove(world, l); });
+    rings = []; links = [];
+
+    var p = startPoint();
+    var gap = 9;
+    for (var i = 0; i < N; i++){
+      var b = Matter.Bodies.circle(p.x + i * 1.2, p.y - i * gap, 7, {
+        friction: 0.42, frictionAir: 0.004, restitution: 0.05, density: 0.0016,
+        collisionFilter: { group: -1 }      // rings pass through each other
+      });
+      b.idx = i;
+      rings.push(b);
+      Matter.Composite.add(world, b);
+    }
+
+    var k = springy / 100;
+    for (var j = 0; j < N - 1; j++){
+      var c = Matter.Constraint.create({
+        bodyA: rings[j], bodyB: rings[j + 1],
+        length: gap, stiffness: Math.min(0.9, 0.18 + k * 1.1), damping: 0.06
+      });
+      links.push(c); Matter.Composite.add(world, c);
+    }
+    /* the weak second set: a faint memory of being straight, which is the
+       difference between a spring and a piece of rope */
+    for (var m = 0; m < N - 2; m++){
+      var c2 = Matter.Constraint.create({
+        bodyA: rings[m], bodyB: rings[m + 2],
+        length: gap * 2, stiffness: 0.012 + k * 0.05, damping: 0.10
+      });
+      links.push(c2); Matter.Composite.add(world, c2);
+    }
+  }
+
+  /* ---- setting it going -------------------------------------------- *
+   *  A real slinky is started by lifting one end over. This throws the
+   *  top few rings forward and down the stairs and lets gravity do the
+   *  rest; it is a shove, not a script — nothing below moves the coil
+   *  after this frame.
+   * ----------------------------------------------------------------- */
+  function sendIt(){
+    if (!rings.length) return;
+    var top = rings.slice(-7);
+    top.forEach(function(b, i){
+      Matter.Body.setVelocity(b, {
+        x: 5.4 + i * 0.42,
+        y: -3.4 - i * 0.18
+      });
+    });
+    cueBoing();
+    say(showStairs
+      ? 'Off it goes. It will usually manage a step or two end over end and then think better of it.'
+      : 'With the stairs hidden it has nowhere to go but along the floor.');
+  }
+
+  /* ---- drawing ------------------------------------------------------ */
+  function hue(i){ return (i / Math.max(1, N - 1)) * 300; }
+
+  function draw(){
+    /* the room and the floor */
+    var g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, '#F6F4FB'); g.addColorStop(1, '#E4E1F0');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+
+    /* floorboards */
+    ctx.fillStyle = '#D9B384';
+    ctx.fillRect(0, FLOOR_Y, W, H - FLOOR_Y);
+    ctx.strokeStyle = 'rgba(150,110,70,.3)'; ctx.lineWidth = 1;
+    for (var fx = 0; fx < W; fx += 74){
+      ctx.beginPath(); ctx.moveTo(fx, FLOOR_Y); ctx.lineTo(fx, H); ctx.stroke();
+    }
+    ctx.fillStyle = 'rgba(160,120,80,.18)';
+    ctx.fillRect(0, FLOOR_Y, W, 4);
+
+    /* the stairs */
+    if (showStairs){
+      for (var i = 0; i < STEPS; i++){
+        var top = stairTop(i), x = 140 + i * STEP_W;
+        ctx.fillStyle = i % 2 ? '#CBA477' : '#D2AC80';
+        ctx.fillRect(x, top, STEP_W, FLOOR_Y - top + 40);
+        ctx.fillStyle = 'rgba(255,255,255,.55)';
+        ctx.fillRect(x, top, STEP_W, 5);
+        ctx.fillStyle = 'rgba(120,85,50,.22)';
+        ctx.fillRect(x, top + 5, 4, FLOOR_Y - top);
+        ctx.strokeStyle = 'rgba(120,85,50,.28)'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x + STEP_W, top); ctx.stroke();
+      }
+    }
+
+    if (!rings.length) return;
+
+    /* the coil's shadow on whatever is under it */
+    ctx.save();
+    ctx.globalAlpha = .13;
+    ctx.fillStyle = '#3A2E52';
+    rings.forEach(function(b){
+      ctx.beginPath();
+      ctx.ellipse(b.position.x + 6, FLOOR_Y + 6, 16, 4, 0, 0, 6.283);
+      ctx.fill();
+    });
+    ctx.restore();
+
+    /* Each ring is an ellipse squashed across the direction the coil is
+       going at that point, so it turns to face you as the coil bends. */
+    for (var r = 0; r < rings.length; r++){
+      var b = rings[r];
+      var prev = rings[Math.max(0, r - 1)], next = rings[Math.min(rings.length - 1, r + 1)];
+      var dx = next.position.x - prev.position.x;
+      var dy = next.position.y - prev.position.y;
+      var ang = Math.atan2(dy, dx);
+      /* how stretched this part is decides how open the ring reads */
+      var sep = Math.hypot(dx, dy) / 2;
+      var minor = Math.max(2.2, 9 - sep * 0.42);
+
+      ctx.save();
+      ctx.translate(b.position.x, b.position.y);
+      ctx.rotate(ang);
+      ctx.beginPath();
+      ctx.ellipse(0, 0, minor, 21, 0, 0, 6.283);
+      ctx.strokeStyle = 'hsl(' + hue(r) + ',74%,42%)';
+      ctx.lineWidth = 5.4;
+      ctx.stroke();
+      ctx.strokeStyle = 'hsl(' + hue(r) + ',86%,62%)';
+      ctx.lineWidth = 2.6;
+      ctx.stroke();
+      /* a highlight along the top of the wire */
+      ctx.beginPath();
+      ctx.ellipse(0, -1.2, minor * 0.72, 19, 0, Math.PI * 1.08, Math.PI * 1.75);
+      ctx.strokeStyle = 'rgba(255,255,255,.6)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  /* ---- sound: a real spring, boinging ------------------------------ */
+  function cueBoing(){
+    if (!window.LCSound) return;
+    LCSound.play(function(A){
+      /* a falling glide with a fast wobble on it, which is what a long
+         spring under tension actually does */
+      A.blip(420, { type:'triangle', dur: 0.55, glide: 96, level: A.cap(0.06), reverb: true });
+      A.blip(631, { at: 0.03, type:'sine', dur: 0.42, glide: 150, level: A.cap(0.03) });
+      A.burst('pink', { type:'bandpass', freq: 1800, q: 3, dur: 0.2, level: A.cap(0.02), attack: 0.01 });
+    });
+  }
+  var lastTick = 0;
+  function cueTick(){
+    var now = Date.now();
+    if (now - lastTick < 120) return;
+    lastTick = now;
+    if (!window.LCSound) return;
+    LCSound.play(function(A){
+      A.burst('white', { type:'bandpass', freq: 900 + Math.random() * 1400, q: 6,
+                         dur: 0.02, level: A.cap(0.03) });
+    });
+  }
+
+  /* ---- controls ----------------------------------------------------- */
+  E('btn-walk').addEventListener('click', sendIt);
+  E('btn-top').addEventListener('click', function(){
+    var p = startPoint();
+    rings.forEach(function(b, i){
+      Matter.Body.setPosition(b, { x: p.x + i * 1.2, y: p.y - i * 9 });
+      Matter.Body.setVelocity(b, { x: 0, y: 0 });
+      Matter.Body.setAngularVelocity(b, 0);
+    });
+    say('Back at the top, and standing up straight.');
+  });
+  E('btn-stairs').addEventListener('click', function(){
+    showStairs = !showStairs;
+    this.textContent = showStairs ? 'Hide the stairs' : 'Bring the stairs back';
+    buildStairs();
+    say(showStairs ? 'Stairs back.' : 'Just a floor now. Pull it about instead.');
+  });
+  E('btn-reset').addEventListener('click', function(){
+    buildCoil(); say('A new one, same as the old one.');
+  });
+  E('n').addEventListener('input', function(){
+    N = +this.value; E('v-n').textContent = N; buildCoil();
+  });
+  var KWORDS = [[14,'stiff'],[28,'medium'],[44,'loose'],[61,'floppy']];
+  E('k').addEventListener('input', function(){
+    springy = +this.value;
+    for (var i = 0; i < KWORDS.length; i++){
+      if (springy <= KWORDS[i][0]){ E('v-k').textContent = KWORDS[i][1]; break; }
+    }
+    buildCoil();
+  });
+
+  /* ---- go ----------------------------------------------------------- */
+  function tick(){
+    if (HAVE && !document.hidden){
+      Matter.Engine.update(engine, 1000 / 60);
+      /* anything that gets away comes back, because losing the toy is not
+         a thing that should be able to happen */
+      var lost = rings.some(function(b){
+        return b.position.y > H + 300 || b.position.x < -400 || b.position.x > W + 400;
+      });
+      if (lost) E('btn-top').click();
+    }
+    draw();
+    requestAnimationFrame(tick);
+  }
+
+  if (!HAVE){
+    ctx.fillStyle = '#E8E6F2'; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#2E2A3D'; ctx.font = '30px system-ui,sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('The physics library did not load,', W / 2, H / 2 - 20);
+    ctx.fillText('so there is no coil to pull.', W / 2, H / 2 + 24);
+    say('Physics unavailable. The little one below still works — it does its own sums.');
+    ['btn-walk','btn-top','btn-stairs','btn-reset'].forEach(function(id){ E(id).disabled = true; });
+  } else {
+    engine = Matter.Engine.create();
+    engine.gravity.y = 1.25;
+    world = engine.world;
+    var opt = { isStatic: true, friction: 0.7 };
+    Matter.Composite.add(world, [
+      Matter.Bodies.rectangle(W / 2, FLOOR_Y + 60, W * 3, 120, opt),
+      Matter.Bodies.rectangle(-60, H / 2, 120, H * 4, opt),
+      Matter.Bodies.rectangle(W + 60, H / 2, 120, H * 4, opt)
+    ]);
+    buildStairs();
+    buildCoil();
+
+    mouse = Matter.Mouse.create(cv);
+    /* the canvas is drawn at 1000px and shown at whatever width fits, so
+       the mouse has to be told about the scale or the grab lands in the
+       wrong place on every screen but one */
+    mc = Matter.MouseConstraint.create(engine, {
+      mouse: mouse,
+      constraint: { stiffness: 0.16, damping: 0.1, render: { visible: false } }
+    });
+    Matter.Composite.add(world, mc);
+    function rescale(){
+      var r = cv.getBoundingClientRect();
+      Matter.Mouse.setScale(mouse, { x: W / r.width, y: H / r.height });
+      Matter.Mouse.setOffset(mouse, { x: 0, y: 0 });
+    }
+    rescale();
+    window.addEventListener('resize', rescale);
+    Matter.Events.on(mc, 'startdrag', function(){ cueTick(); });
+
+    Matter.Events.on(engine, 'collisionStart', function(ev){
+      for (var i = 0; i < ev.pairs.length; i++){
+        var p = ev.pairs[i];
+        var speed = Math.abs((p.bodyA.velocity.y || 0) - (p.bodyB.velocity.y || 0));
+        if (speed > 3.4){ cueTick(); break; }
+      }
+    });
+
+    requestAnimationFrame(tick);
+  }
+
+  if (window.LCSound) LCSound.mount();
+
+  /* ---- the little one, from the shared component ------------------- */
+  var widget = null;
+  if (window.LCCoilIdle){
+    widget = LCCoilIdle.create(document.getElementById('coil-widget'), { coils: 13 });
+  }
+
+  window.__coil = {
+    have: HAVE,
+    world: function(){ return world; },
+    engine: function(){ return engine; },
+    ringBodies: function(){ return rings; },
+    rings: function(){ return rings.length; },
+    links: function(){ return links.length; },
+    n: function(){ return N; },
+    stairs: function(){ return stairs.length; },
+    positions: function(){ return rings.map(function(b){ return [Math.round(b.position.x), Math.round(b.position.y)]; }); },
+    lowest: function(){ return Math.max.apply(null, rings.map(function(b){ return b.position.y; })); },
+    rightmost: function(){ return Math.max.apply(null, rings.map(function(b){ return b.position.x; })); },
+    send: sendIt,
+    top: function(){ E('btn-top').click(); },
+    setN: function(v){ E('n').value = v; E('n').dispatchEvent(new Event('input')); },
+    widget: function(){ return widget; },
+    energy: function(){
+      return rings.reduce(function(a, b){
+        return a + Math.hypot(b.velocity.x, b.velocity.y);
+      }, 0);
+    }
+  };
+})();
+</script>
+<style>
+@keyframes lcf-swell{from{opacity:0;transform:scale(.98)}to{opacity:1;transform:none}}
+.lc-flourish{animation:lcf-swell .42s cubic-bezier(.2,.85,.3,1) both}
+@media (prefers-reduced-motion: reduce){ .lc-flourish{animation:none} }
+</style>
+<script>
+(function(){
+  function flourish(){
+    var el = document.querySelector('.floor');
+    if (!el) return;
+    el.classList.remove('lc-flourish');
+    void el.offsetWidth;
+    el.classList.add('lc-flourish');
+  }
+  document.addEventListener('click', function(e){
+    if (!e.target.closest || e.target.closest('#lc-sound-btn')) return;
+    if (e.target.closest('.bar button')) setTimeout(flourish, 30);
+  });
+})();
+</script>
+</body>
+</html>

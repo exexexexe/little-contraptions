@@ -3302,3 +3302,825 @@ cabinet's own voice — a short square blip on a direction, a harder one on sele
 - Full sweep at 1280px and again at **a real 390px touch viewport**: 153 pages, zero page errors,
   zero horizontal overflow at either width.
 
+
+---
+
+# Overnight batch — cozy toys, new mechanics, and the coil toy
+
+Fourteen drawers asked for in one unattended run. Logged here as each was built and
+verified in a real browser, with what was skipped and why at the end.
+
+## Before anything: the two governing documents named in the brief do not exist
+
+The brief opened with "read `PROJECT-OVERVIEW.md` and `CONVENTIONS-AND-RULES.md` in full
+before starting anything — ambience standard, storage patterns, dependency policy and
+fabrication rules all apply." **Neither file is in this repository**, under any casing, at
+any depth. Nor is the phrase "ambience standard" written down anywhere in `PROGRESS.md` or
+`README.md`.
+
+Rather than stall an unattended run on it, the conventions were reconstructed from the two
+documents that do exist — `README.md` for the dependency policy, the storage patterns, the
+relay rules and the structure, and this file for the house style — plus the brief's own
+one-line definition of the ambience bar ("palette, font, and sound should feel distinct from
+every other toy in the hub, not reskinned defaults"), which is the only definition of it
+available. **Whoever has those two documents should check this batch against them**, because
+everything below was built against an inferred standard rather than the written one.
+
+## No. 145 — The Windowsill (`/windowsill/`), extending the tree rather than duplicating it
+
+`/bonsai/` already existed as No. 145, "A Tree That Takes Its Time". Per the brief it was
+extended, not duplicated: `/windowsill/` carries the tree's engine over whole and adds two
+more plants, and `/bonsai/` is now a redirect stub of the usual shape.
+
+**The tree keeps its old storage key.** `lc-bonsai` is read and written exactly as it was, so
+a tree planted when this was a one-plant page is still there on the sill, the same age, with
+the same cuts on it. The other two have their own keys — `lc-sill-basil`, `lc-sill-succ` —
+which is what makes the brief's promise true: switching tabs cannot touch another plant,
+and "start again" only ever scraps the plant that is out. Verified by ageing all three to
+different dates and confirming none of the other records moved.
+
+**The basil is the real botany, and it is where the work went.** Paced on the ranges a seed
+packet actually gives — germination 5–10 days, first true pair about a fortnight, a pair a
+week after, worth pinching at four or five pairs, flower spikes about ten weeks if never
+pinched — and the page prints them as ranges rather than inventing precision. Pinching is
+modelled as the real thing: the growing tip comes out, the two buds in the axils below both
+run, so one stem becomes two and flowering is postponed. Leaves are drawn *decussate* — each
+pair turned ninety degrees from the one below — so every second pair is edge-on, which is why
+a real basil looks busier than two leaves a node should allow.
+
+**The succulent is the slow one on purpose**: a leaf from the centre every two to three weeks,
+offsets after months, full size in years. Its leaves sit on the golden angle, 137.5°, oldest
+outermost and flattest, each newer one shorter, nearer the middle and drawn last so it
+overlaps — which is the actual reason a rosette looks like a rosette.
+
+### Three real bugs, all found by looking rather than by reasoning
+
+- **The pinched basil floated.** Side shoots were positioned by lifting them a fixed distance
+  off the soil, and the stem they were supposed to be branching from was never drawn — so
+  after a pinch, four stems hung in the air above the pot. Rewritten as a proper recursive
+  stem structure: a shoot stops extending on the day it is pinched and its two children start
+  *at its own last node*, which is both what fixes the picture and what actually happens to a
+  pinched plant.
+- **The stated figure and the code disagreed.** The note under the pot claimed flowering "at
+  about ten weeks", and the code measured the ten weeks from the first true leaves rather than
+  from sowing — quietly making it twelve. Now counted from sowing, so the page and the plant
+  say the same thing.
+- **One canvas height for three plants.** Sized for the tall tree, it left the basil and the
+  succulent sitting in a metre of empty sky. Each plant now gets a canvas the shape of the
+  plant; the tree's geometry is pinned to its own height so a visit to the basil and back
+  cannot move its pot. A hard horizontal edge across the succulent's bowl came from the same
+  family of mistake — a grit fill that started partway down the clipped ellipse.
+
+**Verified:** three plants' growth stepped through real elapsed dates (0/3/7/14/21/28/45/80
+days for the basil; 0/18/40/130/260/400 for the succulent), storage independence confirmed,
+pruning persists, redirect from `/bonsai/` lands on the sill, zero console errors, no
+horizontal overflow.
+
+## No. 154 — Kintsugi Mender (`/kintsugi/`)
+
+Matter.js. Click the bowl to break it, drag the pieces back, then take up the gold and run it
+down the seams. No timer, no score, and the loop is the whole drawer.
+
+**The bowl is convex on purpose.** The shattering clips the outline against half-planes, and
+Sutherland–Hodgman clipping is only well behaved when the shape being cut is convex — a vase
+with a waist comes back with spurious edges stitching the parts together. A tea bowl is convex
+anyway, so the constraint cost nothing and bought correctness.
+
+**The pieces are real Voronoi cells**, which is what makes the gold work. A scatter of seed
+points is dropped into the outline, weighted towards wherever it was struck; each shard is the
+outline clipped against the perpendicular bisector between its own seed and every other one.
+Two neighbours therefore share an *exact* edge rather than two edges that nearly meet, so the
+gold runs down one line instead of falling into a gap. Two measurements confirm the partition
+rather than assuming it:
+
+- **Every internal seam is shared by exactly two shards** — 348 segments, all with `sides.length
+  === 2`, none with one or three.
+- **The shard areas sum to the bowl area exactly** — 119584 against 119584. No lost slivers, no
+  overlap.
+
+Seams are derived the cheap correct way: any shard edge whose midpoint is more than 2.5px from
+the bowl's own outline is an internal crack, deduped by rounded midpoint — rather than matching
+edges pairwise between shards.
+
+### Two real bugs
+
+- **The gold came out dotted.** Each seam is chopped into seven-pixel runs so the brush can fill
+  a crack gradually, and each run was being stroked on its own — which puts a round cap on both
+  ends of every one of them. A line of round caps at that scale reads as a dashed line, not a
+  poured seam. All gilded runs now go into one path per layer and the crack fills properly.
+- **The tally stayed a bowl behind.** `mended++` ran after the panel had already been repainted,
+  so finishing a bowl showed the previous count for ever. Repainted after the increment.
+
+**Verified with a real pointer, not just the hooks:** a mouse drag picked a shard off the shelf,
+carried it and dropped it near home, where it snapped in (0 → 1 placed); one brush stroke across
+the middle of the mended bowl gilded 78 seam segments along the cracks it passed and nothing
+else. Physics fallback tested by the usual route — the page says so plainly and disables the
+break button rather than showing an empty stage.
+
+## No. 155 — Rain Sound Machine (`/rain-machine/`)
+
+Real local precipitation, synthesised. Position from the keyless `/api/where` the desktop
+widget already uses; weather from **Open-Meteo, CC BY 4.0**, attributed on the page — their
+terms allow the free API for non-commercial use, which this hub is, and they ask for the
+credit.
+
+**Nothing is sampled**, per the standing rule. Five generated layers: a high-passed white-noise
+hiss for many small drops at once; pink noise through a mid band near 600 Hz for the body;
+low-passed brown noise that only arrives above about 0.42 intensity; individual droplet impacts
+scheduled at a rate following the intensity, each a few milliseconds of noise through a sharp
+resonant filter; and the occasional slower plink of water into water that has already
+collected. Heavier rain is made brighter as well as louder, by sliding the band filters, which
+is what more small fast drops actually sounds like.
+
+**The mm-to-noise mapping uses the standard bands**, not invented ones: under 2.5 mm/h light,
+2.5–7.6 moderate, above 7.6 heavy. Codes carry a floor as well as the millimetres, because
+Open-Meteo will report drizzle with 0.0 mm accumulated and "it is drizzling but silent" would
+be wrong. The WMO 4677 descriptions are copied from Open-Meteo's own documentation rather than
+paraphrased, since the panel prints the code beside the words and the two have to agree.
+
+**The slider moves the sound and never the reading** — confirmed on screen: with the slider at
+0.85 and the glass streaming, the panel still read *"Overcast — nothing falling"*, which is
+what was actually happening outside. **Thunder is only ever armed by a real thunderstorm code**
+(95/96/99), so nobody gets a storm that is not happening.
+
+**No rain is not an empty state.** A clear sky gets two sine tones a fraction apart beating
+slowly against each other under a breath of filtered air — measured at RMS 0.022, so it is
+real sound rather than silence dressed up as a feature.
+
+**Verified by measuring the output, not by listening for it.** An analyser on the bench master
+gave RMS 0.022 / 0.029 / 0.043 / 0.057 across hum → drizzle → moderate → downpour: monotonic,
+and all well under the house ceiling. The cabinet's mute switch reaches it — 0.053 to exactly 0
+at the gate — because the bed hangs off `LCAudio.bus()` and therefore off master. Live reading
+on the day: Älta, Sweden, WMO 3, 0 mm, 17.6 °C, observed 15:30 local.
+
+## No. 156 — Species of the Day (`/species-of-the-day/`)
+
+The brief's "Extinction Clock", built as a specimen card. **The design rule that makes it safe:
+the list written into the page holds a scientific name, a common name and a GBIF key, and
+nothing else.** Every fact on the card — category, classification, record counts, countries,
+dates — is fetched from GBIF when the page opens. So the drawer cannot state a figure nobody
+published, and cannot go stale.
+
+**No key was needed after all.** GBIF's `/species/{key}/iucnRedListCategory` returns the real
+IUCN category *and* the real IUCN taxon id, keyless and CORS-open, so the card carries a genuine
+Red List assessment and links to that species' own assessment page. The scale uses the Red
+List's published category colours. Population figures are deliberately **absent**: the keyless
+route does not carry them, and the page says so and links out rather than inventing one.
+
+**The rotation was verified against the register before it was written down.** All 70 candidates
+were resolved through GBIF's backbone; 65 came back EXACT with a live category and were kept.
+Five were dropped rather than patched: two subspecies with no assessment of their own (Amur
+leopard, Przewalski's horse), two Not Evaluated plants (welwitschia, Wood's cycad), and one
+deliberately malformed name included as a canary — which GBIF correctly returned as `matchType:
+NONE`, confirming the check discriminated rather than rubber-stamping.
+
+Six of the 65 are Least Concern, and they were kept on purpose. Some are recoveries; a list
+curated to be uniformly bleak would say more about the curator than about the world.
+
+### Two real bugs, one of them serious
+
+- **A rate-limit was rendering as a fact.** GBIF's 429 still parses as JSON — it simply has no
+  `count` — and `occ.count || 0` turned that into a confident *"0 occurrence records in GBIF"*
+  for a green turtle that has **289,441**. A wrong number that looks like a right one is the
+  worst thing this particular drawer could print. A non-OK response is now null and every field
+  from that query reports an absence instead. Verified both ways: 289,441 when GBIF answers, and
+  with `fetch` stubbed to return 429, the honest "did not answer" line with no zero anywhere.
+- **GBIF's facet limits are per facet.** `facet=country&facetLimit=7&facet=year&facetLimit=1`
+  silently applies the last limit to everything, which returned one country and one year — and
+  the "earliest record" computed from that single year read **2015** when the true answer for the
+  same species is **1840**. Now `country.facetLimit` and `year.facetLimit`, and the label says
+  exactly what the number is: the earliest year GBIF holds a dated record for.
+
+Records held and countries are labelled as what they are — occurrence records and the countries
+those records came from, not a population count and not a range map — with a note that recording
+effort is wildly uneven, so they read as a map of where people have been looking.
+
+## No. 157 — Silhouette Guesser (`/silhouette/`)
+
+Eighty outlines — 40 coastlines, 22 islands and peninsulas, 18 lakes — from **Natural Earth,
+which is public domain**. Extracted once at build time by a throwaway Python script and shipped
+as path data, so the page fetches nothing while you play and no library was added to draw it.
+
+**The latitude correction is the part that matters.** Longitude is multiplied by the cosine of
+each shape's own mean latitude before scaling. Without it Norway and Greenland come out
+stretched sideways into something nobody would recognise, which would have quietly ruined the
+only thing this toy does. Verified by rendering Italy, Norway, Greenland and Japan side by side
+and looking at them: all four read correctly.
+
+Each ring is simplified with Douglas–Peucker to roughly 30–120 points — enough to keep what
+makes a coastline recognisable, not so much that the file becomes a map. **Every shape is
+normalised to the same box, so size is not a clue**: Lake Erie is drawn as large as Brazil.
+Distractors are drawn from the same kind, so a lake is never given away by being offered
+against three countries.
+
+Taking the largest ring means Italy appears without Sicily and Japan as Honshu alone. That is a
+real simplification rather than an accident, and the page says so.
+
+**Verified:** a sweep of all 80 — valid path syntax, sane bounding boxes, and mean coordinates
+inside ±180/±90, with zero failures. The reveal's locator uses the cabinet's existing
+`world-land.js` outline and the shape's real mean position; Lake Tanganyika resolved to 6.4° S
+30.0° E, which is where Lake Tanganyika is.
+
+## No. 158 — The Slow Reveal (`/slow-reveal/`)
+
+A real public-domain work from **The Met's Open Access API** (keyless), filtered on
+`isPublicDomain=true`, `hasImages=true` and `medium=Paintings`, uncovering over **seven real
+days**. The plaque prints the Met's own title, attribution, date, medium and credit line —
+nothing on it is written here.
+
+**Progress is purely a function of the clock.** The squares are uncovered in a fixed order
+settled when the work is chosen (a seeded shuffle off the object id), and how many have gone is
+just how far through the week you are. Closing the tab does not pause it; leaving it open does
+not speed it up; there is no reveal button, because that button would be the end of the only
+idea the drawer has. The test hook can only move *when it started* — there is deliberately no
+way to add progress directly. Verified linear: 1 hour → 0.6%, 1 day → 14.3%, 3 days → 42.8%,
+6 days → 85.7%, which is n/7 to the decimal.
+
+**The mask is a cover, not a filter** — and that is forced by CORS. The Met's image host sends
+no `Access-Control-Allow-Origin`, so reading the picture into a canvas would taint it. Instead
+the image sits underneath as an ordinary `<img>` and a canvas over the top is painted opaque and
+has squares cleared out of it with `destination-out`. Covering something up needs no access to
+it at all.
+
+### One real bug, found only by looking at it
+
+**The cover was invisible against the art.** The first version covered the picture in a mid
+grey-green — and against a painting's own mid tones, and against the grey backdrop the Met
+photographs objects on, an *uncovered* square looked exactly like a covered one. A whole day's
+progress read as no progress, which is fatal for this particular drawer. The cover is now a pale
+dust sheet, which contrasts with almost any artwork. This was not visible in any number — the
+percentages were right the whole time — only in the screenshot.
+
+The title and attribution on the plaque stay blurred until 72%, so it does not give away what
+you are still waiting to see. The search's broad `q=painting` was also tightened to
+`medium=Paintings` after it served up a suit of armour.
+
+## No. 159 — Fireplace Corner (`/fireplace/`)
+
+Pure ambience. **No video, no image assets, no sampled audio.**
+
+The flame is a particle fire: parcels of hot gas released along the top of the logs, given
+buoyancy while they are still hot, and curled by a cheap moving field so the column wanders
+instead of standing up straight. Each is drawn as a soft blob with
+`globalCompositeOperation = 'lighter'`, which is what makes overlapping flames go white-hot in
+the middle without anyone painting a white middle. Colour is read off each parcel's own age —
+pale yellow, orange, dull red, then smoke — because that is what a cooling parcel of gas does,
+rather than a palette picked by eye. Embers are rarer, live far longer, and start to fall as
+they cool.
+
+Crackle is Web Audio: a crack is 4–20 ms of noise through a filter at Q 9–25, a pop is louder
+with a low thump under it, and beneath both is a filtered rumble that broadens as the fire comes
+up. **More logs means busier cracking**, because more wood is more to crack. Poking it flares the
+bed and throws sparks, then settles on its own over a few seconds.
+
+**Verified:** particles scale 461 → 1369 between medium and maximum; measured audio output rises
+from RMS 0.0056 (one log, embers) to 0.0163 (five logs, roaring), so the dials reach the sound as
+well as the picture. Nothing animates while the tab is hidden.
+
+**Flagged for the dedicated session, not wired tonight:** this drawer's flame renderer and
+crackle bench are the obvious source material for the Windows 98 hub's planned **"rest mode"
+screensaver**. The particle loop is self-contained (`step()` / `draw()` against one canvas, with
+`logs` and `heat` as its only inputs) and would drop into a screensaver surface without the page
+around it. **Not integrated tonight** — that belongs to the supervised hub-shell session.
+
+## No. 160 — Tea Steeping Timer (`/tea-timer/`)
+
+Eleven teas, each carrying **the steeping range and water temperature that are generally
+published for it, shown as a range** — 1–3 min at 70–80 °C for green, 3–5 at 95–100 for black,
+5–10 at boiling for chamomile, and so on. The brief asked for sourced timings and no invented
+precision, and the honest form of that is the range itself: nobody publishes that green tea takes
+132 seconds, they publish one to three minutes. The slider moves inside the published range and
+the panel keeps showing the range beside your choice.
+
+**Matcha is on the list and says it is not steeped.** It is whisked into suspension and drunk
+leaf and all. Quietly leaving it out, or giving it a made-up steep time to make the grid tidy,
+were both worse than the card simply saying what it is and timing the whisking instead.
+
+**The colour arrives on the clock, not on an animation loop.** Progress is `elapsed / duration`
+from `Date.now()`, and the infusion is drawn as a real diffusion — plumes leaving the leaf,
+spreading, and evening out into the body of the cup as they go, strongest early and folded in
+later, which is the order it happens in a real cup. The start time is kept in `localStorage`, so
+reloading does not restart your tea.
+
+The chime is a struck bell built from three **inharmonic** partials (1 : 2.76 : 5.40) rather than
+a harmonic stack, because a harmonic stack sounds like an organ and a real bell does not.
+
+**Verified:** black tea at 55% showed 1:48 remaining of 4:00 with the ring 55% round; at 12% the
+diffusion plumes were clearly visible as mottled clouds in pale water. The clock text flips to
+dark automatically over a pale liquor so it stays readable in a cup of white tea.
+
+## No. 161 — The Nightlight (`/nightlight/`)
+
+Deliberately the least interactive drawer in the cabinet. A glow, a dimmer, and after five
+seconds of being left alone everything except the light fades out.
+
+**The sunrise stretch goal came in, because it needed no key.** Open-Meteo's `daily=sunrise,sunset`
+is keyless, so with `/api/where` for a rough position the drift sits on the visitor's real sun
+times. Measured live: Älta, sunrise 06:08, sunset 19:16 — correct for Stockholm in mid-September.
+If either call fails it falls back to a plain 6am/6pm clock drift and says so in the corner. A
+nightlight that fails is not a nightlight, so there is no error state that stops the light.
+
+**The colour follows the real Planckian locus**, not a hand-picked gradient — the standard
+piecewise approximation to the blackbody table, 1700 K at the bottom of the night up to about
+4200 K at midday, and never cold, because this is a nightlight. That matters more than it sounds:
+hand-picked "warm" colours drift through muddy greens between amber and white, and a real
+blackbody curve does not. Verified across a whole day: 02:00 → 1700 K rgb(255,121,0), 13:00 →
+4198 K rgb(255,211,175), 19:30 (just past a 19:16 sunset) → 2477 K rgb(255,158,68).
+
+A very slow breath — a little over a minute, plus a slower second term — keeps it alive without
+ever being something you would catch moving.
+
+## No. 162 — Endless Coil (`/endless-coil/`) + a reusable idle component
+
+Matter.js. A chain of ring bodies with a soft constraint between neighbours and **a much weaker
+one between every second pair** — that second set is the whole trick, because it gives the coil a
+faint memory of being straight, which is the difference between a spring and a piece of rope.
+The rings share a negative collision group so they pass through each other rather than jamming.
+
+The rainbow is computed, not painted: each ring is drawn as an ellipse squashed across the local
+travel direction of the coil, so it turns its rings to face you as it bends, with hue off the
+ring index.
+
+### The walking, and what actually fixed it
+
+The first build managed exactly **one** step and stopped. Four parameter sweeps — air resistance
+0.012→0.002, constraint damping 0.06→0.01, gravity 1.25→1.9, and the size of the initial shove —
+all still ended on step one (`bottom=438` every single time). **The variable that mattered was
+the stairs, not the coil.** A real slinky walks only on stairs that are shallow relative to its
+own length and just sits there on tall ones. Dropping the rise from 52 px to 32 px and running
+six steps instead of four got it descending **two steps and about two step-widths** (228,402 →
+445,466) before the energy ran out.
+
+So it is honestly described on the page rather than oversold: it takes a step or two end over
+end and then runs out of enthusiasm, which is what happens on a carpeted staircase. It is not a
+perpetual motion machine and does not claim to be.
+
+### The bonus: `shared/lc-coil-idle.js`
+
+The idle-bounce component, built as asked and **deliberately not wired into the desktop**.
+
+**It has no dependency at all** — about 90 lines of its own spring integration rather than
+Matter.js. That is the point: the place it is eventually going is a live desktop widget, and a
+widget should not pull a physics engine off a CDN or break when that CDN is having a bad day. It
+honours `prefers-reduced-motion` by hanging still and still booping when asked, stops drawing
+when the tab is hidden, and exposes `boop()`, `moving()` and `destroy()` so a host can mount and
+unmount it cleanly. It is mounted on the coil's own page so it can be seen working: idle wobble
+measured 1.44, a boop spikes it to 47, it settles back to 18, and a real click on the canvas
+registers 53.
+
+> **For the dedicated widget-system session:** every individual widget must end up
+> **independently toggleable on and off — not gated behind one master switch.** Noted here as the
+> brief asked; the toggle mechanism, desktop placement and hub-shell wiring were all deliberately
+> left alone tonight.
+
+## No. 163 — The Comfort Jar (`/comfort-jar/`)
+
+Sixty-three folded notes in a glass jar, one a day at the visitor's own midnight.
+
+**This is the one drawer in the cabinet where the content is invented, and the page says so and
+says why.** Everything else here that states something is sourced, checked and linked. A
+reassurance is not a fact: it has no source to cite, and a quotation lifted off the internet and
+misattributed would be exactly the failure the rest of the cabinet is built to avoid. So every
+note was written for this jar and **none is attributed to anybody, because nobody else said
+them.** The register is deliberately quiet — nearer to something a friend would actually say than
+to a poster, and firmly not fun-fact flavoured, which is Species of the Day's job.
+
+The day's note is chosen by `day * 23 mod 63`. **23 is coprime with 63**, so every note in the jar
+comes up before any of them repeats, and consecutive days land far apart in the list instead of
+walking it in order. Verified: 63 distinct notes across 63 consecutive days, and the first week
+gives 4, 27, 50, 10, 33, 56, 16.
+
+What you have already unfolded is kept in `localStorage` and nowhere else — no account, nothing
+sent anywhere. Opening the jar again on the same day gives you the same note and says so, rather
+than pretending to deal a fresh one.
+
+## No. 164 — Postcards from Nowhere (`/postcards/`)
+
+A shared corkboard on the same SQLite-on-the-Railway-volume pattern as the guestbook and the
+bottles: new `postcards` table, new `/api/postcards` route, added to the `WRITABLE` allowlist,
+and it answers `200 {ok:false, why:"no_store"}` rather than a 5xx when the volume is not mounted
+— the page has a state for that like every other shared drawer.
+
+**There is no location in this one at all, coarse or otherwise.** The brief allowed
+"coarse-or-no", and no location turned out to be the better toy as well as the safer one: the
+drawer is called Postcards from Nowhere, so the postmark is one of **ten invented places the
+sender picks** — "The Far Side of Tuesday", "Last Stop But One" — stored as a small integer.
+Nothing about where anyone actually is is asked for, looked up or written down. Identity is the
+cabinet's usual anonymous browser-invented token and there is no handle at all, because the brief
+asked for anonymous.
+
+**The stamp and postmark indexes are clamped server-side rather than trusted.** They pick a
+drawing, and a number outside the set would render as nothing — verified by posting
+`stamp: 9999, postmark: -5` and getting `(5, 0)` back.
+
+The six stamps are drawn for this page out of simple shapes, each with a **real perforated edge**
+— a ring of small bites punched out of the border in the card colour — rather than a dashed line
+pretending to be one.
+
+**Verified against the running server:** empty board renders its own state; a card posts and
+appears for everybody; the three-minute per-browser cooldown returns `too_soon` with the
+remaining wait; link spam is refused with `no_links`; 240-character cap enforced. The board shows
+your own cards outlined, each pinned at a slight angle with a coloured pin.
+
+## No. 165 — Blanket Fort Builder (`/blanket-fort/`)
+
+Thirteen kinds of thing in a box, a dim room, and nothing to achieve. Everything is drawn by a
+small routine rather than pictured, so the drawer loads no artwork at all.
+
+**Placement, not physics** — which the brief allowed and which is the better toy here. Things
+stay exactly where you put them rather than sliding off a cushion the moment you let go. What it
+does have is a real stacking order: picking anything up brings it to the front, and it can be
+pushed behind the rest, which is most of what building a fort out of furniture actually is.
+
+**The blankets hang properly.** A drape's lower edge is computed as a sag across its own width,
+so a wide quilt droops more in the middle than a narrow blanket — the way one slung between two
+chairs does — rather than being a wavy line drawn by hand. The folds follow the same curve.
+
+**The lamp is a real light rather than a decoration.** Every object is tinted by its distance
+from the lamp, and the tint warms as it brightens and goes blue as it darkens, which is what a
+lamp in a dim room does to a colour. Measured: a point at the lamp reads 1.00, the far corner
+0.13. Moving the lamp genuinely changes the room; turning it off drops everything to moonlight.
+
+**Verified:** a twelve-piece fort built and rendered — two chairs, a quilt and a blanket draped
+over them, bolster, pillow and cushion inside, fairy lights above, lamp, books, a mug and a
+sleeping cat — with correct occlusion throughout. The layout persists to `localStorage`.
+
+## No. 166 — Ocean Sound Mixer (`/ocean-mixer/`)
+
+**This drawer breaks the cabinet's oldest rule, deliberately, and the page says so.**
+
+The standing rule, in `README.md` and at the top of `lc-audio.js`, is absolute: *nothing in the
+cabinet is sampled, every sound is an oscillator or a noise buffer generated in the browser, and
+there is no audio file anywhere in this repo and nothing is fetched to make a sound.* The brief
+for this toy asked specifically for **real NOAA field recordings**, and carved it out knowingly —
+it asked for synthesis explicitly on the rain machine, the fireplace and the tea chime, and asked
+for real recordings only here.
+
+That is the right call for this one: real hydrophone data cannot be synthesised honestly. A
+made-up whale is not a whale. But it is a rule collision rather than a loophole, so it is flagged
+here for the owner and handled as carefully as possible:
+
+- **Every channel is badged `RECORDING` or `GENERATED`** on the page, in different colours, and
+  the notes explain the distinction at length. Nobody can mistake one for the other.
+- **Nothing is copied into the repo.** The audio is streamed from `pmel.noaa.gov` straight to the
+  visitor's browser, never proxied, cached or re-served — the same rule the song guesser's Deezer
+  previews already run under. The "no audio file in this repository" half of the rule still holds.
+- **Sound still only starts on a gesture**, and nothing is fetched until then (`preload: none`).
+
+### What is actually there
+
+Four real clips from **NOAA PMEL's Acoustics Program** — blue whale (NE Pacific), humpback with
+ship noise (Stellwagen Bank NMS), humpback with ship noise (American Samoa), and damselfish on a
+reef. U.S. federal government works are not under copyright so no attribution is required;
+it is given on every channel anyway. Two generated beds — surface swell and a deep drone — sit on
+the house bench alongside them, labelled as generated.
+
+Of the five `.wav` files NOAA publishes there, **one was unusable and was dropped**: the Challenger
+Deep clip declares a 320 kHz sample rate, which browsers will not play sensibly.
+
+### Two constraints found by measuring
+
+- **NOAA sends no `Access-Control-Allow-Origin`.** The files play but cannot be read into Web
+  Audio — `createMediaElementSource` on a tainted cross-origin element yields silence. So the
+  mixer is deliberately plain: per-element `volume` faders and nothing fancier, because anything
+  fancier would have failed *silently*. The page explains this rather than hiding it.
+- **The shared mute could not reach them for the same reason**, and this drawer was not going to
+  be the one that ignores the cabinet's switch. `LCSound.onChange` is wired by hand to the element
+  volumes. Verified: muting drops all four to `volume 0` **and pauses them**, and unmuting
+  restores each fader's exact previous position (0.7 / 0.5 / 0.8 / 0.45).
+
+**Verified in a real browser:** all four clips load from NOAA, loop, and advance (`currentTime`
+3.4 s after 3.5 s of playing); a channel left at zero stays paused until its fader is raised;
+zero load failures. A channel that does fail says so on its own row and leaves the others alone.
+
+---
+
+# The batch, closed out
+
+**Fourteen asked for, fourteen built.** Nothing was skipped and nothing was blocked. Numbers
+145 (rebuilt) and 154–166 in the grid; the ghost card now reads 167.
+
+## Two deliberate exceptions, both flagged rather than slipped through
+
+1. **The Ocean Sound Mixer plays real recordings**, against the cabinet's standing no-sampling
+   rule. The brief asked for this specifically and knowingly. Handled as narrowly as possible —
+   every channel badged, nothing copied into the repo, streamed from NOAA and never re-served —
+   and **`README.md` has been amended**, because it stated the rule absolutely and would
+   otherwise now be making a false claim about its own cabinet.
+2. **The Comfort Jar's content is invented.** Also asked for, also the right call — a
+   reassurance is not a fact and has no source to cite — and the page says so and says why.
+
+## One thing that is out of line with a house standard, on purpose
+
+**The Nightlight makes no sound at all**, so it is the fifth drawer with no cue, alongside
+conduct, the morse key, the radio and Room Tone. Those four are exempt because they are
+instruments you came to play. The Nightlight is exempt for a different reason: the brief asked
+for a drawer that "succeeds by being boring in a good way — nothing to click", and a nightlight
+that hums at you is a worse nightlight. It also carries no mute button, because a mute button on
+a silent page is worse than no button. **Flagged here rather than quietly left**, in case the
+"every drawer makes a noise" audit is re-run and counts it as a regression.
+
+## Untouched, as instructed
+
+None of the following was started, and nothing in this batch reaches the hub shell: the Windows 98
+folder/icon density toggle; the live-desktop **widget system** (toggle, placement, wiring); the
+"4B, Pasadena-Adjacent" apartment toy; any 3D rocket/anatomy deconstruction; marketplace-listings
+scraping of any kind; and sitcom/pop-culture rooms, which remain declined outright rather than
+paused. The Fireplace's flame and the coil's idle component are both *noted* as material for the
+rest-mode screensaver and the widget system respectively, and neither is wired to anything.
+
+> **Carried forward for the widget session:** every individual widget must end up
+> **independently toggleable on and off — not gated behind a single master switch.**
+
+## Shared code touched
+
+- `store.js` — new `postcards` table and `postcard()` / `corkboard()`.
+- `server.js` — new `/api/postcards` route, added to the `WRITABLE` allowlist.
+- `shared/lc-coil-idle.js` — **new**, dependency-free, not wired to anything.
+- `public/index.html` — 14 cards, icon-map entries, ghost bumped.
+- `public/bonsai/index.html` — now a redirect stub; the tree itself is unharmed and keeps its
+  `lc-bonsai` record.
+- `README.md` — drawer count corrected 149 → **139** (167 page files less 28 redirect stubs,
+  which is exactly the difference and now says so), the new route, the new shared file, and the
+  sampling-rule exception.
+
+## Verified across the whole batch
+
+- **Every page loaded in a real browser at 1280px and again at a 390px touch viewport.**
+  All 14 new drawers plus the hub and the `/bonsai/` stub: **zero page errors, zero horizontal
+  overflow**, back-to-cabinet control present on every one.
+- The single console error in the sweep was an upstream **GBIF 503** on Species of the Day — and
+  it is the good news, because it exercised the honest-failure path against a real outage rather
+  than a stubbed one: the card kept the name, category and classification it had already fetched
+  and reported the occurrence data as *not returned*, with no fabricated zero anywhere.
+- **Hub grid: 139 cards, no duplicate numbers, no stale `/bonsai/` card**, footer count agrees.
+- **The Windows 98 desktop picked up all fourteen by itself** — 141 icons, none missing, no stale
+  bonsai icon — because it is generated from the cards, as designed.
+- Audio measured rather than assumed on all four sound drawers, via an analyser on the bench
+  master; the shared mute switch confirmed reaching every one of them, including the Ocean Mixer,
+  which needed it wiring by hand.
+- Every real-data drawer confirmed pulling live: Open-Meteo (Älta, WMO 3, 0 mm, 17.6 °C), GBIF
+  (whale shark, Endangered, 16,240 records), the Met (public-domain flag checked per object),
+  Natural Earth (80 outlines sanity-swept), NOAA (4 clips loading and looping).
+- **The new shared route degrades like the old ones.** Started with every writable directory
+  denied, exactly as the README describes for the existing five: `/api/postcards` answers
+  `200 {ok:false, why:"no_store"}` on both GET and POST — identical to `/api/guestbook` under the
+  same conditions — and the server came up and served normally rather than falling over.
+
+---
+
+# Hub shell — Phase A: desktop density toggle (Icons vs. Folders)
+
+Dedicated-session work, one phase at a time. **Phase A only. Phase B has not been started.**
+
+## Note on the governing documents, again
+
+The brief cites `CONVENTIONS-AND-RULES.md` as the authority for the one-phase-at-a-time rule.
+**Those two files still do not exist in this repository** — only `README.md` and this file. Checked
+again at the start of this session. The brief's own inline instructions were detailed enough to
+work from and were followed literally; flagging once more rather than repeatedly.
+
+## What was already there
+
+Most of it, as it turns out — and checking first was the single most useful thing in this phase.
+The Windows 98 desktop **already had a complete folder system**: folder icons, a folder window with
+period chrome (title bar, close box, status line, resize grip), drag-to-file, rename, delete, and
+z-ordered windows, all in `desk.folders` and remembered in `lc-w98-desktop`. **No new window chrome
+was written.** Category folders open through exactly the same `openFolder()` path as a folder a
+visitor made themselves.
+
+## The design: category folders are computed, not stored
+
+The folders a visitor makes and the eight category folders are deliberately different kinds of
+thing. Category folders **hold no state** — their contents are recomputed from the toy list every
+time they are drawn. That is what makes the switch a presentation change rather than a migration:
+`desk.folders`, `desk.pos`, the free/messy layout and every appearance pref are untouched by it.
+
+They carry **`data-cat` rather than `data-folder`**, which is the part that makes this safe: every
+existing handler that files, renames or deletes a real folder keys off `dataset.folder` and
+therefore simply cannot see them. There is no guard to forget, because there is no guard.
+
+Three places needed deliberate work rather than falling out for free:
+- **Positioning.** Category icons can be dragged to a spot like anything else (`posKey` namespace
+  `cat:`), but they can never be filed into anything and nothing can be filed into them — a
+  category window returns `desktop` as its drop target, and dragging a drawer out of one is
+  refused, because its contents are computed and an unfiling would change nothing.
+- **Window size.** A category folder has nowhere of its own to keep anything, so the one fact
+  remembered about it — how big its window was — lives in `desk.catwin`.
+- **Context menu.** A category folder offers Open and a shortcut back to Icons, and deliberately
+  offers no Rename and no Delete, because there is nothing underneath it to rename or delete.
+
+## Where a new drawer lands: by its tag, with a short exception list
+
+The brief offered "Uncategorized until sorted" or "assigned when built" and asked for whichever is
+less fragile. **Neither, quite — a new drawer's home is derived from the `tag` its hub card already
+carries**, with a 15-entry per-slug exception list for drawers whose natural home is not their
+tag's. A drawer added next year is filed correctly the moment its card exists, with nothing to
+remember and no limbo folder for somebody to notice and empty. A per-slug list of 139 entries would
+need editing on every addition and would silently drop new drawers into nothing.
+
+`tag -> folder`: game→Games, generator→Generators, real data→Real Data, reference and scroll
+story→Reference Desk, toy→Toys, reflection→Personal, sound→Ambience. Fallback is Toys.
+
+## The mapping, as built — all 139 drawers, each in exactly one folder
+
+- **Games & Arcade (25)** — type-ghost, apocalypse-quiz, perfume-match, morse, bureaucracy,
+  case-opener, boss-battle, speedrun-anything, escape-room, character-match, higher-or-lower,
+  reverse-turing, typing-fortune, flag-guesser, name-that-fallacy, outpost-builder, decade-matcher,
+  paint-namer, needle-drop, arcade, reaction-test, balance-scale, whack-a-mole, color-test,
+  silhouette
+- **Generators (31)** — weather, name-my-thing, multiverse, the-guide, explain-to-an-era,
+  future-news, the-zone, radio, loot-terminal, exoplanet-postcard, emoji-mistranslate,
+  fortune-cookie, sequel, honest-cover-letter, impossible-vending, operator-gen, eternal-groupchat,
+  universes-colliding, what-beats-this, the-oracle, dungeon-room, design-a-country, groupchat-namer,
+  pet-rock, paradox-machine, dream-decoder, city-builder-map, declassified-search,
+  recipe-of-the-day, generator, design-studio
+- **Real Data (20)** — close-call, rabbit-hole, going-outside, good-news, right-now, nature-hits,
+  iss, city-day, undersea-cables, orbital-junk, static-channel, doppelganger, constellation,
+  masterpiece-roulette, atmosphere, the-zone-gallery, movie-night, picture-of-the-day,
+  day-night-line, species-of-the-day
+- **Reference Desk (15)** — inventions, unknown-sport, scale, hidden-thing, civilizations,
+  cryptid-log, interview-beyond, ocean-depths, slang-glossary, fiction-wiki, starship-scale,
+  absurd-estimator, encode-anything, illusions, history-desk
+- **Toys & Contraptions (19)** — liminal-swipe, retro-os, conduct, media-visualizer, invisible-ink,
+  cipher, useless-buttons, infinite-archive, six-degrees, paper-airplane, hourglass, dominoes,
+  marble-run, flip-book, bubble-wrap, etch-a-sketch, shadow-puppets, kintsugi, endless-coil
+- **Ambience & Cozy (16)** — ant-farm, do-nothing, worry-stone, room-tone, snow-globe, aquarium,
+  windowsill, sound-lab, rain-machine, slow-reveal, fireplace, tea-timer, nightlight, comfort-jar,
+  blanket-fort, ocean-mixer
+- **Personal & Kept (7)** — your-dreams, time-capsule, gratitude-jar, same-age-as-you, dilemma,
+  reverse-alarm, sleep-cycles
+- **Social & Shared (6)** — message-in-a-bottle, who-else-is-here, guestbook, pixel-canvas,
+  story-chain, postcards
+
+## One real bug, found by testing the reset path
+
+**A desktop reset in Folders mode silently reverted to Icons on the next reload.** `deskForget()`
+kept the chosen density in memory but cleared the stored record outright, so the two disagreed
+until something else happened to save. It looked correct right up until you came back. The reset
+now writes the kept density back instead of removing the record. Density is deliberately kept
+across a reset at all — resetting the desktop should put the drawers back, not change which way you
+look at them — and it is deliberately *not* wired into Display Properties' "Restore defaults",
+because throwing somebody back to 139 loose icons for wanting the teal scheme again would be a
+surprise.
+
+## Verified in a real browser
+
+- **All 139 drawers have exactly one home**; the eight folders sum to 139 with none empty and no
+  drawer unplaced.
+- **Toggled six times in a row**, including a no-op: 141 icons ↔ 10 icons every time, nothing
+  duplicated, nothing lost, persisted on each switch. **No reload needed** — `buildIcons()` is the
+  whole of the switch.
+- **Nothing else is disturbed.** With a user-made folder holding two drawers, free mode on, pinned
+  positions and a non-default scheme/wallpaper/icon style, four round trips left the user folder
+  byte-identical, **0 position keys lost and 0 changed** (148 before, 148 after), free mode intact
+  and the prefs record untouched. The only additions were the eight category folders recording
+  their own spots.
+- **Start-menu search is byte-identical in both modes** — same hits, same ordering, same
+  "139 of 139" count — including finding a drawer that was sitting inside a user folder at the time.
+- Switched through the **real settings panel**, not just the test hook; survives reload; survives a
+  desktop reset and a further reload. **Zero console errors.**
+
+---
+
+# Hub shell — Phase B: the live widget system
+
+Started only after Phase A was finished and looked at, as the brief required.
+
+## Again: extend what is there
+
+The desktop **already had a widget framework** — the six ornaments in the right-hand rail come
+with drag by the title bar, resize by the corner grip, double-click to swell, remembered positions
+in `lc-w98-widgets`, and height-based shedding on short screens. So the seven new peeks are
+ordinary `.w98-widget` elements in that same rail, and they inherited all of it without being told
+it exists. **No parallel widget system was written.**
+
+What is genuinely new is the switchboard, the peeks themselves, and the drift layer.
+
+## The hard requirement: a switch each, not one master switch
+
+`WG_REG` lists **all thirteen** ornaments — the six that were always here as well as the seven new
+ones — and each has its own switch in a new **Widgets** tab in Display Properties, persisted
+per-visitor in `lc-w98-wg-on`. Including the old six was not asked for but makes the feature
+coherent: turning one of them off is how you make room for a new one.
+
+A switched-off widget **costs nothing** — no timer, no animation frame, no polling. That is what
+makes "turn one off and the rest keep running" worth checking rather than obvious.
+
+The rows are rendered by the desktop closure rather than by the settings closure, because that is
+where the register lives and a second copy over there would be a second copy to keep in step. The
+settings pane owns the panel; the desktop owns what goes in that fieldset.
+
+## Default-off, and why — measured, not guessed
+
+At 1280×860 the original six ornaments already stand **763px tall in the 816px the rail has**.
+There is room for about one more. Switching the new peeks on by default would have overflowed the
+rail on first load for most people, so **the six peeks arrive off** and the drift layer — which has
+no box and costs the rail nothing — arrives on. The Widgets pane then measures the rail live and
+says either *"About 61 pixels of rail left"* or *"over-full by about 106 pixels, so the bottom one
+is behind the taskbar"*. Inventing a hard cap would have been worse than measuring and saying so.
+
+## The seven
+
+- **Windowsill peek** — reads the drawer's own three records in the same browser, so it is the
+  visitor's actual plant at its actual age, with the drawer's own stage thresholds. Draws the
+  active plant. Click opens the sill.
+- **Hearth peek** — the fireplace's particle flame in miniature, on the same additive-blend
+  colour-by-age rule. Click opens the drawer.
+- **Coil** — **`shared/lc-coil-idle.js` reused directly**, as the brief asked, rather than
+  rebuilt. Its own click handler boops it; it does not navigate.
+- **Postcards peek** — real cards off `/api/postcards`, cycling every nine seconds, re-pulled
+  every three minutes. Says so honestly when there is no shared storage.
+- **Species badge** — today's species with its **real IUCN category fetched from GBIF**, in the
+  Red List's own colours, looked up once a day rather than once a tick.
+- **Who else is here** — the same in-memory `/api/here` the card catalogue's footer uses, phrased
+  as *others* rather than as a total.
+- **Drift** — slow cloud, and stars only over a dark wallpaper, read off `--w98-desk`'s luminance
+  so it follows whatever the visitor chose. Behind the icons, pointer-transparent, out of the
+  accessibility tree, and it stops dead when the tab is hidden.
+
+## The species list was extracted rather than copied
+
+The badge and the drawer must show the same species on the same day, and two copies of a
+sixty-five entry list are two lists that will disagree eventually. The rotation now lives in
+**`shared/lc-species.js`**, used by both. It holds only identifiers — a GBIF key and two names —
+so every actual fact is still fetched live by whoever is displaying it. The drawer shows its usual
+empty-card state if the shared file fails to load.
+
+## One real bug, and it was the kind that hides
+
+**A peek switched on in the first moments of a visit could start before the shared file it needs
+had arrived**, and returned quietly. For the species badge, whose own retry interval is ten
+minutes, that meant a blank widget for ten minutes — indistinguishable from a broken one. Both
+affected peeks now wait briefly for their dependency and then fail out loud. Found by switching
+everything on at boot rather than after the page had settled; it did not reproduce once the page
+had time to load, which is exactly why it was worth looking for.
+
+## Verified in a real browser
+
+- **All thirteen toggled off one at a time.** Every one disappeared and stopped on its own, and in
+  every single case **zero others became invisible and zero others stopped running**.
+- **Widgets are untouched by the density switch.** State byte-identical across icons → folders →
+  icons, running flags included.
+- **A real time gap, with nothing touching the widget.** The sill's record was changed and the
+  page left alone for 34 seconds; the peek moved itself from *"with offsets · 200 days"* to
+  *"Herb pot — sown · 3 days"* on its own 30-second tick.
+- **Switches persist** — camera and meter off survived a reload, with the record written.
+- **Click-through**: the sill peek opens `/windowsill/`, the species badge opens
+  `/species-of-the-day/`, and clicking the coil boops it (movement 4.6 → 40.3) **without**
+  navigating.
+- All peeks start correctly **from boot** with everything pre-enabled, including the race case.
+- Sweep of the hub and eight affected drawers at 1280px and 390px: **zero page errors, zero
+  horizontal overflow**.
+
+## Files touched
+
+- `public/index.html` — drift layer, seven widget bodies, `WG_REG` and the switchboard, the
+  Widgets tab, the peek implementations, the rail-capacity readout.
+- `public/shared/lc-species.js` — **new**, the shared rotation.
+- `public/species-of-the-day/index.html` — repointed at the shared rotation; behaviour unchanged.
+- `public/shared/lc-coil-idle.js` — **not modified**, only used, which was the point of building
+  it dependency-free in the first place.
+
+## Phase B, closing out: one more real bug, and a full cabinet sweep
+
+### The drift layer scrolled away, and then came out 300x150
+
+Two defects in the same feature, both found by looking at it in a state the earlier tests had not
+put it in — a **scrolled** desktop.
+
+- **It scrolled with the icons.** In Icons mode the desktop is a scrolling surface — 139 drawers
+  is 2112px of content in an 830px window — and an absolutely positioned layer inside it scrolls
+  away with them, leaving the bottom two thirds of the desktop with no sky at all. The wallpaper
+  does not scroll and neither should the thing drifting across it, so the layer is now `fixed`.
+  The codebase had already solved exactly this once: the wallpaper credit carries a comment saying
+  it is on the shell "so it does not scroll away with the icons".
+- **Then it came out 300x150.** Making it `fixed` with `inset:0 0 var(--w98-bar-h) 0` looked right
+  and was not: **a `<canvas>` is a replaced element, so left/right insets do not stretch it.** It
+  kept its intrinsic 300x150 default and painted the sky as a small blurry rectangle in the corner
+  — while every measurement of position still read as correct. It is now sized in script from the
+  desktop's own `clientWidth`/`clientHeight`, which also excludes the scrollbar and the taskbar
+  without either being hard-coded.
+
+Verified after: backing store 1280x830 exactly matching the desktop's client box, unmoved after
+scrolling 900px, stopping above the taskbar, and actually painting.
+
+### Full sweep: 139 drawers, both widths
+
+The house standard is the whole cabinet, not the pages that were touched. Both phases changed
+shared infrastructure, so:
+
+- **1280px: 139 drawers swept, zero problems.**
+- **390px: 139 drawers swept, two findings, neither from this work.**
+
+Both findings checked against `git status` before being reported:
+
+- **`/orbital-junk/` overflows horizontally by 14px at 390px — pre-existing.** The file is
+  untouched by this session. The cause is the satellite listing `<table>` (`tbody#rows`): it is
+  386px wide starting at x=18, so its right edge lands at 404 in a 390 viewport, and it is not
+  inside an `overflow-x:auto` wrapper the way wide tables elsewhere in the cabinet are. It is a
+  one-line fix and **has deliberately not been made here**, because it is a different drawer and
+  this was a hub-shell session. Flagged for whoever wants it.
+- **`/reverse-turing/` logged two 429s — that is the rate limiter working.** `/api/generate` is
+  capped at 20 requests per IP per hour and a 139-page sweep runs into it. Correct behaviour, not
+  a defect.

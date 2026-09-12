@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Slow Reveal</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%232E3733'/><rect x='6' y='6' width='20' height='20' rx='1' fill='%23A8823C'/><rect x='6' y='6' width='7' height='7' fill='%23D9CFB8'/><rect x='19' y='13' width='7' height='7' fill='%23D9CFB8'/><rect x='13' y='19' width='6' height='7' fill='%23D9CFB8'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  /* A gallery with the lights down: painted walls, one lit picture and a
+     brass plaque. Warm where the cabinet's other dark drawer is gold. */
+  --wall:#2E3733;
+  --wall-2:#242C29;
+  --ink:#E4E0D4;
+  --ink-2:#A9A899;
+  --dim:#7C7F72;
+  --dimmer:#585C52;
+  --brass:#A8823C;
+  --brass-2:#D4AC62;
+  --cover:#CFC7B2;
+  --line:#3D4641;
+  /* A transitional serif — a wall label, not a brush and not a slab. */
+  --serif:Baskerville,"Baskerville Old Face","Hoefler Text","Libre Baskerville",Garamond,Georgia,serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;min-height:100%}
+body{
+  background:var(--wall);
+  background-image:
+    radial-gradient(ellipse at 50% 8%, rgba(233,224,196,.10), transparent 55%),
+    linear-gradient(180deg,#333D38 0%,#1F2723 100%);
+  color:var(--ink);font-family:var(--serif);
+  min-height:100vh;padding:26px 16px 84px;
+  display:flex;flex-direction:column;align-items:center;
+}
+.wrap{ width:min(700px,100%);display:flex;flex-direction:column;align-items:center }
+
+h1{ font-size:clamp(22px,5vw,30px);font-weight:400;margin:0 0 7px;letter-spacing:.02em;text-align:center }
+.tagline{ font-size:14px;line-height:1.75;color:var(--dim);margin:0 0 24px;text-align:center;
+  max-width:44ch;font-style:italic }
+
+/* ---- the picture ------------------------------------------------------- */
+.frame{
+  position:relative;width:100%;padding:14px;background:linear-gradient(160deg,#6B5730,#3E3320 60%,#5C4A2A);
+  border-radius:2px;box-shadow:0 20px 48px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.14);
+}
+.mat{ position:relative;background:#1A211E;padding:10px;border-radius:1px;
+  box-shadow:inset 0 2px 10px rgba(0,0,0,.6) }
+.holder{ position:relative;width:100%;min-height:200px;display:flex;justify-content:center;align-items:center }
+.holder img{ display:block;width:100%;height:auto;border-radius:1px }
+.holder canvas{ position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;border-radius:1px }
+.holder .waiting{ padding:70px 20px;color:var(--dim);font-style:italic;font-size:15px;text-align:center }
+
+/* ---- the plaque -------------------------------------------------------- */
+.plaque{
+  width:min(520px,100%);margin:22px auto 0;padding:17px 20px 16px;text-align:center;
+  background:linear-gradient(170deg,#A8823C,#7E6129 55%,#96742F);
+  border-radius:2px;color:#1E1A10;
+  box-shadow:0 8px 22px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.35);
+}
+.plaque .ttl{ font-size:16.5px;line-height:1.4;margin:0 0 5px;font-weight:600 }
+.plaque .art{ font-size:13.5px;margin:0 0 3px;font-style:italic }
+.plaque .det{ font-size:11.5px;line-height:1.6;margin:0;opacity:.82 }
+.plaque .cred{ font-size:10px;line-height:1.55;margin:9px 0 0;opacity:.7;
+  font-family:var(--mono);letter-spacing:.02em }
+.plaque a{ color:#1E1A10 }
+.plaque.hidden .ttl, .plaque.hidden .art{ filter:blur(5px);user-select:none }
+
+/* ---- the progress ------------------------------------------------------ */
+.meter{ width:100%;margin-top:20px }
+.track{ height:3px;background:var(--line);border-radius:2px;overflow:hidden }
+.track i{ display:block;height:100%;background:var(--brass-2);width:0;transition:width 1s linear }
+.legend{ display:flex;justify-content:space-between;margin-top:9px;
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.17em;text-transform:uppercase;color:var(--dimmer) }
+.legend b{ color:var(--brass-2);font-weight:400 }
+
+.bar{ display:flex;gap:9px;margin-top:18px;justify-content:center;width:100% }
+.bar button{
+  font:inherit;font-family:var(--mono);font-size:10.5px;letter-spacing:.17em;text-transform:uppercase;
+  cursor:pointer;background:transparent;color:var(--dim);border:1px solid var(--line);
+  border-radius:2px;padding:10px 18px;transition:border-color .15s,color .15s;
+}
+.bar button:hover{ border-color:var(--brass);color:var(--brass-2) }
+.bar button:focus-visible{ outline:2px solid var(--brass);outline-offset:2px }
+
+.said{ margin-top:15px;text-align:center;font-size:14px;line-height:1.8;color:var(--ink-2);
+  min-height:3em;max-width:48ch;font-style:italic }
+
+.book{ margin-top:28px;padding-top:20px;border-top:1px solid var(--line);font-size:14px;
+  line-height:1.9;color:var(--ink-2);width:100% }
+.book p{ margin:0 0 12px } .book p:last-child{ margin:0 }
+.book b{ color:var(--ink);font-weight:600 }
+.book a{ color:var(--brass-2) }
+.book code{ font-family:var(--mono);font-size:12.5px;color:var(--brass-2) }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 var(--mono);
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#1E1A10;background:var(--brass);
+  border:1px solid rgba(0,0,0,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  box-shadow:0 5px 18px rgba(0,0,0,.5);
+  transition:width .18s ease, background .16s, gap .18s ease;
+}
+@media (pointer:coarse){ #lc-back{ width:44px;height:44px } }
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:var(--brass-2) }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid var(--brass-2);outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>The Slow Reveal</h1>
+<p class="tagline">One real painting, uncovering itself over a week. There is nothing to press.
+  It will be further along tomorrow whether you come back or not.</p>
+
+<div class="frame">
+  <div class="mat">
+    <div class="holder" id="holder">
+      <div class="waiting" id="waiting">Choosing something from the collection&hellip;</div>
+    </div>
+  </div>
+</div>
+
+<div class="plaque hidden" id="plaque">
+  <p class="ttl" id="p-title">&mdash;</p>
+  <p class="art" id="p-artist">&nbsp;</p>
+  <p class="det" id="p-det">&nbsp;</p>
+  <p class="cred" id="p-cred">&nbsp;</p>
+</div>
+
+<div class="meter">
+  <div class="track"><i id="fill"></i></div>
+  <div class="legend">
+    <span><b id="l-pct">0%</b> uncovered</span>
+    <span id="l-left">&nbsp;</span>
+  </div>
+</div>
+
+<div class="bar">
+  <button type="button" id="btn-new">Start a different one</button>
+</div>
+
+<p class="said" id="said">&nbsp;</p>
+
+<div class="book">
+  <p><b>The picture is real, public domain, and chosen by the museum's own flag.</b> It comes from
+  <a href="https://metmuseum.github.io/" rel="noopener">The Metropolitan Museum of Art's Open
+  Access API</a>, which needs no key, filtered on <code>isPublicDomain=true</code>,
+  <code>hasImages=true</code> and <code>medium=Paintings</code>. The plaque prints the Met's own title, attribution, date, medium
+  and credit line &mdash; nothing on it is written here.</p>
+  <p><b>It uncovers over seven real days, and nothing can hurry it.</b> What is showing is worked
+  out from the clock: the squares are uncovered in a fixed order settled when the work was
+  chosen, and how many of them have gone is simply how far through the week you are. Closing the
+  tab does not pause it. Leaving it open does not speed it up. There is no button here that
+  reveals more, because a button like that would be the end of the only idea this drawer has.</p>
+  <p><b>The mask is a cover, not a filter.</b> The image sits underneath as an ordinary
+  <code>&lt;img&gt;</code> and a canvas over the top is painted opaque and then has squares
+  cleared out of it. That is deliberate: the Met's image host sends no
+  <code>Access-Control-Allow-Origin</code>, so reading the picture's pixels into a canvas would
+  taint it and fail. Covering it up needs no access to it at all.</p>
+  <p>The title is blurred until the picture is mostly there, so the plaque does not give away
+  what you are still waiting to see.</p>
+</div>
+
+</div>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">&larr;</span><span class="w">cabinet</span></a>
+
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  var KEY = 'lc-slow-reveal';
+  var WEEK = 7 * 24 * 60 * 60 * 1000;
+  var COLS = 58;                         /* squares across; rows follow the picture */
+  var API = 'https://collectionapi.metmuseum.org/public/collection/v1/';
+
+  function E(id){ return document.getElementById(id); }
+  function say(s){ E('said').innerHTML = s || '&nbsp;'; }
+
+  var state = null, meta = null, order = null, rows = 0, img = null, cv = null;
+
+  function load(){
+    try {
+      var raw = JSON.parse(localStorage.getItem(KEY) || 'null');
+      if (raw && typeof raw.id === 'number' && typeof raw.startedAt === 'number') return raw;
+    } catch (e) {}
+    return null;
+  }
+  function save(){ try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+
+  /* ---- how far through ---------------------------------------------- *
+   *  Entirely a function of the clock. Nothing on this page can move it.
+   * -------------------------------------------------------------------- */
+  function progress(){
+    if (!state) return 0;
+    return Math.max(0, Math.min(1, (Date.now() - state.startedAt) / WEEK));
+  }
+
+  /* a seeded shuffle, so the order the squares go in is settled when the
+     work is chosen and is the same on every visit */
+  function shuffleOrder(n, seed){
+    var a = new Uint32Array(n);
+    for (var i = 0; i < n; i++) a[i] = i;
+    var s = seed >>> 0 || 1;
+    function rnd(){
+      s ^= s << 13; s >>>= 0; s ^= s >> 17; s ^= s << 5; s >>>= 0;
+      return s / 4294967296;
+    }
+    for (var k = n - 1; k > 0; k--){
+      var j = Math.floor(rnd() * (k + 1));
+      var t = a[k]; a[k] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
+  /* ---- choosing a picture ------------------------------------------- */
+  function chooseNew(){
+    say('Looking through the collection&hellip;');
+    E('waiting').textContent = 'Choosing something from the collection…';
+    return fetch(API + 'search?isPublicDomain=true&hasImages=true&medium=Paintings&q=*')
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        var ids = d && d.objectIDs;
+        if (!ids || !ids.length) throw new Error('no results');
+        /* try a few, because a record can pass the search filter and still
+           have no usable primary image */
+        var tries = 0;
+        function attempt(){
+          if (tries++ > 7) throw new Error('nothing usable');
+          var id = ids[Math.floor(Math.random() * ids.length)];
+          return fetch(API + 'objects/' + id).then(function(r){ return r.json(); })
+            .then(function(o){
+              if (!o || !o.isPublicDomain || !o.primaryImageSmall) return attempt();
+              state = { id: o.objectID, startedAt: Date.now() };
+              save();
+              return o;
+            });
+        }
+        return attempt();
+      });
+  }
+
+  function fetchMeta(id){
+    return fetch(API + 'objects/' + id).then(function(r){ return r.json(); });
+  }
+
+  function boot(){
+    state = load();
+    var p = state ? fetchMeta(state.id).then(function(o){
+      if (!o || !o.primaryImageSmall){ state = null; return chooseNew(); }
+      return o;
+    }) : chooseNew();
+
+    p.then(function(o){ meta = o; mount(o); })
+     .catch(function(e){
+       E('waiting').innerHTML = 'The museum did not answer just now, so there is nothing to ' +
+         'uncover.<br><br>Nothing else in the cabinet is affected &mdash; try again in a moment.';
+       say('');
+     });
+  }
+
+  /* ---- mounting the picture ------------------------------------------ */
+  function mount(o){
+    E('holder').innerHTML = '';
+    img = document.createElement('img');
+    img.alt = 'A work from the Met, most of it still covered';
+    img.decoding = 'async';
+    cv = document.createElement('canvas');
+    E('holder').appendChild(img);
+    E('holder').appendChild(cv);
+
+    img.addEventListener('load', function(){
+      rows = Math.max(8, Math.round(COLS * (img.naturalHeight / img.naturalWidth)));
+      order = shuffleOrder(COLS * rows, o.objectID * 2654435761);
+      size();
+      paint();
+      plaque(o);
+      cue();
+    });
+    img.addEventListener('error', function(){
+      E('holder').innerHTML = '<div class="waiting">The picture would not load. ' +
+        'Starting a different one will pick another.</div>';
+    });
+    img.src = o.primaryImageSmall;
+  }
+
+  function size(){
+    if (!img || !cv) return;
+    var w = img.clientWidth, h = img.clientHeight;
+    if (!w || !h) return;
+    var dpr = Math.min(2, window.devicePixelRatio || 1);
+    cv.width = Math.round(w * dpr);
+    cv.height = Math.round(h * dpr);
+  }
+
+  /* ---- the cover ------------------------------------------------------ */
+  function paint(){
+    if (!cv || !order) return;
+    var ctx = cv.getContext('2d');
+    var W = cv.width, H = cv.height;
+    if (!W || !H) return;
+
+    ctx.clearRect(0, 0, W, H);
+    /* The covering: a pale dust sheet with a little tooth to it.
+       Pale on purpose. The first version covered the picture in a mid
+       grey-green, and against a painting's own mid tones an uncovered
+       square looked exactly like a covered one — so a day's progress was
+       invisible, which is fatal for the one thing this drawer does. */
+    ctx.fillStyle = '#CFC7B2';
+    ctx.fillRect(0, 0, W, H);
+    ctx.globalAlpha = 0.5;
+    for (var i = 0; i < 900; i++){
+      ctx.fillStyle = i % 2 ? 'rgba(255,255,255,.5)' : 'rgba(120,110,88,.16)';
+      ctx.fillRect(Math.random() * W, Math.random() * H, 3, 3);
+    }
+    ctx.globalAlpha = 1;
+
+    var total = COLS * rows;
+    var shown = Math.floor(progress() * total);
+    var cw = W / COLS, ch = H / rows;
+
+    ctx.globalCompositeOperation = 'destination-out';
+    for (var k = 0; k < shown; k++){
+      var idx = order[k];
+      var cx = (idx % COLS) * cw, cy = Math.floor(idx / COLS) * ch;
+      /* a hair of overlap, or a seam of cover survives between squares */
+      ctx.fillRect(cx - 0.5, cy - 0.5, cw + 1, ch + 1);
+    }
+    ctx.globalCompositeOperation = 'source-over';
+
+    chrome(shown, total);
+  }
+
+  function chrome(shown, total){
+    var pct = total ? shown / total : 0;
+    E('fill').style.width = (pct * 100).toFixed(2) + '%';
+    E('l-pct').textContent = (pct * 100).toFixed(1) + '%';
+
+    var left = state ? (state.startedAt + WEEK) - Date.now() : 0;
+    if (left <= 0){
+      E('l-left').textContent = 'finished';
+    } else {
+      var d = Math.floor(left / 86400000);
+      var h = Math.floor(left / 3600000) % 24;
+      var m = Math.floor(left / 60000) % 60;
+      E('l-left').textContent = d > 0 ? d + 'd ' + h + 'h left'
+        : h > 0 ? h + 'h ' + m + 'm left' : m + 'm left';
+    }
+
+    /* the plaque stops hiding the title once the picture is mostly there */
+    E('plaque').className = 'plaque' + (pct < 0.72 ? ' hidden' : '');
+
+    if (pct >= 1) say('Finished. It took a week, and there was never anything to press.');
+    else if (pct < 0.02) say('Just started. Come back tomorrow and there will be noticeably more of it.');
+    else say('');
+  }
+
+  function plaque(o){
+    E('p-title').textContent = o.title || 'Untitled';
+    E('p-artist').textContent = o.artistDisplayName
+      ? o.artistDisplayName + (o.artistDisplayBio ? ', ' + o.artistDisplayBio : '')
+      : (o.culture || 'Maker not recorded');
+    var det = [o.objectDate, o.medium, o.department].filter(Boolean).join(' · ');
+    E('p-det').textContent = det;
+    var cred = [];
+    if (o.creditLine) cred.push(o.creditLine);
+    cred.push('The Metropolitan Museum of Art, Open Access (public domain)');
+    E('p-cred').innerHTML = cred.join('<br>') +
+      (o.objectURL ? '<br><a href="' + o.objectURL + '" rel="noopener" target="_blank">see it at the Met</a>' : '');
+  }
+
+  function cue(){
+    if (!window.LCSound) return;
+    LCSound.play(function(A){
+      /* a dust sheet coming off, once */
+      A.burst('pink', { type:'lowpass', freq: 1500, dur: 0.5, level: A.cap(0.035), attack: 0.12, reverb: true });
+    });
+  }
+
+  E('btn-new').addEventListener('click', function(){
+    if (this.dataset.sure !== '1'){
+      this.dataset.sure = '1';
+      this.textContent = 'Really? this week starts over';
+      say('A different picture starts a new week from now. The one you have been waiting on ' +
+          'will not come back.');
+      return;
+    }
+    this.dataset.sure = ''; this.textContent = 'Start a different one';
+    try { localStorage.removeItem(KEY); } catch (e) {}
+    state = null;
+    chooseNew().then(function(o){ meta = o; mount(o); say('A new one, and a new week.'); })
+               .catch(function(){ say('The museum did not answer. Try again in a moment.'); });
+  });
+
+  window.addEventListener('resize', function(){ size(); paint(); });
+  /* it moves on its own while you sit there, slowly */
+  setInterval(function(){ if (!document.hidden) paint(); }, 20000);
+  setInterval(function(){ if (!document.hidden && order) chrome(
+    Math.floor(progress() * COLS * rows), COLS * rows); }, 1000);
+
+  boot();
+  if (window.LCSound) LCSound.mount();
+
+  window.__slow = {
+    state: function(){ return state; },
+    meta: function(){ return meta; },
+    progress: progress,
+    week: WEEK,
+    tiles: function(){ return COLS * rows; },
+    shown: function(){ return Math.floor(progress() * COLS * rows); },
+    /* wind the clock back to look at a later stage; this changes when it
+       STARTED, which is the only handle there is — there is no way to add
+       progress directly, by design */
+    backdate: function(ms){ state.startedAt = Date.now() - ms; save(); paint(); },
+    repaint: paint
+  };
+})();
+</script>
+<style>
+@keyframes lcf-develop{from{opacity:.2;filter:blur(6px)}to{opacity:1;filter:none}}
+.lc-flourish{animation:lcf-develop .7s ease both}
+@media (prefers-reduced-motion: reduce){ .lc-flourish{animation:none} }
+</style>
+<script>
+(function(){
+  function flourish(){
+    var el = document.querySelector('.frame');
+    if (!el) return;
+    el.classList.remove('lc-flourish');
+    void el.offsetWidth;
+    el.classList.add('lc-flourish');
+  }
+  document.addEventListener('click', function(e){
+    if (!e.target.closest || e.target.closest('#lc-sound-btn')) return;
+    if (e.target.closest('.bar button')) setTimeout(flourish, 30);
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tea Steeping Timer</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23F5EFE3'/><circle cx='16' cy='17' r='10' fill='none' stroke='%234A3423' stroke-width='1.8'/><circle cx='16' cy='17' r='7' fill='%23B5722E'/><path d='M13 6c0 2 3 2 3 4M19 6c0 2-3 2-3 4' stroke='%238B6A4A' stroke-width='1.4' fill='none' stroke-linecap='round'/></svg>">
+<style>
+:root{ color-scheme: light; }
+:root{
+  /* A tea room: warm paper, one piece of porcelain, and whatever colour
+     is in the cup. High-contrast serif rather than the cabinet's slabs. */
+  --paper:#F5EFE3;
+  --paper-2:#EAE1D0;
+  --ink:#33271C;
+  --ink-2:#5E4B38;
+  --dim:#8A7860;
+  --dimmer:#B0A188;
+  --tea:#B5722E;
+  --rule:#DBD0BB;
+  --serif:Didot,"Bodoni 72",Cochin,"Playfair Display","Hoefler Text",Georgia,serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;min-height:100%}
+body{
+  background:var(--paper);
+  background-image:radial-gradient(ellipse at 50% 0%, rgba(255,255,255,.8), transparent 55%);
+  color:var(--ink);font-family:var(--serif);
+  min-height:100vh;padding:26px 16px 84px;
+  display:flex;flex-direction:column;align-items:center;
+}
+.wrap{ width:min(660px,100%);display:flex;flex-direction:column;align-items:center }
+
+h1{ font-size:clamp(24px,5.6vw,34px);font-weight:400;margin:0 0 7px;letter-spacing:.01em;text-align:center }
+.tagline{ font-size:14px;line-height:1.75;color:var(--dim);margin:0 0 22px;text-align:center;
+  max-width:42ch;font-style:italic }
+
+/* ---- picking one ------------------------------------------------------ */
+.teas{ display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:22px }
+.teas button{
+  font:inherit;font-family:var(--serif);font-size:14px;cursor:pointer;
+  background:transparent;color:var(--ink-2);border:1px solid var(--rule);border-radius:999px;
+  padding:8px 15px;transition:border-color .15s,background .15s,color .15s;
+}
+.teas button:hover{ border-color:var(--ink-2);color:var(--ink) }
+.teas button[aria-pressed="true"]{ background:var(--ink);border-color:var(--ink);color:var(--paper) }
+.teas button:focus-visible{ outline:2px solid var(--tea);outline-offset:2px }
+
+/* ---- the cup ---------------------------------------------------------- */
+.saucer{ position:relative;width:min(400px,86vw) }
+.saucer canvas{ display:block;width:100%;height:auto }
+.clock{
+  position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);
+  text-align:center;pointer-events:none;
+}
+.clock .t{ font-family:var(--mono);font-size:clamp(26px,7vw,38px);letter-spacing:.04em;
+  color:#fff;text-shadow:0 2px 10px rgba(60,36,14,.6);font-variant-numeric:tabular-nums }
+.clock .s{ font-family:var(--mono);font-size:9px;letter-spacing:.24em;text-transform:uppercase;
+  color:rgba(255,255,255,.82);text-shadow:0 1px 6px rgba(60,36,14,.7);margin-top:4px }
+.clock.dark .t{ color:#4A3423;text-shadow:none }
+.clock.dark .s{ color:#8A7860;text-shadow:none }
+
+/* ---- the label -------------------------------------------------------- */
+.label{ width:100%;margin-top:24px;text-align:center }
+.label .nm{ font-size:21px;margin:0 0 5px }
+.label .lat{ font-size:12.5px;font-style:italic;color:var(--dim);margin:0 0 14px }
+.spec{ display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:1px;
+  background:var(--rule);border:1px solid var(--rule);border-radius:2px;overflow:hidden }
+.spec div{ background:#FBF7EE;padding:10px 8px }
+.spec .k{ display:block;font-family:var(--mono);font-size:8px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--dimmer);margin-bottom:5px }
+.spec .v{ font-size:15.5px;color:var(--ink) }
+.spec .v small{ font-size:11px;color:var(--dim) }
+
+.slider{ width:100%;margin-top:20px }
+.slider .lab{ display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;
+  font-family:var(--mono);font-size:9px;letter-spacing:.17em;text-transform:uppercase;color:var(--dimmer) }
+.slider .lab b{ color:var(--tea);font-weight:400;font-size:12px;letter-spacing:.03em }
+input[type=range]{ -webkit-appearance:none;appearance:none;width:100%;height:3px;
+  background:var(--rule);border-radius:2px;outline:none }
+input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none;appearance:none;width:18px;height:18px;
+  border-radius:50%;background:var(--tea);cursor:pointer;border:2px solid var(--paper) }
+input[type=range]::-moz-range-thumb{ width:18px;height:18px;border-radius:50%;background:var(--tea);
+  cursor:pointer;border:2px solid var(--paper) }
+input[type=range]:disabled{ opacity:.4 }
+input[type=range]:focus-visible{ outline:2px solid var(--tea);outline-offset:4px }
+
+.bar{ display:flex;gap:10px;margin-top:20px;justify-content:center;width:100% }
+.bar button{
+  font:inherit;font-family:var(--serif);font-size:15px;cursor:pointer;
+  background:var(--ink);color:var(--paper);border:1px solid var(--ink);border-radius:999px;
+  padding:11px 30px;transition:opacity .15s,background .15s;
+}
+.bar button.ghost{ background:transparent;color:var(--ink-2);border-color:var(--rule) }
+.bar button.ghost:hover{ border-color:var(--ink-2);color:var(--ink) }
+.bar button:hover{ opacity:.86 }
+.bar button:focus-visible{ outline:2px solid var(--tea);outline-offset:2px }
+
+.said{ margin-top:16px;text-align:center;font-size:14.5px;line-height:1.8;color:var(--ink-2);
+  min-height:3em;max-width:46ch }
+.said b{ color:var(--tea) }
+
+.book{ margin-top:28px;padding-top:20px;border-top:1px solid var(--rule);font-size:14px;
+  line-height:1.9;color:var(--ink-2);width:100% }
+.book p{ margin:0 0 12px } .book p:last-child{ margin:0 }
+.book b{ color:var(--ink);font-weight:600 }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 var(--mono);
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:var(--paper);background:var(--ink);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  box-shadow:0 5px 16px rgba(80,60,34,.32);
+  transition:width .18s ease, background .16s, gap .18s ease;
+}
+@media (pointer:coarse){ #lc-back{ width:44px;height:44px } }
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:#54402C }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid var(--tea);outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Tea Steeping Timer</h1>
+<p class="tagline">Pick one, and watch the colour actually arrive over the actual minutes it
+  actually takes.</p>
+
+<div class="teas" id="teas"></div>
+
+<div class="saucer">
+  <canvas id="cv" width="800" height="800"></canvas>
+  <div class="clock" id="clock">
+    <div class="t" id="c-time">&mdash;</div>
+    <div class="s" id="c-state">ready</div>
+  </div>
+</div>
+
+<div class="label">
+  <p class="nm" id="l-name">&mdash;</p>
+  <p class="lat" id="l-note">&nbsp;</p>
+  <div class="spec">
+    <div><span class="k">published range</span><span class="v" id="s-range">&mdash;</span></div>
+    <div><span class="k">water</span><span class="v" id="s-temp">&mdash;</span></div>
+    <div><span class="k">you have set</span><span class="v" id="s-set">&mdash;</span></div>
+  </div>
+</div>
+
+<div class="slider">
+  <div class="lab"><span>how long to leave it</span><b id="v-set">&mdash;</b></div>
+  <input type="range" id="dur" min="0" max="100" value="50" aria-label="Steeping time">
+</div>
+
+<div class="bar">
+  <button type="button" id="btn-go">Start steeping</button>
+  <button type="button" class="ghost" id="btn-reset">Pour it out</button>
+</div>
+
+<p class="said" id="said">&nbsp;</p>
+
+<div class="book">
+  <p><b>The times are the published ranges, not a number invented here.</b> Every tea below shows
+  the steeping range and water temperature that tea sellers and tea associations generally
+  publish for it &mdash; and it shows them <i>as ranges</i>, because that is how they are given.
+  Nobody agrees that green tea takes 132 seconds. They agree it takes somewhere between one and
+  three minutes in water well off the boil, and the slider lets you choose inside that. What this
+  page will not do is pick a precise-looking number and present it as fact.</p>
+  <p><b>Matcha is on the list and is not a steeping time</b>, because it is not steeped &mdash; it
+  is whisked into suspension and drunk leaf and all. Rather than quietly leave it out or give it a
+  fake steep, the card says what it actually is and times the whisking instead.</p>
+  <p><b>The colour arrives on the clock.</b> The infusion is drawn as a real diffusion &mdash;
+  plumes leaving the leaf, spreading, and slowly filling the cup &mdash; and how far along it is
+  comes from elapsed real time, not from an animation that runs at its own pace. Reloading the
+  page does not restart your tea; the clock is remembered, so a cup you left is still going.</p>
+  <p>The chime at the end is three sine partials and a little noise, generated here like
+  everything else that makes a sound in this cabinet.</p>
+</div>
+
+</div>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">&larr;</span><span class="w">cabinet</span></a>
+
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  /* ================================================================== *
+   *  The teas.
+   *
+   *  min/max are the steeping range in seconds, and `temp` the water
+   *  temperature — both as commonly published rather than as a single
+   *  invented figure. `col` is roughly the colour of the finished liquor.
+   * ================================================================== */
+  var TEAS = [
+    { id:'green',    n:'Green',          min:60,  max:180, temp:'70–80 °C',
+      col:[190,196,104], note:'Sencha, dragonwell and most Chinese and Japanese greens. Boiling water scalds it and turns it bitter.' },
+    { id:'white',    n:'White',          min:120, max:300, temp:'75–85 °C',
+      col:[226,214,150], note:'Silver needle, white peony. The palest liquor on this list and the most forgiving of a long steep.' },
+    { id:'oolong',   n:'Oolong',         min:180, max:300, temp:'85–95 °C',
+      col:[198,132,58],  note:'Partly oxidised, between a green and a black. Traditionally re-steeped several times.' },
+    { id:'black',    n:'Black',          min:180, max:300, temp:'95–100 °C',
+      col:[139,58,24],   note:'Assam, Ceylon, breakfast blends. Fully oxidised, and the one that genuinely wants boiling water.' },
+    { id:'darjeel',  n:'Darjeeling',     min:120, max:210, temp:'85–90 °C',
+      col:[214,162,78],  note:'A first flush is treated far more gently than its colour suggests — closer to an oolong than to a breakfast tea.' },
+    { id:'earl',     n:'Earl Grey',      min:180, max:300, temp:'90–95 °C',
+      col:[158,74,34],   note:'A black tea scented with bergamot. Over-steeping pushes the bergamot behind the tannin.' },
+    { id:'puerh',    n:'Pu-erh',         min:180, max:300, temp:'95–100 °C',
+      col:[74,30,14],    note:'Aged and fermented. Usually given a quick rinse with hot water first, which is thrown away.' },
+    { id:'rooibos',  n:'Rooibos',        min:300, max:420, temp:'100 °C',
+      col:[168,52,26],   note:'Not tea at all — a South African shrub. No caffeine, no tannin, and it cannot really be over-steeped.' },
+    { id:'chamom',   n:'Chamomile',      min:300, max:600, temp:'100 °C',
+      col:[224,185,74],  note:'An infusion of flowers. Long and hot, covered if you can, and it will not turn bitter on you.' },
+    { id:'mint',     n:'Peppermint',     min:300, max:420, temp:'100 °C',
+      col:[202,214,150], note:'Leaves rather than flowers. Covering the cup keeps the oils in it instead of in the room.' },
+    { id:'matcha',   n:'Matcha',         min:30,  max:60,  temp:'70–80 °C', whisk:true,
+      col:[122,164,74],  note:'Not steeped at all — whisked into suspension and drunk leaf and all. The timer below is for the whisking.' }
+  ];
+
+  var KEY = 'lc-tea-timer';
+  var cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+  var W = cv.width, H = cv.height;
+  function E(id){ return document.getElementById(id); }
+  function say(s){ E('said').innerHTML = s || '&nbsp;'; }
+
+  var tea = TEAS[0], dur = 120, startedAt = null, done = false;
+  var plumes = [], t = 0;
+
+  function save(){
+    try {
+      localStorage.setItem(KEY, JSON.stringify({
+        id: tea.id, dur: dur, startedAt: startedAt
+      }));
+    } catch (e) {}
+  }
+  function load(){
+    try {
+      var r = JSON.parse(localStorage.getItem(KEY) || 'null');
+      if (!r) return;
+      var t2 = TEAS.filter(function(x){ return x.id === r.id; })[0];
+      if (t2) tea = t2;
+      if (typeof r.dur === 'number') dur = r.dur;
+      if (typeof r.startedAt === 'number') startedAt = r.startedAt;
+    } catch (e) {}
+  }
+
+  function mmss(s){
+    s = Math.max(0, Math.round(s));
+    return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+  }
+  function rangeText(t2){
+    var a = t2.min / 60, b = t2.max / 60;
+    var f = function(v){ return (Math.round(v * 10) / 10).toString().replace('.0',''); };
+    return f(a) + '–' + f(b) + ' min';
+  }
+
+  /* elapsed seconds, purely from the clock */
+  function elapsed(){ return startedAt ? (Date.now() - startedAt) / 1000 : 0; }
+  function progress(){ return startedAt ? Math.min(1, elapsed() / dur) : 0; }
+
+  /* ---- the cup -------------------------------------------------------- */
+  function seedPlumes(){
+    plumes = [];
+    for (var i = 0; i < 26; i++){
+      plumes.push({
+        a: Math.random() * 6.283,
+        r0: 10 + Math.random() * 40,
+        spread: 0.55 + Math.random() * 0.9,
+        wob: Math.random() * 6.283,
+        speed: 0.5 + Math.random() * 0.9,
+        size: 0.6 + Math.random() * 0.8
+      });
+    }
+  }
+
+  function draw(){
+    ctx.clearRect(0, 0, W, H);
+    var cx = W / 2, cy = H / 2;
+    var R = W * 0.40;                       // the liquid surface
+    var p = progress();
+
+    /* saucer */
+    ctx.beginPath();
+    ctx.arc(cx, cy, R * 1.30, 0, 6.283);
+    var sg = ctx.createLinearGradient(cx - R, cy - R, cx + R, cy + R);
+    sg.addColorStop(0, '#FFFFFF'); sg.addColorStop(.55, '#EFE8DA'); sg.addColorStop(1, '#DCD2BF');
+    ctx.fillStyle = sg; ctx.fill();
+    ctx.strokeStyle = 'rgba(140,120,92,.25)'; ctx.lineWidth = 2; ctx.stroke();
+
+    /* the cup's outer wall */
+    ctx.beginPath();
+    ctx.arc(cx, cy, R * 1.10, 0, 6.283);
+    var cg = ctx.createLinearGradient(cx - R, cy - R, cx + R, cy + R);
+    cg.addColorStop(0, '#FFFFFF'); cg.addColorStop(.6, '#F6F1E6'); cg.addColorStop(1, '#E2DACA');
+    ctx.fillStyle = cg; ctx.fill();
+
+    /* the liquid */
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, 0, 6.283);
+    ctx.clip();
+
+    /* water, tinting overall as the infusion builds */
+    var col = tea.col;
+    var base = ctx.createRadialGradient(cx - R * .25, cy - R * .3, R * .1, cx, cy, R);
+    var strength = Math.pow(p, 0.72);
+    function mix(c, amt){
+      return 'rgb(' + Math.round(246 + (c[0] - 246) * amt) + ',' +
+                      Math.round(242 + (c[1] - 242) * amt) + ',' +
+                      Math.round(230 + (c[2] - 230) * amt) + ')';
+    }
+    base.addColorStop(0, mix(col, strength * 0.78));
+    base.addColorStop(1, mix(col, strength));
+    ctx.fillStyle = base;
+    ctx.fillRect(cx - R, cy - R, R * 2, R * 2);
+
+    /* the plumes leaving the leaf: strongest early, folded into the body
+       of the cup as it evens out */
+    if (startedAt && p < 1){
+      var vis = Math.sin(Math.min(1, p * 1.9) * Math.PI) * 0.85 + 0.12;
+      ctx.globalAlpha = Math.min(0.85, vis);
+      plumes.forEach(function(pl, i){
+        var grow = Math.pow(p, 0.55);
+        var reach = pl.r0 + grow * R * pl.spread * 1.7;
+        var wob = Math.sin(t * 0.012 * pl.speed + pl.wob) * 0.30;
+        var px = cx + Math.cos(pl.a + wob) * reach;
+        var py = cy + Math.sin(pl.a + wob) * reach;
+        var rr = R * 0.30 * pl.size * (0.5 + grow);
+        var g = ctx.createRadialGradient(px, py, 0, px, py, rr);
+        g.addColorStop(0, 'rgba(' + col[0] + ',' + col[1] + ',' + col[2] + ',' + (0.30 * (1 - p * 0.55)) + ')');
+        g.addColorStop(1, 'rgba(' + col[0] + ',' + col[1] + ',' + col[2] + ',0)');
+        ctx.fillStyle = g;
+        ctx.beginPath(); ctx.arc(px, py, rr, 0, 6.283); ctx.fill();
+      });
+      ctx.globalAlpha = 1;
+    }
+
+    /* the leaf itself, sitting in the middle */
+    if (startedAt && p < 1 && !tea.whisk){
+      ctx.globalAlpha = 0.5;
+      for (var k = 0; k < 9; k++){
+        var a2 = (k / 9) * 6.283 + Math.sin(t * 0.006 + k) * 0.2;
+        var d2 = 14 + (k % 4) * 11;
+        ctx.save();
+        ctx.translate(cx + Math.cos(a2) * d2, cy + Math.sin(a2) * d2);
+        ctx.rotate(a2 + t * 0.002);
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 15, 5, 0, 0, 6.283);
+        ctx.fillStyle = 'rgba(52,42,22,.75)'; ctx.fill();
+        ctx.restore();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    /* the light on the surface */
+    var sh = ctx.createRadialGradient(cx - R * .38, cy - R * .44, 2, cx - R * .38, cy - R * .44, R * .8);
+    sh.addColorStop(0, 'rgba(255,255,255,.34)');
+    sh.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = sh; ctx.fillRect(cx - R, cy - R, R * 2, R * 2);
+    ctx.restore();
+
+    /* rim */
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, 0, 6.283);
+    ctx.strokeStyle = 'rgba(120,100,74,.30)'; ctx.lineWidth = 3; ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(cx, cy, R * 1.10, 0, 6.283);
+    ctx.strokeStyle = 'rgba(150,130,102,.22)'; ctx.lineWidth = 2; ctx.stroke();
+
+    /* the ring that fills as the time goes */
+    if (startedAt){
+      ctx.beginPath();
+      ctx.arc(cx, cy, R * 1.19, -Math.PI / 2, -Math.PI / 2 + p * 6.283);
+      ctx.strokeStyle = done ? '#6E8A42' : 'rgb(' + col[0] + ',' + col[1] + ',' + col[2] + ')';
+      ctx.lineWidth = 7; ctx.lineCap = 'round'; ctx.stroke();
+    }
+    t++;
+  }
+
+  /* ---- the chrome ----------------------------------------------------- */
+  function paintLabel(){
+    E('l-name').textContent = tea.n + (tea.whisk ? ' — whisked, not steeped' : '');
+    E('l-note').textContent = tea.note;
+    E('s-range').innerHTML = tea.whisk
+      ? rangeText(tea) + ' <small>whisking</small>'
+      : rangeText(tea) + ' <small>published</small>';
+    E('s-temp').textContent = tea.temp;
+    E('s-set').innerHTML = mmss(dur) + ' <small>min</small>';
+    E('v-set').textContent = mmss(dur);
+    var pct = (dur - tea.min) / (tea.max - tea.min) * 100;
+    E('dur').value = Math.max(0, Math.min(100, pct));
+    E('dur').disabled = !!startedAt;
+  }
+
+  function paintClock(){
+    var p = progress();
+    if (!startedAt){
+      E('c-time').textContent = mmss(dur);
+      E('c-state').textContent = tea.whisk ? 'ready to whisk' : 'ready';
+    } else if (p < 1){
+      E('c-time').textContent = mmss(dur - elapsed());
+      E('c-state').textContent = tea.whisk ? 'whisking' : 'steeping';
+    } else {
+      E('c-time').textContent = 'ready';
+      E('c-state').textContent = 'poured at ' + mmss(dur);
+    }
+    /* the numbers sit on the liquid, so they go dark when it is still pale */
+    var dark = p < 0.28 || tea.col[0] + tea.col[1] + tea.col[2] > 520;
+    E('clock').className = 'clock' + (dark ? ' dark' : '');
+    E('btn-go').textContent = startedAt ? (p < 1 ? 'Steeping…' : 'Start again') : 'Start steeping';
+    E('btn-go').disabled = !!startedAt && p < 1;
+  }
+
+  function buildTeaButtons(){
+    E('teas').innerHTML = '';
+    TEAS.forEach(function(x){
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = x.n;
+      b.setAttribute('aria-pressed', String(x.id === tea.id));
+      b.addEventListener('click', function(){ choose(x); });
+      E('teas').appendChild(b);
+    });
+  }
+
+  function choose(x){
+    tea = x;
+    startedAt = null; done = false;
+    dur = Math.round((x.min + x.max) / 2);
+    seedPlumes();
+    buildTeaButtons(); paintLabel(); paintClock(); save();
+    say(x.whisk
+      ? 'Matcha is not steeped &mdash; it is whisked. The timer is for the whisking.'
+      : 'Published range <b>' + rangeText(x) + '</b> at <b>' + x.temp + '</b>. Move the slider ' +
+        'anywhere inside it.');
+  }
+
+  E('dur').addEventListener('input', function(){
+    if (startedAt) return;
+    dur = Math.round(tea.min + (tea.max - tea.min) * (this.value / 100));
+    paintLabel(); paintClock(); save();
+  });
+
+  E('btn-go').addEventListener('click', function(){
+    if (startedAt && progress() >= 1){ startedAt = null; done = false; save(); paintLabel(); paintClock(); return; }
+    startedAt = Date.now(); done = false;
+    seedPlumes(); save(); paintLabel(); paintClock();
+    say('Going. It is on the clock, so closing this page will not stop it.');
+    cueStart();
+  });
+  E('btn-reset').addEventListener('click', function(){
+    startedAt = null; done = false; save(); paintLabel(); paintClock();
+    say('Poured out. Nothing wasted.');
+  });
+
+  /* ---- sound ---------------------------------------------------------- */
+  function cueStart(){
+    if (!window.LCSound) return;
+    LCSound.play(function(A){
+      /* water going into a cup: a rising resonance as it fills */
+      A.burst('pink', { type:'bandpass', freq: 600, q: 2.4, dur: 0.5, level: A.cap(0.05), attack: 0.05 });
+      A.blip(300, { type:'sine', dur: 0.5, glide: 520, level: A.cap(0.025), reverb: true });
+    });
+  }
+  function cueDone(){
+    if (!window.LCSound) return;
+    LCSound.play(function(A){
+      /* a small struck bell: three partials, inharmonic like a real one */
+      var f = 784;
+      A.blip(f,        { type:'sine', dur: 2.6, level: A.cap(0.055), reverb: true });
+      A.blip(f * 2.76, { type:'sine', dur: 1.9, level: A.cap(0.022), reverb: true });
+      A.blip(f * 5.40, { type:'sine', dur: 1.2, level: A.cap(0.012), reverb: true });
+      A.burst('white', { type:'highpass', freq: 6000, dur: 0.04, level: A.cap(0.02) });
+    });
+  }
+
+  /* ---- the loop ------------------------------------------------------- */
+  function tick(){
+    if (!document.hidden){
+      draw();
+      if (startedAt){
+        paintClock();
+        if (!done && progress() >= 1){
+          done = true;
+          cueDone();
+          say(tea.whisk
+            ? '<b>Whisked.</b> Drink it while the foam is still on it.'
+            : '<b>Ready.</b> Take the leaf out now, or it will keep going without you.');
+        }
+      }
+    }
+    requestAnimationFrame(tick);
+  }
+
+  load();
+  if (!dur) dur = Math.round((tea.min + tea.max) / 2);
+  seedPlumes(); buildTeaButtons(); paintLabel(); paintClock();
+  if (startedAt && progress() >= 1) done = true;
+  requestAnimationFrame(tick);
+  if (window.LCSound) LCSound.mount();
+
+  window.__tea = {
+    teas: TEAS,
+    tea: function(){ return tea; },
+    dur: function(){ return dur; },
+    elapsed: elapsed,
+    progress: progress,
+    choose: function(id){ choose(TEAS.filter(function(x){ return x.id === id; })[0] || TEAS[0]); },
+    start: function(){ E('btn-go').click(); },
+    /* wind the start back, the only handle there is on the clock */
+    backdate: function(sec){ startedAt = Date.now() - sec * 1000; save(); paintClock(); },
+    setDur: function(s){ dur = s; paintLabel(); paintClock(); save(); },
+    done: function(){ return done; }
+  };
+})();
+</script>
+<style>
+@keyframes lcf-swell{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
+.lc-flourish{animation:lcf-swell .5s cubic-bezier(.2,.8,.3,1) both}
+@media (prefers-reduced-motion: reduce){ .lc-flourish{animation:none} }
+</style>
+<script>
+(function(){
+  function flourish(){
+    var el = document.querySelector('.label');
+    if (!el) return;
+    el.classList.remove('lc-flourish');
+    void el.offsetWidth;
+    el.classList.add('lc-flourish');
+  }
+  document.addEventListener('click', function(e){
+    if (!e.target.closest || e.target.closest('#lc-sound-btn')) return;
+    if (e.target.closest('.teas button, .bar button')) setTimeout(flourish, 30);
+  });
+})();
+</script>
+</body>
+</html>

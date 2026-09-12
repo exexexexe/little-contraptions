@@ -16,7 +16,9 @@ Opens on http://localhost:3000.
 
 ## The toys
 
-**149 drawers**, each a single self-contained HTML file under `public/<slug>/index.html`.
+**139 drawers**, each a single self-contained HTML file under `public/<slug>/index.html`.
+(`public/` holds 167 such files; 28 of them are redirect stubs left behind by
+consolidations, which is exactly the difference.)
 The hub filters them by the tag on each card.
 
 The table below covers the first 29 and has not been maintained since — the
@@ -57,13 +59,21 @@ what it is.
 | 28 | [Civilizations, Ranked](/civilizations/) | scroll story | Up the Kardashev scale — build a Dyson swarm, send a message through a wormhole. |
 | 29 | [The Loot Terminal](/loot-terminal/) | generator | Fantasy item appraisal with a compendium that persists in the browser. |
 
-(The table above stops at 29; the hub itself is at 149. Bringing it up to date is on the list.)
+(The table above stops at 29; the hub itself is at 139. Bringing it up to date is on the list.)
 
 The desktop has a Start menu with **Rest**, **Restart** and **Shut Down**, a **messy desktop**
 switch in Display Properties → Settings, and an ambient soundtrack that follows the colour scheme.
 The soundtrack is Room Tone's engine (`shared/lc-roomtone.js`) at a background level — four of its
 six beds mapped across the twenty schemes. Nothing is sampled and there is still no audio file in
-this repo. Sound cannot start on load: the bed is armed and waits for the visitor's first gesture.
+this repo.
+
+**One drawer is an exception to the sampling rule and says so on its own page.** The Ocean Sound
+Mixer (`/ocean-mixer/`) plays four real hydrophone recordings from NOAA's PMEL Acoustics Program,
+because real hydrophone data cannot be synthesised honestly — a made-up whale is not a whale.
+Every channel there is badged `RECORDING` or `GENERATED` so the two can never be confused. The
+audio is streamed straight from `pmel.noaa.gov` and is **never proxied, cached or re-served**,
+the same rule the song guesser's previews run under, so the "no audio file in this repo" half of
+the rule still holds exactly. Everything else in the cabinet remains generated. Sound cannot start on load: the bed is armed and waits for the visitor's first gesture.
 
 `/api/hall` is the hall of fame: a shared wall signed only by visitors who have found all
 forty-three hidden things. The completeness claim comes from the browser and is not verifiable
@@ -107,6 +117,33 @@ do real work:
 
 The other three are the older ornaments: a camera watching nothing, a meter
 measuring nothing, and a note from whoever left.
+
+### The live peeks, and the switch on each one
+
+Seven more sit alongside them, off by default: a **Windowsill** peek showing whichever plant the
+visitor is actually tending and how far along it really is; a **Hearth** running the fireplace's
+particle flame in miniature; the **Coil**, which is `shared/lc-coil-idle.js` reused rather than
+rebuilt; a **Postcards** peek cycling real cards off the shared board; a **Species** badge
+carrying today's real IUCN category, fetched from GBIF; **Who else is here**, off the same
+in-memory `/api/here` the card catalogue uses; and **Drift**, slow cloud behind everything with
+stars over a dark wallpaper.
+
+**Every one of the thirteen has its own switch**, in Display Properties → Widgets, remembered in
+`lc-w98-wg-on`. Deliberately not one master switch: the point of a rail you can edit is choosing
+what is in it. A widget that is off costs nothing — no timer, no frame, no polling.
+
+They start off because the rail is only so tall. The original six already stand 763px in the 816px
+the rail has at a 1280x860 window, so the pane measures the rail and says how much is left, rather
+than imposing a cap.
+
+### Desktop layout: Icons or Folders
+
+Display Properties -> Icons -> Desktop layout switches the desktop between every drawer loose on
+the surface and all of them filed into eight category folders. The category folders are computed
+from the toy list rather than stored, so the switch is purely presentational: folders a visitor
+made themselves, icon positions, wallpaper and everything else are untouched and come back exactly
+as they were. A drawer's folder is derived from the tag on its hub card, with a short exception
+list, so a new drawer is filed correctly the moment its card exists.
 
 ### Moving them about
 
@@ -167,6 +204,7 @@ nothing moves at all until a hand is on the cradle.
     /api/guestbook         GET the wall (?before= to page back), POST a signature
     /api/pixels            GET the shared canvas, POST up to your remaining pixels
     /api/story             GET the tail of the shared story, POST one sentence
+    /api/postcards         GET the shared corkboard (?before= to page back), POST a card
 
 Keys are read from the environment and never reach the browser. The RSS relay
 takes a short feed name, never a URL — an arbitrary `?url=` would make it an
@@ -199,7 +237,7 @@ runtime again after fetching details and deals another card if the cap was broke
 sends a query string. Same rule as the RSS relay, and the same reason: an arbitrary `?query=` would
 make this a free image search running on somebody else's quota.
 
-The five shared routes all sit on the same SQLite file as the bottles and the
+The six shared routes all sit on the same SQLite file as the bottles and the
 presence map, and all five answer `200 {ok:false, why:"no_store"}` rather than
 a 5xx when the volume is not mounted — every page that uses one has a state
 for "there is no shared storage today", and none of them should read as a
@@ -269,6 +307,13 @@ style.
       lc-audio.js          the Web Audio bench, out of Room Tone
       lc-weather-fx.js     the twelve-effect particle field, out of the almanac
       world-land.js        world coastlines for a 720x360 viewBox
+      lc-species.js        the species rotation, shared by the drawer and the
+                           desktop badge so the two cannot disagree about the
+                           day; identifiers only, every fact still fetched
+      lc-coil-idle.js      the small wobbling coil, as a droppable component —
+                           its own spring integration, no Matter.js, no
+                           dependency at all, built for a future desktop widget
+                           and deliberately not wired into one yet
 
 `NO_CACHE=1` serves every static file with `no-store`. An hour of browser cache
 on a `.js` file is right in production and maddening while editing one.

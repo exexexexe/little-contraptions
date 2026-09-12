@@ -1,0 +1,628 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Blanket Fort Builder</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%236B5D6E'/><path d='M4 24l7-12 5 6 4-5 8 11z' fill='%23C9705F'/><path d='M4 24h24' stroke='%23E8D9C0' stroke-width='2'/><circle cx='16' cy='9' r='2' fill='%23F0C878'/></svg>">
+<style>
+:root{ color-scheme: dark; }
+:root{
+  /* A dim room in the evening, with one lamp on. */
+  --wall:#6B5D6E;
+  --wall-2:#54485A;
+  --ink:#F2E7D8;
+  --ink-2:#C9BBAE;
+  --dim:#9A8C93;
+  --dimmer:#75686F;
+  --lamp:#F0C878;
+  --rust:#C9705F;
+  --line:#7E6F80;
+  --sans:"Trebuchet MS",Verdana,"Segoe UI",Tahoma,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;min-height:100%}
+body{
+  background:var(--wall-2);
+  background-image:radial-gradient(ellipse at 50% 30%, rgba(240,200,120,.10), transparent 60%);
+  color:var(--ink);font-family:var(--sans);
+  min-height:100vh;padding:24px 16px 84px;
+  display:flex;flex-direction:column;align-items:center;
+}
+.wrap{ width:min(880px,100%);display:flex;flex-direction:column;align-items:center }
+
+h1{ font-size:clamp(21px,4.8vw,28px);font-weight:700;margin:0 0 7px;text-align:center }
+.tagline{ font-size:13.5px;line-height:1.7;color:var(--dim);margin:0 0 16px;text-align:center;max-width:46ch }
+
+.room{
+  position:relative;width:100%;border:1px solid var(--line);border-radius:5px;
+  box-shadow:0 16px 38px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.05);
+  overflow:hidden;background:#584B5E;
+}
+.room canvas{ display:block;width:100%;height:auto;touch-action:none;cursor:default }
+.room canvas.grabbing{ cursor:grabbing }
+.tip{ position:absolute;left:12px;top:11px;pointer-events:none;
+  font-family:var(--mono);font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:rgba(242,231,216,.34) }
+
+/* ---- the box of things ------------------------------------------------ */
+.tray{ width:100%;margin-top:14px;display:flex;flex-wrap:wrap;gap:7px;justify-content:center }
+.tray button{
+  font:inherit;font-family:var(--sans);font-size:13px;cursor:pointer;
+  background:rgba(242,231,216,.07);color:var(--ink);border:1px solid var(--line);border-radius:8px;
+  padding:8px 13px;display:flex;align-items:center;gap:7px;transition:background .14s,border-color .14s;
+}
+.tray button:hover{ background:rgba(242,231,216,.15);border-color:var(--lamp) }
+.tray button:focus-visible{ outline:2px solid var(--lamp);outline-offset:2px }
+.tray button i{ width:15px;height:15px;border-radius:3px;display:block;flex:0 0 auto }
+
+.bar{ display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;justify-content:center;width:100% }
+.bar button{
+  font:inherit;font-family:var(--mono);font-size:10px;letter-spacing:.15em;text-transform:uppercase;
+  cursor:pointer;background:transparent;color:var(--dim);border:1px solid var(--line);
+  border-radius:999px;padding:9px 16px;transition:border-color .14s,color .14s;
+}
+.bar button:hover:not(:disabled){ border-color:var(--lamp);color:var(--ink) }
+.bar button:disabled{ opacity:.35;cursor:default }
+.bar button:focus-visible{ outline:2px solid var(--lamp);outline-offset:2px }
+.bar button.danger:hover:not(:disabled){ border-color:var(--rust);color:var(--rust) }
+
+.said{ margin-top:13px;text-align:center;font-size:13.5px;line-height:1.75;color:var(--ink-2);
+  min-height:2.6em;max-width:52ch }
+
+.book{ margin-top:26px;padding-top:19px;border-top:1px solid var(--line);font-size:13.5px;
+  line-height:1.9;color:var(--ink-2);width:100% }
+.book p{ margin:0 0 12px } .book p:last-child{ margin:0 }
+.book b{ color:var(--ink);font-weight:700 }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 var(--mono);
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#3A2F3C;background:var(--lamp);
+  border:1px solid rgba(0,0,0,.2);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  box-shadow:0 5px 18px rgba(0,0,0,.42);
+  transition:width .18s ease, background .16s, gap .18s ease;
+}
+@media (pointer:coarse){ #lc-back{ width:44px;height:44px } }
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:#F7DCA2 }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid var(--ink);outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Blanket Fort Builder</h1>
+<p class="tagline">Take things out of the box and put them where you want them. It is remembered,
+  so the fort is still standing when you come back.</p>
+
+<div class="room">
+  <canvas id="cv" width="1000" height="600"></canvas>
+  <div class="tip" id="tip">pick something from the box below</div>
+</div>
+
+<div class="tray" id="tray"></div>
+
+<div class="bar">
+  <button type="button" id="btn-rot" disabled>Turn it</button>
+  <button type="button" id="btn-front" disabled>Bring forward</button>
+  <button type="button" id="btn-back" disabled>Send behind</button>
+  <button type="button" id="btn-del" class="danger" disabled>Take it away</button>
+  <button type="button" id="btn-lamp">Lamp off</button>
+  <button type="button" id="btn-clear" class="danger">Start again</button>
+</div>
+
+<p class="said" id="said">&nbsp;</p>
+
+<div class="book">
+  <p><b>Everything in the box is drawn rather than pictured.</b> Each thing is a little routine
+  that paints a pillow or a draped blanket or a sleeping cat out of curves, so there is no
+  artwork in this drawer and nothing is loaded to build a fort.</p>
+  <p><b>It is placement, not physics.</b> The brief allowed either, and for a fort the fiddly
+  version is worse: things stay exactly where you put them instead of sliding off a cushion the
+  moment you let go. What you do get is a real stacking order &mdash; anything you pick up comes
+  to the front, and you can push it behind the rest &mdash; which is most of what building a fort
+  out of furniture actually involves.</p>
+  <p><b>The blankets hang.</b> A blanket's lower edge is a chain of catenary-ish sags computed
+  across its width rather than a wavy line drawn by hand, so a wide one droops more in the middle,
+  the way a real one slung between two chairs does.</p>
+  <p>The lamp is a real light: everything in the room is tinted by how far it sits from the lamp,
+  so moving the lamp changes what the fort looks like. Turn it off and the room goes to moonlight.</p>
+  <p>Your fort is kept in this browser and nowhere else.</p>
+</div>
+
+</div>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">&larr;</span><span class="w">cabinet</span></a>
+
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  var KEY = 'lc-blanket-fort';
+  var cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+  var W = cv.width, H = cv.height;
+  var FLOOR = H * 0.72;
+  function E(id){ return document.getElementById(id); }
+  function say(s){ E('said').textContent = s || ' '; }
+
+  /* ================================================================== *
+   *  The box of things. Each kind knows its own size and how to draw
+   *  itself around its own origin.
+   * ================================================================== */
+  var KINDS = {
+    pillow:  { n:'Pillow',      w:150, h:86,  c:'#C9705F', soft:true },
+    cushion: { n:'Cushion',     w:104, h:104, c:'#7E8FA8', soft:true },
+    bolster: { n:'Bolster',     w:190, h:58,  c:'#9C7FA0', soft:true },
+    blanket: { n:'Blanket',     w:250, h:160, c:'#A8564E', drape:true },
+    quilt:   { n:'Quilt',       w:300, h:180, c:'#5F7F72', drape:true },
+    chair:   { n:'Chair',       w:120, h:170, c:'#8A6A4A' },
+    stool:   { n:'Stool',       w:96,  h:96,  c:'#7A6046' },
+    table:   { n:'Side table',  w:150, h:120, c:'#6E5540' },
+    lamp:    { n:'Lamp',        w:90,  h:150, c:'#F0C878', light:true },
+    lights:  { n:'Fairy lights',w:280, h:70,  c:'#F0C878' },
+    books:   { n:'Books',       w:94,  h:70,  c:'#B5843C' },
+    mug:     { n:'Mug',         w:52,  h:56,  c:'#E0D2BC' },
+    cat:     { n:'Cat',         w:120, h:56,  c:'#4A4048' }
+  };
+  var ORDER = ['pillow','cushion','bolster','blanket','quilt','chair','stool','table',
+               'lamp','lights','books','mug','cat'];
+
+  var items = [], sel = null, lampOn = true, drag = null, seq = 1;
+
+  function load(){
+    try {
+      var r = JSON.parse(localStorage.getItem(KEY) || 'null');
+      if (r && Array.isArray(r.items)){
+        items = r.items.filter(function(i){ return KINDS[i.k]; }).slice(0, 80);
+        lampOn = r.lampOn !== false;
+        items.forEach(function(i){ if (i.id >= seq) seq = i.id + 1; });
+      }
+    } catch (e) {}
+  }
+  function save(){
+    try { localStorage.setItem(KEY, JSON.stringify({ items: items, lampOn: lampOn })); } catch (e) {}
+  }
+
+  /* ---- where the light is ------------------------------------------ */
+  function lampAt(){
+    for (var i = items.length - 1; i >= 0; i--) if (items[i].k === 'lamp') return items[i];
+    return null;
+  }
+  /* how lit a point is, 0..1 — a real falloff from the nearest lamp */
+  function litness(x, y){
+    if (!lampOn) return 0.14;
+    var L = lampAt();
+    if (!L) return 0.42;
+    var d = Math.hypot(x - L.x, y - (L.y - 40));
+    return Math.max(0.13, Math.min(1, 1.25 - d / 560));
+  }
+  function shade(hex, amt){
+    var n = parseInt(hex.slice(1), 16);
+    var r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+    /* warm as it brightens, blue as it darkens — which is what a lamp in a
+       dim room actually does to a colour */
+    var wr = amt, wg = amt * 0.93, wb = amt * 0.78;
+    if (amt < 0.4){ wb = amt * 1.35; wg = amt * 1.05; }
+    return 'rgb(' + Math.round(Math.min(255, r * wr + 12)) + ',' +
+                    Math.round(Math.min(255, g * wg + 12)) + ',' +
+                    Math.round(Math.min(255, b * wb + 20)) + ')';
+  }
+
+  /* ================================================================== *
+   *  Drawing the things
+   * ================================================================== */
+  function roundRect(x, y, w, h, r){
+    ctx.beginPath(); ctx.roundRect(x, y, w, h, r);
+  }
+
+  function drawItem(it, ghost){
+    var K = KINDS[it.k];
+    var lit = litness(it.x, it.y);
+    var col = shade(K.c, lit);
+
+    ctx.save();
+    ctx.translate(it.x, it.y);
+    ctx.rotate((it.rot || 0) * Math.PI / 180);
+    if (ghost) ctx.globalAlpha = 0.55;
+
+    /* a soft shadow under everything, so it sits in the room */
+    ctx.save();
+    ctx.globalAlpha = (ghost ? 0.12 : 0.26) * (0.4 + lit);
+    ctx.fillStyle = '#221C26';
+    ctx.beginPath();
+    ctx.ellipse(4, K.h / 2 + 5, K.w * 0.45, 9, 0, 0, 6.283);
+    ctx.fill();
+    ctx.restore();
+
+    var w = K.w, h = K.h;
+
+    if (K.soft){
+      /* a pillow: a rounded block pinched at the corners */
+      ctx.beginPath();
+      ctx.moveTo(-w/2 + 14, -h/2);
+      ctx.quadraticCurveTo(0, -h/2 - 11, w/2 - 14, -h/2);
+      ctx.quadraticCurveTo(w/2 + 11, 0, w/2 - 14, h/2);
+      ctx.quadraticCurveTo(0, h/2 + 11, -w/2 + 14, h/2);
+      ctx.quadraticCurveTo(-w/2 - 11, 0, -w/2 + 14, -h/2);
+      ctx.closePath();
+      var g = ctx.createLinearGradient(-w/2, -h/2, w/2, h/2);
+      g.addColorStop(0, shade(K.c, Math.min(1, lit * 1.22)));
+      g.addColorStop(1, shade(K.c, lit * 0.7));
+      ctx.fillStyle = g; ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,.16)'; ctx.lineWidth = 1.4; ctx.stroke();
+      /* a seam, and the dent where somebody leaned on it */
+      ctx.beginPath();
+      ctx.ellipse(0, 0, w * 0.30, h * 0.22, 0, 0, 6.283);
+      ctx.strokeStyle = 'rgba(0,0,0,.10)'; ctx.lineWidth = 3; ctx.stroke();
+    }
+    else if (K.drape){
+      /* A blanket hung between two points. The lower edge is worked out
+         as a sag across the width rather than drawn as a wave, so a wide
+         one droops more in the middle the way a real one does. */
+      var N = 22, sag = h * 0.42 * (w / 250);
+      ctx.beginPath();
+      ctx.moveTo(-w/2, -h/2);
+      ctx.lineTo(w/2, -h/2);
+      for (var i = N; i >= 0; i--){
+        var t = i / N;
+        var x = -w/2 + t * w;
+        var u = (t - 0.5) * 2;
+        var y = h/2 + sag * (1 - u * u) - Math.abs(u) * h * 0.10;
+        ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      var bg = ctx.createLinearGradient(0, -h/2, 0, h/2 + sag);
+      bg.addColorStop(0, shade(K.c, Math.min(1, lit * 1.18)));
+      bg.addColorStop(1, shade(K.c, lit * 0.62));
+      ctx.fillStyle = bg; ctx.fill();
+      /* folds, following the same sag */
+      ctx.strokeStyle = 'rgba(0,0,0,.13)'; ctx.lineWidth = 2;
+      for (var f = 1; f < 5; f++){
+        var tf = f / 5, xf = -w/2 + tf * w, uf = (tf - 0.5) * 2;
+        ctx.beginPath();
+        ctx.moveTo(xf, -h/2);
+        ctx.lineTo(xf, h/2 + sag * (1 - uf * uf) - Math.abs(uf) * h * 0.10);
+        ctx.stroke();
+      }
+      /* the pegged top edge */
+      ctx.fillStyle = 'rgba(255,255,255,.14)';
+      ctx.fillRect(-w/2, -h/2, w, 6);
+    }
+    else if (it.k === 'chair'){
+      ctx.fillStyle = col;
+      roundRect(-w/2, -h/2, w * 0.22, h, 5); ctx.fill();           // back post
+      roundRect(-w/2, -h/2, w, h * 0.10, 5); ctx.fill();           // top rail
+      roundRect(-w/2, h * 0.06, w, h * 0.13, 5); ctx.fill();       // seat
+      ctx.fillRect(-w/2 + 6, h * 0.19, 11, h * 0.31);              // legs
+      ctx.fillRect(w/2 - 17, h * 0.19, 11, h * 0.31);
+      ctx.fillStyle = 'rgba(255,255,255,.10)';
+      ctx.fillRect(-w/2, h * 0.06, w, 4);
+    }
+    else if (it.k === 'stool'){
+      ctx.fillStyle = col;
+      roundRect(-w/2, -h/2, w, h * 0.20, 5); ctx.fill();
+      ctx.fillRect(-w/2 + 8, -h/2 + h * 0.2, 10, h * 0.72);
+      ctx.fillRect(w/2 - 18, -h/2 + h * 0.2, 10, h * 0.72);
+      ctx.fillStyle = 'rgba(255,255,255,.10)';
+      ctx.fillRect(-w/2, -h/2, w, 4);
+    }
+    else if (it.k === 'table'){
+      ctx.fillStyle = col;
+      roundRect(-w/2, -h/2, w, h * 0.14, 4); ctx.fill();
+      ctx.fillRect(-w/2 + 10, -h/2 + h * 0.14, 9, h * 0.84);
+      ctx.fillRect(w/2 - 19, -h/2 + h * 0.14, 9, h * 0.84);
+      ctx.fillRect(-w/2 + 10, h * 0.20, w - 20, 6);
+      ctx.fillStyle = 'rgba(255,255,255,.10)';
+      ctx.fillRect(-w/2, -h/2, w, 4);
+    }
+    else if (it.k === 'lamp'){
+      ctx.fillStyle = shade('#6E5540', lit);
+      ctx.fillRect(-4, -h/2 + 44, 8, h - 54);                      // stem
+      roundRect(-22, h/2 - 12, 44, 12, 5); ctx.fill();             // base
+      /* the shade, lit from inside when it is on */
+      ctx.beginPath();
+      ctx.moveTo(-34, -h/2 + 44); ctx.lineTo(-22, -h/2);
+      ctx.lineTo(22, -h/2); ctx.lineTo(34, -h/2 + 44);
+      ctx.closePath();
+      ctx.fillStyle = lampOn ? '#F4D28E' : shade('#8A7A62', 0.3);
+      ctx.fill();
+      if (lampOn){
+        ctx.fillStyle = 'rgba(255,238,190,.55)';
+        ctx.fillRect(-32, -h/2 + 38, 64, 7);
+      }
+    }
+    else if (it.k === 'lights'){
+      ctx.strokeStyle = shade('#5A4A50', lit); ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-w/2, -h/2 + 6);
+      ctx.quadraticCurveTo(0, h/2, w/2, -h/2 + 6);
+      ctx.stroke();
+      for (var b = 0; b <= 9; b++){
+        var tb = b / 9;
+        var bx = -w/2 + tb * w;
+        var by = (1-tb)*(1-tb)*(-h/2+6) + 2*(1-tb)*tb*(h/2) + tb*tb*(-h/2+6);
+        ctx.beginPath();
+        ctx.arc(bx, by + 7, 5.5, 0, 6.283);
+        ctx.fillStyle = lampOn ? ['#F0C878','#E8A0A0','#A8D0C0','#C8B0E0'][b % 4] : '#5E5258';
+        ctx.fill();
+        if (lampOn){
+          ctx.beginPath(); ctx.arc(bx, by + 7, 11, 0, 6.283);
+          ctx.fillStyle = 'rgba(240,200,120,.14)'; ctx.fill();
+        }
+      }
+    }
+    else if (it.k === 'books'){
+      var cols = ['#B5843C','#7E8FA8','#A8564E'];
+      for (var bk = 0; bk < 3; bk++){
+        ctx.fillStyle = shade(cols[bk], lit);
+        roundRect(-w/2 + bk * 3, h/2 - 22 - bk * 21, w - bk * 8, 18, 2); ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,.16)';
+        ctx.fillRect(-w/2 + bk * 3, h/2 - 22 - bk * 21, w - bk * 8, 3);
+      }
+    }
+    else if (it.k === 'mug'){
+      ctx.fillStyle = col;
+      roundRect(-w/2 + 4, -h/2 + 8, w - 18, h - 12, 5); ctx.fill();
+      ctx.beginPath();
+      ctx.arc(w/2 - 12, 2, 11, -1.2, 1.2);
+      ctx.strokeStyle = col; ctx.lineWidth = 5; ctx.stroke();
+      ctx.fillStyle = 'rgba(90,60,40,.75)';
+      roundRect(-w/2 + 8, -h/2 + 11, w - 26, 6, 3); ctx.fill();
+    }
+    else if (it.k === 'cat'){
+      ctx.fillStyle = col;
+      /* a loaf of a cat, asleep */
+      ctx.beginPath();
+      ctx.ellipse(0, 6, w * 0.42, h * 0.42, 0, 0, 6.283);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(-w * 0.30, -2, h * 0.31, 0, 6.283);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(-w * 0.44, -h * 0.28); ctx.lineTo(-w * 0.36, -h * 0.56); ctx.lineTo(-w * 0.27, -h * 0.27);
+      ctx.closePath(); ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(-w * 0.20, -h * 0.30); ctx.lineTo(-w * 0.12, -h * 0.56); ctx.lineTo(-w * 0.07, -h * 0.26);
+      ctx.closePath(); ctx.fill();
+      /* tail curled round */
+      ctx.beginPath();
+      ctx.moveTo(w * 0.36, 10);
+      ctx.quadraticCurveTo(w * 0.62, 4, w * 0.46, -14);
+      ctx.strokeStyle = col; ctx.lineWidth = 11; ctx.lineCap = 'round'; ctx.stroke();
+      /* shut eye */
+      ctx.beginPath();
+      ctx.arc(-w * 0.34, -4, 5, 0.2, Math.PI - 0.2);
+      ctx.strokeStyle = 'rgba(255,240,220,.6)'; ctx.lineWidth = 1.8; ctx.stroke();
+    }
+
+    if (!ghost && sel === it.id){
+      ctx.strokeStyle = 'rgba(240,200,120,.85)';
+      ctx.setLineDash([6, 4]); ctx.lineWidth = 1.6;
+      ctx.strokeRect(-K.w / 2 - 6, -K.h / 2 - 6, K.w + 12, K.h + 12);
+      ctx.setLineDash([]);
+    }
+    ctx.restore();
+  }
+
+  /* ---- the room ----------------------------------------------------- */
+  function draw(){
+    var amb = lampOn ? 1 : 0.42;
+    var g = ctx.createLinearGradient(0, 0, 0, FLOOR);
+    g.addColorStop(0, lampOn ? '#6B5D6E' : '#3C3646');
+    g.addColorStop(1, lampOn ? '#57495C' : '#302B3A');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, FLOOR);
+
+    /* skirting and floor */
+    ctx.fillStyle = lampOn ? '#4A3E50' : '#2C2735';
+    ctx.fillRect(0, FLOOR - 14, W, 14);
+    var fg = ctx.createLinearGradient(0, FLOOR, 0, H);
+    fg.addColorStop(0, lampOn ? '#6E523C' : '#3A2E28');
+    fg.addColorStop(1, lampOn ? '#513C2C' : '#2A211D');
+    ctx.fillStyle = fg; ctx.fillRect(0, FLOOR, W, H - FLOOR);
+    ctx.strokeStyle = 'rgba(0,0,0,.18)'; ctx.lineWidth = 1;
+    for (var fx = 0; fx < W; fx += 86){
+      ctx.beginPath(); ctx.moveTo(fx, FLOOR); ctx.lineTo(fx - 20, H); ctx.stroke();
+    }
+
+    /* the pool of light the lamp throws into the room */
+    var L = lampAt();
+    if (lampOn && L){
+      var rg = ctx.createRadialGradient(L.x, L.y - 40, 12, L.x, L.y - 40, 480);
+      rg.addColorStop(0, 'rgba(255,224,160,.28)');
+      rg.addColorStop(0.5, 'rgba(255,210,140,.10)');
+      rg.addColorStop(1, 'rgba(255,200,120,0)');
+      ctx.fillStyle = rg; ctx.fillRect(0, 0, W, H);
+    }
+
+    items.forEach(function(it){ drawItem(it, false); });
+
+    if (!items.length){
+      ctx.font = '19px "Trebuchet MS", Verdana, sans-serif';
+      ctx.fillStyle = 'rgba(242,231,216,.30)'; ctx.textAlign = 'center';
+      ctx.fillText('an empty room, and a box of things', W / 2, FLOOR - 60);
+      ctx.textAlign = 'left';
+    }
+
+    /* the dark at the edges, last, so it sits over everything */
+    var v = ctx.createRadialGradient(W/2, H/2, H*0.38, W/2, H/2, H*1.05);
+    v.addColorStop(0, 'rgba(0,0,0,0)');
+    v.addColorStop(1, 'rgba(0,0,0,' + (lampOn ? .34 : .55) + ')');
+    ctx.fillStyle = v; ctx.fillRect(0, 0, W, H);
+  }
+
+  /* ---- picking things up -------------------------------------------- */
+  function at(px, py){
+    for (var i = items.length - 1; i >= 0; i--){
+      var it = items[i], K = KINDS[it.k];
+      var dx = px - it.x, dy = py - it.y;
+      var a = -(it.rot || 0) * Math.PI / 180;
+      var lx = dx * Math.cos(a) - dy * Math.sin(a);
+      var ly = dx * Math.sin(a) + dy * Math.cos(a);
+      if (Math.abs(lx) <= K.w / 2 + 6 && Math.abs(ly) <= K.h / 2 + 6) return it;
+    }
+    return null;
+  }
+  function localPt(e){
+    var r = cv.getBoundingClientRect();
+    return { x: (e.clientX - r.left) / r.width * W, y: (e.clientY - r.top) / r.height * H };
+  }
+
+  cv.addEventListener('pointerdown', function(e){
+    var p = localPt(e);
+    var it = at(p.x, p.y);
+    if (!it){ sel = null; chrome(); draw(); return; }
+    cv.setPointerCapture(e.pointerId);
+    sel = it.id;
+    /* picking a thing up brings it to the front, which is what happens */
+    items.splice(items.indexOf(it), 1);
+    items.push(it);
+    drag = { it: it, dx: p.x - it.x, dy: p.y - it.y };
+    cv.className = 'grabbing';
+    chrome(); draw();
+  });
+  cv.addEventListener('pointermove', function(e){
+    if (!drag) return;
+    var p = localPt(e);
+    drag.it.x = Math.max(20, Math.min(W - 20, p.x - drag.dx));
+    drag.it.y = Math.max(20, Math.min(H - 20, p.y - drag.dy));
+    draw();
+  });
+  function drop(){
+    if (!drag) return;
+    drag = null; cv.className = '';
+    save(); cueSoft();
+  }
+  cv.addEventListener('pointerup', drop);
+  cv.addEventListener('pointercancel', drop);
+
+  /* ---- the box ------------------------------------------------------ */
+  function paintTray(){
+    E('tray').innerHTML = '';
+    ORDER.forEach(function(k){
+      var K = KINDS[k];
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.innerHTML = '<i style="background:' + K.c + '"></i>' + K.n;
+      b.addEventListener('click', function(){ add(k); });
+      E('tray').appendChild(b);
+    });
+  }
+  function add(k){
+    var K = KINDS[k];
+    var it = {
+      id: seq++, k: k, rot: 0,
+      x: W / 2 + (Math.random() - .5) * 220,
+      y: FLOOR - K.h / 2 - 10 - Math.random() * 40
+    };
+    items.push(it);
+    sel = it.id;
+    save(); chrome(); draw(); cueSoft();
+    say(K.n + ' in the room. Drag it wherever you want it.');
+  }
+
+  function chrome(){
+    var has = !!sel && items.some(function(i){ return i.id === sel; });
+    ['btn-rot','btn-front','btn-back','btn-del'].forEach(function(id){ E(id).disabled = !has; });
+    E('tip').textContent = has ? 'drag it, or use the buttons' : 'pick something from the box below';
+    E('btn-lamp').textContent = lampOn ? 'Lamp off' : 'Lamp on';
+  }
+  function selected(){
+    return items.filter(function(i){ return i.id === sel; })[0];
+  }
+  E('btn-rot').addEventListener('click', function(){
+    var it = selected(); if (!it) return;
+    it.rot = ((it.rot || 0) + 15) % 360;
+    save(); draw(); cueSoft();
+  });
+  E('btn-front').addEventListener('click', function(){
+    var it = selected(); if (!it) return;
+    items.splice(items.indexOf(it), 1); items.push(it);
+    save(); draw();
+  });
+  E('btn-back').addEventListener('click', function(){
+    var it = selected(); if (!it) return;
+    items.splice(items.indexOf(it), 1); items.unshift(it);
+    save(); draw();
+  });
+  E('btn-del').addEventListener('click', function(){
+    var it = selected(); if (!it) return;
+    items.splice(items.indexOf(it), 1);
+    sel = null; save(); chrome(); draw();
+    say('Back in the box.');
+  });
+  E('btn-lamp').addEventListener('click', function(){
+    lampOn = !lampOn; save(); chrome(); draw();
+    say(lampOn ? 'Lamp on.' : 'Lamp off. Moonlight only.');
+  });
+  E('btn-clear').addEventListener('click', function(){
+    if (this.dataset.sure !== '1'){
+      this.dataset.sure = '1'; this.textContent = 'Really? take it all down';
+      say('That takes the whole fort down.');
+      return;
+    }
+    this.dataset.sure = ''; this.textContent = 'Start again';
+    items = []; sel = null; save(); chrome(); draw();
+    say('An empty room again.');
+  });
+
+  function cueSoft(){
+    if (!window.LCSound) return;
+    LCSound.play(function(A){
+      /* fabric being put down: a short breath of noise, nothing sharp */
+      A.burst('pink', { type:'lowpass', freq: 900, dur: 0.11, level: A.cap(0.038), attack: 0.012 });
+    });
+  }
+
+  load(); paintTray(); chrome(); draw();
+  if (window.LCSound) LCSound.mount();
+
+  window.__fort = {
+    items: function(){ return items; },
+    count: function(){ return items.length; },
+    kinds: Object.keys(KINDS).length,
+    add: add,
+    sel: function(){ return sel; },
+    select: function(id){ sel = id; chrome(); draw(); },
+    lamp: function(){ return lampOn; },
+    toggleLamp: function(){ E('btn-lamp').click(); },
+    litness: litness,
+    clearAll: function(){ items = []; sel = null; save(); chrome(); draw(); },
+    stored: function(){ return localStorage.getItem(KEY); },
+    move: function(id, x, y){
+      var it = items.filter(function(i){ return i.id === id; })[0];
+      if (it){ it.x = x; it.y = y; save(); draw(); }
+    },
+    draw: draw
+  };
+})();
+</script>
+<style>
+@keyframes lcf-settle{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
+.lc-flourish{animation:lcf-settle .4s cubic-bezier(.2,.85,.3,1) both}
+@media (prefers-reduced-motion: reduce){ .lc-flourish{animation:none} }
+</style>
+<script>
+(function(){
+  function flourish(){
+    var el = document.querySelector('.room');
+    if (!el) return;
+    el.classList.remove('lc-flourish');
+    void el.offsetWidth;
+    el.classList.add('lc-flourish');
+  }
+  document.addEventListener('click', function(e){
+    if (!e.target.closest || e.target.closest('#lc-sound-btn')) return;
+    if (e.target.closest('.tray button, .bar button')) setTimeout(flourish, 30);
+  });
+})();
+</script>
+</body>
+</html>

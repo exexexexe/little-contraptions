@@ -1,0 +1,1105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Windowsill</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23E8EEF0'/><rect x='8' y='21' width='16' height='8' rx='1.6' fill='%23B9704F'/><path d='M16 21V9' stroke='%234A6B3A' stroke-width='2' fill='none'/><ellipse cx='10.5' cy='13' rx='5' ry='3' fill='%235E8A44' transform='rotate(-22 10.5 13)'/><ellipse cx='21.5' cy='15' rx='5' ry='3' fill='%236E9A52' transform='rotate(20 21.5 15)'/></svg>">
+<style>
+:root{ color-scheme: light; }
+:root{
+  /* Cold glass and morning light, against the bonsai alcove's warm paper.
+     Nothing in here is the tea-coloured washi of the tree's own page. */
+  --glass:#E8EEF0;
+  --glass-2:#DCE5E8;
+  --sill:#F4F7F8;
+  --ink:#2F3E42;
+  --ink-2:#55696E;
+  --dim:#7C9096;
+  --dimmer:#A4B5BA;
+  --leaf:#5E8A44;
+  --leaf-2:#3F6630;
+  --terra:#B9704F;
+  --terra-2:#8E4F34;
+  --line:#C8D6DA;
+  --bloom:#C18BA8;
+  /* Humanist sans — the tree's page is Iowan serif and these two should
+     not read as one house style. */
+  --sans:Optima,Candara,"Gill Sans MT","Gill Sans","Trebuchet MS",sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;min-height:100%}
+body{
+  background:var(--glass);
+  /* a suggestion of condensation, cool and even */
+  background-image:
+    radial-gradient(circle at 30% 20%, rgba(255,255,255,.55) 0 2px, transparent 3px),
+    radial-gradient(circle at 75% 65%, rgba(255,255,255,.38) 0 1.5px, transparent 2.6px),
+    linear-gradient(180deg, rgba(255,255,255,.5), rgba(255,255,255,0) 42%);
+  background-size:23px 23px, 31px 31px, 100% 100%;
+  color:var(--ink);font-family:var(--sans);
+  min-height:100vh;padding:26px 16px 84px;
+  display:flex;flex-direction:column;align-items:center;
+}
+.wrap{ width:min(720px,100%);display:flex;flex-direction:column;align-items:center }
+
+h1{ font-size:clamp(21px,4.8vw,28px);font-weight:400;margin:0 0 6px;letter-spacing:.015em;text-align:center }
+.tagline{ font-size:14px;line-height:1.7;color:var(--dim);margin:0 0 18px;text-align:center;max-width:44ch }
+
+/* ---- the three plants ------------------------------------------------- */
+.tabs{ display:flex;gap:0;margin:0 0 16px;border:1px solid var(--line);border-radius:999px;
+  overflow:hidden;background:var(--sill);box-shadow:0 1px 0 #fff inset }
+.tabs button{
+  font:inherit;font-family:var(--sans);font-size:14px;cursor:pointer;
+  background:transparent;color:var(--ink-2);border:0;border-right:1px solid var(--line);
+  padding:10px 18px;transition:background .15s,color .15s;
+}
+.tabs button:last-child{ border-right:0 }
+.tabs button:hover{ background:#fff;color:var(--ink) }
+.tabs button[aria-selected="true"]{ background:var(--ink);color:var(--sill) }
+.tabs button:focus-visible{ outline:2px solid var(--leaf);outline-offset:-3px }
+
+/* ---- the sill --------------------------------------------------------- */
+.sill{
+  position:relative;width:100%;
+  background:linear-gradient(180deg,#FBFCFC 0%,#EDF2F3 62%,#DFE7E9 100%);
+  border:1px solid var(--line);border-radius:3px;
+  box-shadow:0 12px 30px rgba(70,95,103,.16), inset 0 1px 0 #fff;
+  overflow:hidden;
+}
+.sill canvas{ display:block;width:100%;height:auto }
+.sill.snip canvas{ cursor:pointer }
+.stage{
+  position:absolute;left:12px;top:10px;
+  font-family:var(--mono);font-size:9px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--dimmer);pointer-events:none;
+}
+.latin{
+  position:absolute;right:12px;bottom:11px;
+  font-family:var(--sans);font-style:italic;font-size:11.5px;
+  color:var(--dimmer);pointer-events:none;
+}
+
+/* ---- the ledger --------------------------------------------------------- */
+.ledger{
+  width:100%;display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));
+  gap:1px;background:var(--line);border:1px solid var(--line);margin-top:16px;border-radius:3px;overflow:hidden;
+}
+.ledger div{ background:var(--sill);padding:11px 8px;text-align:center }
+.ledger .k{ display:block;font-family:var(--mono);font-size:8.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--dimmer);margin-bottom:5px }
+.ledger .v{ font-size:17px;color:var(--ink) }
+.ledger .v small{ font-size:11px;color:var(--dim) }
+
+.bar{ display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;justify-content:center;width:100% }
+.bar button{
+  font:inherit;font-family:var(--sans);font-size:14px;cursor:pointer;
+  background:var(--sill);color:var(--ink);border:1px solid var(--line);border-radius:3px;
+  padding:9px 16px;transition:border-color .15s,background .15s;
+}
+.bar button:hover{ border-color:var(--ink-2) }
+.bar button[aria-pressed="true"]{ background:var(--ink);border-color:var(--ink);color:var(--sill) }
+.bar button:focus-visible{ outline:2px solid var(--leaf);outline-offset:2px }
+.bar button.risky{ color:var(--terra-2);border-color:#E0C3B6 }
+.bar button.risky:hover{ background:#F9EFEA;border-color:var(--terra-2) }
+.bar button[hidden]{ display:none }
+
+.said{
+  margin-top:15px;text-align:center;font-size:14.5px;line-height:1.75;color:var(--ink-2);
+  min-height:3.2em;max-width:48ch;
+}
+
+.book{ margin-top:26px;padding-top:19px;border-top:1px solid var(--line);font-size:14px;line-height:1.85;color:var(--ink-2);width:100% }
+.book p{ margin:0 0 12px } .book p:last-child{ margin:0 }
+.book b{ color:var(--ink);font-weight:600 }
+.book .fig{ font-family:var(--mono);font-size:12.5px;color:var(--ink) }
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:600 11px/1 var(--mono);
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:var(--sill);background:var(--ink);
+  border:1px solid rgba(255,255,255,.35);border-radius:999px;
+  width:38px;height:38px;justify-content:center;
+  box-shadow:0 5px 16px rgba(47,62,66,.32);
+  transition:width .18s ease, background .16s, gap .18s ease;
+}
+@media (pointer:coarse){ #lc-back{ width:44px;height:44px } }
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:118px;gap:9px;background:#415457 }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:2px solid var(--leaf);outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>The Windowsill</h1>
+<p class="tagline">Three things growing at their own real speeds. None of them needs you, and none of
+  them can die.</p>
+
+<div class="tabs" role="tablist" aria-label="What you are tending">
+  <button type="button" role="tab" id="tab-tree" aria-selected="true">Bonsai tree</button>
+  <button type="button" role="tab" id="tab-basil" aria-selected="false">Herb pot</button>
+  <button type="button" role="tab" id="tab-succ" aria-selected="false">Succulent</button>
+</div>
+
+<div class="sill" id="sill">
+  <canvas id="cv" width="1200" height="900"></canvas>
+  <div class="stage" id="stage">&nbsp;</div>
+  <div class="latin" id="latin">&nbsp;</div>
+</div>
+
+<div class="ledger">
+  <div><span class="k">planted</span><span class="v" id="l-age">&mdash;</span></div>
+  <div><span class="k" id="k-2">stage</span><span class="v" id="l-stage">&mdash;</span></div>
+  <div><span class="k" id="k-3">&mdash;</span><span class="v" id="l-extra">&mdash;</span></div>
+  <div><span class="k">next change</span><span class="v" id="l-next">&mdash;</span></div>
+</div>
+
+<div class="bar" id="bar">
+  <button type="button" id="t-look" aria-pressed="true">Just look at it</button>
+  <button type="button" id="t-snip" aria-pressed="false">Prune</button>
+  <button type="button" id="btn-pinch">Pinch out the tops</button>
+  <button type="button" id="btn-hemi">Southern hemisphere</button>
+  <button type="button" class="risky" id="btn-new">Start again</button>
+</div>
+
+<p class="said" id="said">&nbsp;</p>
+
+<div class="book" id="book"></div>
+
+</div>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">&larr;</span><span class="w">cabinet</span></a>
+
+<script>
+(function(){
+  'use strict';
+
+  var cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+  var W = cv.width;
+
+  /* Each plant gets a canvas the shape of the plant. One height for all
+     three means the tree fits and the other two sit in a metre of empty
+     sky, which is what the first version did. H is reassigned before each
+     draw; the tree's own geometry is baked against HS.tree so that a visit
+     to the basil and back cannot move its pot. */
+  var HS = { tree: 900, basil: 700, succ: 580 };
+  var H = HS.tree;
+
+  /* ---- time ------------------------------------------------------------- */
+  function pad2(n){ return (n < 10 ? '0' : '') + n; }
+  function today(){
+    var d = new Date();
+    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+  }
+  function daysSince(iso){
+    var p = String(iso).split('-');
+    var then = new Date(+p[0], +p[1] - 1, +p[2]);
+    then.setHours(0,0,0,0);
+    var now = new Date();
+    var n = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    return Math.max(0, Math.round((n - then) / 86400000));
+  }
+
+  /* ---- storage, one record per plant ------------------------------------ *
+   *  Deliberately one key per plant rather than one key for the sill. The
+   *  tree keeps the key it has always had (`lc-bonsai`), so a tree planted
+   *  back when this page was only a tree is still here, the same age, with
+   *  the same cuts on it. And because the three are separate records,
+   *  switching tabs cannot touch the other two — which is the whole promise
+   *  of the tab bar.
+   * ---------------------------------------------------------------------- */
+  var KEYS = { tree:'lc-bonsai', basil:'lc-sill-basil', succ:'lc-sill-succ' };
+  var TAB_KEY = 'lc-windowsill-tab';
+
+  function load(which, extras){
+    var st = { seed: Math.floor(Math.random() * 1e9), planted: today() };
+    for (var k in extras) st[k] = extras[k];
+    try {
+      var raw = JSON.parse(localStorage.getItem(KEYS[which]) || 'null');
+      if (raw && typeof raw.seed === 'number' && typeof raw.planted === 'string'){
+        st.seed = raw.seed;
+        st.planted = raw.planted;
+        if (Array.isArray(raw.cuts)) st.cuts = raw.cuts.slice(0, 400);
+        if (Array.isArray(raw.pinches)) st.pinches = raw.pinches.slice(0, 8);
+        if (typeof raw.south === 'boolean') st.south = raw.south;
+      }
+    } catch (e) {}
+    return st;
+  }
+  function save(which, st){
+    try { localStorage.setItem(KEYS[which], JSON.stringify(st)); } catch (e) {}
+  }
+
+  var S = {
+    tree:  load('tree',  { cuts: [], south: false }),
+    basil: load('basil', { pinches: [] }),
+    succ:  load('succ',  {})
+  };
+
+  /* ---- one deterministic generator, seeded per plant -------------------- *
+   *  Nothing about any plant's shape may come from Math.random, or it would
+   *  be a different plant on every visit. Everything is derived from the
+   *  plant's seed and the part's own address.
+   * ---------------------------------------------------------------------- */
+  function mk(seed){
+    return function(a, b, c){
+      var h = (seed ^ (a * 374761393) ^ (b * 668265263) ^ ((c || 0) * 2246822519)) >>> 0;
+      h = Math.imul(h ^ (h >>> 15), 2246822519);
+      h = Math.imul(h ^ (h >>> 13), 3266489917);
+      return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+    };
+  }
+
+  /* ===================================================================== *
+   *  THE TREE
+   *  The engine from "A Tree That Takes Its Time", carried over whole: the
+   *  shape is settled on the day it is planted and the calendar decides how
+   *  much of it has happened. Including da Vinci's thickness rule, which is
+   *  the bit that stops it becoming a baobab.
+   * ===================================================================== */
+  var TREE = (function(){
+    var MAX_DEPTH = 8, tree = null, rnd = null, hovered = null;
+
+    function build(){
+      rnd = mk(S.tree.seed);
+      var id = 0;
+      function node(depth, x, y, ang, len, born){
+        var me = { id: ++id, depth: depth, x: x, y: y, ang: ang, len: len, born: born, kids: [] };
+        if (depth >= MAX_DEPTH) return me;
+        var ex = x + Math.cos(ang) * len, ey = y + Math.sin(ang) * len;
+        var r = rnd(me.id, 1);
+        var n = r < .16 ? 1 : (r < .88 ? 2 : 3);
+        for (var i = 0; i < n; i++){
+          var spread = 0.30 + rnd(me.id, 2 + i) * 0.55;
+          var side = (i === 0 ? -1 : (i === 1 ? 1 : (rnd(me.id, 9) < .5 ? -1 : 1)));
+          var lean = (n === 1 ? (rnd(me.id, 5) - .5) * .5 : side * spread);
+          me.kids.push(node(depth + 1, ex, ey, ang + lean - 0.10,
+            len * (0.70 + rnd(me.id, 6 + i) * 0.16),
+            born + 2 + Math.floor(rnd(me.id, 12 + i) * 4)));
+        }
+        return me;
+      }
+      var lean = (rnd(0, 77) - .5) * .5;
+      tree = node(0, W / 2, HS.tree * .84, -Math.PI / 2 + lean, HS.tree * .15, 0);
+    }
+
+    function age(){ return daysSince(S.tree.planted) + S.tree.cuts.length; }
+    function isCut(id){ return S.tree.cuts.indexOf(id) >= 0; }
+    function visible(node, out){
+      if (isCut(node.id) || node.born > age()) return;
+      out.push(node);
+      node.kids.forEach(function(k){ visible(k, out); });
+    }
+
+    var SEASONS = [
+      { n:'deep winter', leaf:null,     bud:false },
+      { n:'late winter', leaf:null,     bud:true  },
+      { n:'early spring',leaf:'#8FB05E',bud:true  },
+      { n:'spring',      leaf:'#6E9648',bud:false },
+      { n:'late spring', leaf:'#5E8A3E',bud:false },
+      { n:'summer',      leaf:'#4E7A34',bud:false },
+      { n:'high summer', leaf:'#456E2E',bud:false },
+      { n:'late summer', leaf:'#4E7A34',bud:false },
+      { n:'early autumn',leaf:'#8A8A34',bud:false },
+      { n:'autumn',      leaf:'#B47A26',bud:false },
+      { n:'late autumn', leaf:'#A85A24',bud:false },
+      { n:'winter',      leaf:null,     bud:false }
+    ];
+    function season(){
+      var m = new Date().getMonth();
+      if (S.tree.south) m = (m + 6) % 12;
+      return SEASONS[m];
+    }
+
+    function pot(){
+      var w = W * .40, h = HS.tree * .11, x = W / 2 - w / 2, y = HS.tree * .84 - 4;
+      ctx.beginPath();
+      ctx.ellipse(W / 2, y + 6, w / 2 - 10, 12, 0, 0, 6.283);
+      ctx.fillStyle = '#4A3A28'; ctx.fill();
+      for (var i = 0; i < 26; i++){
+        var a = rnd(0, 200 + i) * 6.283, d = rnd(0, 300 + i) * (w / 2 - 18);
+        ctx.beginPath();
+        ctx.ellipse(W / 2 + Math.cos(a) * d, y + 6 + Math.sin(a) * 9, 6, 3.4, 0, 0, 6.283);
+        ctx.fillStyle = 'rgba(94,122,68,' + (.3 + rnd(0, 400 + i) * .4) + ')';
+        ctx.fill();
+      }
+      ctx.beginPath();
+      ctx.moveTo(x, y); ctx.lineTo(x + w, y);
+      ctx.lineTo(x + w - 16, y + h); ctx.lineTo(x + 16, y + h);
+      ctx.closePath();
+      var g = ctx.createLinearGradient(0, y, 0, y + h);
+      g.addColorStop(0, '#9C6A50'); g.addColorStop(1, '#6B4232');
+      ctx.fillStyle = g; ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,.16)';
+      ctx.fillRect(x + 4, y + 4, w - 8, 5);
+      ctx.fillStyle = '#5A3626';
+      ctx.fillRect(x + 30, y + h, 26, 11);
+      ctx.fillRect(x + w - 56, y + h, 26, 11);
+    }
+
+    function foliage(x, y, nd, colour){
+      var n = 5 + Math.floor(rnd(nd.id, 44) * 4);
+      var spread = 16 + rnd(nd.id, 45) * 14;
+      for (var i = 0; i < n; i++){
+        var a = rnd(nd.id, 50 + i) * 6.283;
+        var d = rnd(nd.id, 70 + i) * spread;
+        var rr = 7 + rnd(nd.id, 90 + i) * 7;
+        ctx.beginPath();
+        ctx.ellipse(x + Math.cos(a) * d, y + Math.sin(a) * d * .7, rr, rr * .74,
+                    rnd(nd.id, 110 + i) * 3.14, 0, 6.283);
+        ctx.fillStyle = colour;
+        ctx.globalAlpha = .55 + rnd(nd.id, 130 + i) * .35;
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+    function buds(x, y, nd){
+      for (var i = 0; i < 3; i++){
+        var a = rnd(nd.id, 60 + i) * 6.283, d = rnd(nd.id, 80 + i) * 9;
+        ctx.beginPath();
+        ctx.arc(x + Math.cos(a) * d, y + Math.sin(a) * d, 2.6, 0, 6.283);
+        ctx.fillStyle = '#8A6A44'; ctx.fill();
+      }
+    }
+
+    function draw(){
+      var nodes = []; visible(tree, nodes);
+      var thick = {};
+      for (var i = nodes.length - 1; i >= 0; i--){
+        var nd = nodes[i], sq = 0;
+        nd.kids.forEach(function(k){ var t = thick[k.id] || 0; sq += t * t; });
+        thick[nd.id] = Math.max(1.3, Math.sqrt(sq) * 1.02);
+      }
+      var girth = 1 + Math.min(1.6, age() / 220);
+      var s = season();
+      pot();
+      nodes.forEach(function(nd){
+        var ex = nd.x + Math.cos(nd.ang) * nd.len;
+        var ey = nd.y + Math.sin(nd.ang) * nd.len;
+        var w = thick[nd.id] * girth * 0.95;
+        ctx.beginPath();
+        ctx.moveTo(nd.x, nd.y);
+        var mx = (nd.x + ex) / 2 + Math.cos(nd.ang + Math.PI / 2) * nd.len * (rnd(nd.id, 33) - .5) * .34;
+        var my = (nd.y + ey) / 2 + Math.sin(nd.ang + Math.PI / 2) * nd.len * (rnd(nd.id, 33) - .5) * .34;
+        ctx.quadraticCurveTo(mx, my, ex, ey);
+        ctx.lineCap = 'round'; ctx.lineWidth = w;
+        ctx.strokeStyle = hovered === nd.id ? '#A8352B' : '#3E332A';
+        ctx.stroke();
+        if (w > 5){
+          ctx.lineWidth = w * .34;
+          ctx.strokeStyle = hovered === nd.id ? '#C9584C' : 'rgba(120,102,84,.5)';
+          ctx.stroke();
+        }
+        nd._ex = ex; nd._ey = ey;
+        var tips = nd.kids.every(function(k){ return isCut(k.id) || k.born > age(); });
+        if (tips && nd.depth >= 3){
+          if (s.leaf) foliage(ex, ey, nd, s.leaf);
+          else if (s.bud) buds(ex, ey, nd);
+        }
+      });
+      return s.n;
+    }
+
+    function segDist(px, py, x1, y1, x2, y2){
+      var dx = x2 - x1, dy = y2 - y1;
+      var t = ((px - x1) * dx + (py - y1) * dy) / (dx * dx + dy * dy || 1);
+      t = Math.max(0, Math.min(1, t));
+      return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
+    }
+    function nodeAt(px, py){
+      var nodes = []; visible(tree, nodes);
+      var best = null, bestD = 26;
+      nodes.forEach(function(nd){
+        if (nd.depth === 0) return;
+        var d = segDist(px, py, nd.x, nd.y, nd._ex, nd._ey);
+        if (d < bestD){ bestD = d; best = nd; }
+      });
+      return best;
+    }
+
+    function nextDay(){
+      var next = null;
+      (function walk(n){
+        if (isCut(n.id)) return;
+        if (n.born > age() && (next === null || n.born < next)) next = n.born;
+        n.kids.forEach(walk);
+      })(tree);
+      return next === null ? null : next - age();
+    }
+    function count(){ var o = []; visible(tree, o); return o.length; }
+
+    return {
+      build: build, draw: draw, age: age, nodeAt: nodeAt, nextDay: nextDay,
+      count: count, season: season, visible: visible, root: function(){ return tree; },
+      hover: function(v){ hovered = v; }, hovered: function(){ return hovered; },
+      countBelow: function(nd){ var o = []; visible(nd, o); return o.length; }
+    };
+  })();
+
+  /* ===================================================================== *
+   *  THE HERB POT — sweet basil, Ocimum basilicum
+   *
+   *  Paced on the timings a seed packet and an extension-service growing
+   *  guide actually give, which are ranges rather than numbers: germination
+   *  in about 5-10 days in warm soil, the first true pair roughly a
+   *  fortnight in, a new pair every week or so after that, worth pinching
+   *  once there are four or five pairs, and flower spikes from about ten
+   *  weeks if it is never pinched. The page prints those ranges rather than
+   *  pretending to a precision no basil has.
+   *
+   *  Pinching is the real thing, not a score: take the growing tip out and
+   *  the two buds in the axils below it both run, so one stem becomes two.
+   *  Do it to every tip and the plant doubles its stems and postpones
+   *  flowering, which is exactly why you pinch basil.
+   * ===================================================================== */
+  var BASIL = (function(){
+    var GERM = 7;            // within the 5-10 day range
+    var FIRST_PAIR = 14;     // first true leaves, about a fortnight
+    var PAIR_DAYS = 7;       // a pair a week thereafter
+    var PINCH_AT = 4;        // pairs before the first pinch is worth it
+    var BOLT = 70;           // flower spikes, about ten weeks unpinched
+    var MAX_GEN = 4;         // 16 stems is a full pot; beyond that is mush
+
+    function age(){ return daysSince(S.basil.planted); }
+    function gens(){ return Math.min(MAX_GEN, S.basil.pinches.length); }
+
+    /* ---- the stem structure ------------------------------------------- *
+     *  Pinching a basil does not remove the stem, only its growing tip. The
+     *  stem stays exactly as long as it was on the day it was pinched, and
+     *  the two buds in the axils of its top pair both run — so the new
+     *  shoots start AT the old tip, not floating above the pot, which is
+     *  what the first version drew.
+     *
+     *  So a shoot stops extending on the day it is pinched and carries its
+     *  two children from its own last node. Generation g is pinched by
+     *  pinches[g], because you go over the whole plant, not one tip.
+     * ------------------------------------------------------------------- */
+    function walk(visit){
+      var rnd = mk(S.basil.seed);
+      var a = age();
+      (function shoot(x, y, ang, born, gen, idx){
+        var stop = (gen < S.basil.pinches.length && gen < MAX_GEN)
+          ? S.basil.pinches[gen] : null;
+        var until = (stop === null ? a : Math.min(stop, a));
+        var grown = until - born;
+        if (grown < 0) return;
+        var np = Math.min(9, 1 + Math.floor(grown / PAIR_DAYS));
+
+        var gap = 54 - gen * 7;
+        var px = x, py = y, cx = x, cy = y, cang = ang;
+        for (var i = 0; i < np; i++){
+          /* side shoots lean out and then straighten, the way a branch on
+             any opposite-leaved herb does */
+          cang = ang + (rnd(gen * 31 + idx, i) - .5) * .16 - (ang + Math.PI / 2) * (i * .14);
+          cx += Math.cos(cang) * gap;
+          cy += Math.sin(cang) * gap;
+          visit.seg(px, py, cx, cy, gen, i, np);
+          visit.node(cx, cy, cang, gen, i, np);
+          px = cx; py = cy;
+        }
+        if (np === 0) return;
+
+        if (stop !== null && a >= stop){
+          var spread = 0.62 - gen * 0.10;
+          shoot(cx, cy, ang - spread, stop, gen + 1, idx * 2);
+          shoot(cx, cy, ang + spread, stop, gen + 1, idx * 2 + 1);
+        } else {
+          visit.tip(cx, cy, cang, gen);
+        }
+      })(W / 2, 0, -Math.PI / 2, FIRST_PAIR, 0, 0);
+    }
+
+    function survey(){
+      var out = { pairs: 0, tips: 0 };
+      walk({
+        seg: function(){},
+        node: function(x, y, a, gen, i, np){ if (np > out.pairs) out.pairs = np; },
+        tip: function(){ out.tips++; }
+      });
+      return out;
+    }
+    function pairs(){ return survey().pairs; }
+    function tips(){ return Math.max(1, survey().tips); }
+
+    /* Only the tips that are still running can be pinched, and only once
+       they have enough pairs on them to be worth it. */
+    function tipPairs(){
+      var g = S.basil.pinches.length;
+      var born = g === 0 ? FIRST_PAIR : S.basil.pinches[g - 1];
+      var a = age() - born;
+      return a < 0 ? 0 : Math.min(9, 1 + Math.floor(a / PAIR_DAYS));
+    }
+
+    function flowering(){
+      /* Ten weeks is counted from sowing, not from the first true leaves —
+         which is what "flowers at about ten weeks" means on a seed packet,
+         and what the note under the pot claims. Measuring it from the first
+         pair instead quietly made it twelve. */
+      var from = S.basil.pinches.length ? S.basil.pinches[S.basil.pinches.length - 1] : 0;
+      return age() >= FIRST_PAIR && (age() - from) >= BOLT;
+    }
+    function stage(){
+      var d = age();
+      if (d < GERM) return 'sown';
+      if (d < FIRST_PAIR) return 'seed leaves';
+      if (flowering()) return 'flowering';
+      if (tipPairs() >= PINCH_AT) return 'pickable';
+      return 'true leaves';
+    }
+
+    /* A basil leaf: ovate, pointed, and cupped along the midrib. Drawn as
+       two mirrored quadratics with a vein up the middle, because an ellipse
+       reads as a privet and nothing else. */
+    function leaf(x, y, ang, len, wid, col, edge){
+      ctx.save();
+      ctx.translate(x, y); ctx.rotate(ang);
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.quadraticCurveTo(len * .34, -wid, len, 0);
+      ctx.quadraticCurveTo(len * .34, wid, 0, 0);
+      ctx.closePath();
+      ctx.fillStyle = col; ctx.fill();
+      ctx.strokeStyle = edge; ctx.lineWidth = 1.6; ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(len * .06, 0); ctx.lineTo(len * .92, 0);
+      ctx.strokeStyle = 'rgba(255,255,255,.34)'; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.restore();
+    }
+
+    function pot(){
+      var w = W * .27, h = H * .17, x = W / 2 - w / 2, y = H * .78;
+      /* soil */
+      ctx.beginPath();
+      ctx.ellipse(W / 2, y + 4, w / 2 - 6, 13, 0, 0, 6.283);
+      ctx.fillStyle = '#3F3227'; ctx.fill();
+      /* the pot: a plain terracotta with a rolled rim */
+      ctx.beginPath();
+      ctx.moveTo(x, y); ctx.lineTo(x + w, y);
+      ctx.lineTo(x + w - 26, y + h); ctx.lineTo(x + 26, y + h);
+      ctx.closePath();
+      var g = ctx.createLinearGradient(x, 0, x + w, 0);
+      g.addColorStop(0, '#9E5B3E'); g.addColorStop(.42, '#C47B58');
+      g.addColorStop(1, '#8E4F34');
+      ctx.fillStyle = g; ctx.fill();
+      ctx.fillStyle = 'rgba(0,0,0,.12)';
+      ctx.fillRect(x + 1, y + h * .30, w - 2, 3);
+      /* rim */
+      ctx.beginPath();
+      ctx.ellipse(W / 2, y, w / 2, 15, 0, 0, 6.283);
+      ctx.fillStyle = '#C47B58'; ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(W / 2, y, w / 2 - 9, 10, 0, 0, 6.283);
+      ctx.fillStyle = '#6E4430'; ctx.fill();
+      return y;
+    }
+
+    function draw(){
+      var rnd = mk(S.basil.seed);
+      var soilY = pot();
+      var d = age();
+
+      if (d < GERM){
+        /* nothing above the soil yet, and saying so is the honest picture */
+        ctx.font = 'italic 26px Optima, Candara, "Gill Sans", sans-serif';
+        ctx.fillStyle = '#A4B5BA'; ctx.textAlign = 'center';
+        ctx.fillText('sown, and not up yet', W / 2, soilY - 60);
+        ctx.textAlign = 'left';
+        return stage();
+      }
+
+      if (d < FIRST_PAIR){
+        /* cotyledons: two round seed leaves on a short hook of a stem */
+        var hh = 40 + (d - GERM) * 11;
+        ctx.beginPath();
+        ctx.moveTo(W / 2, soilY - 4);
+        ctx.lineTo(W / 2, soilY - hh);
+        ctx.strokeStyle = '#7FA35E'; ctx.lineWidth = 7; ctx.lineCap = 'round'; ctx.stroke();
+        for (var sd = -1; sd <= 1; sd += 2){
+          ctx.beginPath();
+          ctx.ellipse(W / 2 + sd * 24, soilY - hh - 2, 24, 14, sd * .24, 0, 6.283);
+          ctx.fillStyle = '#86AC62'; ctx.fill();
+          ctx.strokeStyle = '#5E8A44'; ctx.lineWidth = 1.6; ctx.stroke();
+        }
+        return stage();
+      }
+
+      /* the stems, walked as a tree. The visitor draws what it is handed:
+         a segment of stem, then the pair of leaves standing on its node. */
+      var bloom = flowering();
+      var spikes = [];
+      walk({
+        seg: function(px, py, cx, cy, gen, i, np){
+          ctx.beginPath();
+          ctx.moveTo(px, soilY + py); ctx.lineTo(cx, soilY + cy);
+          ctx.strokeStyle = '#547F3C';
+          ctx.lineWidth = Math.max(3, (12 - gen * 2.1) * (1 - i / (np + 3)));
+          ctx.lineCap = 'round'; ctx.stroke();
+        },
+        node: function(x, y, a, gen, i, np){
+          /* Basil's leaves are decussate — each pair is turned ninety
+             degrees from the one below. Seen from the side every second
+             pair is therefore edge-on, which is why a real basil looks
+             busier than two leaves a node has any right to. */
+          var faceOn = (i % 2 === 0);
+          var len = (88 - gen * 11) * (0.58 + 0.42 * (1 - i / (np + 1)));
+          var wid = len * (faceOn ? .40 : .13);
+          var tone = i / Math.max(1, np);
+          var col = faceOn
+            ? 'rgb(' + Math.round(86 - tone * 18) + ',' + Math.round(146 - tone * 22) + ',' +
+              Math.round(76 - tone * 18) + ')'
+            : '#4E7A38';
+          for (var sd = -1; sd <= 1; sd += 2){
+            leaf(x, soilY + y, a + sd * (faceOn ? 1.18 : 1.42), len, wid, col, '#3F6630');
+          }
+        },
+        tip: function(x, y, a){ if (bloom) spikes.push([x, soilY + y, a]); }
+      });
+
+      /* the flower spikes, if it was left to run */
+      spikes.forEach(function(sp){
+        var sx = sp[0], sy = sp[1], ang = sp[2];
+        ctx.beginPath(); ctx.moveTo(sx, sy);
+        ctx.lineTo(sx + Math.cos(ang) * 62, sy + Math.sin(ang) * 62);
+        ctx.strokeStyle = '#6E8A52'; ctx.lineWidth = 3; ctx.stroke();
+        for (var f = 0; f < 6; f++){
+          var fx = sx + Math.cos(ang) * (10 + f * 9.2);
+          var fy = sy + Math.sin(ang) * (10 + f * 9.2);
+          for (var fs = -1; fs <= 1; fs += 2){
+            ctx.beginPath();
+            ctx.arc(fx + fs * (10 - f * .9), fy, 4.6 - f * .3, 0, 6.283);
+            ctx.fillStyle = '#EDE4EC'; ctx.fill();
+            ctx.strokeStyle = '#C18BA8'; ctx.lineWidth = 1; ctx.stroke();
+          }
+        }
+      });
+      return stage();
+    }
+
+    function nextDay(){
+      var d = age();
+      if (d < GERM) return GERM - d;
+      if (d < FIRST_PAIR) return FIRST_PAIR - d;
+      if (flowering()) return null;
+      var g = S.basil.pinches.length;
+      var born = g === 0 ? FIRST_PAIR : S.basil.pinches[g - 1];
+      var a = d - born;
+      if (a < 0) return -a;
+      var np = 1 + Math.floor(a / PAIR_DAYS);
+      if (np >= 9) return null;
+      return (np * PAIR_DAYS) - a;
+    }
+
+    return {
+      age: age, draw: draw, stage: stage, pairs: pairs, stems: tips,
+      nextDay: nextDay, flowering: flowering, canPinch: function(){
+        return age() >= FIRST_PAIR && tipPairs() >= PINCH_AT && S.basil.pinches.length < MAX_GEN;
+      }, tipPairs: tipPairs,
+      PINCH_AT: PINCH_AT, MAX_GEN: MAX_GEN, GERM: GERM, FIRST_PAIR: FIRST_PAIR,
+      PAIR_DAYS: PAIR_DAYS, BOLT: BOLT
+    };
+  })();
+
+  /* ===================================================================== *
+   *  THE SUCCULENT — an Echeveria rosette
+   *
+   *  The slow one, and the point of having it here. Echeveria put out a new
+   *  leaf from the centre on the order of a fortnight to three weeks in
+   *  growing weather, and throw offsets — pups — around the base after
+   *  months rather than weeks. Full size is a matter of years. So this is
+   *  the plant that rewards forgetting about it, and the ledger says so
+   *  instead of hurrying it along.
+   *
+   *  Drawn from above, which is the only honest way to draw a rosette. The
+   *  leaves sit on the golden angle, 137.5 degrees apart, which is the real
+   *  arrangement and the reason a rosette looks the way it does: oldest
+   *  leaves outermost and flattest, each newer one shorter and nearer the
+   *  middle, drawn last so it overlaps the one before.
+   * ===================================================================== */
+  var SUCC = (function(){
+    var START = 6;           // leaves on a young rosette
+    var LEAF_DAYS = 18;      // within the fortnight-to-three-weeks range
+    var PUP_AT = 130;        // offsets after months, not weeks
+    var PUP_EVERY = 110;
+    var GOLDEN = 137.5 * Math.PI / 180;
+
+    function age(){ return daysSince(S.succ.planted); }
+    function leaves(){ return Math.min(34, START + Math.floor(age() / LEAF_DAYS)); }
+    function pups(){ return age() < PUP_AT ? 0 : Math.min(3, 1 + Math.floor((age() - PUP_AT) / PUP_EVERY)); }
+    function stage(){
+      var n = leaves();
+      if (n < 9) return 'young rosette';
+      if (pups() > 0) return 'with offsets';
+      if (n < 18) return 'filling out';
+      return 'established';
+    }
+
+    /* One fat leaf: a pointed teardrop with a highlight down it and the
+       pink edge an echeveria gets in good light. */
+    function leaf(cx, cy, ang, dist, len, wid, shade){
+      var x = cx + Math.cos(ang) * dist, y = cy + Math.sin(ang) * dist * .62;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(Math.atan2(Math.sin(ang) * .62, Math.cos(ang)));
+      ctx.beginPath();
+      ctx.moveTo(-len * .22, 0);
+      ctx.bezierCurveTo(-len * .05, -wid, len * .58, -wid * .82, len, 0);
+      ctx.bezierCurveTo(len * .58, wid * .82, -len * .05, wid, -len * .22, 0);
+      ctx.closePath();
+      var g = ctx.createLinearGradient(-len * .2, 0, len, 0);
+      g.addColorStop(0, 'rgb(' + (128 + shade) + ',' + (154 + shade) + ',' + (128 + shade) + ')');
+      g.addColorStop(.72, 'rgb(' + (150 + shade) + ',' + (172 + shade) + ',' + (148 + shade) + ')');
+      g.addColorStop(1, '#C98FA0');
+      ctx.fillStyle = g; ctx.fill();
+      ctx.strokeStyle = 'rgba(92,112,96,.55)'; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(0, 0); ctx.lineTo(len * .84, 0);
+      ctx.strokeStyle = 'rgba(255,255,255,.30)'; ctx.lineWidth = wid * .26; ctx.stroke();
+      ctx.restore();
+    }
+
+    function rosette(cx, cy, n, scale, seed){
+      var rnd = mk(S.succ.seed + seed);
+      var R = 168 * scale, L = 128 * scale;
+      for (var i = 0; i < n; i++){
+        var f = n === 1 ? 1 : i / (n - 1);        // 0 oldest, 1 newest
+        var ang = i * GOLDEN + rnd(seed, 7) * 6.283;
+        var dist = R * (1 - 0.74 * f);
+        var len = L * (1 - 0.56 * f);
+        var wid = len * (0.40 - 0.06 * f);
+        leaf(cx, cy, ang, dist, len, wid, Math.round((rnd(i, 3) - .5) * 16));
+      }
+    }
+
+    function draw(){
+      var cx = W / 2, cy = H * .42;
+      var rnd = mk(S.succ.seed);
+      /* a shallow glazed bowl, which is what these are kept in */
+      var rw = W * .27, rh = rw * .40;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy + 104, rw, rh, 0, 0, 6.283);
+      ctx.fillStyle = '#93A7AC'; ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(cx, cy + 96, rw, rh, 0, 0, 6.283);
+      var bg = ctx.createLinearGradient(cx - rw, 0, cx + rw, 0);
+      bg.addColorStop(0, '#A8BBC0'); bg.addColorStop(.45, '#CBD9DC'); bg.addColorStop(1, '#9CAFB4');
+      ctx.fillStyle = bg; ctx.fill();
+      /* grit on the surface, which is how they are actually potted */
+      ctx.save();
+      ctx.beginPath(); ctx.ellipse(cx, cy + 96, rw - 7, rh - 5, 0, 0, 6.283); ctx.clip();
+      /* the fill has to cover the whole clipped ellipse — starting it
+         partway down leaves a hard horizontal edge across the bowl */
+      ctx.fillStyle = '#6E7D82'; ctx.fillRect(cx - rw, cy + 96 - rh, rw * 2, rh * 2);
+      for (var i = 0; i < 150; i++){
+        var a = rnd(0, 500 + i) * 6.283, d = Math.sqrt(rnd(0, 600 + i)) * (rw - 10);
+        ctx.beginPath();
+        ctx.arc(cx + Math.cos(a) * d, cy + 96 + Math.sin(a) * d * .38, 2.2 + rnd(0, 700 + i) * 2.4, 0, 6.283);
+        ctx.fillStyle = 'rgba(' + (150 + Math.round(rnd(0, 800 + i) * 70)) + ',' +
+                        (158 + Math.round(rnd(0, 810 + i) * 60)) + ',160,.8)';
+        ctx.fill();
+      }
+      ctx.restore();
+
+      /* offsets first, behind and beside, then the main rosette over them */
+      var np = pups();
+      for (var p = 0; p < np; p++){
+        var a2 = 2.2 + p * 2.1;
+        var px = cx + Math.cos(a2) * rw * .66;
+        var py = cy + 92 + Math.sin(a2) * rh * .52;
+        var pAge = age() - PUP_AT - p * PUP_EVERY;
+        rosette(px, py, Math.min(12, 4 + Math.floor(pAge / LEAF_DAYS)), 0.30, 11 + p * 7);
+      }
+      rosette(cx, cy + 96, leaves(), 1, 0);
+      return stage();
+    }
+
+    function nextDay(){
+      var n = leaves();
+      if (n >= 34) return null;
+      return ((n - START + 1) * LEAF_DAYS) - age();
+    }
+
+    return { age: age, draw: draw, stage: stage, leaves: leaves, pups: pups,
+             nextDay: nextDay, LEAF_DAYS: LEAF_DAYS, PUP_AT: PUP_AT };
+  })();
+
+  /* ===================================================================== *
+   *  The sill itself: which plant is out, and everything the page says
+   *  about it.
+   * ===================================================================== */
+  var BOOK = {
+    tree:
+      '<p><b>Nothing here happens because you are watching.</b> The tree&rsquo;s whole shape is ' +
+      'settled the day it is planted &mdash; every branch it will ever have, and the day each one ' +
+      'opens. What the calendar does is decide how much of that shape has happened yet. Staring at ' +
+      'it does nothing; leaving it alone for a fortnight does a great deal.</p>' +
+      '<p><b>Pruning is not damage, it is direction.</b> Cutting a branch takes it and everything ' +
+      'above it away for good, and in exchange the rest of the tree gets a day&rsquo;s worth of ' +
+      'vigour it would not otherwise have had. That is roughly what happens in a real pot: take the ' +
+      'leader off and the tree spends what it was spending there somewhere else.</p>' +
+      '<p>The leaves follow the real month where you are, with a hemisphere switch. Branch thickness ' +
+      'follows da Vinci&rsquo;s rule, <span class="fig">w = &radic;(&Sigma; w&sup2;)</span> over the ' +
+      'branches a limb carries &mdash; add the widths directly instead and eight levels of that ' +
+      'compounds into a baobab.</p>',
+    basil:
+      '<p><b>Sweet basil, <i>Ocimum basilicum</i>, at the pace a seed packet gives.</b> Germination ' +
+      'in about <span class="fig">5&ndash;10 days</span> in warm soil; the first pair of true leaves ' +
+      'around a <span class="fig">fortnight</span>; a new pair roughly <span class="fig">every ' +
+      'week</span> after that; worth pinching once there are four or five pairs, at something like ' +
+      '<span class="fig">4&ndash;6 weeks</span>; flower spikes from about <span class="fig">ten ' +
+      'weeks</span> if it is never pinched. Those are ranges because that is what basil gives you ' +
+      '&mdash; light, warmth and the particular seed all move them.</p>' +
+      '<p><b>Pinching is the whole craft of basil.</b> Take the growing tip out and the two buds in ' +
+      'the leaf axils below it both run, so one stem becomes two. Go over every tip and the plant ' +
+      'doubles its stems and puts off flowering &mdash; which is the point, because a basil that ' +
+      'flowers stops making leaves.</p>' +
+      '<p>The leaves are <i>decussate</i>: each pair is turned ninety degrees from the pair below. ' +
+      'Seen from the side every second pair is therefore edge-on, which is why a real basil looks ' +
+      'busier than two leaves a node has any right to.</p>',
+    succ:
+      '<p><b>An echeveria, and the slow one on purpose.</b> A new leaf from the centre every ' +
+      '<span class="fig">two to three weeks</span> in growing weather; offsets &mdash; pups &mdash; ' +
+      'around the base after <span class="fig">months</span> rather than weeks; full size a matter ' +
+      'of <span class="fig">years</span>. There is nothing to do to it and that is the point. Come ' +
+      'back in a month and there will be one more leaf.</p>' +
+      '<p><b>The leaves sit on the golden angle</b>, <span class="fig">137.5&deg;</span> apart, which ' +
+      'is the real arrangement and the reason a rosette looks like that: the oldest leaves are ' +
+      'outermost and flattest, each newer one is shorter and nearer the middle, and the newest is ' +
+      'drawn last because it overlaps everything under it.</p>' +
+      '<p>The pink along the edges is what an echeveria does in good light. It is not stress and it ' +
+      'is not a warning &mdash; there is nothing on this sill that can go wrong.</p>'
+  };
+
+  var LATIN = { tree:'', basil:'Ocimum basilicum', succ:'Echeveria sp.' };
+  var SEED_NOTE = {
+    tree:  'Planted. Its whole shape is already decided. Come back tomorrow.',
+    basil: 'Sown. Nothing will show above the soil for about a week.',
+    succ:  'Potted. This one moves in months. That is not a fault.'
+  };
+
+  var which = 'tree';
+  try {
+    var w = localStorage.getItem(TAB_KEY);
+    if (w === 'tree' || w === 'basil' || w === 'succ') which = w;
+  } catch (e) {}
+
+  var snipping = false;
+  var E = function(id){ return document.getElementById(id); };
+
+  function draw(){
+    H = HS[which];
+    if (cv.height !== H) cv.height = H;      // resizing a canvas also clears it
+    ctx.clearRect(0, 0, W, H);
+    var st = which === 'tree' ? TREE.draw() : which === 'basil' ? BASIL.draw() : SUCC.draw();
+    E('stage').textContent = st;
+    E('latin').textContent = LATIN[which];
+  }
+
+  function ledger(){
+    var plant = S[which];
+    var d = daysSince(plant.planted);
+    E('l-age').innerHTML = d === 0 ? 'today'
+      : d + ' <small>' + (d === 1 ? 'day ago' : 'days ago') + '</small>';
+
+    if (which === 'tree'){
+      E('k-2').textContent = 'branches';
+      E('l-stage').textContent = TREE.count();
+      E('k-3').textContent = 'cuts made';
+      E('l-extra').textContent = S.tree.cuts.length;
+    } else if (which === 'basil'){
+      E('k-2').textContent = 'leaf pairs';
+      E('l-stage').textContent = BASIL.age() < BASIL.FIRST_PAIR ? '0' : BASIL.pairs();
+      E('k-3').textContent = 'stems';
+      E('l-extra').textContent = BASIL.age() < BASIL.FIRST_PAIR ? '0' : BASIL.stems();
+    } else {
+      E('k-2').textContent = 'leaves';
+      E('l-stage').textContent = SUCC.leaves();
+      E('k-3').textContent = 'offsets';
+      E('l-extra').textContent = SUCC.pups();
+    }
+
+    var nx = which === 'tree' ? TREE.nextDay() : which === 'basil' ? BASIL.nextDay() : SUCC.nextDay();
+    var el = E('l-next');
+    if (nx === null) el.innerHTML = 'fully <small>grown</small>';
+    else if (nx <= 0) el.innerHTML = 'due <small>now</small>';
+    else el.innerHTML = nx + ' <small>' + (nx === 1 ? 'day' : 'days') + '</small>';
+  }
+
+  function buttons(){
+    E('t-look').hidden = which !== 'tree';
+    E('t-snip').hidden = which !== 'tree';
+    E('btn-hemi').hidden = which !== 'tree';
+    E('btn-pinch').hidden = which !== 'basil';
+    if (which === 'basil'){
+      var can = BASIL.canPinch();
+      E('btn-pinch').disabled = !can;
+      E('btn-pinch').textContent = S.basil.pinches.length >= BASIL.MAX_GEN
+        ? 'Pinched all it needs' : 'Pinch out the tops';
+      E('btn-pinch').style.opacity = can ? '1' : '.45';
+    }
+    E('btn-hemi').textContent = S.tree.south ? 'Northern hemisphere' : 'Southern hemisphere';
+  }
+
+  function say(s){ E('said').textContent = s || ' '; }
+
+  function render(){
+    E('book').innerHTML = BOOK[which];
+    buttons(); draw(); ledger();
+  }
+
+  function setTab(w){
+    which = w;
+    try { localStorage.setItem(TAB_KEY, w); } catch (e) {}
+    ['tree','basil','succ'].forEach(function(k){
+      E('tab-' + (k === 'succ' ? 'succ' : k)).setAttribute('aria-selected', String(k === w));
+    });
+    if (w !== 'tree' && snipping) setTool(false);
+    say(''); render();
+  }
+  E('tab-tree').addEventListener('click', function(){ setTab('tree'); });
+  E('tab-basil').addEventListener('click', function(){ setTab('basil'); });
+  E('tab-succ').addEventListener('click', function(){ setTab('succ'); });
+
+  /* ---- pruning the tree -------------------------------------------------- */
+  function setTool(sn){
+    snipping = sn;
+    E('t-look').setAttribute('aria-pressed', String(!sn));
+    E('t-snip').setAttribute('aria-pressed', String(sn));
+    E('sill').className = 'sill' + (sn ? ' snip' : '');
+    TREE.hover(null); draw();
+    say(sn ? 'Click a branch to take it off. There is no undo, which is also true of secateurs.' : '');
+  }
+  E('t-look').addEventListener('click', function(){ setTool(false); });
+  E('t-snip').addEventListener('click', function(){ setTool(true); });
+
+  function localPt(e){
+    var r = cv.getBoundingClientRect();
+    return { x: (e.clientX - r.left) / r.width * W, y: (e.clientY - r.top) / r.height * H };
+  }
+  cv.addEventListener('pointermove', function(e){
+    if (which !== 'tree' || !snipping){ if (TREE.hovered()){ TREE.hover(null); draw(); } return; }
+    var p = localPt(e), nd = TREE.nodeAt(p.x, p.y);
+    var id = nd ? nd.id : null;
+    if (id !== TREE.hovered()){ TREE.hover(id); draw(); }
+  });
+  cv.addEventListener('pointerleave', function(){
+    if (TREE.hovered()){ TREE.hover(null); draw(); }
+  });
+  cv.addEventListener('click', function(e){
+    if (which !== 'tree' || !snipping) return;
+    var p = localPt(e), nd = TREE.nodeAt(p.x, p.y);
+    if (!nd) return say('Nothing there to cut.');
+    var n = TREE.countBelow(nd);
+    S.tree.cuts.push(nd.id);
+    save('tree', S.tree); TREE.hover(null); draw(); ledger();
+    say(n > 1
+      ? 'Cut. That took ' + n + ' branches with it, and the rest of the tree has a day of vigour it would not have had.'
+      : 'Cut. A single branch, and a day of vigour to the rest.');
+  });
+
+  /* ---- pinching the basil ------------------------------------------------ */
+  E('btn-pinch').addEventListener('click', function(){
+    if (!BASIL.canPinch()) return;
+    var before = BASIL.stems();
+    S.basil.pinches.push(BASIL.age());
+    save('basil', S.basil); render();
+    say('Pinched out. ' + before + ' stem' + (before === 1 ? '' : 's') + ' became ' +
+        BASIL.stems() + ', and it will be that much longer before it tries to flower.');
+  });
+
+  /* ---- the hemisphere switch -------------------------------------------- */
+  E('btn-hemi').addEventListener('click', function(){
+    S.tree.south = !S.tree.south;
+    save('tree', S.tree); buttons(); draw();
+    say('Seasons set for the ' + (S.tree.south ? 'southern' : 'northern') + ' hemisphere.');
+  });
+
+  /* ---- starting one again ------------------------------------------------ *
+   *  Only ever the plant that is out. Scrapping the tree must not touch the
+   *  basil, which is the same promise the separate storage keys make.
+   * ---------------------------------------------------------------------- */
+  E('btn-new').addEventListener('click', function(){
+    var NAME = { tree:'tree', basil:'pot of basil', succ:'succulent' };
+    if (this.dataset.sure !== '1'){
+      this.dataset.sure = '1';
+      this.textContent = 'Really? This ' + NAME[which] + ' is gone';
+      say('Only the ' + NAME[which] + ' starts again. The other two on the sill are not touched.');
+      return;
+    }
+    var fresh = { seed: Math.floor(Math.random() * 1e9), planted: today() };
+    if (which === 'tree'){ fresh.cuts = []; fresh.south = S.tree.south; TREE.build(); }
+    if (which === 'basil') fresh.pinches = [];
+    S[which] = fresh;
+    save(which, fresh);
+    if (which === 'tree') TREE.build();
+    this.dataset.sure = ''; this.textContent = 'Start again';
+    render(); say(SEED_NOTE[which]);
+  });
+
+  TREE.build();
+  setTab(which);
+
+  /* ---- the hooks the verification drives -------------------------------- */
+  window.__sill = {
+    which: function(){ return which; },
+    tab: setTab,
+    state: S,
+    setPlanted: function(w, iso){ S[w].planted = iso; save(w, S[w]); if (w === 'tree') TREE.build(); render(); },
+    ages: function(){ return { tree: TREE.age(), basil: BASIL.age(), succ: SUCC.age() }; },
+    stages: function(){ return { tree: TREE.season().n, basil: BASIL.stage(), succ: SUCC.stage() }; },
+    basil: BASIL, succ: SUCC, tree: TREE,
+    pinch: function(){ E('btn-pinch').click(); },
+    cutFirst: function(){
+      var o = []; TREE.visible(TREE.root(), o);
+      var t = o.filter(function(n){ return n.depth === 2; })[0];
+      if (!t) return null;
+      S.tree.cuts.push(t.id); save('tree', S.tree); draw(); ledger();
+      return t.id;
+    }
+  };
+})();
+</script>
+<script src="/shared/lc-audio.js"></script>
+<script src="/shared/lc-sound.js"></script>
+<script>
+(function(){
+  /* Secateurs on green wood for the tree; for the others a softer version of
+     the same event — a leaf let go, a pot set down on a stone sill. */
+  function cue(){ if (window.LCSound) LCSound.play(function(A){
+    A.burst('white', { type:'bandpass', freq: 3200, q: 6, dur: 0.022, level: A.cap(0.055), reverb: false });
+    A.burst('pink',  { at: 0.05, type:'bandpass', freq: 1250, q: 1.1, dur: 0.15, level: A.cap(0.03), attack: 0.03 });
+  }); }
+  document.addEventListener('click', function(e){
+    if (!e.target.closest || e.target.closest('#lc-sound-btn')) return;
+    if (e.target.closest('.tabs button, .bar button, #cv')) cue();
+  });
+  if (window.LCSound) LCSound.mount();
+})();
+</script>
+<style>
+/* A plant is a day older, which is not a dramatic event. */
+@keyframes lcf-swell{from{opacity:0;transform:scale(.972)}to{opacity:1;transform:none}}
+.lc-flourish{animation:lcf-swell .52s cubic-bezier(.2,.8,.3,1) both}
+@media (prefers-reduced-motion: reduce){ .lc-flourish{animation:none} }
+</style>
+<script>
+(function(){
+  function flourish(){
+    var el = document.getElementById('cv');
+    if (!el) return;
+    el.classList.remove('lc-flourish');
+    void el.offsetWidth;
+    el.classList.add('lc-flourish');
+  }
+  document.addEventListener('click', function(e){
+    if (!e.target.closest || e.target.closest('#lc-sound-btn')) return;
+    if (e.target.closest('.tabs button, .bar button, canvas')) setTimeout(flourish, 30);
+  });
+})();
+</script>
+</body>
+</html>
