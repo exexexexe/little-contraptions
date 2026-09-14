@@ -1,12 +1,56 @@
+<div align="center">
+
 # Little Contraptions
 
+**A cabinet of 139 small web toys.**
+
+Weather for places that aren't real. The space station, tracked live overhead.
+An arcade with fifteen games in it. A hundred and thirty-six other things —
+all behind a Windows 98 desktop you can rearrange.
+
+### [→ Open the cabinet](https://contraptions.up.railway.app)
+
+[![live](https://img.shields.io/badge/live-contraptions.up.railway.app-0E75C7?style=flat-square)](https://contraptions.up.railway.app)
+[![drawers](https://img.shields.io/badge/drawers-139-008080?style=flat-square)](#the-toys)
+[![dependencies](https://img.shields.io/badge/dependencies-0-4C1?style=flat-square)](#what-it-is)
+[![node](https://img.shields.io/badge/node-%E2%89%A5%2024-5FA04E?style=flat-square&logo=node.js&logoColor=white)](package.json)
+
+</div>
+
+![The cabinet — 139 drawers on a Windows 98 desktop, with live widgets down the right-hand side](docs/screenshots/hero-desktop.png)
+
+<div align="center"><sub>Every drawer on one desktop. The weather widget is your
+actual sky; the Newton's cradle is five real pendulums.</sub></div>
+
+## A few of the drawers
+
+|  |  |
+| :-- | :-- |
+| [<img src="docs/screenshots/weather.png" alt="The Elsewhere Almanac">](https://contraptions.up.railway.app/weather/)<br>**[The Elsewhere Almanac](https://contraptions.up.railway.app/weather/)** — weather for 23 places that don't exist, each with its own animated sky. | [<img src="docs/screenshots/iss.png" alt="ISS Tracker">](https://contraptions.up.railway.app/iss/)<br>**[ISS Tracker](https://contraptions.up.railway.app/iss/)** — live position on a 3D globe, ground track, and visible-pass prediction by in-browser SGP4. |
+| [<img src="docs/screenshots/arcade.png" alt="The Arcade Cabinet">](https://contraptions.up.railway.app/arcade/)<br>**[The Arcade Cabinet](https://contraptions.up.railway.app/arcade/)** — fifteen games on one cabinet. Insert nothing, play forever. | [<img src="docs/screenshots/city-day.png" alt="A Sunny Afternoon in the City">](https://contraptions.up.railway.app/city-day/)<br>**[A Sunny Afternoon in the City](https://contraptions.up.railway.app/city-day/)** — 96 attributed Commons photographs of San Francisco, under a fictional HUD. |
+| [<img src="docs/screenshots/chladni.png" alt="The Chladni Plate">](https://contraptions.up.railway.app/chladni/)<br>**[The Chladni Plate](https://contraptions.up.railway.app/chladni/)** — fourteen thousand grains of sand finding the lines that are not moving. | [<img src="docs/screenshots/constellation.png" alt="Name a Constellation">](https://contraptions.up.railway.app/constellation/)<br>**[Name a Constellation](https://contraptions.up.railway.app/constellation/)** — 1,637 real stars from the HYG database. Join them up, name the shape. |
+| [<img src="docs/screenshots/descent.png" alt="The Descent">](https://contraptions.up.railway.app/ocean-depths/)<br>**[The Descent](https://contraptions.up.railway.app/ocean-depths/)** — 10,935 metres down. Blue panels are real and sourced; amber panels are invented, and say so. | [<img src="docs/screenshots/the-zone.png" alt="Field PDA — Zone Survey">](https://contraptions.up.railway.app/the-zone/)<br>**[Field PDA — Zone Survey](https://contraptions.up.railway.app/the-zone/)** — 26 sectors, synthesised Geiger audio, and an unmarked catch on the bezel. |
+
+There are 133 more. The [card catalogue](https://contraptions.up.railway.app)
+is the real index; [`PROGRESS.md`](PROGRESS.md) is the running log of what was
+added when.
+
+## What it is
+
 A small hub of self-contained web toys. Zero dependencies — one Node
-static file server, one HTML page per toy.
+static file server, one HTML page per toy. No build step, no bundler, no
+framework: `public/<slug>/index.html` is the whole of a drawer.
 
 Two exceptions, both loaded from a CDN and both with a working fallback if it
 does not answer: the ISS tracker's 3D globe uses Three.js, and the physics toys
 — the hourglass, the toppling table, the marble run, the gratitude jar, the snow
 globe and the arcade — use Matter.js.
+
+**Nothing is sampled.** There is no audio file in this repository — every sound
+is synthesised in the browser at the moment you ask for it. The two deliberate
+exceptions are documented on their own pages and streamed straight from the
+source, never re-served: the Ocean Sound Mixer's NOAA hydrophone recordings, and
+the song guesser's previews.
 
 ## Run locally
 
