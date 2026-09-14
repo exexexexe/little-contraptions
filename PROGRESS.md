@@ -1,986 +1,58 @@
-# Overnight batch — progress log
+# Build notes
 
-## Summary — batches 15 to 20, the credits egg, and fifteen more eggs
+What was added, and why it was built the way it was. The catalogue below has an
+entry per drawer: what it does, what was decided, and how it was checked.
 
-> **Later addition.** The two items this batch deliberately left alone — the
-> draggable desktop and the icon style selector — were built afterwards in their
-> own session. See "The two dedicated-session items" below.
+Built between 8 and 14 September 2026.
 
-**Twenty-two new drawers, 110 to 132.** Plus the arcade's fourteenth game, five new
-TV-voice archetypes, a third mode for Atmosphere, a third handset for the Zone PDA,
-seventeen easter eggs, and four shared modules extracted out of toys that already
-existed. Every new page was loaded in a real browser; nothing below is claimed on
-the strength of having written it. **All 132 drawers** were then re-checked
-together at the end — every card points at a page that exists, and every page
-loads with no console error and real content on screen.
+## Changelog
 
-**Deployed.** Pushed to `main` and live at https://contraptions.up.railway.app —
-including the two dedicated-session items below. Production was previously running
-a separate `deploy-needle-drop` branch, so the service was pointed back at `main`;
-checked first that this working copy was byte-identical to that branch on every
-file it touched, so nothing the other session had shipped was rolled back.
-Verified live: 132 cards, all 22 new pages 200, `store: true` on the mounted
-volume with the four new tables created, all five shared routes answering, and
-the head-count genuinely counting.
+### Draggable desktop, selectable icon styles
+Icons on the desktop can be rearranged and the arrangement persists. Icon style
+is selectable.
 
----
+### Drawers 110–132
+Twenty-two new drawers, the arcade's fourteenth game, five more TV-voice
+archetypes, a third Atmosphere mode, a third Zone PDA handset, seventeen easter
+eggs, and four shared modules extracted out of toys that already existed.
 
-### The thing to read first: the shared storage was already there
+Shared state landed here. `store.js` gained four tables on SQLite over a Railway
+volume, backing the arcade leaderboards, the song-guesser boards, the guestbook,
+the pixel canvas and the story chain. Two decisions worth knowing about: scores
+are one row per (board, token), so beating your own score edits the row you
+already have rather than filling the board with your afternoon; and which
+direction counts as "better" is written into the SQL from the board's own
+direction, so the read and the write can never disagree about which way is up.
 
-The brief said five items were blocked on "the shared SQLite-on-Railway-volume
-infrastructure from the message-in-a-bottle work" and to check whether it exists
-before assuming. **It exists** — `store.js`, SQLite through `node:sqlite`, on the
-volume at `/data` with a gitignored local fallback. So **none of the five were
-skipped**: the shared arcade leaderboards, the song-guesser boards, the guestbook,
-the pixel canvas and the story chain are all built on it.
-
-`store.js` gained four tables. Two decisions in there worth knowing about:
-
-- **Scores are one row per (board, token).** Beating your own score edits the row
-  you already have rather than filling the board with your afternoon.
-- **Which way is "better" is written into the SQL from the board's own direction.**
-  Fifteen boards want the biggest number; the song guesser's speed board wants the
-  smallest. Doing it in the statement rather than in the caller keeps the read and
-  the write from ever disagreeing about which way is up.
-
-And the head-count is deliberately **not** in the database. "X people here right
-now" is a fact about this server process in the last ninety seconds. Writing it
-down would make the hub claim to know something it does not, and after a restart
+The live head-count is deliberately *not* in the database. "X people here right
+now" is a fact about this server process in the last ninety seconds — writing it
+down would make the hub claim to know something it doesn't, and after a restart
 the honest answer really is that nobody has said hello yet.
 
-**The degradation was tested, not assumed.** The server was started with every
-writable directory denied. All four data routes answer `200 {ok:false,
-why:"no_store"}`, all five pages show the same honest panel, and the arcade and
-the song guesser keep working on local scores alone.
+Degradation is tested rather than assumed: started with every writable directory
+denied, all four data routes answer `200 {ok:false, why:"no_store"}`, every page
+shows the same panel, and the arcade and song guesser keep working on local
+scores alone.
 
----
+### The arcade cabinet and the song guesser
+Fifteen games on one cabinet, and a song-guessing game with a speed board.
 
-### One thing about this run that is not about the code
+### Eleven more drawers
 
-**Another session was committing to this repository at the same time.** Commit
-`b854a66` ("Needle Drop: 140 more Europop, no repeats, and a speaker that
-moves") landed at 19:21:32, three seconds before this session's TV-voice commit.
-Both sessions had `public/needle-drop/index.html` open.
+### Cleanup pass
+Consolidations, with redirect stubs left behind for pages that moved, and a
+revision of the earlier toys.
 
-Nothing was lost, and it was checked rather than assumed: the file now carries
-**both** sets of work — their 304-track pool and shuffled-bag dealer, and this
-session's shared leaderboards and streak counter — and it was driven through five
-rounds in a browser with no errors. One side effect to know about: five lines of
-their cache-buster change were swept into this session's commit `546ac08` by a
-`git add -A` that ran while their edit was in the working tree, so that hunk sits
-under the wrong commit message. The content is intact and the diff shows what it
-is.
+### The ten remaining drawers
 
-Worth avoiding next time by not running two sessions on one working copy.
+### Easter eggs
+Nineteen, hidden across the drawers that already existed.
 
----
+### The first 63 drawers
 
-### Bugs the testing found that reading would not have
+## Catalogue
 
-These are the parts of the session worth the time:
-
-1. **BACKROAD, the new arcade racer, was unplayable and the bot proved it.** The
-   road slid sideways faster than the car could steer: a bot tracking the centre
-   line *perfectly* went off in 3.4 seconds. The three sine amplitudes are now set
-   from that constraint rather than by eye — the road can move at most 0.315 px
-   sideways per px driven, which at the 210 px/s top speed is 66 px/s against the
-   car's 147. A good line now survives 87–150 seconds and doing nothing ends the
-   run in 7.5.
-
-2. **The snow globe threw its entire snowfall out of the globe on the first
-   shake.** Force was being applied without reference to mass; a flake masses
-   about 0.0036, so a flat force of 0.0084 was an acceleration of over two units
-   per step. Measured, not guessed: the average flake ended at y = −3316 in a
-   128-unit world. Forces are scaled by mass now, and separately, anything found
-   outside the glass is put back inside with its speed cut — because a thin ring
-   of static wall segments can still be tunnelled through on one step. Verified
-   with sixty hammer blows in a row: nothing ever leaves.
-
-3. **The snow globe's falling snow stopped permanently if the tab was hidden.**
-   The particle field drops its own loop when the tab goes away and does not
-   restart it. Found by sampling the canvas rather than by looking at it — the
-   pixel count was flatly zero. The main loop now starts it every frame.
-
-4. **The About overlay was invisible in Windows 98 mode.** Its inner element was
-   called `.card`, which the 98 mode also styles, so it rendered on light paper
-   with light text. Caught in a screenshot, not in the code.
-
-5. **The city map's park took its name from the district word list**, so the very
-   first city generated had a park called North Gardens next to a district called
-   North Gardens.
-
-6. **The guestbook read path was broken by `stmt.all.apply(null, …)`**, which
-   loses `this`. Writes worked; reads 500'd.
-
----
-
-### Judgment calls, and where the brief and the code disagreed
-
-The brief described several things as existing that did not. In each case the
-honest move was to build the shared piece the brief assumed and wire the existing
-toy into it, so the reuse it asked for is real rather than nominal:
-
-- **Atmosphere had no filter engine.** The brief said to reuse "Atmosphere's
-  existing filter engine (Nostalgia, Y2K Camera, etc.)" for the picture of the
-  day. There wasn't one. `shared/lc-filters.js` is now the single definition of
-  eight grades, and **both** toys call into it — verified by comparing the
-  computed `filter` string on both pages, which is character-for-character
-  identical. Atmosphere gained the control row it was assumed to have.
-
-- **Atmosphere had two modes, not three.** "A fourth mode: Forested Americana"
-  lands as the **third**. It is built and it works; it is just not the fourth.
-
-- **The Konami code already had a payload.** The brief said it was an unspecified
-  egg with nothing decided. It reshuffled the cabinet. Rather than delete that,
-  the reshuffle moved to typing `shuffle` and the code now opens the About card.
-  Nothing was lost and the brief's request was honoured.
-
-- **The static channel has no text ticker.** The ticker audit covered the news
-  crawl (42s → 96s), the good-news wire (50s → 112s) and the cryptid log (a report
-  every 6–13s → 13–26s), all three now hover-paused. The static channel's only
-  moving part is the vertical-hold roll, so that was slowed and hover-paused too,
-  and its caption no longer fades out from under you while you are reading it.
-
-- **The Windows 98 wallpaper feature did exist**, so "Set as wallpaper" writes
-  into the preferences Display Properties already reads rather than getting the
-  fallback download button. The photographer's name goes on the desktop with the
-  photograph, not behind a toggle: it is the licence.
-
-- **Six degrees is honest about being too easy.** The tag graph turned out dense —
-  200 random pairs all connect, average 1.38 hops. Rather than fake longer chains
-  and still call it shortest-path, there is a second button that deliberately
-  takes the long way round, and the tally says which one you are looking at.
-
-- **The README's toy table stopped being maintained at 29 drawers.** Updating 103
-  rows was out of scope tonight, so the count at the top is now correct (132) and
-  the table is labelled for what it is, rather than left silently wrong.
-
----
-
-### Facts, and how they were checked
-
-Three toys are built on real dates and one on real astronomy. None of them was
-written from memory and left there.
-
-- **Gaming, on this day** — 57 events. The rule is in a comment at the top of
-  `data.js` and repeated in the footer: *an entry needs a firm day*. The 1983
-  crash, the Commodore 64's launch and Spacewar! being finished at MIT are
-  therefore **not in the list** rather than given a plausible-looking date. Dates
-  are the original-territory release unless the entry says otherwise; where the
-  better-known date belongs to another region, both are given. Caveats are
-  printed, not hidden. A date with nothing on it says so and points at the
-  nearest days that do.
-
-- **Closer than you'd think** — 22 comparisons. Where a date is genuinely an
-  estimate (a pyramid, an extinction, the first tree) it says so and the
-  arithmetic is done on the estimate. Each card shows both gaps as numbers and
-  the fact you would want to check.
-
-- **What if it had gone differently** — forks from real, dated events, and says
-  plainly that everything after the fork came off a list on the page.
-
-- **The day/night line** — the terminator is computed, not fetched. Checked
-  against known values: declination 23.44° at the June solstice and −23.43° at
-  December (0.04° off), near zero at both equinoxes, and the sub-solar longitude
-  at 12:00 UTC is −0.67°, which is exactly the +2.68-minute equation of time.
-  London is lit at solstice midday and dark at midnight; Sydney is dark at 12:00
-  UTC in June. Twelve real time-zone facts alongside it.
-
-- **Semaphore is generated from the rule, not typed out.** The two-flag alphabet
-  is seven "circles" — one flag holds a position while the other walks round the
-  remaining eight — and that construction produces exactly 26 letters plus the
-  two service signs, which is why J sits where it does rather than after I.
-  Verified: 26 letters, none missing, no two sharing a position. A hand-typed
-  table can contain a typo; this one cannot.
-
----
-
-### Easter egg #12, which needed care rather than cleverness
-
-Dating a ship's-log entry to **15 April** prints a plain grey note above it:
-the Titanic foundered in the early hours of that morning in 1912 after striking
-ice the previous night, and around 1,500 of the roughly 2,200 people aboard died.
-
-Everything about how it is presented is deliberate. It carries **none** of the
-page's brass, rope or aged paper — it is a different object on the page. The
-foghorn does not play. And the invented log entry printed beneath it **drops its
-ice, its gale and its strange-sighting line**, because a fictional log about
-something following the ship, sitting directly under a note about 1,500 real
-dead, would be exactly the joke the page has just said it is not going to make.
-
-It was read back in full before shipping, as the brief asked.
-
----
-
-### The seventeen eggs
-
-All seventeen are built and all seventeen were triggered in a browser.
-
-| # | Where | What |
-|---|-------|------|
-| — | the hub | Konami code opens the About card, crediting Maksim and Claude, linking the repo taken from this working copy's actual git remote |
-| 1 | Infinite Archive | searching "the library of babel" stops the pretence and explains what the page really is |
-| 2 | Paradox Machine | the same paradox twice overflows the stack, prints identical frames ending `at you`, and restarts itself |
-| 3 | Story Chain | sentence 1,000 gets a "The End?" marker, drawn from the count so it is still there tomorrow, and the story carries on |
-| 4 | Snow Globe | shake hard *and* keep shaking and somebody is standing in the drift for three seconds |
-| 5 | Encode Anything | "easter egg" lays its own eighteen morse marks out as an egg |
-| 6 | Closer Than You'd Think | twenty comparisons in, it compares your visit to the Anglo-Zanzibar War, computed live |
-| 7 | Dream Decoder | "I dreamed about this website" gets the one reading it is qualified to give |
-| 8 | Declassified Search | left untouched for 75 seconds it adds a line about you, and the Subject field becomes "whoever left this open" |
-| 9 | What If History | "what if the internet was never invented" — no internet, no browser, no page, no machine to answer; it declines |
-| 10 | Guestbook | signing as "Neal" gets the same hat-tip the hub's hidden keystroke gives |
-| 11 | Pixel Canvas | pixels landing in the shape of a heart or a smiley set off a small celebration |
-| 12 | Ship's Log | 15 April. See above. Not a joke. |
-| 13 | Ancient Advisor | push the realm past 900 years and the archivists tell you that you have played too long |
-| 14 | Snarky Weapon | ask it something genuinely large and it drops the voice for exactly one sincere line, then catches itself |
-| 15 | City Builder | naming a street after a real Stockholm one gets a quiet note in the margin |
-| + | Arcade / DESCENT | hold DOWN for two seconds — the one input that game cannot receive by accident — and the ship comes up with an energy shield that breaks and recharges |
-| + | Snow Globe | turn the phone right over and hold it, and gravity inverts (the motion egg, reusing Invisible Ink's availability test) |
-
-The triggers are discriminating, not just present: `lonely` fires the weapon's
-sincere line and `abalone` does not; `no electricity` fires the what-if refusal
-and `invented earlier` does not; `Drottninggatan` and `drottning gatan` both land
-in Stockholm and `Cooper Street` does not.
-
----
-
-### What was extracted rather than duplicated
-
-Four shared modules, each lifted out of a toy that already had the code, with the
-original refactored to call into it and re-verified afterwards:
-
-- **`shared/lc-audio.js`** — Room Tone's Web Audio bench. Room Tone's six beds
-  still produce distinct spectra after the move, checked on the analyser rather
-  than by ear (library quiet with a 47 Hz hum, rain broadband at 1.5 kHz, the
-  bridge on a 94 Hz drive).
-- **`shared/lc-weather-fx.js`** — the almanac's twelve-effect particle field. The
-  almanac still draws, checked by sampling its canvas.
-- **`shared/lc-commons.js`** — the Commons rules (origin=\*, the thumb-host
-  rewrite, no credit means no display). The San Francisco toy still fills a
-  96-photograph pool with credits intact.
-- **`shared/lc-filters.js`** — the eight photograph grades, new, because there was
-  nothing to extract.
-- **`shared/lc-id.js`** — the one anonymous visitor id, new.
-
-**Nothing in this cabinet is sampled.** Every sound any of these pages makes is an
-oscillator or a noise buffer generated in the browser at the moment you hear it.
-There is still no audio file anywhere in this repository. The snow globe's carol
-is Jingle Bells (1857) or Silent Night (1818), both long out of copyright,
-arranged here for oscillators — verified on the analyser: the first note comes
-out at 328 Hz, which is E4.
-
----
-
-### The two dedicated-session items — now done
-
-Both were named in the overnight brief as explicitly out of scope and were left
-alone during it. They were built afterwards, in their own session, which is what
-the brief asked for.
-
-#### 1. Draggable icons, and folders to put them in
-
-The desktop starts auto-arranged — the grid it always was. Drag an icon and the
-surface goes into free mode with every icon pinned exactly where it already sat.
-Drop a drawer on a folder to file it, drag it out of the open window to unfile
-it, right-click anything for the same operations as a list. Positions, folders
-and membership are remembered.
-
-**The rule it is built under.** The widget rail next door is decoration, and it
-is fair to make that pointer-only. These are the navigation, so: every icon
-stays an `<a href>` a keyboard can tab to and open; every pointer gesture has an
-equivalent in the context menu, which Shift+F10 and the menu key both open, the
-arrows walk and Escape closes with focus returned; and **the Start menu goes on
-listing all 132 drawers whatever has been done out here.** That last one is the
-safety net — nothing a visitor does to this desktop can lose them a toy.
-Verified after filing three away: still 132 of 132, all reachable.
-
-**Five bugs, every one found by driving it rather than reading it.** This is the
-part worth the time:
-
-1. **Pointer capture on the wrong element.** Capture was taken on the icon
-   *wrapper*, and capture retargets the click and dblclick the browser derives
-   from the pointer events too — so every click arrived with the wrapper as its
-   target, `closest('.w98-icon')` came back null, and **double-click to open
-   silently stopped working**. `elementFromPoint` at the very same coordinates
-   still correctly reported the icon, which is what made it puzzling for so
-   long. Capture is on the icon now.
-
-2. **The grid cell was guessed, not measured.** The grid is
-   `repeat(auto-fill, minmax(88px,1fr))` with a row gap, so the real track is
-   neither 88 wide nor 88 tall and both move with the window. Snapping to a
-   hard-coded cell shifted **113 of 135 icons by up to 37px** at the instant of
-   the first grab — which also moved the folder out from under the pointer that
-   was about to drop something on it. The cell is measured now, and entering
-   free mode pins at the exact measured offset rather than a snapped one, so it
-   is a photograph of the grid: 0 icons move.
-
-3. **`dragEnd` nulled `drag` before `dropTargetAt` read `drag.el`**, so every
-   drop onto a folder threw and silently did nothing.
-
-4. **`deskForget()` cleared the record but left the layout.** The free class
-   makes every icon `position:absolute`, so forgetting without removing it
-   dropped all 134 into a heap at 0,0.
-
-5. **The new-folder rename ate the next gesture.**
-
-**Restoring is self-healing**, which matters because a record written by an
-older version can name a cell something else now claims, and a drawer added
-since has no remembered place at all. Checked against a deliberately poisoned
-record with six icons all claiming 0,0: 134 icons, 134 distinct cells, and the
-healed record written back.
-
-Display Properties gave up its own icon and its own right-click menu on the way
-— it used to append the icon to the grid directly, which did not survive the
-grid being rebuilt for a new folder, and its "Properties" menu opened alongside
-the new one on the same click.
-
-A folder cannot go inside a folder, and says so. One level is the point: a
-desktop you can tidy, not a filesystem to get lost in.
-
-#### 2. The icon style selector
-
-Four styles — pixel, cartoon, flat, realistic — from a row at the top of the
-Icons tab, remembered with the rest of the appearance.
-
-**The mechanism was tested before it was designed.** Document CSS cannot reach
-inside a `<use>` shadow tree, but *custom properties inherit into it* — a probe
-confirmed it by painting one circle red on the defaults and green with the
-variable set. So every outline in the sprite is
-`stroke="var(--ic-ink, <its own colour>)"` with a matching `--ic-sw`, and with
-no style chosen **nothing changes at all**: the fallbacks are the values that
-were already there.
-
-Only outlines are parameterised, by a mechanical rule. A stroke on a shape with
-a real fill is a contour — 68 of those, and they are what a style thickens,
-lightens or removes. A stroke on `fill="none"` is the drawing itself, and a
-stroke with no fill attribute is a detail line. Those 34 keep their own colour
-and weight in every style, **which is why the flat set still has all its detail
-instead of going blank.**
-
-Checked side by side at 40px and live at 32px: the four are plainly different,
-and the style reaches the icons inside an open folder window too. The realistic
-bevel is a per-icon SVG filter, so anybody who has asked for reduced motion gets
-a plain drop shadow instead.
-
----
-
-## Summary — batch 15, the arcade and the song guesser
-
-**Two things built: a thirteen-game arcade cabinet, and the Europop guesser widened into
-Needle Drop. The cabinet went from 109 drawers to 110** — the guesser was expanded in place
-rather than duplicated, as asked, which meant renaming it.
-
-**Nothing else was touched.** No change to the hub shell beyond one card, one renamed card and
-two icon mappings. `server.js` gained no new route; the existing `/api/preview` got stricter.
-
-**Not deployed.** The commits are local.
-
-### Look at these first
-
-1. **The song pool is 164 tracks, not 500, and that is the honest number.** Every candidate was
-   put through the same `/api/preview` call the game itself uses, and only the ones Deezer
-   actually returned — right artist, playable preview, not a karaoke or instrumental take — were
-   kept. 177 candidates went in and 129 came out. Nearly every Russian and Ukrainian miss was my
-   own fault: I had written the titles in transliteration and **Deezer indexes them in Cyrillic**,
-   so those were re-queried in native script and 37 more came back. The brief said accuracy over
-   count and to build incrementally, so the remaining gap to 500 is left as curation rather than
-   filled with unchecked guesses. Per scene: Europop 56, Italy 43, Russia 35, Ukraine 26,
-   **Georgia 4**.
-
-2. **Georgian is the thin one and needs someone who actually knows the scene.** Four tracks
-   survived, all Eurovision entries, because that is the Georgian pop I could name and verify.
-   Most of what I tried — Mgzavrebi, The Shin, Young Georgian Lolitaz, several Eurovision
-   entrants — is simply not on Deezer with a preview. This is the one part of the brief I could
-   not deliver properly and it wants a native speaker with a list, not more guessing from me.
-
-3. **Playing the platformer found four real bugs that were invisible from looking at it.** This is
-   the part of the session worth reading:
-   - `boxHits` sampled only **one** bottom corner, so the moment the player's right edge crossed a
-     gap the whole body counted as unsupported. You fell a tile early at every ledge and could
-     never jump *from* an edge, because `p.on` was already false.
-   - Walkers in four levels sat one row above the floor. With nothing under them they flipped
-     direction every frame and hovered on the spot instead of patrolling.
-   - The jump rose 35.6 px while the level art assumed three-tile steps of 48 px. **Level 6 was not
-     hard, it was impossible.** The jump is 250 now, and there is an audit that refuses a step it
-     cannot clear.
-   - A platform on row 9 leaves 32 px of headroom over a 50 px jump, so jumping *under* one
-     cancelled the jump mid-rise and dropped you into the pit you were trying to clear. That is
-     why four levels looked fine and were unplayable. Levels with floor hazards no longer carry
-     low platforms.
-
-   All ten levels now pass a structural audit — reachability, spike runs, gap widths, walkers
-   grounded, headroom over every hazard — and a physics-aware bot clears **10/10 on the first
-   attempt with zero deaths**.
-
-4. **The retro look is enforced by the architecture, not by discipline.** Every game draws into one
-   320x240 buffer which is then scaled by a whole number with smoothing off, so nothing inside the
-   cabinet can be smooth even by accident. Sixteen colours, a 5x7 bitmap font set by hand — no
-   webfont is blocky enough at this size — and the CRT treatment applied once at the shell so each
-   game inherits it. The two the brief warned would drift, the platformer and billiards, are drawn
-   with the same primitives as everything else.
-
-5. **PENTAFALL is meaningfully different, not superficially.** Twelve pentominoes, five cells each,
-   a twelve-wide well, and a colour mapping that avoids the familiar convention entirely. Five-cell
-   pieces change how it plays as well as how it looks: the well is wider because pentominoes do not
-   pack, and a clear is worth more because it is harder to arrange.
-
-6. **`/api/preview` was handing back karaoke and instrumental takes.** Searching "Boten Anna
-   Basshunter" returned an instrumental — a clip that plays and cannot be named, which reads as a
-   broken game rather than a hard round. It now rejects those outright and prefers the exact title
-   by the right artist over a remix or alternate version.
-
-### What was verified, and how
-
-- **Every one of the thirteen games was driven, not just loaded.** All thirteen survive 600 frames
-  of random input with no thrown errors, and each was opened from the menu and played with real key
-  presses. High scores persist across a reload (checked by writing one and reloading).
-- **The falling-block game was checked against the thing it must not be.** Screenshotted mid-game:
-  the pieces on the field are visibly five-cell — a plus-shaped X, a W, a P — in oranges, cyans and
-  greens, on a twelve-wide well.
-- **Ten platformer levels, start to finish**, as described above. The brief asked for eight.
-- **The clip really does start at one second.** Measured on the audio element, not the UI: with the
-  window at 2 s the clip stopped at `currentTime` 2.02 and paused itself; the source is a real
-  30-second Deezer preview.
-- **Pause and volume are real.** Pause froze `currentTime` at 0.73 across a 700 ms wait and resumed
-  to 1.35; the volume slider set `audio.volume` to 0.22.
-- **The year filter really changes the pool**: 164 / 48 / 34 / 29 / 53 across the four ranges, and
-  the track actually drawn was inside the selected range every time. The scene filter gives 43
-  Italian tracks, all of them Italian.
-- All 110 drawers return 200, the hub shows 110 cards, both new toys appear as cards and as desktop
-  icons with hand-picked icons, and no page throws.
-
-### What was decided without asking
-
-- **The guesser was renamed.** Its pool is no longer Europop, so `/europop-guesser/` became
-  `/needle-drop/` and the card moved with it. The old path now 404s. The brief asked for an
-  original name and identity for this mechanic, and leaving a directory called "europop" on a
-  five-country pool would have been wrong in both directions.
-- **Verification for the arcade drove the real game loop**, rather than trying to be a human at the
-  keyboard for thirteen games. Where it mattered — that the clip starts at one second, that the
-  platformer is completable, that pause works — real input was used and is reported as such.
-- **A `_fit` and a small state object are exposed on `window`** in the arcade and the guesser, so
-  the scaling and the audio window can be checked from outside. Harmless, and it is what made the
-  audio claim checkable rather than asserted.
-
-### Still to do
-
-- **The song pool.** 164 verified of a target of 500. The method is repeatable: add candidates to
-  the list, run them through `/api/preview`, keep what answers. Georgian needs a person, not a
-  script.
-
----
-
-## Summary — batch 14
-
-**11 toys built, verified in a real browser, and added to the hub.** The cabinet went from 97 drawers
-to 108. Everything on the list got built, in the order given, and nothing was left half-finished.
-
-**Nothing from the blocked list was touched** — no globe/planet editor, no device-detected retro
-theming, no message in a bottle, no who-else-is-here, no outpost builder, no Room Tone.
-
-**Not deployed.** The commits are on `main`; Railway still needs its manual trigger.
-
-### Look at these first
-
-1. **The Europop guesser needed an API decision, and the brief was right to insist on checking.**
-   Both providers were verified against live behaviour rather than memory:
-
-   - **Spotify: rejected.** Its `preview_url` is now marked **deprecated and nullable** in the
-     current reference, needs OAuth, and its terms state that "Audio Preview Clips may not be
-     offered as a standalone service or product" — which is close to describing this toy.
-   - **Deezer: chosen.** Its public search needs **no key and no OAuth**, and returns a `preview`
-     field: a real MP3 on Deezer's CDN, measured at 479,827 bytes / 128 kbps = **exactly 30.0
-     seconds**.
-   - `api.deezer.com` sends **no** `Access-Control-Allow-Origin`. I confirmed that by calling it
-     from a real browser rather than by reading headers — the headers are misleading, carrying
-     `allow-methods` and `allow-credentials` but not the one that matters. Hence the metadata relay
-     at `/api/preview`.
-   - The **preview URL itself does** send `Access-Control-Allow-Origin: *`, so the page plays the
-     file straight from Deezer. **No audio is proxied, cached or re-served here**, which is both the
-     instruction and what Deezer's terms require. The URLs are signed and expire, so a fresh one is
-     fetched each round rather than any being kept.
-
-   All **53** curated tracks were resolved against the live relay: 53 of 53 return a playable
-   preview. No key is needed, so there is no needs-a-key state to show.
-
-2. **The museum's twelve buttons were verified one at a time, not as a group.** The note when it was
-   expanded was that they must not be one joke repeated, so a shared "did anything change" check
-   would have been the wrong test — it passes trivially. Each exhibit got its own assertion: it
-   dodges the pointer, counts its own uselessness, springs, rotates the page hue, synthesises a note
-   that is never the same twice running, spawns working copies, falls through its own floor,
-   escalates its refusals, fills over three seconds, turns its case upside down, shatters into
-   falling fragments that reassemble, and — exactly once — really does copy the time to the
-   clipboard. Fifteen assertions, all true.
-
-3. **One real arithmetic error, caught by checking rather than by re-reading.** The estimator's
-   rice-on-a-chessboard sum was out by a factor of a thousand: grams to tonnes is 1e6, not 1e3.
-   Worse, its note claimed the last square was "five hundred thousand years" of world rice
-   production when the correct figure is about **five centuries**. Both fixed, and the note now says
-   so out loud. This is precisely what the never-fabricate-a-statistic rule exists for, and I nearly
-   shipped past it.
-
-4. **The decade matcher was rebalanced after simulation.** On the first pass, over 20,000 random
-   answer sets, the 2000s won only **3.9%** of the time while the 1970s took **27%** — one decade
-   nearly unreachable, another dominant. After reweighting, over 40,000 sets, the spread runs
-   **7.8% to 18.6%** and all seven decades are reachable.
-
-### What was decided without asking
-
-- **The estimator tags every figure `m` or `a`** — measured or assumed. A silly premise is stated as
-  a premise and never dressed as a known quantity, and the assumptions are editable so you can
-  disagree and watch the answer move.
-- **The decade matcher never touches song titles.** It matches on production and arrangement — how
-  it was recorded, what the low end is doing, where the voice sits — because those are what date a
-  record, and because that was the explicit note.
-- **The banknote portrait is nobody.** A coin-style profile assembled from landmarks in a unit space
-  with seeded variation. The first attempt collapsed into a purple blob and was redrawn.
-- **The pet rock's photograph never leaves the tab.** That toy has no server side at all, and the
-  page says so.
-- **The redundancy department separates invention from fact.** The memoranda are made up; the
-  appendix of genuinely doubled phrases beneath them — PIN number, La Brea Tar Pits, chai tea, RSVP
-  — is real, and each says which word got repeated and where it was hiding.
-
-### The eleven
-
-| Toy | What it is |
-|---|---|
-| `/groupchat-namer/` | Four tones that genuinely change the output, never repeating twice running |
-| `/redundancy-dept/` | Invented memoranda, with eighteen real doubled phrases underneath |
-| `/absurd-estimator/` | Daft questions, real arithmetic, every figure tagged measured or assumed |
-| `/decade-matcher/` | Eight questions on production and arrangement, seven reachable decades |
-| `/vintage-stamp/` | Canvas engraving, perforated and postmarked, deterministic from the subject |
-| `/design-currency/` | Real guilloché — parametric curves — and a portrait of nobody |
-| `/paint-namer/` | The right name is derived from the swatch; the decoys belong to other colours |
-| `/pet-rock/` | Six drawn rocks or your own photo, and a certificate that never shifts under you |
-| `/useless-buttons/` | Twelve exhibits, twelve mechanics, one of which is not useless |
-| `/reverse-alarm/` | Counts backwards from where you must be to the last moment you can get up |
-| `/europop-guesser/` | Real 30-second Deezer previews, four answers, five era filters |
-
-### How it was checked
-
-Every toy was driven in a real headless browser, not loaded and eyeballed. Each has a scripted probe
-exercising its actual mechanic: the swatch names are stable and hue-derived, the certificate is
-identical for the same rock and name, the alarm's chain always ascends and 09:00 less 87 minutes
-really is 07:33, the era pools are disjoint and sum to the whole, and the Europop audio element is
-confirmed playing a `dzcdn.net` file of duration 30.0 with `currentTime` past zero. A final sweep
-loaded all 108 toys plus the hub: **no JavaScript errors on any page**. Every toy checked at 390px
-for horizontal overflow.
-
----
-
-## Summary — batch 12, the cleanup batch
-
-**Six toys built, verified in a real browser, and added to the hub. The cabinet went from 91
-drawers to 97.** Every item on the list is resolved: the two new toys are built, and all four
-previously-blocked items — the outpost builder, the shared-storage pair, Room Tone, and the
-nostalgia sound that folded into it — are now done rather than deferred.
-
-**One item could not be done as written, because its premise is wrong: Movie night was never
-built.** Details below; it is the only thing on this list needing your decision.
-
-**Server changes.** One new module (`store.js`), three new routes, one new field on `/api/keys`,
-and a coarse-geolocation helper shared with `/api/where`. `package.json` now asks for Node 24+.
-
-**Not deployed, but infrastructure did change:** a Railway volume now exists. See item 6.
-
-### Look at these first
-
-1. **Movie night does not exist, and never did.** Item 6 said it was built and waiting on a key.
-   It is not built. There is no `/movie-night/` directory, no route, no markup, and nothing in the
-   git history that was ever added and later removed — I checked the working tree, every commit on
-   every branch, and every deleted path. The only traces are one line in `/api/keys` reporting
-   `tmdb`, and a line in the README that already said **"Still to build: Movie night"**. So
-   setting `TMDB_API_KEY` today would change nothing you could see. The key plumbing itself does
-   work — I ran the server with and without the variable and `/api/keys` correctly reports
-   `tmdb:false` then `tmdb:true`. **I did not build the toy**: item 6 asked me to confirm a
-   needs-a-key state and leave a note, not to design a toy from scratch, and there is no spec for
-   what Movie night should actually do. Tell me what it is and it is a short job. TMDB is still a
-   free signup, same as Groq was. I corrected the README so it no longer implies the key gates
-   anything.
-
-2. **The bottle is a public, unmoderated text box, and you should decide if you want that.**
-   `/message-in-a-bottle/` stores whatever a stranger types and shows it to other strangers. I put
-   real guards on it — 280 characters, control characters stripped, **any link refused outright**
-   (a link is what spam actually wants), and its own rate limiter at six casts an hour per address
-   rather than sharing the generate one. But there is no moderator and no way to attribute a note
-   to anyone, which is the point of the toy and also its risk. The page says so in those words.
-   **If you would rather it not be open to the public, the honest options are a holding queue you
-   approve, or not shipping this one.** Everything else in the batch is safe to deploy as is.
-
-3. **Room Tone's scenes were nearly identical, and measuring them is what caught it.** The brief
-   said to confirm the scenes are audibly distinct rather than one pad with six labels. I cannot
-   listen, so I profiled the real audio output through an AnalyserNode instead. Three pairs came
-   back almost the same sound: library and underwater sat **0.008 apart** in normalised band
-   profile, campfire and train 0.008, rain and bridge 0.018. The library was also *louder than the
-   train*, which is not what a late library is. I regraphed four of the six. The closest pair is
-   now 0.038 — five times the old minimum — and those two still differ 1.6x in loudness and 2.2x
-   in event density. **This is measurement, not listening: please put headphones on and tell me if
-   your ears agree with the numbers.**
-
-4. **Nothing in the starship chart is anybody's actual silhouette, by construction.** The brief was
-   right that stripping detail off a Star Destroyer still leaves a Star Destroyer, so I did not try
-   to draw ships at all. There are six abstract hull forms and **the only input to which one a ship
-   gets is how many metres long it is**. That makes it structurally impossible for a shape to encode
-   a specific design: the Executor comes out a banded slab, an Imperial Star Destroyer a symmetric
-   spindle, and both Death Stars plain ellipses rather than spheres with a dish. I looked at every
-   size bracket on screen to confirm none of them reads as a real design. The page also says the
-   drawn heights are invented, because they are — only length is data.
-
-5. **Five ship lengths were wrong and five ships were dropped.** I checked the marquee figures
-   rather than trusting my memory, and it was worth doing: the EVE Erebus is **14,764 m, not
-   14,000**; the Avatar titan's length I could not source at all, so it is gone and two titans whose
-   lengths are published took its place. Babylon 5's production figures disagree with each other, so
-   it is now marked an estimate at 8,046.7 m, and Galactica has two competing official numbers so it
-   is an estimate too. Five more ships — the Bengal carrier, Event Horizon, Icarus II, the Axiom and
-   Interstellar's Endurance — **were dropped rather than given a plausible-looking number**, because
-   I could not source them. Every remaining row is coloured by whether it is a published figure or a
-   fan estimate.
-
-6. **A Railway volume now exists, and this is the one thing I changed outside the repo.**
-   `railway volume list` was empty, as the brief anticipated, so I created `hub-volume`, 5 GB,
-   attached to the `hub` service at `/data`, status Ready. **`package.json` now requires Node 24+**,
-   because that is what `node:sqlite` needs without a flag — worth knowing before the next deploy,
-   since it is the only breaking constraint added this batch. No dependency was added: SQLite is
-   built into Node now.
-
-7. **The production database starts empty.** Everything I wrote while testing is in `./.data`,
-   which is gitignored and local. The first person to load the bottle toy in production will
-   correctly see empty water.
-
-### What was verified, and how
-
-Every toy was opened in a real browser and driven, not checked for a 200 and left. All 97 drawers
-return 200, the six new ones carry the standard back-to-the-cabinet control, appear as both a card
-and a desktop icon with a hand-picked icon rather than a tag fallback, are findable in the Start
-menu, and produce no console or page errors. None overflows horizontally at 390 px.
-
-Beyond that, the specific things the brief asked to be checked:
-
-- **The wiki at full scale, not on a test set.** All 500 entries load. Search runs over name,
-  source and description together — "seabed" finds two entries by description alone; "gun" plus the
-  weapons chip plus a source filter narrows correctly to zero. Ten category chips, 131 sources,
-  four sort orders. A full 500-row render measures **17 ms**; rows are drawn 120 at a time so the
-  first paint stays quick. The random draw pages forward far enough to actually show you what it
-  picked, which it did on six consecutive tries.
-- **The starship chart's shapes and its zoom.** Screenshotted at four brackets and looked at.
-  Real mouse drag, real wheel zoom and a real click all work; at fit-all, with all 68 loaded, a
-  frame costs **0.16 ms**.
-- **The Mercury → Neptune progression, not just one planet.** I played all eight through to their
-  targets with real click events on the canvas. Each unlocked the next, the final card correctly
-  says there is nothing further out, and the rail ends with all eight marked done. The
-  collector-to-reactor crossover falls at Mars, which is exactly where the arithmetic says it
-  should: a collector is 10 ore for 3x solar and a reactor 32 for a flat 9, so they cross at
-  solar 0.937, and Mars is 0.431.
-- **That the shared data actually survives a restart.** This is the whole point of the volume, so
-  I tested it properly rather than assuming — and my first attempt was invalid, because two node
-  processes were bound to the port and the kill failed. Second attempt: killed every listener,
-  **confirmed the port had gone dead** (curl got no answer at all), started a new process with a
-  new PID, and all three bottles came back with their found count intact, along with both places
-  and all three visitors.
-- **That losing the database does not take the site down.** Ran the server from a read-only
-  directory with `DATA_DIR` pointing somewhere unwritable. `/api/keys` reports `store:false`, both
-  routes answer `no_store`, both pages show an honest panel with writing switched off, and the hub
-  still serves 200.
-- **Room Tone's six scenes.** Profiled as described in item 3, plus a leak found while testing and
-  fixed: tearing down a scene disconnected its output but left its oscillators and looping buffers
-  running for the life of the page. Instrumented start/stop counts across twelve scene switches now
-  come back **82 started, 82 stopped, none left live**, and the time-domain peak after stopping is
-  exactly zero.
-
-### What was decided without asking
-
-- **The starship comparison is its own toy, not a category in Higher or Lower.** The brief allowed
-  either. It needs zoom, pan, a log index rail and a projection, none of which fits a two-card
-  guessing game.
-- **Visitors are counted by a random token their own browser invents**, not by anything derived
-  from the address. The brief said to derive coarse location and discard the IP, which leaves no
-  way to tell a reload from a new person; a browser-generated id solves that without the server
-  ever holding an identifier that means anything. It is disclosed on the page.
-- **Stored coordinates are rounded to one decimal place**, about eleven kilometres — deliberately
-  blunter than the city they came from. The address is used once, in memory, to ask a geocoder for
-  a city and is then dropped: it is never a column and never a log line. Rows are deleted after
-  24 hours.
-- **The outpost builder's difficulty curve is real physics.** Sunlight per planet is 1/r² with r in
-  AU, so Mercury gets 6.68x Earth and Neptune 0.00111x. That single real number is what makes the
-  outer half of the solar system need reactors. Ore, costs and targets are balance, and the page
-  says which is which.
-- **The world map came from the ISS tracker.** `/who-else-is-here/` needed coastlines and that toy
-  has carried an equirectangular outline since it was built, on the same 720x360 projection. I
-  copied it to `public/shared/world-land.js` rather than editing a working toy to share it out —
-  **so that 35 kB outline now exists twice.** Worth collapsing if either page is touched again.
-
-### Still not built
-
-Nothing from this list, and nothing outside it. The full custom globe/planet editor and
-device-detected retro hub theming remain unbuilt from earlier batches, as before.
-
----
-
-## Summary — batch 8, the ten that were still undone
-
-**Ten toys built, verified in a real browser, and added to the hub. The cabinet went from 81 drawers
-to 91.** Everything on the list got built, in the order given, and nothing was left half-finished.
-One additive server route (`/api/photos`) and one added field on `/api/keys`; no other change to
-`server.js`, and no structural change to the hub shell beyond ten cards and ten desktop-icon
-mappings.
-
-**Not built, as instructed:** the full custom globe/planet editor, device-detected retro hub
-theming, message in a bottle, who else is here, the pixel outpost builder, and Room Tone. Nothing
-outside the list was built.
-
-**Not deployed.** The commits are local. Deploying is a manual step whenever you want it.
-
-### Look at these first
-
-1. **The premise of the flag toy was out of date and I changed the source.** REST Countries'
-   keyless API is gone — v1 through v4 are deprecated and v5 wants a signed-up key. Rather than
-   ship a toy that needs a key for country names, I took the data from
-   [mledoze/countries](https://github.com/mledoze/countries), which is the open dataset REST
-   Countries is *built from*, ODbL, and baked the 193 UN member states into the page. It is 13 kB,
-   it is attributed on the page, and the toy now makes no network call for its data at all. Flags
-   come from flagcdn.com at runtime. **If you would rather pay for or sign up to the real API, that
-   is a one-file change and your call, not mine.**
-
-2. **`/cipher/` is the one with real engineering in it, and it is worth ten minutes.** Ondaric is a
-   constructed language built backwards from one requirement: whatever goes in must come out again,
-   or your friend cannot read it. Six rules, all reversible. It round-trips **4,000 randomly
-   generated sentences with zero losses**, and getting there took five separate bug fixes that a
-   fuzzer found and I would not have: a non-bijective letter table, prepositions binding across
-   numbers, accented letters being silently dropped, a substituted word colliding with a grammar
-   particle (under one passphrase "you" came out as the word for a comma), and a two-piece parse
-   that could not tell an article in front from a postposition behind. The passphrase reshuffles
-   the particles as well as the letters, so a wrong key garbles the grammar too. **It is a party
-   trick, not cryptography, and the page says so in those words.**
-
-3. **`/atmosphere/` is built and wired but its live API call is unverified, because there is no
-   Pexels key.** Everything else about it is verified: the needs-a-key panel, the route's allowlist,
-   the 400 on an unknown mode, and — by stubbing the route with the exact response shape — image
-   loading, the fade, attribution rendering with both links, caption stability, swipe and arrows.
-   Set `PEXELS_API_KEY` and it should work; the one thing nobody has watched is Pexels' own
-   response. **Stubbing it also caught a genuine bug that would have shipped:** a photograph whose
-   file failed to load made the page skip to the next one, which at the end of the deck fetched
-   more, which also failed — an unbounded loop that made **95 API calls in four seconds**. Both ends
-   are bounded now, and the same guard went into the Zone gallery.
-
-4. **The README's toy table has drifted badly and I did not fix it.** It still lists 29 toys and
-   describes the cabinet as it was several batches ago. I updated only the parts this session
-   touched — the routes list and the keys paragraph. Rewriting 91 rows is a job in its own right
-   and it needs someone who knows which of the older entries are still accurate.
-
-5. **The Zone gallery served a war grave, and I have fixed it.** The very first plate it showed in
-   production was a real WWII mass grave in Ukraine, with an invented eerie survey note printed
-   underneath — because a great many war memorials are also Soviet-era concrete and the search could
-   not tell the difference. There is now a name-based exclusion list running in English, Ukrainian
-   and Russian (memorial, grave, cemetery, victims, могила, мемориал, братськ and the rest), the
-   search term that reached hardest for monuments has been dropped, and the footer states the rule.
-   Verified over ten consecutive plates. It will sometimes skip an innocent building with an unlucky
-   name, which is the correct direction to be wrong in. **If you find any other category this ought
-   to be refusing, the list is one array at the top of the file.**
-
-6. **Another session was committing to `main` while I worked.** Its last commit was 11:55 and the
-   tree was clean when I started, so nothing collided, but two agents are writing to
-   `public/index.html`. Worth settling before the next batch.
-
-### What was verified, and how
-
-Every toy was opened in a real browser and driven, not just checked for a 200. All ten return 200,
-carry the standard back-to-the-cabinet control, appear as both a card and a desktop icon with a
-hand-picked icon rather than a tag fallback, and are findable in the Start menu search. No page
-threw a script error.
-
-Specifically beyond that: the flag desk's distractors come from the same subregion as the answer;
-the fallacy quiz marks by value rather than by re-reading its own rendered labels; the dilemma
-tally moves only when you answer; the five verse registers have five different line counts and
-three different rhyme schemes; the dungeon room is stable across a reload and identical for
-everyone today; changing the charge on the flag changes exactly one line of the country dossier and
-nothing else; masterpiece roulette loads real images with CC0 attribution and a link to the record.
-
----
-
-
-## Summary — batches 9, 10 and 11, plus the easter-egg pass
-
-**16 toys built, verified in a real browser, and added to the hub. The cabinet went from 65 drawers
-to 81.** Everything on the new-toy list got built, in the order given. Nothing was left half-finished.
-Then the easter-egg pass: **19 eggs, all of them landed, none skipped for a missing target toy.**
-
-**Not built, as instructed:** message in a bottle and who else is here (both need genuine cross-visitor
-shared storage, and the second one touches approximate visitor location — your decision, not mine),
-the pixel outpost builder (still awaiting the go/no-go), and Room Tone. Nothing outside the list was
-built.
-
-**Not deployed.** Railway does not deploy on push, so nothing here is live. The commits are on `main`
-and pushed to GitHub; triggering the deploy is one manual step whenever you want it.
-
-### Look at these first
-
-1. **The ant farm had five separate faults and I nearly shipped it broken.** It looked right the whole
-   time — ants moving, sand shifting — while the grain counter sat frozen and the tank hollowed anyway.
-   The real one: an ant hauling a load upward would accept an opening *below* it as the highest available
-   whenever nothing above was open, step into it, and then be offered the cell it had just left. Fourteen
-   of eighteen ants spent the run oscillating between two cells one row short of the surface, full, never
-   dumping. I found it by printing the terrain around a stuck ant, which is what I should have done three
-   fixes earlier instead of guessing. It now runs about half an hour before the tank is hollow, with real
-   shafts, galleries, chambers and spoil heaps. **Worth leaving in a tab for ten minutes to see if you
-   agree it earns the slot.**
-
-2. **`/reverse-turing/` has an honest limitation you may want to overrule.** The human half of a
-   human-or-machine test has to be genuinely human, so it is fourteen sentences from books out of
-   copyright, attributed on the reveal. That means the human side skews old. I dealt with it by telling
-   the model to write in the same period, so it is not a test of spotting a modern idiom — but a few of
-   the human lines are famous enough to simply recognise, and the page says outright that recognising
-   them counts. If you would rather have modern human text, that needs a source you are happy with and
-   it is your call, not mine.
-
-3. **`/slang-glossary/` is the one to fact-check.** Twenty terms, real definitions, and I put real effort
-   into the etymologies — *ate*, *it's giving*, *no cap* and *bussin'* all come out of Black American and
-   in two cases Black queer ballroom speech decades before the feeds, and the notes say so rather than
-   letting TikTok take the credit. The entry I am least certain about is **six seven**: I am confident it
-   spread through schools in 2025 from a rap song and that its meaninglessness is the point, so I wrote
-   only that and deliberately left out the dictionary-word-of-the-year claim I could not stand behind.
-
-4. **`server.js` gained one prompt.** A `reverse-turing` entry in the `PROMPTS` table, in the same shape
-   as the others. Nothing else in the file was touched by me. The route was tested against the real Groq
-   endpoint and comes back with usable period prose.
-
-5. **Another Claude session was working in this repository at the same time, all night.** That is how
-   `/api/where`, `/api/generate`, `public/shared/lc-generate.js`, `/character-match/` and
-   `/what-beats-this/` got there — they are not mine. Earlier in the evening one of its commits swept up
-   uncommitted work of mine and shipped it under an unrelated message, so from that point on I committed
-   after every toy. Worth knowing when you read the history: **two authors, one branch, interleaved.**
-
-6. **One pre-existing bug fixed, one left alone.** Fixed: the fortune cookie put a horizontal scrollbar
-   on narrow screens, because the cracked halves fly 172px either side of the stage. Left alone:
-   `/retro-os/` overflows horizontally below about 470px, which is inherent to it being a fixed-size
-   drawing of a desktop, and changing that is a design decision rather than a fix.
-
-### What was decided without asking
-
-- **"Animal battles" is `/what-beats-this/`.** There is no toy by that name; the X-versus-Y battler is
-  the only thing the bees egg could go on, so that is where it went.
-- **Higher or lower is one toy with three categories**, as asked, and a fourth is a data addition to
-  `data.js` and nothing else — the switcher, the rounds and the scoring all read from whatever is in
-  that array. It also refuses to offer any pair closer than six per cent, because that is a coin toss
-  rather than a question.
-- **The typing fortune's numbers are real and its reading is a joke**, and the page says which is which.
-  Keystroke dynamics is a real field for identifying people; it has never shown anything about character.
-- **The Chladni plate says its frequencies are a stand-in.** The nodal shapes are the genuine article
-  from the standard square-plate model; the hertz figures are scaled from the mode numbers so the slider
-  covers an audible range, and a real plate would resonate somewhere else entirely. The page says so.
-
-### The easter eggs, all nineteen
-
-Every target toy existed, so nothing was skipped for a missing one.
-
-| Where | What |
-|---|---|
-| Hub cards | Drag the dog-eared corner and the card peels back to a handwritten note, one of thirty-six, stable per drawer |
-| Hub | Typing `neal` tips its hat to neal.fun |
-| Hub | The Konami code really reshuffles the cabinet — DOM order, not an animation |
-| Hub | The "still being built" ghost card answers back, and eventually admits there is no drawer 82 |
-| Hub, Windows 98 | An icon that is not a drawer, absent from the Start menu, that blue-screens |
-| Weather almanac | Visit all twenty-three places in one sitting and it admits to a twenty-fourth: room temperature, no wind, no exits, filed by nobody |
-| Weather almanac | About one report in four hundred comes back past the end of the dial |
-| Radio hub | Hold the needle on the exact midpoint of a wide gap for a second and a half: an unlisted carrier reading five-digit groups, with a tone per group |
-| Gratitude jar | Shake hard enough for long enough and the lid gives; the notes erupt, land, and are tipped back in. Nothing is lost |
-| Loot terminal | The same item name twice running is appraised as **Impossible**, valuation left blank |
-| Bureaucracy | Three submissions running with nothing left blank: "Congratulations, you are free." The form stops growing |
-| Civilizations | One more rung past the sources, unlabelled and unnumbered, lit only once it is actually on screen |
-| Apocalypse quiz | The worst answer to every question is reclassified from an assessment to a statement of intent |
-| What beats this | A thousand bees against a thousand bees, answered without calling the model |
-| Retro OS | Right-click the desktop: everything greyed out except the one item that sounds dangerous, which is the most inert of the lot |
-| Race your ghost | Beating your own ghost by forty wpm at ninety per cent accuracy gets a question, not an accusation |
-| Fortune cookie | The hundredth cookie of a session is not drawn from the pile. Fires once, at exactly one hundred |
-| ISS tracker | The station's real reported position against Stockholm by great-circle distance: "over Stockholm right now" inside 600 km |
-| Inventions | The newest thing on the timeline opens the drawer after the last one: eight things we have not invented, each marked with how far along it really is |
-
-### How it was checked
-
-Every page was driven in a real headless Chromium, not just loaded: each toy has a scripted probe that
-exercises its actual mechanic — the ants dig, the sand settles on the nodal lines, the theremin's pitch
-tracks the pointer logarithmically, the sequencer's balls strike pegs, the oracle never answers, the
-register rejects a year it does not cover, the ink is opaque before the pointer goes down and opaque
-again after. A final sweep loaded all 81 toys plus the hub and reported **no JavaScript errors on any
-page**. Every toy was also checked at 390px for horizontal overflow.
-
----
-
-## Summary — the previous run (63 drawers)
-
-
-**34 toys built, verified in a browser, and added to the hub.** The cabinet went from 29 drawers to 63.
-Everything on the list got built; nothing was left half-finished, and nothing hit a blocker that stopped it.
-Each one has its own section below with what it does, what I had to decide, and how it was checked.
-
-**Not started, as instructed:** the pixel outpost builder (waiting on your scoped-down version — not begun,
-not even the small one), Room Tone, and the nostalgia-sound idea. Nothing outside the list was built.
-
-### Look at these first
-
-1. **`/boring-day/` was renamed and reframed.** It could not honestly be called "the most boring day in
-   history" — it measures how much Wikipedia's editors wrote about a date, not how much happened on it. It
-   is now **The Quietest Day**, and the note under the grid says so in as many words, using 1 January (the
-   darkest square of the year) as evidence of the encyclopedia's own bias. It also took three attempts to
-   build: Wikimedia rate-limits at roughly 25 requests in a short window, then returns 429 with
-   `retry-after: 7`, so any live scan broke a third of the way through. The counts for all 366 days are now
-   snapshotted (paced against the limiter over about an hour) and stored as a 4 kB file beside the page; only
-   the date you click goes to the network. **The snapshot date is stated on the page** — it will want
-   refreshing eventually, and re-running is just a matter of re-pacing the same script.
-
-2. **`/doppelganger/` deliberately does not recognise faces.** A real doppelganger finder needs a model this
-   project cannot add, and would mean sending someone's photograph somewhere. So it matches on *light* — a
-   4×4 brightness grid plus tone, contrast and warmth — against 220 public-domain paintings, and it says
-   that plainly under the result rather than implying it saw your face. The photo genuinely never leaves the
-   tab. If you would rather it did real face matching, that is a different toy and needs a dependency
-   decision from you.
-
-3. **Three routes were added to `server.js`.** `/api/onthisday` (one date, reduced and cached a day, with a
-   backoff retry on 429), `/api/art` (the Art Institute's IIIF server sends
-   `cross-origin-resource-policy: same-origin`, so their images **cannot** be displayed from another origin
-   at all without a relay — it accepts only their host, only a UUID of the shape they issue, and only the
-   three widths they keep derivatives for), and `/api/cables` from earlier in the run. All three follow the
-   existing fixed-allowlist pattern; none takes a URL from the query string.
-
-4. **I retagged 11 cards.** Everything built tonight had gone in as `toy`, which made the filter useless —
-   a third of the cabinet under one chip. They are now spread across the existing taxonomy (`real data` 15,
-   `generator` 25, `game` 10, `scroll story` 3, `reference` 5, `reflection` 3, `toy` 2). Filtering was
-   re-checked with all 63 cards: every chip's count matches the cards it shows, and the ghost drawer still
-   hides when a filter is on. If you disagree with any individual tag, it is one word per card.
-
-5. **Three facts in `/ocean-depths/` were wrong on the first pass and were corrected against sources.** The
-   Challenger Deep depth is now attributed to the 2021 survey (10,935 ± 6 m) with the disagreeing surveys
-   listed rather than one figure asserted as *the* answer; "more people have walked on the Moon" was cut
-   because it stopped being true in 2019, replaced with the real counts; and Ahmed Gabr's ascent is "close
-   to fourteen hours", not fifteen. The pressure gauge is labelled as calculated from depth rather than
-   measured, and the temperature line as a typical profile rather than a reading.
-
-6. **`/static-channel/` streams other people's video.** Films come straight from archive.org's Prelinger
-   collection — nothing is re-hosted here — and every channel links back to its item page. Worth knowing:
-   these are historical documents and some carry the attitudes of the year they were made, which the page
-   says outright.
-
-### Data files added to the repo
-
-| file | size | what it is |
-|---|---|---|
-| `public/boring-day/counts.json` | 4 kB | events per date, snapshotted from Wikimedia on 9 Sep 2026 |
-| `public/doppelganger/portraits.json` | 73 kB | 220 public-domain paintings, measured here, with AIC ids |
-| `public/constellation/stars.json` | 146 kB | 1,637 stars to mag 5 from the HYG database |
-
-No npm dependencies were added. The only CDN scripts remain Three.js (ISS) and Matter.js (the jar), both
-already approved. No API keys were needed by anything built tonight.
-
-### Standing note
-
-Deploys still need the Railway source reconnected by hand — the GitHub App has no access to this repo, so
-pushes to `main` do not trigger anything. That is unchanged from before tonight and needs your click in
-GitHub → Settings → Applications → Railway → Repository access.
-
----
-
-## Log
-
-### /exoplanet-postcard/ — Postcard from an Exoplanet
+#### /exoplanet-postcard/ — Postcard from an Exoplanet
 
 **Built.** Postcard that flips. Front is a generated illustrated scene (same layered sky/ridge technique as the almanac rework — light at the horizon, bands darkening forward); back is a message, correspondent and weather report. Eight world types (ocean, desert, ice, greenhouse, volcanic, ringed, storm, tidally locked).
 
@@ -988,7 +60,7 @@ GitHub → Settings → Applications → Railway → Repository access.
 
 **Verified:** 60 runs, 57 distinct names, 23 distinct greetings, 0 defects; scene renders 3+ land bands every time; flip works both ways.
 
-### /morse/ — Morse Key
+#### /morse/ — Morse Key
 
 **Built.** Text in, Morse out: a live code strip, a blinking lamp, and a Web Audio tone. Speed slider is 5-30 wpm.
 
@@ -996,7 +68,7 @@ GitHub → Settings → Applications → Railway → Repository access.
 
 **Verified:** SOS = `... --- ...`, HELLO WORLD correct letter for letter, unknown char flagged, lamp lights during send, playback stops cleanly and on tab-hide.
 
-### /emoji-mistranslate/ — The Literalist
+#### /emoji-mistranslate/ — The Literalist
 
 **Built.** Sentence in, deliberately over-literal emoji out, plus a read-back in plain English and a `where it went wrong` list.
 
@@ -1006,7 +78,7 @@ GitHub → Settings → Applications → Railway → Repository access.
 
 **Verified:** idiom, homophone, no-match and empty-input paths all correct; fixed a bug where the notes list kept the previous sentence's entries.
 
-### /fortune-cookie/ — The Fortune Cookie
+#### /fortune-cookie/ — The Fortune Cookie
 
 **Built.** A drawn cookie that splits into two halves with scattering crumbs, revealing a paper slip: one fortune, six lucky numbers, one thing to learn. 52 fortunes.
 
@@ -1014,7 +86,7 @@ GitHub → Settings → Applications → Railway → Repository access.
 
 **Verified:** cracks on click and on the button, 10 crumbs animate, 29 distinct fortunes in 40 pulls, numbers unique/in-range/sorted. Fixed: the halves originally slid only 58px and ended up hidden behind the slip — they now fan clear of it on both sides.
 
-### /excuses/ — The Escalating Excuse
+#### /excuses/ — The Escalating Excuse
 
 **Built.** Pick a situation (late, code not done, dishes, never replied, cancelled, skipped the gym), then press *Make it worse* to climb six tiers. A believability gauge falls 84% → 0% and an *if pressed* line tells you how to hold the lie. Everything you already claimed stacks up in a list underneath, which is where it gets funny.
 
@@ -1022,7 +94,7 @@ GitHub → Settings → Applications → Railway → Repository access.
 
 **Verified:** all 6 situations × 6 tiers render, level counter and gauge track, *worse* disables at the top, history reaches 5 entries, reset clears cleanly.
 
-### /conspiracy/ — The Corkboard
+#### /conspiracy/ — The Corkboard
 
 **Built.** Object in, corkboard case file out: opener, three pieces of "evidence", a leap, a credentials line, a *how far gone* meter, and — always — a closing paragraph giving the actual dull explanation.
 
@@ -1032,7 +104,7 @@ Every card also *ends* on the mundane truth ("a British Standard from the 1970s 
 
 **Verified:** 12 off-limits inputs (vaccines, the government, 5g towers, Bill Gates, jewish bankers, the 2020 election, covid, chemtrails, moon landing, a named politician, muslims, deep state) all refused; 8 ordinary objects all pass and all produce a debunk.
 
-### /sequel/ — The Uninvited Sequel
+#### /sequel/ — The Uninvited Sequel
 
 **Built.** One-sheet layout — title treatment with the subtitle in gold, tagline, logline, a beat sheet, a production grid (returning cast / director / budget / projection) and a studio note.
 
@@ -1040,7 +112,7 @@ Every card also *ends* on the mundane truth ("a British Standard from the 1970s 
 
 **Verified:** 60 runs over 4 concepts, 59 distinct titles, 0 defects; every card renders 4-5 beats and all four grid fields.
 
-### /honest-cover-letter/ — Cover Letter, But Honest
+#### /honest-cover-letter/ — Cover Letter, But Honest
 
 **Built.** Role + company + how-you-feel-about-it, out comes a five-paragraph letter on a sheet, signed and stamped *do not send*, with a P.S. Copy button lifts the whole thing as plain text.
 
@@ -1048,7 +120,7 @@ Every card also *ends* on the mundane truth ("a British Standard from the 1970s 
 
 **Verified:** all 5 tones × 12 drafts, exactly 5 paragraphs every time, 15 distinct openers, role and company substitute correctly into the body, stamp always present.
 
-### /bad-ideas/ — Seed Round
+#### /bad-ideas/ — Seed Round
 
 **Built.** One slide: generated company name and logo mark, the "X, but for Y" line, two stacked pitch paragraphs, a metrics strip (huge market / almost no users / almost no revenue / real burn), a why-now/model/team/ask table, and a closing note from the associate who actually read it.
 
@@ -1058,7 +130,7 @@ The metrics are deliberately absurd and the footer says so — no figure here is
 
 **Verified:** 80 pitches, 73 distinct names, 75 distinct taglines, 0 structural defects.
 
-### /cryptid-log/ — The Sighting Log
+#### /cryptid-log/ — The Sighting Log
 
 **Built.** An ambient feed — four entries seeded, then a new one every 6-13 seconds. Each has a reference number and timestamp, a classification (single witness / withdrawn, then unwithdrawn), a witness account, a pull quote, a follow-up detail and an official comment. Pause/resume, and it does not file while the tab is hidden.
 
@@ -1068,7 +140,7 @@ The metrics are deliberately absurd and the footer says so — no figure here is
 
 **Verified:** 60 clicks gave 60 distinct headlines, feed caps at 24 entries, pause genuinely stops the timer, every entry has all five parts.
 
-### /bureaucracy/ — Form 12-B
+#### /bureaucracy/ — Form 12-B
 
 **Built.** Starts at three fields. Every submission adds 1-3 more, each with a hint that is a small procedural trap ("Previous reference number — issued on completion of this form. Enter it now."). 28 requirements in a shuffled pool.
 
@@ -1076,7 +148,7 @@ The metrics are deliberately absurd and the footer says so — no figure here is
 
 **Verified:** 8 rounds of fill-everything-and-submit — the form grew every time (3 → 22 fields), the percentage fell after every growth, restart clears fully.
 
-### /impossible-vending/ — Machine 7
+#### /impossible-vending/ — Machine 7
 
 **Built.** Insert coin → vend. Each item drops into the window with a drawn sigil, a rarity band, a description and — always — a catch. Weighted rarity (common 46 / unusual 28 / irregular 16 / restricted 8 / sealed 2) and a collection tray holding the last 14.
 
@@ -1084,7 +156,7 @@ The metrics are deliberately absurd and the footer says so — no figure here is
 
 **Verified:** vend is disabled without credit, 300 pulls surfaced all 26 items, rarity distribution came out close to the declared weights (124/79/57/35/5 against 46/28/16/8/2), tray caps at 14, credit arithmetic is correct.
 
-### /espionage/ — Briefing Room
+#### /espionage/ — Briefing Room
 
 **Built.** Typewritten document on a desk: classification banner, operation codename, redacted officer fields, and five sections. Objectives, assets, complications, extraction and registry notes all draw on the word you typed.
 
@@ -1094,7 +166,7 @@ The metrics are deliberately absurd and the footer says so — no figure here is
 
 **Verified:** 80 briefings over 4 words, 75 distinct codenames, 0 defects, the typed word appears in every document.
 
-### /operator-gen/ — Operator File
+#### /operator-gen/ — Operator File
 
 **Built.** Roster card — badge panel with a generated sigil, callsign, real name, unit, speed/armour tags, gadget block, stat pips, background rows and a comms line.
 
@@ -1102,7 +174,7 @@ The metrics are deliberately absurd and the footer says so — no figure here is
 
 **Verified:** 100 generations, 28 callsigns and all 14 gadgets seen, the speed/armour trade-off held 100/100, 0 structural defects.
 
-### /case-opener/ — The Case
+#### /case-opener/ — The Case
 
 **Built.** A 60-slot reel that spins for 5.4s on an ease-out curve and lands the winning item under the needle, then a result panel with a wear meter, and an inventory.
 
@@ -1114,7 +186,7 @@ Everything is invented — item classes, finishes, flavour text. No real game's 
 
 **Verified:** button disables during the spin and re-enables after; the slot sitting under the needle is the same item shown in the result panel (the detail that makes it feel real rather than faked).
 
-### /wanted-poster/ — Wanted
+#### /wanted-poster/ — Wanted
 
 **Built.** Canvas poster at 760×1060: aged paper drawn procedurally (fibre grain, blotches, edge darkening, torn top and bottom, two pin holes), the photo sepia-toned by pixel manipulation, then the headline, name, crime, reward and territorial-office footer. Downloads as PNG.
 
@@ -1126,7 +198,7 @@ Everything is invented — item classes, finishes, flavour text. No real game's 
 
 **Bug found and fixed:** the WANTED headline's cap height exceeded its baseline, so the tops of the letters were being cut off by the canvas edge. Baseline lowered and the layout below it shifted to match — now 0 dark pixels in the top 12px.
 
-### /time-capsule/ — Time Capsule
+#### /time-capsule/ — Time Capsule
 
 **Built.** Write, choose a date (or *seal for a year*), label it, seal it. The drawer lists capsules by date with a countdown; sealed ones show only length and dates, and the text appears once the date passes.
 
@@ -1138,7 +210,7 @@ Everything is invented — item classes, finishes, flavour text. No real game's 
 
 **Verified:** future text hidden while sealed, countdown shown, past-dated capsules open and are marked, today's date refused, and the capsule survives in localStorage.
 
-### /gratitude-jar/ — The Jar
+#### /gratitude-jar/ — The Jar
 
 **Built with Matter.js** (the approved CDN exception). Each note is a real rigid body — they drop through the neck, funnel down the sloped shoulders, collide, stack and come to rest. Matter runs the simulation; the drawing is ours, so each slip is a folded paper rectangle with a fold line and a shadow rather than a debug rectangle.
 
@@ -1150,7 +222,7 @@ Everything is invented — item classes, finishes, flavour text. No real game's 
 
 **Verified:** 12 slips added and settled (total drift 3.2px over 700ms, so they genuinely come to rest rather than jittering), all bodies inside the jar bounds, a drag displaced them by 1,529px combined, take-one-out returns a stored note with its date.
 
-### /boss-battle/ — Today, But It Is A Boss
+#### /boss-battle/ — Today, But It Is A Boss
 
 **Built.** Add tasks, they become the boss's HP. Ticking one deals damage with a hit-shake, a trailing white bar catches up a beat later the way fighting games do, and the boss loses phases as it drops. A drawn sprite shifts colour red → orange → gold as its health falls. Persists in localStorage.
 
@@ -1160,7 +232,7 @@ Unticking restores the health and the boss comments on it, because that is funni
 
 **Verified:** 4 tasks → 400 HP, ticking gave exactly 300 / 200 / 100 / 0 with phases two, three and four firing at the right thresholds, victory panel on completion, untick restored 100 HP and removed the victory, list survives in localStorage.
 
-### /speedrun-anything/ — Any% Daily Life
+#### /speedrun-anything/ — Any% Daily Life
 
 **Built.** Category input with suggestions, a centisecond clock on requestAnimationFrame, space bar to start/stop, a live delta against your personal best while the run is going, a records panel and a run table with the best per category starred.
 
@@ -1171,21 +243,21 @@ Unticking restores the health and the boss comments on it, because that is funni
 
 **Verified:** a 0.89s run recorded as first PB; a slower 1.48s run correctly *not* a PB and reported 0.59s behind; a 0.40s run took the record with the delta stated exactly (0.49s off the previous best); best row starred; sub-300ms run rejected without polluting the table.
 
-### /interview-beyond/ — The Interview Room
+#### /interview-beyond/ — The Interview Room
 
 **Built.** Four hand-authored branching conversations — 31 nodes, 76 question links, no model in the loop. Each answer has an optional stage direction, and a transcript builds underneath as you go.
 
-**The judgment call worth reviewing.** The brief said "a historical or invented figure". I went entirely invented-people-in-real-roles rather than named historical figures, because a scripted interview with a real person means writing quotations they never said — and the project rule about real people is about not putting words in their mouths. So: Verecunda the water overseer, Master Aldous, Ellen Marrow, Dorothy Sanne. Nobody real is ventriloquised, and the footer says the working details are accurate but the people are not.
+**The judgment call worth reviewing.** The plan said "a historical or invented figure". I went entirely invented-people-in-real-roles rather than named historical figures, because a scripted interview with a real person means writing quotations they never said — and the project rule about real people is about not putting words in their mouths. So: Verecunda the water overseer, Master Aldous, Ellen Marrow, Dorothy Sanne. Nobody real is ventriloquised, and the footer says the working details are accurate but the people are not.
 
 The *jobs* are researched and the details are the real ones: the chorobates and the few-feet-per-mile gradient; miasma theory and why sealing windows was exactly wrong; winding the clockwork every two hours and the log being evidence rather than a diary; hand-verifying flight code and a sign error nobody recorded.
 
 **Verified:** every option points at a node that exists, every node is reachable from its start, no dead ends, no answer under 40 characters, and an eight-question walk-through builds a correct transcript.
 
-### /undersea-cables/ — The Cables
+#### /undersea-cables/ — The Cables
 
 **Built.** World map with all 728 cables from TeleGeography's public submarine cable map, drawn from the real MultiLineString geometry, plus 1,925 named landing points. Hover highlights, click selects, search by name.
 
-**The verification the brief asked for, and what it changed.** I checked the sources before building:
+**The verification the plan asked for, and what it changed.** I checked the sources before building:
 - The GitHub repo the data is usually taken from (`telegeography/www.submarinecablemap.com`) **no longer exists** — every path 404s, and search turns up only third-party forks of unknown vintage. I did not use those; stale cable data presented as current is exactly the failure mode to avoid.
 - The live `submarinecablemap.com` API is up but sends no CORS headers, so a browser cannot read it.
 - So I added `/api/cables` to `server.js`, following the existing RSS/ISS relay pattern: a **fixed allowlist of three dataset names**, never an arbitrary `?url=`, cached 6 hours. Verified `?set=../etc` is rejected with the allowed list.
@@ -1194,7 +266,7 @@ The *jobs* are researched and the details are the real ones: the chorobates and 
 
 **Verified:** 728 cables and 1,925 points load, 0 malformed, search finds real cables (SAIL, AC-1, FA-1, MAC, SACS), selection reports real coordinates and real nearby landing points.
 
-### /orbital-junk/ — What Is Up There
+#### /orbital-junk/ — What Is Up There
 
 **Built.** Reads CelesTrak's public general-perturbations catalogue live (keyless, sends CORS). Real counts per group, a log-scale altitude-vs-inclination plot of ~940 objects, and a table of everything catalogued in the last thirty days.
 
@@ -1206,19 +278,19 @@ The 2009 collision note uses the *current* tracked counts (585 + 111 = 696 fragm
 
 **Verified:** 246 recent objects, 21 station objects, 942 plotted, 25 table rows, geostationary and low-orbit sanity checks both pass.
 
-### /liminal-swipe/ — Would You Sleep Here
+#### /liminal-swipe/ — Would You Sleep Here
 
 Eight room types (drained pool, hotel corridor, open-plan office, car park level P3, waiting area, soft play, lower concourse, service stairwell), each drawn as a one-point perspective canvas scene from a seeded RNG, with six lighting moods and per-scene props. Twelve cards a run, drag or buttons or arrow keys, and a final tally split into always / never / depended-on-the-lighting.
 
-Judgment calls: the brief said not to scrape Reddit or anyone's photographs, so there are no images on the page at all — every room is drawn by code, and the footer says so. First pass put the caption over the picture as a gradient overlay, which hid the floor, where nearly all the detail of a liminal room lives; the caption moved below the art instead. The pool basin, the play tube, the mall shutters and the office glazing all needed a second pass — the first versions read as a flat floor, a banana, blank walls and a wireframe respectively.
+Judgment calls: the plan said not to scrape Reddit or anyone's photographs, so there are no images on the page at all — every room is drawn by code, and the footer says so. First pass put the caption over the picture as a gradient overlay, which hid the floor, where nearly all the detail of a liminal room lives; the caption moved below the art instead. The pool basin, the play tube, the mall shutters and the office glazing all needed a second pass — the first versions read as a flat floor, a banana, blank walls and a wireframe respectively.
 
-### /static-channel/ — The Static Channel
+#### /static-channel/ — The Static Channel
 
 A CRT set that tunes into random public-domain ephemeral film streamed straight from the Internet Archive's Prelinger collection. Canvas static plus a WebAudio hiss between channels, an on-screen channel number, a caption with title, year and a link back to the item page, and a log of what you have tuned through. Every film is seeked to a random point between 10 and 75 percent, so no channel ever starts at the beginning.
 
-Judgment calls: the brief said Prelinger specifically, not a general Internet Archive search, so the query is pinned to collection:"prelinger" AND mediatype:"movies" — 10,461 items. Nothing is downloaded or re-hosted: the video element points at archive.org and every card links back. The player prefers the 512Kb derivative (about 40 MB) over the masters (up to 500 MB) so a channel starts quickly. Roughly a third of the collection is unlabelled scanned reels with numeric identifiers; those stay in, since an unmarked reel is very much the point, but titled films are drawn first and unlabelled ones are captioned 'Unlabelled reel — Prelinger no. NNNN' rather than showing a bare number. The footnote says plainly that these are historical documents carrying the assumptions of their year.
+Judgment calls: the plan said Prelinger specifically, not a general Internet Archive search, so the query is pinned to collection:"prelinger" AND mediatype:"movies" — 10,461 items. Nothing is downloaded or re-hosted: the video element points at archive.org and every card links back. The player prefers the 512Kb derivative (about 40 MB) over the masters (up to 500 MB) so a channel starts quickly. Roughly a third of the collection is unlabelled scanned reels with numeric identifiers; those stay in, since an unmarked reel is very much the point, but titled films are drawn first and unlabelled ones are captioned 'Unlabelled reel — Prelinger no. NNNN' rather than showing a bare number. The footnote says plainly that these are historical documents carrying the assumptions of their year.
 
-### /eternal-groupchat/ — The Group Chat
+#### /eternal-groupchat/ — The Group Chat
 
 A group chat that is always mid-argument. Seven roles (the one who makes plans, the one who is never serious, the lurker, the one who checks in on people, the one who posts at 4am, the one who answers the literal question, and the one who is six hours behind) get shuffled onto twelve possible names, so the same personalities appear under different names each visit. Ten topics, every one of them written to end without resolving. Typing indicators, drifting timestamps with day dividers, emoji reactions that land a few seconds late, and quoted replies to messages from much earlier.
 
@@ -1226,7 +298,7 @@ You can type. Forty-five percent of the time somebody answers within a few secon
 
 Judgment calls: no model generates any of this — it is a beat queue over hand-written topics, which is stated on the page so nobody assumes there is an LLM behind it. All names are invented and no real person or real group is depicted.
 
-### /ocean-depths/ — The Descent
+#### /ocean-depths/ — The Descent
 
 A scroll-driven descent to 10,935 m with a live instrument panel (depth, calculated pressure, a typical temperature profile, a daylight curve, and the pelagic zone), water colour interpolated through eight stops, marine snow on canvas that drifts with your scroll speed, and bioluminescent flashes below 900 m. A 'descend' button does the whole thing hands-free in about 35 seconds, and the bottom compares that to Trieste's 4 h 47 min.
 
@@ -1234,13 +306,13 @@ Facts and fiction are kept visibly apart: blue cards are real and name their sou
 
 Judgment calls: no creature, name or piece of lore from any game is used — the unease is in the invented sonar logs, which are entirely original. Cards for stops only a few metres apart (200 and 214 m, 3,688 and 3,800 m) collide on this scale, so a layout pass pushes each one clear of the last and the printed depth carries the exact position.
 
-### /retro-os/ — Five Operating Systems
+#### /retro-os/ — Five Operating Systems
 
 A desktop with draggable windows, a file listing, a text editor, a doodle canvas and a start menu, restyled through five invented operating systems: MONO 1.0 (1984, one bit, dithered desktop, striped title bars), TILE 3.1 (1991, beige and bevelled, menu bar on top), PLATE 95 (1995, the bar moves to the bottom), GLASS 5 (2001, rounded and gradient) and FLAT (2013, every bevel deleted). The windows survive the switch — it is the same machine, redecorated — and the About box restates itself in the new system's terms.
 
 Judgment calls: names, logos, wallpapers and icons are all invented, and the icons are inline SVG drawn for this page rather than traced from anything. What is borrowed is the era's conventions — which direction a bevel catches the light, where the bar lives, what colour a desktop was — which is the part worth evoking. The machine specifications in the About box are clearly fictional and the window says so, so no invented number is presented as a real one. Closing an edited file offers to save it and then admits there is nowhere to save it to.
 
-### /boring-day/ — The Quietest Day
+#### /boring-day/ — The Quietest Day
 
 A calendar heat map of all 366 dates, shaded by how many events Wikipedia's on-this-day feed carries for each. It opens on the quietest day of the year — 6 March, tied with 6 November at 24 entries each, against a year average of 54 and a maximum of 121 on 1 January — and clicking any square pulls that date's actual entries live.
 
@@ -1250,25 +322,25 @@ The honesty problem is the interesting one: this cannot measure how boring a day
 
 server.js gained /api/onthisday for the live half: one date at a time, reduced to year and text, cached 24 h, with a backoff retry on 429.
 
-### /tv-voice/ — The TV Voice
+#### /tv-voice/ — The TV Voice
 
 Six archetypes — the detective, the medical examiner, the captain, the profiler, the defence, the true-crime narrator — each with its own grammar, cadence and set of parentheticals. Output is set as a script page (scene slug, character cue, parenthetical, stage directions, cut to titles), and you can name what was found to seed it. 'Read it aloud' uses the browser's own speech synthesis at a rate and pitch set per archetype, highlights the line being spoken, and skips the stage directions.
 
 Judgment calls: nothing is quoted from or written to resemble a line from any real programme — what is borrowed is the genre's structure (the cold open, the small detail that bothers them, the turn, the sting), filled with material written for this page, and the footnote says so. No LLM: it is a slot grammar over hand-written pools. One stage direction said 'He waits', which assumed a gender the detective does not have; it is now 'Nobody moves.'
 
-### /escape-room/ — Five Small Rooms
+#### /escape-room/ — Five Small Rooms
 
 Five one-screen escape rooms, each with its own kind of puzzle: arithmetic from a ticket and a queue display, spotting which two floor numbers a lift panel refuses to have, a shelf-book-line lookup in a bookcase of twenty openable books, an elimination puzzle among four labelled plants, and reading an eight-lamp rack as binary. Click anything in the scene to examine it; anything that carries a clue writes itself into the notebook. One hint per room, counted.
 
 Judgment calls: every room is solvable from what is inside it — no outside knowledge, no pixel-hunting, and the hint explains the method rather than giving the answer. All five re-roll their numbers on load (the queue numbers, the scratched pot number, the eight lamps, which plant is self-seeded, which shelf and book and line, and the word itself), so nothing can be memorised or looked up; the lift's missing floors are the one fixed answer, because 4 and 13 are the joke. Scenes are flat SVG drawn for the page.
 
-### /universes-colliding/ — Universes Colliding
+#### /universes-colliding/ — Universes Colliding
 
 Eight genre archetypes — the rain-coat detective, the sergeant, the debutante, the antiquarian, the nature narrator, the innkeeper, the friendly puppet, the netrunner — each written with its own voice for the same seven beats (arrive, open, fail to understand the other, offer something from their own world, agree to something neither has understood). Pick two, or press surprise me, and the page stages the crossover: a title card, a location made from both their settings, eight turns of dialogue, and a stinger. Fifty-six pairings, no line repeated inside a scene.
 
 Judgment calls: nobody here is from anything. These are the shapes genres reuse, not characters from any work — no named property, character, place or catchphrase appears anywhere on the page, nothing is quoted or written to echo a real line, and the footnote says so plainly. The comedy comes from the collision of registers, which needs no borrowed material at all.
 
-### /doppelganger/ — Your Painted Double
+#### /doppelganger/ — Your Painted Double
 
 Drop or paste a photograph and the page finds its closest match among 220 public-domain paintings from the Art Institute of Chicago, then explains the match in terms you can check: which side the light comes from, whether the picture is brighter at the top, how dark it is overall, how hard the modelling is, and whether it leans warm. Four runners-up underneath, each linking to the artwork page.
 
@@ -1276,7 +348,7 @@ Judgment calls, and the honesty one matters most. A face-recognition doppelgange
 
 The corpus was built by querying the Art Institute's public API for public-domain paintings, keeping 220 with usable images and measuring each one here rather than in the browser. Their IIIF server sits behind Cloudflare and sends cross-origin-resource-policy: same-origin, so the images cannot be displayed from another origin at all — server.js gained /api/art, which fetches them with the user-agent header their API asks for and hands them to the browser with a day of cache. It accepts only their IIIF host, only a UUID of the shape they issue, and only the three widths they keep derivatives for (an unusual width makes the server render one on the spot, which was timing out).
 
-### /constellation/ — Name a Constellation
+#### /constellation/ — Name a Constellation
 
 A gnomonic projection of a real patch of sky, centred on a random bright star, drawn from 1,637 catalogued stars down to magnitude 5. Click stars to join them, break for a separate stroke, undo, clear. Naming it writes an invented origin story around the brightest star you used and enters it in a register kept in localStorage; you can reopen any of them, and save the chart as a PNG.
 
@@ -1284,13 +356,13 @@ The facts panel is the point: it names the brightest star you joined, its magnit
 
 Judgment calls: star positions, magnitudes, proper names, Bayer designations, spectral colours and distances all come from the HYG database (Hipparcos, Yale, Gliese), and every number shown is from that catalogue rather than invented; the page credits it and says which half is real. Distances are only shown where the catalogue has a parallax good enough to give one. The story is generated and carries an INVENTED tag, and the note says outright that the IAU will not be recognising your constellation.
 
-### /what-beats-this/ — What Beats This
+#### /what-beats-this/ — What Beats This
 
 First of the two new toys on the Groq endpoint. Two free-text inputs, a winner, a confidence bar, three factors and the circumstance under which the other one wins. This is the case that genuinely needs a model rather than a dataset: the matchups are unbounded, so no fixed table could cover them.
 
 Judgment call: when the model answers but not in the JSON shape asked for, the page shows the prose it did send rather than an error — a verdict is a verdict. Only a real failure (no key, rate limit, outage) shows a state.
 
-### /character-match/ — Which One Are You
+#### /character-match/ — Which One Are You
 
 Second of the two new toys. Six questions about behaviour rather than preference — where you are at eleven o'clock at a party you did not want to attend, what you do when you know more than the person talking — each answerable by picking one of four or typing your own. The model reads all six and names a character, says what gave you away, and names a runner-up it rejected.
 
@@ -1298,12 +370,12 @@ Judgment calls: the questions ask what someone did, not what they like, because 
 
 ---
 
-## Groq integration pass
+### Groq integration pass
 
 Seven toys now share one language-model endpoint. Two are new, four were static generators that got
 their source swapped, one was a scripted tree that got redesigned.
 
-### Live in production
+#### Live in production
 
 `GROQ_API_KEY` is set on the Railway service and all seven toys are answering on the live site.
 Setting the variable triggered a redeploy, which shipped `83624a1` — so the Windows 98 hub mode and
@@ -1324,7 +396,7 @@ variables are never overridden by a stray file and a missing `.env` is the norma
 busy" and worked on retry. That is Groq's 8,000 tokens/minute ceiling, not a bug — see the latency
 section. It is the one thing likely to be noticed by a real visitor.
 
-### The shared backend
+#### The shared backend
 
 One route, `POST /api/generate`, taking `{toy, input}` and returning `{text, model, ms, remaining}`.
 A prompt table holds one entry per toy; adding a toy is one entry and nothing else. All seven prompts
@@ -1349,7 +421,7 @@ Rate limit: 20 requests per IP per hour, in memory, resetting on redeploy as agr
 knowing: it reads the first `x-forwarded-for` value, which a determined person can spoof. That is the
 right trade at this scale — it is a speed bump, not a wall.
 
-### What was wired
+#### What was wired
 
 | toy | what changed |
 |---|---|
@@ -1361,7 +433,7 @@ right trade at this scale — it is a speed bump, not a wall.
 | `/interview-beyond/` | **redesigned.** The scripted branching tree is gone; it is now open-ended chat with free-text questions, recent turns passed back for continuity, and per-figure persona notes anchoring the character. |
 | `/explain-to-an-era/` | **left static, deliberately** — see below. It is registered in the prompt table, so wiring it later is a frontend-only change. |
 
-### What the real key changed
+#### What the real key changed
 
 Four things only a live call could have found, all of which would have shipped broken:
 
@@ -1393,14 +465,14 @@ the butler in that novel is Stevens. A hallucinated name pinned to a real work i
 invented claim that reads as fact, so the prompt now tells it to prefer characters it is certain of,
 and the page says plainly that it sometimes misremembers which book someone is from.
 
-### Judgment calls
+#### Judgment calls
 
 **The static generators were kept as fallbacks rather than deleted.** For espionage, universes and
 bureaucracy, an outage or an unreadable answer falls back to the original template bank and shows a
 short banner saying which happened. The toy never becomes a dead page. The no-key case still shows a
 plain "needs a key" state, as asked — it is the banner text that changes.
 
-**`explain-to-an-era` was left alone.** The brief made it conditional on it still feeling generic. It
+**`explain-to-an-era` was left alone.** The plan made it conditional on it still feeling generic. It
 does not: the era voices are hand-tuned and specific ("Show me where a smartphone grows. If it does
 not grow, somebody made it, and I want to know from what"), they are never anachronistic, and they
 are instant. Routing it through a model would trade a reliable, fast, period-accurate answer for a
@@ -1418,7 +490,7 @@ figures remain *invented* people doing real jobs, the system prompt tells the mo
 a persona and has no access to what anyone really said, and the footer now leads with "None of this
 is a historical record" and calls it a conversation with a costume.
 
-### Latency — measured, live
+#### Latency — measured, live
 
 Per toy, real requests through the real endpoint:
 
@@ -1471,7 +543,7 @@ across all visitors at once**. Fine for one person browsing; a room full of peop
 generator is busy". Groq's own 429 points at their Dev Tier if that ever matters. This hub's 20/IP
 per hour limit is a separate thing, for cost, and is nowhere near as tight.
 
-### What the real key changed
+#### What the real key changed
 
 Four things only a live call could have found, all of which would have shipped broken:
 
@@ -1503,14 +575,14 @@ the butler in that novel is Stevens. A hallucinated name pinned to a real work i
 invented claim that reads as fact, so the prompt now tells it to prefer characters it is certain of,
 and the page says plainly that it sometimes misremembers which book someone is from.
 
-### Judgment calls
+#### Judgment calls
 
 **The static generators were kept as fallbacks rather than deleted.** For espionage, universes and
 bureaucracy, an outage or an unreadable answer falls back to the original template bank and shows a
 short banner saying which happened. The toy never becomes a dead page. The no-key case still shows a
 plain "needs a key" state, as asked — it is the banner text that changes.
 
-**`explain-to-an-era` was left alone.** The brief made it conditional on it still feeling generic. It
+**`explain-to-an-era` was left alone.** The plan made it conditional on it still feeling generic. It
 does not: the era voices are hand-tuned and specific ("Show me where a smartphone grows. If it does
 not grow, somebody made it, and I want to know from what"), they are never anachronistic, and they
 are instant. Routing it through a model would trade a reliable, fast, period-accurate answer for a
@@ -1528,7 +600,7 @@ figures remain *invented* people doing real jobs, the system prompt tells the mo
 a persona and has no access to what anyone really said, and the footer now leads with "None of this
 is a historical record" and calls it a conversation with a costume.
 
-### Latency — measured, live
+#### Latency — measured, live
 
 Per toy, real requests through the real endpoint:
 
@@ -1554,7 +626,7 @@ server passes the 429 through and the toys say "the generator is busy, it has a 
 which is a different message from this hub's own 20/hour limit. Worth knowing before you show it to
 a room full of people at once.
 
-### What was verified
+#### What was verified
 
 Against a stub speaking Groq's format, with the real route, real client code and a real browser:
 
@@ -1593,7 +665,7 @@ And then, with the real key:
   her shift was, then whether anyone thanked her for it, the 1968 operator's second answer followed
   from her first and stayed in period. That continuity is the thing the scripted tree could not do.
 
-### Still worth watching
+#### Still worth watching
 
 Nothing is unverified any more, but two things are worth an eye over time:
 
@@ -1608,9 +680,9 @@ Nothing is unverified any more, but two things are worth an eye over time:
 
 ---
 
-# Batches 9, 10 and 11 — the sixteen toys
+### Sixteen more toys
 
-## 1. `/ant-farm/` — The Ant Farm
+### 1. `/ant-farm/` — The Ant Farm
 
 An emergent simulation with no input at all. Eighteen ants in a 240×150 grid of sand, with stones they
 cannot dig through. Each ant knows four things: how much it is carrying, which way it was heading, what
@@ -1645,7 +717,7 @@ should have happened three fixes earlier.
 **Checked.** Grain count, excavation count, per-ant mode histogram and depth sampled over five-minute
 runs; rendered at 90s, 180s and 300s and looked at.
 
-## 2. `/same-age-as-you/` — Exactly As Old As You
+### 2. `/same-age-as-you/` — Exactly As Old As You
 
 A birth year in, a register of what else started that year out. Seventy-six years, 1940 to 2015, three
 hundred and eighty entries.
@@ -1656,7 +728,7 @@ launched, aired or was published, and the date must not be in dispute. Anything 
 *after* the thing appeared — Angry Birds and Flappy Bird, both breakout-year rather than release-year —
 and were replaced rather than fudged. Out-of-range years get an honest refusal, not an empty page.
 
-## 3. `/do-nothing/` — The Do-Nothing Timer
+### 3. `/do-nothing/` — The Do-Nothing Timer
 
 A still pool at night. The clock runs only while you are motionless, and the water is the readout: the
 reflection of the moon and stars sharpens as you settle and breaks up the instant you move. There is
@@ -1664,7 +736,7 @@ one piece of state — how disturbed the water is — and the clock, the words a
 readings of it. Sub-pixel pointer drift does not count against you; a resting hand on a trackpad should
 not fail you. Leaving the tab counts, and says so.
 
-## 4. `/worry-stone/` — The Worry Stone
+### 4. `/worry-stone/` — The Worry Stone
 
 A stone with a thumb dent. Rubbing builds a sheen where your thumb has been, which fades on its own. A
 count that resets daily, and no other information at all.
@@ -1674,7 +746,7 @@ is shadowed on its upper-left wall and catches the light on its lower-right one 
 a bump — so the gradient had to run along the light rather than down the page. That, plus a blurred lip
 where the dent meets the face, is the whole difference between a dish and a dome.
 
-## 5. `/conduct/` — Conduct
+### 5. `/conduct/` — Conduct
 
 Six orchestral sections synthesised in Web Audio, mixed by how close the baton is to each. No samples:
 detuned oscillator stacks through lowpass filters for the sustained sections, filtered noise for the
@@ -1682,7 +754,7 @@ timpani, and a celeste that only strikes while its corner is being asked for. Th
 every eleven seconds so it never settles into a drone. Audio starts on a click, and there is a silence
 control.
 
-## 6. `/the-oracle/` — The Oracle
+### 6. `/the-oracle/` — The Oracle
 
 Answers every question with another question, rule-based, no model. Pronoun reflection lets it quote you
 back at yourself: "should I leave my wife" becomes "what would change if you leave your wife".
@@ -1692,7 +764,7 @@ leaves the fragment "the sky blue", and any template that quotes it produces non
 now skip the quoting templates entirely rather than emit something broken. Verified across a set of
 question shapes that every reply ends in a question mark and none contains a dangling fragment.
 
-## 7. `/slang-glossary/` — The Glossary
+### 7. `/slang-glossary/` — The Glossary
 
 Twenty current terms, real definitions, honest etymologies, each with its own illustrated scene built
 the same way the almanac's backdrops are: a graded sky, silhouette bands generated from a seeded
@@ -1702,7 +774,7 @@ pseudo-random walk, a drawn motif, grain over the top. Nothing photographic, not
 handle double quotes, so every entry's index was silently truncated at the first quotation mark in its
 example sentence. Filtering looked like it worked and was quietly missing half its matches.
 
-## 8. `/chladni/` — The Chladni Plate
+### 8. `/chladni/` — The Chladni Plate
 
 The real phenomenon. Fourteen thousand grains random-walking with a step size proportional to how hard
 the plate is moving under them, on the standard ideal-square-plate model. There is no attraction toward
@@ -1710,14 +782,14 @@ the nodal lines: grains simply stop being thrown about where there is no movemen
 mechanism. Mode numbers must differ — with `m === n` the expression is identically zero and there is no
 figure at all.
 
-## 9. `/theremin/` — The Theremin
+### 9. `/theremin/` — The Theremin
 
 Pitch on a log scale across the width, volume up the height, a live oscilloscope off an analyser node,
 and optional snap-to-scale. Two detuned oscillators with a vibrato LFO on the detune, through a lowpass
 that tracks the pitch. The note name is computed from the frequency, so snapping lands exactly on the
 semitone.
 
-## 10. `/rhythm-sequencer/` — The Bouncing Sequencer
+### 10. `/rhythm-sequencer/` — The Bouncing Sequencer
 
 Matter.js via the CDN, the standing exception. Pegs are tuned by height and all sit on one pentatonic
 scale, which is why a mess of pegs still sounds like something. Tapping an existing peg removes it.
@@ -1725,21 +797,21 @@ Physics runs in a fixed 300×400 space and is drawn scaled, so a peg lands in th
 window size. If the CDN does not answer, the page says so plainly and nothing else in the cabinet
 depends on it.
 
-## 11. `/color-organ/` — The Colour Organ
+### 11. `/color-organ/` — The Colour Organ
 
 Thirty keys across three rows, chromatic, and the colour comes from the pitch class — so the same note
 is the same colour in every octave, which is the whole conceit and goes back to Castel's ocular
 harpsichord in the 1730s. Auto-repeat is ignored so holding a key does not machine-gun. Playable on a
 touchscreen through an on-screen keyboard.
 
-## 12. `/media-visualizer/` — The Visualiser
+### 12. `/media-visualizer/` — The Visualiser
 
 An old player window with no audio in it at all. The letters of your text *are* the waveform: character
 codes become values, a playhead runs along them, and the bars, the scope and the ribbon are three ways
 of drawing the same numbers. Letters spread across the range while spaces and punctuation sit low, which
 is what gives the picture rhythm instead of mush.
 
-## 13. `/higher-or-lower/` — Higher or Lower
+### 13. `/higher-or-lower/` — Higher or Lower
 
 One toy, three categories, built so a fourth is a data addition and nothing else. Heights of mountains
 and buildings, top recorded animal speeds, surface gravity of planets and moons. Pairs closer than six
@@ -1747,7 +819,7 @@ per cent are never offered. Animals whose top speed is genuinely disputed — sa
 out rather than given a number, and the note says that is why. Verified over sixty consecutive correct
 answers that scoring never mis-fires and no pair falls under the threshold.
 
-## 14. `/reverse-turing/` — Which of Us Wrote It
+### 14. `/reverse-turing/` — Which of Us Wrote It
 
 Uses the Groq route. `server.js` gained a `reverse-turing` prompt. The human half is fourteen real
 sentences from books out of copyright, attributed on the reveal; two lines that were still in copyright
@@ -1755,14 +827,14 @@ are filtered out in code rather than quietly left in. The model is told to write
 never to reproduce a real sentence, and any line that comes back matching a human one anyway is dropped
 before it is shown. Tested against the live endpoint: the returned lines are usable period prose.
 
-## 15. `/typing-fortune/` — The Typing Fortune
+### 15. `/typing-fortune/` — The Typing Fortune
 
 Measures the gaps between your keystrokes and throws the words away. Six real figures — median interval,
 coefficient of variation, longest pause, correction rate, words a minute, gaps measured — and a reading
 that is explicitly a joke. Gaps over eight seconds are discarded as "walked away" rather than counted as
 rhythm.
 
-## 16. `/invisible-ink/` — Invisible Ink
+### 16. `/invisible-ink/` — Invisible Ink
 
 The message is covered by an opaque sheet of the same ruled paper and revealing cuts a soft hole in it,
 so the words are always really there and always really covered. Tilt is offered **only** on a device
@@ -1773,13 +845,13 @@ so nothing is stored anywhere and the link is the whole delivery mechanism.
 
 ---
 
-# Batch 8 — the ten toys
+### Ten more toys
 
-## 1. `/flag-guesser/` — The Flag Desk
+### 1. `/flag-guesser/` — The Flag Desk
 
 Flags, currencies and capitals for the 193 UN member states, in four modes.
 
-The brief said REST Countries was "free, keyless". It is not any more: v1–v4 are deprecated and v5
+The plan said REST Countries was "free, keyless". It is not any more: v1–v4 are deprecated and v5
 requires `Authorization: Bearer`. I took the data from mledoze/countries instead — the ODbL dataset
 REST Countries is built from — and baked the 193 UN members in as a 13 kB table, attributed on the
 page. The toy makes no network call for its data. Flags come from flagcdn.com, which is keyless and
@@ -1793,7 +865,7 @@ One bug worth recording: the first version marked answers by comparing each butt
 against the re-rendered label. The labels are HTML-escaped on the way in, so that comparison was one
 apostrophe away from silently marking a right answer wrong. It compares by value now.
 
-## 2. `/name-that-fallacy/` — Name That Fallacy
+### 2. `/name-that-fallacy/` — Name That Fallacy
 
 Twenty-four fallacies with their standard definitions, two worked examples each, and — the part that
 makes it more than trivia — what the argument would have to do instead. Quiz mode and a full
@@ -1807,7 +879,7 @@ conclusion unsupported rather than false.
 The appeal-to-authority entry says outright that citing a real expert in their own field is not the
 fallacy, because half the internet has that one backwards.
 
-## 3. `/dilemma/` — The Philosopher's Dilemma
+### 3. `/dilemma/` — The Philosopher's Dilemma
 
 Eighteen dilemmas, several of them the classical thought experiments in their standard form — the
 lever, the footbridge, the transplant, the pond, the experience machine, the veil.
@@ -1820,7 +892,7 @@ it. Local only, resets when you leave, no shared statistics — as specified.
 The lever and the footbridge sit next to each other on purpose, and the note under the second one
 points out that the arithmetic has not changed.
 
-## 4. `/cipher/` — Ondaric
+### 4. `/cipher/` — Ondaric
 
 The technical centrepiece. A constructed language with six reversible rules: the sentence runs
 backwards, every letter has one counterpart, articles bind in front with a turned comma,
@@ -1846,7 +918,7 @@ your sentence. The page calls it a party trick rather than cryptography and tell
 for anything that matters. Symbols with no particle — currency signs, brackets, the at-sign — are
 dropped, and the page says so rather than pretending.
 
-## 5. `/shanty-ifier/` — Five Ways To Say It
+### 5. `/shanty-ifier/` — Five Ways To Say It
 
 A sentence about your day, set to verse in five registers: sea shanty, pirate, ye-olde chronicle,
 Shakespearean, and noir.
@@ -1861,7 +933,7 @@ rhyming "smile" with "tall" — they are chosen as pairs now. And the keyword pi
 longest word, which meant "the arguing" instead of "the printer"; `-ing` and `-ed` words get
 passed over unless nothing else is left.
 
-## 6. `/dungeon-room/` — Dungeon Room of the Day
+### 6. `/dungeon-room/` — Dungeon Room of the Day
 
 One room, one occupant, one thing worth taking, with a drawn floor plan.
 
@@ -1873,7 +945,7 @@ not have. Placement and drawing now share one inside-the-floor test.
 The footer points at the loot terminal for anyone who wants the item appraised rather than
 described.
 
-## 7. `/design-a-country/` — Design Your Own Country
+### 7. `/design-a-country/` — Design Your Own Country
 
 Pick a flag; the country follows from it. This is the scoped version, as instructed — no globe.
 
@@ -1885,7 +957,7 @@ depending on what it lands on; the map is a generated coastline with rivers, hil
 Names are assembled from invented syllables and the footer says that a resemblance to a real place
 is the alphabet's fault.
 
-## 8. `/masterpiece-roulette/` — Masterpiece Roulette
+### 8. `/masterpiece-roulette/` — Masterpiece Roulette
 
 Real public-domain works from the Art Institute of Chicago, one at a time, through the existing
 `/api/art` image proxy.
@@ -1902,7 +974,7 @@ looking; it makes no claim about who made a thing, when, or why, because the mus
 is doing that on the plaque above. It is attributed to nobody, in the page's own words, because
 nobody said it. Seeded from the artwork id, so a piece keeps its paragraph.
 
-## 9. `/atmosphere/` — Atmosphere
+### 9. `/atmosphere/` — Atmosphere
 
 Two modes, Nostalgia and Liminal, with a swipe. **Built and wired, live API call unverified — there
 is no `PEXELS_API_KEY` on this machine.**
@@ -1927,7 +999,7 @@ allowed a second clause; Liminal is flat, present tense, monospaced on the page,
 at a time. Neither says anything about where the photograph was actually taken, because neither
 knows.
 
-## 10. `/the-zone-gallery/` — Zone Survey, Photographic Annexe
+### 10. `/the-zone-gallery/` — Zone Survey, Photographic Annexe
 
 The companion to the field PDA, in its palette and its voice — institutional, measured, reporting
 the impossible in the tone it would use for the weather.
@@ -1949,7 +1021,7 @@ which without shuffling meant four photographs of the same wall.
 
 ---
 
-# Windows 98 mode — Display Properties
+## Windows 98 mode — Display Properties
 
 Its own session, on top of the Windows 98 hub mode. Confirmed that mode existed and worked before
 starting: 97 icons, taskbar, Start menu, 98.css loading, toggle intact.
@@ -2003,7 +1075,7 @@ retro theming, which is still waiting on the Retro OS toy's per-platform themes.
 
 ---
 
-## No. 109 — Movie Night (`/movie-night/`)
+### No. 109 — Movie Night (`/movie-night/`)
 
 The one item that had been on the "still to build" line since before the key existed. The premise
 of the old note was wrong in a useful way: `TMDB_API_KEY` was wired through `/api/keys` and gated
@@ -2020,7 +1092,7 @@ start at 20:15, out at 22:04.
 "night" that rolls over at 4am rather than midnight. Someone starting a film at 1am is still having
 Tuesday's movie night and should not be handed a fresh set of vetoes for saying so.
 
-### `/api/movie` — one film, never a list
+#### `/api/movie` — one film, never a list
 
 Moods are a fixed allowlist on the server, the same shape as the RSS and photo relays: the browser
 picks a key, not a query, so this cannot be turned into a free TMDB proxy running on someone else's
@@ -2061,7 +1133,7 @@ than showing another country's answer.
 certified by TMDB" wording; watch-provider data is JustWatch's and is credited as such. No images
 are rehosted — posters are loaded from `image.tmdb.org` directly.
 
-### Verified
+#### Verified
 
 Real browser, isolated profile, against a local server on :3999.
 
@@ -2080,7 +1152,7 @@ Real browser, isolated profile, against a local server on :3999.
 
 ---
 
-# Phase 1 — the normal batch
+### Phase 1
 
 Seventeen new drawers (Nos. 133–149), an expanded snow globe, five hidden directional codes, and
 two toys that now have a language model behind them. The hub is at **149**.
@@ -2090,7 +1162,7 @@ work the first time, what was actually wrong is written down rather than smoothe
 these were only found by watching the thing misbehave, and the wrong first answer is usually the
 more useful note.
 
-## The fifteen toys
+### The fifteen toys
 
 **No. 133 — The Reaction Bench** (`/reaction-test/`). Drag-strip christmas tree, amber ladder at a
 deliberately irregular stagger so it cannot be anticipated, and a jumped-start state that is
@@ -2208,7 +1280,7 @@ and the hand is worked back along the ray; and eight hand-written bezier silhoue
 blobs with ears, so they are composed from ellipses and polygons with punched-out gaps for the eye
 and the open jaw instead.
 
-## No. 148 — The Room of Things That Are Not There (`/illusions/`)
+### No. 148 — The Room of Things That Are Not There (`/illusions/`)
 
 Ten documented effects, each drawn from its own rules and each with a control that turns the trick
 off: the café wall with an adjustable mortar, peripheral drift with the tone order reversible,
@@ -2230,7 +1302,7 @@ The three impossible figures took four attempts between them and are worth writi
 - **The fork** is the two-pronged U whose slot back wall is where the middle of three round prongs
   ends.
 
-## No. 149 — The Card for Today (`/recipe-of-the-day/`)
+### No. 149 — The Card for Today (`/recipe-of-the-day/`)
 
 LLM-backed through the shared Groq route, filtered by meal, diet, tradition and effort. The prompt
 carries a food-safety block that overrides style: poultry, pork, mince and eggs cooked through with
@@ -2240,7 +1312,7 @@ honey and fish sauce included. One card per day per set of choices, kept in the 
 dinner stays today's dinner. The page says the recipe did not exist before you asked and that nobody
 has eaten it.
 
-## The snow globe, expanded
+### The snow globe, expanded
 
 Five new dioramas — **a lighthouse in the weather** (rain), **a terrace in fog** (fog), **a country
 halt** (snow), **an orchard in blossom** (blossom) and **a hilltop observatory** (starfield) — taking
@@ -2251,7 +1323,7 @@ Jingle Bells, Silent Night, Deck the Halls, O Tannenbaum and Ode to Joy, all lon
 and arranged for oscillators. Nothing is sampled and there is still no audio file in this repo.
 *Found by testing:* `set()` did not update the plaque, so the brass plate named the previous globe.
 
-## Five directional codes (`/shared/lc-stratagems.js`)
+### Five directional codes (`/shared/lc-stratagems.js`)
 
 Arrow sequences in the front door, alongside the Konami code that was already there. A trail appears
 in the corner once you are two arrows in, so you can tell something is listening; a pause of over two
@@ -2271,7 +1343,7 @@ rectangle at a time in that file, every slogan is invented, and each panel carri
 Checked that none of the five is a consecutive run inside the Konami code, and that the Konami code
 still fires.
 
-## Two toys given a language model
+### Two toys given a language model
 
 Both keep their original generator as the fallback, and both always say which one answered.
 
@@ -2289,13 +1361,13 @@ mention their health or relationships. What it does instead is read the dream as
 night-time writing: what it is built out of, how it is put together, and the exact point where it
 stopped bothering to be consistent. The jumble-sale dream book is still there behind a button.
 
-## Held back on purpose
+### Held back on purpose
 
-**The Tatu-and-Patu-inspired voice pack** is not built. The brief says to add it inside The
+**The Tatu-and-Patu-inspired voice pack** is not built. The plan says to add it inside The
 Generator if that mega-toy exists and otherwise to hold it for Phase 5 rather than making a
 temporary standalone icon. `/generator/` does not exist yet, so it is held.
 
-## What was verified
+### What was verified
 
 Every one of the seventeen new pages: loaded in a real browser, driven through its actual controls,
 photographed, and checked at 390 px for horizontal overflow (all zero) and for the back button (all
@@ -2305,7 +1377,7 @@ recomputed themselves, and the Windows 98 desktop picked up all seventeen icons 
 about them. Both hub modes still toggle. All five directional codes fire through the real key
 handler and a wrong sequence does nothing.
 
-## What needs a look before Phase 2
+### What needs a look before Phase 2
 
 - **The marble run's presets are honest about failing.** The zigzag lands the marble in the bucket
   reliably but takes about fifteen seconds, which is the physics being right rather than slow code —
@@ -2322,13 +1394,13 @@ handler and a wrong sequence does nothing.
 
 ---
 
-# Making the generators feel alive
+## Making the generators feel alive
 
 **The codebase was pre-consolidation when this was done.** `/generator/` does not exist, there is no
 voice-pack picker anywhere, and the hub still lists all of these as separate drawers. So the work was
-applied to each individual toy, as the brief directs for that case.
+applied to each individual toy, as the plan directs for that case.
 
-## What the audit actually found
+### What the audit actually found
 
 Before touching anything, all 49 generator-family toys were checked mechanically for the three
 things. The result was worse than "a few feel generic":
@@ -2344,7 +1416,7 @@ things. The result was worse than "a few feel generic":
 That last one is the clearest evidence the prompt was right: four toys that produce completely
 different artefacts were sitting on the same page.
 
-## One mute switch, not sixteen — `/shared/lc-sound.js`
+### One mute switch, not sixteen — `/shared/lc-sound.js`
 
 Rather than a per-toy mute, there is now a single shared preference in `localStorage` under
 `lc-sound`, read and written by every toy that makes a noise. Mute the excuse generator and the
@@ -2368,11 +1440,11 @@ still nowhere near clipping. Muting was verified across documents: muted on the 
 freshly loaded Department of Redundancy Department came up muted, its button showed the muted state,
 and `LCSound.play` declined to run the cue.
 
-## Twenty-two toys got a real pass
+### Twenty-two toys got a real pass
 
 Each one can be described in a sentence, which was the bar.
 
-**The twelve the brief named directly**
+**The twelve the plan named directly**
 
 | Toy | One sentence |
 |---|---|
@@ -2389,7 +1461,7 @@ Each one can be described in a sentence, which was the bar.
 | The Department of Redundancy Department | Issued in genuine triplicate — a green carbon and a pink one visibly offset behind the top sheet — with a rubber stamp that slams down and a wooden thunk that shakes the whole stack. |
 | The Estimator | A slate blackboard with a wooden chalk rail, handwriting throughout, the answer scribbled over as it recalculates and a chalk rule drawn under it, then a small brass bell. |
 
-**The four that already made an artefact** — the brief asked whether the *surrounding page* was
+**The four that already made an artefact** — the plan asked whether the *surrounding page* was
 intentional. It was not: all four shared one body rule. Each now has a room.
 
 - **The Stamp Press** → a collector's green baize desk with tweezers and a perforation gauge lying on
@@ -2414,7 +1486,7 @@ corners, Hoefler Text, a stone door grinding open and a drip a second later); Fi
 (below decks — vertical planking with caulked seams and a coiled rope in the corner, Optima, a
 four-reed squeezebox chord with the bellows under it).
 
-## Three real bugs, found by testing
+### Three real bugs, found by testing
 
 1. **`translate()` collided with `translate()` in The Literalist.** That toy already had a function
    of that name doing the actual emoji work; my UI wrapper shadowed it, so `render()` called the
@@ -2432,7 +1504,7 @@ first test harness because that harness used `srcdoc`, which has no base URL, so
 relative `data.js` resolved against the wrong path. Re-tested with real page loads and both are fine.
 The harness was wrong, not the pages.
 
-## Verified
+### Verified
 
 All 22 loaded as real pages and driven through their actual controls.
 
@@ -2447,9 +1519,9 @@ All 22 loaded as real pages and driven through their actual controls.
   mounted mute. Checked mechanically; zero failures.
 - **No horizontal overflow at 1100px or 390px**, across all 44 combinations.
 
-## Not done
+### Not done
 
-- **Sixteen of the toys in the brief's final list do not exist** and never have: the legalese
+- **Sixteen of the toys in the plan's final list do not exist** and never have: the legalese
   translator, mood haiku, fake academic abstract, compliment sandwich, group project generator,
   workout playlist namer, baby-to-English translator, telephone chain, commit message generator, git
   blame, small talk rescuer, overthinking simulator, excuse-my-typo generator, roast my playlist,
@@ -2465,10 +1537,10 @@ All 22 loaded as real pages and driven through their actual controls.
   ones are album-cover, name-my-thing, operator-gen, design-a-country and tv-voice. Adding
   `lc-sound.js` to any of them is now a two-line job.
 - Six more (ancient-advisor, generate-a-stand, ships-log, sitcom-generator, snarky-weapon,
-  tactical-loadout) already had audio of their own from batch 17 and were left alone; they should be
+  tactical-loadout) already had audio of their own from an earlier pass and were left alone; they should be
   moved onto the shared mute when somebody is next in there, or their sound will ignore it.
 
-## One thing found and not fixed
+### One thing found and not fixed
 
 Dungeon Room of the Day generates **"There is four sconces, three of them lit."** — a subject/verb
 agreement bug in its existing word lists, nothing to do with this pass. Left alone rather than
@@ -2476,7 +1548,7 @@ widening the scope of an ambience job, but it is a one-line fix for whoever is n
 
 ---
 
-# The phone-friendliness pass — tier 1, the functional breaks
+## The phone-friendliness pass — tier 1, the functional breaks
 
 Codebase state when this ran: **post-Phase-2** (the icon/folder desktop exists) and
 **pre-Phase-5** (no `/generator/`, so all 149 drawers were still separate). Every check below was
@@ -2484,9 +1556,9 @@ run in a real touch context — Playwright's iPhone 13 device profile with `hasT
 set, driving actual CDP touch events — not a resized desktop window, because the two behave
 differently in exactly the ways that matter here.
 
-## 1. Dragging icons on the Windows 98 desktop — was broken, now fixed
+### 1. Dragging icons on the Windows 98 desktop — was broken, now fixed
 
-The brief expected HTML5 `draggable`/`dragstart`. It is not that: the desktop was already built on
+The plan expected HTML5 `draggable`/`dragstart`. It is not that: the desktop was already built on
 pointer events, which do fire for touch. The break was elsewhere and confirmed by measurement:
 
 - `.w98-icon` computed `touch-action: auto`, so the browser owned the gesture
@@ -2506,7 +1578,7 @@ left the icon where it was; a press-and-hold showed the holding state at 200ms, 
 (ghost visible, icon marked dragging), scrolled the desktop **0px** during the drag, and moved the
 icon 93×87px. No page errors.
 
-## 2. Keyboard-only easter eggs — was broken, now fixed
+### 2. Keyboard-only easter eggs — was broken, now fixed
 
 Four things on the front door were unreachable on a phone, not awkward — unreachable: the Konami
 code (the credits overlay), and all five arrow-sequence stratagem codes added last session.
@@ -2529,7 +1601,7 @@ Verified on the iPhone profile by real CDP flicks: eight swipes plus a two-finge
 credits overlay; five swipes fired the MANAGED DEMOCRACY panel. Shake-to-shuffle verified on the
 ungated Android path — the card order changed — and confirmed correctly permission-gated on iOS.
 
-## 3. Hover-only interactions — one was already handled, three were not
+### 3. Hover-only interactions — one was already handled, three were not
 
 - **The San Francisco photo's corner reveal** already had a `@media (hover: none)` fallback from an
   earlier session: the HUD and reticle are simply shown on a touch screen. Left alone.
@@ -2541,15 +1613,15 @@ ungated Android path — the card order changed — and confirmed correctly perm
   a phone could not. All three now toggle on tap, with a `role="button"` and a label. Verified:
   `animation-play-state` goes running → paused → running on two taps, on all three.
 
-## 4. Arcade touch controls — already existed, now verified and two buttons fixed
+### 4. Arcade touch controls — already existed, now verified and two buttons fixed
 
-The brief expected these to be missing. They are not: a previous session built a touch pad, and
+The plan expected these to be missing. They are not: a previous session built a touch pad, and
 `fit()` already reserves 210px of vertical space for it on a coarse pointer. All fourteen games
 route through one shared key map, and the pad feeds that same map — including the two that looked
 like exceptions. (The `click` in minesweeper is the word "click" in a comment about the first move
 being safe; billiards, the stacker and simon are all `A.hit()` like everything else.)
 
-So the work here was verification, which the brief rightly insisted on. **Three games played start
+So the work here was verification, which the plan rightly insisted on. **Three games played start
 to finish using only touch:**
 
 - **snake** — navigated the menu by touch, entered play, died, returned to the menu
@@ -2561,7 +1633,7 @@ buttons were 46×32 and 33×32 — under a fingertip, and they are precisely the
 miss, being how you leave a game and how you pause it. Both are 44px tall on a coarse pointer now.
 The d-pad (44×44) and the A/B buttons (54×54) were already fine.
 
-## 5. Mouse-drag toys — all already worked, all now verified
+### 5. Mouse-drag toys — all already worked, all now verified
 
 Every one of these was built on pointer events with `touch-action` already set, so this was
 verification rather than repair. Driven with real CDP touch drags on the iPhone profile:
@@ -2584,7 +1656,7 @@ key map, covered by the play-throughs above. Two of my first probes were wrong r
 being broken — the pixel canvas one counted every cell in a grid that is never empty — which is
 worth writing down, because a bad probe reads exactly like a broken toy.
 
-## 6. The microphone toy — it does not exist
+### 6. The microphone toy — it does not exist
 
 There is no `getUserMedia` anywhere in this repo. The three files that match "microphone" all
 contain the word in prose: a line of invented radio chatter, a sentence in Room Tone saying nothing
@@ -2592,7 +1664,7 @@ was ever played into one, and a quiz question about how many devices in your hom
 blow-out-the-candles toy has never been built. Nothing to test and nothing to fix — flagged rather
 than invented.
 
-## Also done: the accelerometer enhancement
+### Also done: the accelerometer enhancement
 
 Layered on top of the existing mouse-shake, never instead of it. The snow globe already had tilt.
 **The gratitude jar now responds to shaking the actual phone** — it feeds the same `shake`
@@ -2601,13 +1673,13 @@ about how hard is hard enough, and the slips get a real shove so it looks shaken
 the ungated path: shake 0 → 13173, the hint moved to "the lid is not going to hold". iOS asks for
 permission on the first touch of the jar.
 
-# Phone-friendliness pass — tier 2 (the broad audit)
+## Phone-friendliness pass — tier 2 (the broad audit)
 
 Everything below was measured on a real 320px touch context (iPhone SE profile, `hasTouch` and
 `isMobile` both on), not by reading CSS. The whole cabinet was swept four times: once to find the
 problems, twice mid-repair, once at the end.
 
-## The sweep, start to finish
+### The sweep, start to finish
 
 | | before | after |
 |---|---|---|
@@ -2616,7 +1688,7 @@ problems, twice mid-repair, once at the end.
 | toys with a control under 44px | 148 | 98, and every one that is left is prose links or a listed exception |
 | worst single toy's small-target count | 28 | 11, of which 9 are inline links in body text |
 
-## The five that overflowed
+### The five that overflowed
 
 Each was measured to the exact element rather than guessed at.
 
@@ -2639,7 +1711,7 @@ Each was measured to the exact element rather than guessed at.
   feed has loaded. The category strip is a segmented control, so it scrolls sideways rather than
   wrapping and breaking its shared borders.
 
-## Touch targets
+### Touch targets
 
 The single highest-leverage fix was shared: **`#lc-back` was 38×38 in all 149 toys**, and the sound
 toggle in `lc-sound.js` was 38×38 everywhere it appears. Both are 44 on a coarse pointer now. That
@@ -2659,7 +1731,7 @@ something got corrected by hand:
 - **Checkboxes** (right-now, paper-airplane) stay 22px — a checkbox cannot usefully be 44 — and
   their labels became the 44px target instead.
 
-## Wide-layout and mouse-only assumptions
+### Wide-layout and mouse-only assumptions
 
 - **starship-scale.** Two real collisions: the tools stacked in the top-right corner ran straight
   across the title, and the bottom rail was drawn underneath the back pill because the 62px reserve
@@ -2676,7 +1748,7 @@ something got corrected by hand:
   copy (the button in useless-buttons that "cannot be caught by a mouse"), or already
   device-agnostic ("click, tap or press space").
 
-## The fiction wiki's 500 entries
+### The fiction wiki's 500 entries
 
 The list itself was already fine on a phone — single column under 560px, 120 rows a page behind a
 48px "load more", a 16px input that will not trigger iOS zoom. The problem was the sticky control
@@ -2688,7 +1760,7 @@ count, and that chip filtering still narrows the list (38 rows) with no errors.
 There is no 100-object museum in this repo; the nearest things are unknown-sport at 107 items and
 hidden-thing at 36, and neither has a list/search UI to fix. Flagged rather than invented.
 
-## Verification
+### Verification
 
 - **Three arcade games played start to finish on real touch** — Serpentine, Rally and Wallbreak,
   driven through CDP touch events on the on-screen pad, not synthetic key presses. Menu navigation,
@@ -2705,7 +1777,7 @@ hidden-thing at 36, and neither has a list/search UI to fix. Flagged rather than
   marble-run, escape-room, arcade, fiction-wiki, on-this-day, plus the hub itself.
 - Final sweep: 149 audited, 0 overflowing, 0 crashed, 0 JS errors.
 
-## Where a touch equivalent could not be made to work
+### Where a touch equivalent could not be made to work
 
 Only three, and all three are deliberate:
 
@@ -2716,19 +1788,19 @@ Only three, and all three are deliberate:
   footers — are 11-17px tall across about 90 toys. Making a link inside a sentence 44px tall would
   break the sentence. These are what the remaining small-target count is almost entirely made of.
 
-## Still to do
+### Still to do
 
 Nothing outstanding from the phone-friendliness brief. Not yet committed or deployed.
 
 ---
 
-# Phase 3 — the Windows 98 OS features
+## Phase 3 — the Windows 98 OS features
 
 All four built and wired into the desktop shell. The three modules they lean on were written in
 an earlier sitting and sat unwired because the phone pass had `public/index.html` open; this is
 the sitting that connected them.
 
-## What is in the Start menu now
+### What is in the Start menu now
 
 Three entries under a rule at the foot of the menu, where the real one put the things that end a
 session. All three close the menu first — a shutdown screen with the start menu still hanging
@@ -2747,10 +1819,10 @@ chose Shut Down lands on the screen it just asked for and dismisses it instantly
 **Rest** dims to near-black, brings up a Room Tone bed at 0.34 and shows the time. Any key, click
 or wheel ends it, deliberately — a mode you have to work out how to leave is a trap, not a rest.
 
-## The messy desktop
+### The messy desktop
 
 A switch in Display Properties → Settings, drawn as a plate with a travelling knob and a printed
-legend either side rather than a tickbox, because the brief asked for a physical switch and a
+legend either side rather than a tickbox, because the plan asked for a physical switch and a
 tickbox is not one.
 
 **It is a disturbed desk, not a random one.** Every icon stays near the cell it came from and is
@@ -2774,9 +1846,9 @@ still has to shrink when it is held and fade when it is dragged — an inline `t
 won against the `.holding` rule and silently killed the touch feedback the phone pass had just
 added.
 
-## The soundtrack that follows the scheme
+### The soundtrack that follows the scheme
 
-Room Tone's engine at 0.22, which is background. The brief asked for four moods and Room Tone
+Room Tone's engine at 0.22, which is background. The plan asked for four moods and Room Tone
 already had beds for all four, so this is a mapping and not a fifth engine: **library** is the
 office one (air handling, distant paper), **campfire** is the warm acoustic one, **rain** is the
 gentle noise, **underwater** is underwater. All twenty schemes map onto those four, keyed by
@@ -2792,7 +1864,7 @@ Resting borrows the engine and hands it back. Changing the colour scheme while t
 dimmed does not yank the room out from under it. Verified end to end: Wheat playing campfire at
 0.22 → rest at 0.34 → back to campfire at 0.22, still running.
 
-## Two closures, one contract
+### Two closures, one contract
 
 The icons and the settings panel are different IIFEs and neither can see the other's variables.
 Rather than reach across, the switch dispatches `w98:messy` and reads the answer back off
@@ -2800,7 +1872,7 @@ Rather than reach across, the switch dispatches `w98:messy` and reads the answer
 `dataset.w98Tone` for the Rest button to pick up. Whether the desk is messy stays the desktop's
 fact to keep.
 
-## Verified
+### Verified
 
 Driven in a real browser, both modes, at 1280px and 390px.
 
@@ -2816,7 +1888,7 @@ Driven in a real browser, both modes, at 1280px and 390px.
   start menu open.
 - Zero page errors across every run.
 
-## Not done
+### Not done
 
 - The hall of fame and the retrofit of the other fifty-odd eggs are Phase 6's actual work. The
   registry and its panel exist and are still unwired — there is no trigger for the tracker yet.
@@ -2826,9 +1898,9 @@ Driven in a real browser, both modes, at 1280px and 390px.
 
 ---
 
-# Phase 4 — the visual differentiation pass
+## Phase 4 — the visual differentiation pass
 
-## The premise was already satisfied, and the audit says so
+### The premise was already satisfied, and the audit says so
 
 Phase 4 asks for toys "that ended up sharing generic or similar-looking styling". All 149 were
 loaded in a real browser and their computed `background-color` + `background-image` compared:
@@ -2838,11 +1910,11 @@ loaded in a real browser and their computed `background-color` + `background-ima
 That is the same check that failed during the generator pass — it caught dungeon-room and
 shanty-ifier sharing a gradient — so it is a check with a track record of finding things, and this
 time there is nothing to find. The retroactive look-and-feel sweep the phase was written for has
-effectively already happened, across the generator pass and the batches before it.
+effectively already happened, across the generator pass and the passes before it.
 
 What the audit *did* find was worse and not a styling problem at all.
 
-## Thirty toys made sound and ignored the mute switch
+### Thirty toys made sound and ignored the mute switch
 
 The cabinet-wide mute lived in `LCSound.play()`, which means it only ever muted toys that asked
 their cues *through* LCSound. Thirty toys build their noises straight off the shared bench or
@@ -2862,7 +1934,7 @@ running voice to zero is itself a click — a noise made by the mute button.
 
 `LCSound.gate(ctx)` does the same job for a toy that owns its AudioContext outright.
 
-## Where the line is drawn, and why
+### Where the line is drawn, and why
 
 The gate deliberately does **not** reach anything hung directly off `ctx.destination` rather than
 off the bench master. Room Tone's engine does exactly that, on purpose.
@@ -2875,13 +1947,13 @@ preference. Three of the ten own-context toys are on the other side of that line
 gated: the static channel (static is played *at* you), the Zone's ambience, and the useless
 buttons, whose every noise is a cue on a click.
 
-## The other half: the switch was missing too
+### The other half: the switch was missing too
 
 The preference applying on a page is no use if there is no way to set it there. Nineteen bench
 toys and the three gated own-context ones had no switch at all, so somebody on the aquarium had
 to go and find another drawer to turn sound off. All twenty-two now mount it.
 
-## Verified
+### Verified
 
 - **Measured, not inferred.** An analyser tapped after the gate: the aquarium peaks at 124
   unmuted, **0** muted, 116 unmuted again. Whack-a-mole 114 before the switch is clicked, 0 after.
@@ -2894,7 +1966,7 @@ to go and find another drawer to turn sound off. All twenty-two now mount it.
 - All twenty-two switches present, none overlapping the back button, no overflow.
 - **Full-cabinet sweep after the change: 149 toys, zero page errors, zero horizontal overflow.**
 
-## Not done
+### Not done
 
 - **97 toys still make no sound at all** and 59 have no animation. Both are real gaps against the
   standing ambience rule, but they are additions rather than differentiation, and roughly a fifth
@@ -2905,12 +1977,12 @@ to go and find another drawer to turn sound off. All twenty-two now mount it.
 
 ---
 
-# Phase 5 — the Generator
+## Phase 5 — the Generator
 
 Fourteen drawers became fifteen voices in one. The hub reads **136** and the drawer that replaced
 them is No. 150.
 
-## The decision the merge turned on
+### The decision the merge turned on
 
 A voice repaints the **whole page**, not just the middle of it.
 
@@ -2921,7 +1993,7 @@ would have spent that work to save effort. So a voice brings its palette, its ty
 and its renderer, and the shell is only the door between them. Measured at the end: **15 voices,
 15 distinct page backgrounds, no two the same.**
 
-## How the port was done, and why that way
+### How the port was done, and why that way
 
 The insight that made this tractable: a voice's markup goes into the live document, so a toy's
 original script can run **unchanged** inside `mount(root)` — `document.getElementById` still finds
@@ -2932,7 +2004,7 @@ That matters because the prose *is* the toy. Retyping it is how a merge quietly 
 it was checked rather than assumed: **1,040 long strings across the fourteen originals, zero
 missing from the ports.**
 
-## Three real bugs, all found by loading it
+### Three real bugs, all found by loading it
 
 1. **A voice's CSS is scoped into the room** on the way in, which is the only way two voices can
    both style `.sheet` without meeting — but scoping puts the voice's `:root` variables on the
@@ -2951,7 +2023,7 @@ missing from the ports.**
    that voice failed to mount at all with `makeVerses is not defined`. It travels with the voice
    now.
 
-## The new voice pack
+### The new voice pack
 
 **The Contraption Bureau** is the nonsense-inventor pack Phase 1 parked waiting on this phase. It
 is inspired by a tradition — two visitors explaining the ordinary world back to you as an
@@ -2961,17 +2033,17 @@ device follows from its premise, each step from the last, and the caution at the
 consequence of the mechanism described. A random absurdity is not funny; a wrong thing argued
 carefully is.
 
-## Nothing was thrown away
+### Nothing was thrown away
 
 All fourteen old URLs still answer. Each is a redirect stub that `location.replace()`s to its
 voice — replace rather than assign, so Back returns where the visitor came from instead of
 bouncing them through the stub again. Verified: **all 14 land on the right voice, mounted**, and
 Back from one goes to the hub.
 
-The footer used to carry the drawer count as text, which meant every batch had to remember to
+The footer used to carry the drawer count as text, which meant every update had to remember to
 change it and this one would have left it reading 149 forever. It counts the cards it can see.
 
-## Verified
+### Verified
 
 - All 15 voices mount, tear down without leaking state into each other, and were driven through
   their own controls with zero page errors.
@@ -2981,24 +2053,24 @@ change it and this one would have left it reading 149 forever. It counts the car
   the house message rather than throwing.
 - Full cabinet sweep after the merge: **150 pages, zero page errors, zero horizontal overflow.**
 
-## Not done
+### Not done
 
-- The other three consolidations in the brief — Design Studio, Sound Lab, History Desk — are not
+- The other three consolidations in the plan — Design Studio, Sound Lab, History Desk — are not
   built. This phase's Generator was the one blocking Phase 6.
 - 97 toys still make no sound and 59 have no animation, unchanged from the Phase 4 note.
 
 ---
 
-# Phase 6 — the achievement tracker
+## Phase 6 — the achievement tracker
 
-Run last, as the brief asked, so it tracks final toy identities. That mattered: three of the eggs
+Run last, as the plan asked, so it tracks final toy identities. That mattered: three of the eggs
 below live in toys that Phase 5 merged an hour earlier, and their entries name `generator` rather
 than the drawers they used to be.
 
-## The catalogue is real, and so is the number
+### The catalogue is real, and so is the number
 
-**43 achievements**, taken from the egg tables the batches actually wrote down in this log — the
-seventeen from batches 15–20, the nineteen from the easter-egg pass, the five arrow codes and the
+**43 achievements**, taken from the egg tables actually written down in this log — the
+seventeen from drawers 110–132, the nineteen from the easter-egg pass, the five arrow codes and the
 front door's own. Every one has a hint. No placeholder entries and no rounded-up total.
 
 The catalogue lives in `shared/lc-achievements.js`, not in the toys. That is load-bearing and it
@@ -3009,7 +2081,7 @@ the same number on every page, and `define()` only ever adds.
 
 Entries may carry `was`, an old id, so a renamed toy does not cost anyone a find.
 
-## The way in
+### The way in
 
 Peel a card and **keep holding**. At 900ms a small mark appears in the corner of the note; it opens
 the list.
@@ -3021,7 +2093,7 @@ quick flick arms nothing, 400ms arms nothing, 1200ms arms it, and no mark is lef
 A locked row shows its hint and withholds its name — silent is a blank, explicit is not an egg any
 more. A test asserts no secret's name appears in the locked list.
 
-## What actually reports
+### What actually reports
 
 **14 of the 43.** The front door's five (the old code, the reshuffle, the hat-tip, the tracker
 itself, the desktop icon that is not a drawer), all five arrow codes, and four in the drawers:
@@ -3032,7 +2104,7 @@ The five arrow codes report from inside `open()` rather than from each matcher, 
 arrive from the keyboard, from a swipe or from the public API, and one call site cannot go out of
 step with the other two.
 
-## What does not report, and what that means
+### What does not report, and what that means
 
 **Twenty-nine of the catalogue's entries are listed but not yet wired.** They are named in the
 registry with their hints, so the tracker tells the truth about how many exist — but they cannot
@@ -3046,7 +2118,7 @@ the guestbook and the bottle use, which is a server change and its own sitting.
 Wiring the rest is mechanical rather than hard: each is one `LCAch.fire('id')` on the line where
 the egg already does its own thing, plus the script tag. The four done here are the pattern.
 
-## Verified
+### Verified
 
 - The registry: first-fire-only, listener isolation, persistence across reload, and **private mode**
   — with `localStorage` throwing on every access it loads, fires and reports with no page error.
@@ -3057,12 +2129,12 @@ the egg already does its own thing, plus the script tag. The four done here are 
 
 ---
 
-# Phase 6, finished — all forty-three eggs report
+## Phase 6, finished — all forty-three eggs report
 
 The retrofit the last entry left undone. **43 of 43 catalogued achievements now fire**, so
 `complete()` is reachable and the hall of fame has an unlock condition that can actually be met.
 
-## Two errors in my own catalogue, found while wiring
+### Two errors in my own catalogue, found while wiring
 
 - **`paradox.overflow` and `dream.thissite` were filed under `generator`.** They are not: the
   paradox machine and the dream decoder were given a language model in Phase 1 and were never on
@@ -3073,7 +2145,7 @@ The retrofit the last entry left undone. **43 of 43 catalogued achievements now 
   anything at all counted. It now fires only on a real match, checked both ways: *Drottninggatan*
   fires and *Cooper Street* does not.
 
-## Four toys were left with a syntax error, briefly
+### Four toys were left with a syntax error, briefly
 
 Inserting a statement "before" an anchor line is only safe when that line begins a statement. Four
 anchors were continuation lines — inside a multi-line string concatenation in the snow globe, the
@@ -3084,11 +2156,11 @@ Caught by the full-cabinet sweep reporting `Unexpected token 'if'` on three of t
 parsing every inline script of every toy that had been touched, which found the fourth. All four
 moved to real statement boundaries; every touched file's script now parses.
 
-The lesson is worth keeping for the next batch of these: a mechanical wiring pass needs a syntax
+The lesson is worth keeping for the next round of these: a mechanical wiring pass needs a syntax
 check per edited file, not a smoke test at the end. Three of the four would have shipped otherwise
 — the fourth toy's error did not surface as a page error in the shape the sweep was watching for.
 
-## Where each egg reports from
+### Where each egg reports from
 
 Mostly one line at the point the egg already does its own thing. The exceptions are worth noting:
 
@@ -3100,7 +2172,7 @@ Mostly one line at the point the egg already does its own thing. The exceptions 
 - **The card note** reports at 45% of a peel, where the note becomes legible, rather than at the
   full turn that arms the tracker mark.
 
-## Verified
+### Verified
 
 - Every catalogue id has a call site: **43 of 43, none missing.**
 - Eggs driven for real through their own controls, not stubbed: the library of Babel, the dream
@@ -3111,20 +2183,20 @@ Mostly one line at the point the egg already does its own thing. The exceptions 
 - The hub's own five driven through the real handlers, and the panel read correctly.
 - **Full cabinet sweep: 150 pages, zero page errors, zero horizontal overflow.**
 
-## Still not done
+### Still not done
 
 The hall of fame itself. It needs the shared cross-visitor store the guestbook and the bottle use
 — a server change, and its own sitting. The unlock condition it depends on now works.
 
 ---
 
-# The hall of fame
+## The hall of fame
 
 The last thing on the backlog. A shared, permanent wall that only somebody who has found all
 forty-three hidden things can sign — on the same infrastructure as the guestbook and the bottle,
 because other people have to be able to see it.
 
-## The honest bit about verification
+### The honest bit about verification
 
 **The server cannot check that you actually found everything, and it does not pretend to.** The
 count arrives from the browser, where the tracker keeps it, and anybody who can open a console
@@ -3141,20 +2213,20 @@ same cleaner as every other shared board, the write gate is the guestbook's, the
 to be internally consistent rather than whatever was in the request, and there is one row per
 browser. Verified: a visitor with 1 of 43 is refused with `not_finished`.
 
-## One row per browser, not one per signing
+### One row per browser, not one per signing
 
 The token is the primary key and a second signing replaces the first. The wall is a record of who
 got to the end, not a conversation — letting people write on it repeatedly would make it a
 guestbook with a harder door. Replacing rather than appending also means nobody has to live
 forever with the first thing they typed.
 
-## It is not fetched until it is earned
+### It is not fetched until it is earned
 
 The wall is only requested once the list is complete. Asking earlier would tell the server that
 somebody had opened the tracker, which is not its business. Verified by counting requests:
 **zero calls to `/api/hall` with the tracker open at 1 of 43, exactly one at 43 of 43.**
 
-## Verified
+### Verified
 
 - Incomplete: no wall in the panel at all, just the private-copy footer.
 - Complete: the wall appears, loads, and offers the form.
@@ -3166,7 +2238,7 @@ somebody had opened the tracker, which is not its business. Verified by counting
 - Full cabinet sweep: 150 pages, zero page errors, zero horizontal overflow.
 - Test rows removed from the local database. Production keeps its own on the Railway volume.
 
-## The backlog is now empty of the six phases
+### The backlog is now empty of the six phases
 
 Phase 1 through Phase 6 are all done. What remains is what those phases explicitly deferred: the
 other three consolidations (Design Studio, Sound Lab, History Desk), and the 97 toys that still
@@ -3174,7 +2246,7 @@ make no sound and 59 that have no animation.
 
 ---
 
-# The other three consolidations
+## The other three consolidations
 
 The last of Phase 5's list. **Thirteen more drawers became three.** The hub reads **126**.
 
@@ -3184,11 +2256,11 @@ The last of Phase 5's list. **Thirteen more drawers became three.** The hub read
 | The Sound Lab | theremin, Chladni plate, colour organ, rhythm sequencer | 152 |
 | The History Desk | on this day, most boring day, closer than you'd think, what if, gaming history | 153 |
 
-**Three of the toys the brief named do not exist and never have**: the travel poster, the vinyl
+**Three of the toys the plan named do not exist and never have**: the travel poster, the vinyl
 label designer, and the soundboard. Searched by slug and by title. So the Design Studio merges four
 rather than six, and the Sound Lab four rather than five.
 
-## One shell, not four copies
+### One shell, not four copies
 
 The Generator's registry, CSS scoping, page variables and teardown are now
 `/shared/lc-shell.js`, and all four consolidated drawers use it. The Generator was moved onto it
@@ -3196,7 +2268,7 @@ first and re-tested before anything new was built on it — fifteen voices, fift
 backgrounds, no regression. `LCGen.voice()` stayed as the name the voice files already call, so
 fifteen modules did not have to be edited to move one function.
 
-## The hazard the Sound Lab introduced
+### The hazard the Sound Lab introduced
 
 The other consolidations host toys that draw and print. This one hosts **four instruments that make
 continuous noise**, and an oscillator left running when you switch would follow you to the next
@@ -3207,7 +2279,7 @@ opened, and closes them on the way out, restoring the original constructor. Veri
 a recorder before any page script ran: the theremin's context reads **`running`** while it is
 playing and **`closed`** the moment you switch to the Chladni plate.
 
-## Two things the tests caught
+### Two things the tests caught
 
 - **A data file that was fetched relatively.** The most boring day asks for `counts.json`, which
   resolved against `/boring-day/` before and against `/history-desk/` after — a 404 and an empty
@@ -3216,7 +2288,7 @@ playing and **`closed`** the moment you switch to the Chladni plate.
 - **The sequencer loads Matter.js from a CDN**, which the porter first tried to copy as though it
   were a sibling file. CDN sources are now separated from local ones and loaded by the shell.
 
-## Nothing thrown away, again
+### Nothing thrown away, again
 
 All thirteen old URLs answer, each `location.replace()`-ing to its part. Verified: **all 13 land on
 the right part, mounted.** Two eggs moved house with their toys — the Anglo-Zanzibar comparison and
@@ -3224,7 +2296,7 @@ the machine declining to imagine away the internet — and are re-filed in the c
 `history-desk`. Checked in place: the what-if egg still fires from inside the History Desk, and the
 catalogue still reads 43 of 43 wired.
 
-## Verified
+### Verified
 
 - All 13 parts mount, with **distinct page backgrounds within each drawer** (4 of 4, 4 of 4, 5 of 5).
 - Switching parts leaves exactly one room mounted and no audio running.
@@ -3232,19 +2304,19 @@ catalogue still reads 43 of 43 wired.
   three up and holds no stale icons, without being told.
 - Full cabinet sweep: **153 pages, zero page errors, zero horizontal overflow.**
 
-## What is left
+### What is left
 
 Only the ambience gap: 97 toys that make no sound and 59 with no animation, both counted before
 this merge reduced the cabinet.
 
 ---
 
-# The ambience gap, closed
+## The ambience gap, closed
 
 The last thing the phases deferred. **Every drawer in the cabinet now makes a noise and every one
 has a flourish.** Sound: 88 silent toys to **0**. Animation: 47 real toys without one to **0**.
 
-## The cues are per toy, not per category
+### The cues are per toy, not per category
 
 The standing rule says deliberate and fitting, not generic, so each was written for the toy it is
 in. Loose earth giving way in the ant farm. A rotor stepping round one position in the cipher. A
@@ -3256,7 +2328,7 @@ still air.
 All of them go through the shared bench, so the single mute switch reaches them, and all of them
 mount it. Measured: 178 unmuted, **0** muted, and a different toy opened afterwards comes up muted.
 
-## Two things found by measuring rather than looking
+### Two things found by measuring rather than looking
 
 - **`lc-sound.js` needs `lc-audio.js` and says nothing when it is missing.** The first twelve toys
   mounted a switch that could never make a sound: `LCSound.play` checks for `LCAudio` and quietly
@@ -3266,7 +2338,7 @@ mount it. Measured: 178 unmuted, **0** muted, and a different toy opened afterwa
   turn the sound *off* — the one press in the cabinet that should be silent. Every cue now excludes
   `#lc-sound-btn`. Fixed across 70 toys at once.
 
-## The flourishes
+### The flourishes
 
 Six characters, each with its own timing, assigned by what the toy actually produces: **settle**
 for things dealt onto a pile, **develop** for anything photographic, **stamp** for things pressed
@@ -3283,7 +2355,7 @@ Each toy names its own output element, and the ones that guessed wrong were foun
 **Reduced motion is honoured** — verified both ways: `lcf-stamp` normally, `none` under
 `prefers-reduced-motion: reduce`.
 
-## Deliberately still silent
+### Deliberately still silent
 
 Four toys are not on the shared mute: **conduct, the morse key, the radio and Room Tone**. Same
 line as before — the switch governs cues played at you, not an instrument you came to play or a
@@ -3293,7 +2365,7 @@ The arcade had no sound at all, which is odd for a machine whose whole form is a
 Per-game effects are fourteen different vocabularies and a job of their own; what it has now is the
 cabinet's own voice — a short square blip on a direction, a harder one on select.
 
-## Verified
+### Verified
 
 - **0 toys with no sound, 0 real toys with no animation.** The 18 pages the audit still lists
   without animation are the 16 redirect stubs, which are two-second redirects and should not
@@ -3305,37 +2377,35 @@ cabinet's own voice — a short square blip on a direction, a harder one on sele
 
 ---
 
-# Overnight batch — cozy toys, new mechanics, and the coil toy
+### Cozy toys, new mechanics, and the coil toy
 
-Fourteen drawers asked for in one unattended run. Logged here as each was built and
-verified in a real browser, with what was skipped and why at the end.
+Fourteen drawers, built in one sitting. Logged here as each was built and verified
+in a real browser, with what was skipped and why at the end.
 
-## Before anything: the two governing documents named in the brief do not exist
+### Two referenced documents don't exist
 
-The brief opened with "read `PROJECT-OVERVIEW.md` and `CONVENTIONS-AND-RULES.md` in full
-before starting anything — ambience standard, storage patterns, dependency policy and
-fabrication rules all apply." **Neither file is in this repository**, under any casing, at
-any depth. Nor is the phrase "ambience standard" written down anywhere in `PROGRESS.md` or
-`README.md`.
+`PROJECT-OVERVIEW.md` and `CONVENTIONS-AND-RULES.md` are cited as the source of the
+ambience standard, storage patterns, dependency policy and fabrication rules.
+**Neither is in this repository**, under any casing, at any depth — nor is the phrase
+"ambience standard" written down anywhere in `PROGRESS.md` or `README.md`.
 
-Rather than stall an unattended run on it, the conventions were reconstructed from the two
-documents that do exist — `README.md` for the dependency policy, the storage patterns, the
-relay rules and the structure, and this file for the house style — plus the brief's own
-one-line definition of the ambience bar ("palette, font, and sound should feel distinct from
-every other toy in the hub, not reskinned defaults"), which is the only definition of it
-available. **Whoever has those two documents should check this batch against them**, because
-everything below was built against an inferred standard rather than the written one.
+The conventions below were therefore reconstructed from the two documents that do
+exist: `README.md` for the dependency policy, storage patterns, relay rules and
+structure, and this file for house style. The working definition of the ambience bar
+— "palette, font, and sound should feel distinct from every other toy in the hub, not
+reskinned defaults" — is the only one available, so everything in this section was
+built against an inferred standard rather than a written one.
 
-## No. 145 — The Windowsill (`/windowsill/`), extending the tree rather than duplicating it
+### No. 145 — The Windowsill (`/windowsill/`), extending the tree rather than duplicating it
 
-`/bonsai/` already existed as No. 145, "A Tree That Takes Its Time". Per the brief it was
+`/bonsai/` already existed as No. 145, "A Tree That Takes Its Time". Per the plan it was
 extended, not duplicated: `/windowsill/` carries the tree's engine over whole and adds two
 more plants, and `/bonsai/` is now a redirect stub of the usual shape.
 
 **The tree keeps its old storage key.** `lc-bonsai` is read and written exactly as it was, so
 a tree planted when this was a one-plant page is still there on the sill, the same age, with
 the same cuts on it. The other two have their own keys — `lc-sill-basil`, `lc-sill-succ` —
-which is what makes the brief's promise true: switching tabs cannot touch another plant,
+which is what makes the plan's promise true: switching tabs cannot touch another plant,
 and "start again" only ever scraps the plant that is out. Verified by ageing all three to
 different dates and confirming none of the other records moved.
 
@@ -3353,7 +2423,7 @@ offsets after months, full size in years. Its leaves sit on the golden angle, 13
 outermost and flattest, each newer one shorter, nearer the middle and drawn last so it
 overlaps — which is the actual reason a rosette looks like a rosette.
 
-### Three real bugs, all found by looking rather than by reasoning
+#### Three real bugs, all found by looking rather than by reasoning
 
 - **The pinched basil floated.** Side shoots were positioned by lifting them a fixed distance
   off the soil, and the stem they were supposed to be branching from was never drawn — so
@@ -3376,7 +2446,7 @@ days for the basil; 0/18/40/130/260/400 for the succulent), storage independence
 pruning persists, redirect from `/bonsai/` lands on the sill, zero console errors, no
 horizontal overflow.
 
-## No. 154 — Kintsugi Mender (`/kintsugi/`)
+### No. 154 — Kintsugi Mender (`/kintsugi/`)
 
 Matter.js. Click the bowl to break it, drag the pieces back, then take up the gold and run it
 down the seams. No timer, no score, and the loop is the whole drawer.
@@ -3402,7 +2472,7 @@ Seams are derived the cheap correct way: any shard edge whose midpoint is more t
 the bowl's own outline is an internal crack, deduped by rounded midpoint — rather than matching
 edges pairwise between shards.
 
-### Two real bugs
+#### Two real bugs
 
 - **The gold came out dotted.** Each seam is chopped into seven-pixel runs so the brush can fill
   a crack gradually, and each run was being stroked on its own — which puts a round cap on both
@@ -3417,7 +2487,7 @@ the middle of the mended bowl gilded 78 seam segments along the cracks it passed
 else. Physics fallback tested by the usual route — the page says so plainly and disables the
 break button rather than showing an empty stage.
 
-## No. 155 — Rain Sound Machine (`/rain-machine/`)
+### No. 155 — Rain Sound Machine (`/rain-machine/`)
 
 Real local precipitation, synthesised. Position from the keyless `/api/where` the desktop
 widget already uses; weather from **Open-Meteo, CC BY 4.0**, attributed on the page — their
@@ -3453,9 +2523,9 @@ and all well under the house ceiling. The cabinet's mute switch reaches it — 0
 at the gate — because the bed hangs off `LCAudio.bus()` and therefore off master. Live reading
 on the day: Älta, Sweden, WMO 3, 0 mm, 17.6 °C, observed 15:30 local.
 
-## No. 156 — Species of the Day (`/species-of-the-day/`)
+### No. 156 — Species of the Day (`/species-of-the-day/`)
 
-The brief's "Extinction Clock", built as a specimen card. **The design rule that makes it safe:
+The plan's "Extinction Clock", built as a specimen card. **The design rule that makes it safe:
 the list written into the page holds a scientific name, a common name and a GBIF key, and
 nothing else.** Every fact on the card — category, classification, record counts, countries,
 dates — is fetched from GBIF when the page opens. So the drawer cannot state a figure nobody
@@ -3477,7 +2547,7 @@ NONE`, confirming the check discriminated rather than rubber-stamping.
 Six of the 65 are Least Concern, and they were kept on purpose. Some are recoveries; a list
 curated to be uniformly bleak would say more about the curator than about the world.
 
-### Two real bugs, one of them serious
+#### Two real bugs, one of them serious
 
 - **A rate-limit was rendering as a fact.** GBIF's 429 still parses as JSON — it simply has no
   `count` — and `occ.count || 0` turned that into a confident *"0 occurrence records in GBIF"*
@@ -3495,7 +2565,7 @@ Records held and countries are labelled as what they are — occurrence records 
 those records came from, not a population count and not a range map — with a note that recording
 effort is wildly uneven, so they read as a map of where people have been looking.
 
-## No. 157 — Silhouette Guesser (`/silhouette/`)
+### No. 157 — Silhouette Guesser (`/silhouette/`)
 
 Eighty outlines — 40 coastlines, 22 islands and peninsulas, 18 lakes — from **Natural Earth,
 which is public domain**. Extracted once at build time by a throwaway Python script and shipped
@@ -3521,7 +2591,7 @@ inside ±180/±90, with zero failures. The reveal's locator uses the cabinet's e
 `world-land.js` outline and the shape's real mean position; Lake Tanganyika resolved to 6.4° S
 30.0° E, which is where Lake Tanganyika is.
 
-## No. 158 — The Slow Reveal (`/slow-reveal/`)
+### No. 158 — The Slow Reveal (`/slow-reveal/`)
 
 A real public-domain work from **The Met's Open Access API** (keyless), filtered on
 `isPublicDomain=true`, `hasImages=true` and `medium=Paintings`, uncovering over **seven real
@@ -3542,7 +2612,7 @@ the image sits underneath as an ordinary `<img>` and a canvas over the top is pa
 has squares cleared out of it with `destination-out`. Covering something up needs no access to
 it at all.
 
-### One real bug, found only by looking at it
+#### One real bug, found only by looking at it
 
 **The cover was invisible against the art.** The first version covered the picture in a mid
 grey-green — and against a painting's own mid tones, and against the grey backdrop the Met
@@ -3555,7 +2625,7 @@ The title and attribution on the plaque stay blurred until 72%, so it does not g
 you are still waiting to see. The search's broad `q=painting` was also tightened to
 `medium=Paintings` after it served up a suit of armour.
 
-## No. 159 — Fireplace Corner (`/fireplace/`)
+### No. 159 — Fireplace Corner (`/fireplace/`)
 
 Pure ambience. **No video, no image assets, no sampled audio.**
 
@@ -3583,11 +2653,11 @@ screensaver**. The particle loop is self-contained (`step()` / `draw()` against 
 `logs` and `heat` as its only inputs) and would drop into a screensaver surface without the page
 around it. **Not integrated tonight** — that belongs to the supervised hub-shell session.
 
-## No. 160 — Tea Steeping Timer (`/tea-timer/`)
+### No. 160 — Tea Steeping Timer (`/tea-timer/`)
 
 Eleven teas, each carrying **the steeping range and water temperature that are generally
 published for it, shown as a range** — 1–3 min at 70–80 °C for green, 3–5 at 95–100 for black,
-5–10 at boiling for chamomile, and so on. The brief asked for sourced timings and no invented
+5–10 at boiling for chamomile, and so on. The plan asked for sourced timings and no invented
 precision, and the honest form of that is the range itself: nobody publishes that green tea takes
 132 seconds, they publish one to three minutes. The slider moves inside the published range and
 the panel keeps showing the range beside your choice.
@@ -3609,7 +2679,7 @@ a harmonic stack, because a harmonic stack sounds like an organ and a real bell 
 diffusion plumes were clearly visible as mottled clouds in pale water. The clock text flips to
 dark automatically over a pale liquor so it stays readable in a cup of white tea.
 
-## No. 161 — The Nightlight (`/nightlight/`)
+### No. 161 — The Nightlight (`/nightlight/`)
 
 Deliberately the least interactive drawer in the cabinet. A glow, a dimmer, and after five
 seconds of being left alone everything except the light fades out.
@@ -3630,7 +2700,7 @@ blackbody curve does not. Verified across a whole day: 02:00 → 1700 K rgb(255,
 A very slow breath — a little over a minute, plus a slower second term — keeps it alive without
 ever being something you would catch moving.
 
-## No. 162 — Endless Coil (`/endless-coil/`) + a reusable idle component
+### No. 162 — Endless Coil (`/endless-coil/`) + a reusable idle component
 
 Matter.js. A chain of ring bodies with a soft constraint between neighbours and **a much weaker
 one between every second pair** — that second set is the whole trick, because it gives the coil a
@@ -3641,7 +2711,7 @@ The rainbow is computed, not painted: each ring is drawn as an ellipse squashed 
 travel direction of the coil, so it turns its rings to face you as it bends, with hue off the
 ring index.
 
-### The walking, and what actually fixed it
+#### The walking, and what actually fixed it
 
 The first build managed exactly **one** step and stopped. Four parameter sweeps — air resistance
 0.012→0.002, constraint damping 0.06→0.01, gravity 1.25→1.9, and the size of the initial shove —
@@ -3655,7 +2725,7 @@ So it is honestly described on the page rather than oversold: it takes a step or
 end and then runs out of enthusiasm, which is what happens on a carpeted staircase. It is not a
 perpetual motion machine and does not claim to be.
 
-### The bonus: `shared/lc-coil-idle.js`
+#### The bonus: `shared/lc-coil-idle.js`
 
 The idle-bounce component, built as asked and **deliberately not wired into the desktop**.
 
@@ -3673,7 +2743,7 @@ registers 53.
 > brief asked; the toggle mechanism, desktop placement and hub-shell wiring were all deliberately
 > left alone tonight.
 
-## No. 163 — The Comfort Jar (`/comfort-jar/`)
+### No. 163 — The Comfort Jar (`/comfort-jar/`)
 
 Sixty-three folded notes in a glass jar, one a day at the visitor's own midnight.
 
@@ -3694,19 +2764,19 @@ What you have already unfolded is kept in `localStorage` and nowhere else — no
 sent anywhere. Opening the jar again on the same day gives you the same note and says so, rather
 than pretending to deal a fresh one.
 
-## No. 164 — Postcards from Nowhere (`/postcards/`)
+### No. 164 — Postcards from Nowhere (`/postcards/`)
 
 A shared corkboard on the same SQLite-on-the-Railway-volume pattern as the guestbook and the
 bottles: new `postcards` table, new `/api/postcards` route, added to the `WRITABLE` allowlist,
 and it answers `200 {ok:false, why:"no_store"}` rather than a 5xx when the volume is not mounted
 — the page has a state for that like every other shared drawer.
 
-**There is no location in this one at all, coarse or otherwise.** The brief allowed
+**There is no location in this one at all, coarse or otherwise.** The plan allowed
 "coarse-or-no", and no location turned out to be the better toy as well as the safer one: the
 drawer is called Postcards from Nowhere, so the postmark is one of **ten invented places the
 sender picks** — "The Far Side of Tuesday", "Last Stop But One" — stored as a small integer.
 Nothing about where anyone actually is is asked for, looked up or written down. Identity is the
-cabinet's usual anonymous browser-invented token and there is no handle at all, because the brief
+cabinet's usual anonymous browser-invented token and there is no handle at all, because the plan
 asked for anonymous.
 
 **The stamp and postmark indexes are clamped server-side rather than trusted.** They pick a
@@ -3722,12 +2792,12 @@ appears for everybody; the three-minute per-browser cooldown returns `too_soon` 
 remaining wait; link spam is refused with `no_links`; 240-character cap enforced. The board shows
 your own cards outlined, each pinned at a slight angle with a coloured pin.
 
-## No. 165 — Blanket Fort Builder (`/blanket-fort/`)
+### No. 165 — Blanket Fort Builder (`/blanket-fort/`)
 
 Thirteen kinds of thing in a box, a dim room, and nothing to achieve. Everything is drawn by a
 small routine rather than pictured, so the drawer loads no artwork at all.
 
-**Placement, not physics** — which the brief allowed and which is the better toy here. Things
+**Placement, not physics** — which the plan allowed and which is the better toy here. Things
 stay exactly where you put them rather than sliding off a cushion the moment you let go. What it
 does have is a real stacking order: picking anything up brings it to the front, and it can be
 pushed behind the rest, which is most of what building a fort out of furniture actually is.
@@ -3745,13 +2815,13 @@ lamp in a dim room does to a colour. Measured: a point at the lamp reads 1.00, t
 over them, bolster, pillow and cushion inside, fairy lights above, lamp, books, a mug and a
 sleeping cat — with correct occlusion throughout. The layout persists to `localStorage`.
 
-## No. 166 — Ocean Sound Mixer (`/ocean-mixer/`)
+### No. 166 — Ocean Sound Mixer (`/ocean-mixer/`)
 
 **This drawer breaks the cabinet's oldest rule, deliberately, and the page says so.**
 
 The standing rule, in `README.md` and at the top of `lc-audio.js`, is absolute: *nothing in the
 cabinet is sampled, every sound is an oscillator or a noise buffer generated in the browser, and
-there is no audio file anywhere in this repo and nothing is fetched to make a sound.* The brief
+there is no audio file anywhere in this repo and nothing is fetched to make a sound.* The plan
 for this toy asked specifically for **real NOAA field recordings**, and carved it out knowingly —
 it asked for synthesis explicitly on the rain machine, the fireplace and the tea chime, and asked
 for real recordings only here.
@@ -3767,7 +2837,7 @@ here for the owner and handled as carefully as possible:
   previews already run under. The "no audio file in this repository" half of the rule still holds.
 - **Sound still only starts on a gesture**, and nothing is fetched until then (`preload: none`).
 
-### What is actually there
+#### What is actually there
 
 Four real clips from **NOAA PMEL's Acoustics Program** — blue whale (NE Pacific), humpback with
 ship noise (Stellwagen Bank NMS), humpback with ship noise (American Samoa), and damselfish on a
@@ -3778,7 +2848,7 @@ the house bench alongside them, labelled as generated.
 Of the five `.wav` files NOAA publishes there, **one was unusable and was dropped**: the Challenger
 Deep clip declares a 320 kHz sample rate, which browsers will not play sensibly.
 
-### Two constraints found by measuring
+#### Two constraints found by measuring
 
 - **NOAA sends no `Access-Control-Allow-Origin`.** The files play but cannot be read into Web
   Audio — `createMediaElementSource` on a tainted cross-origin element yields silence. So the
@@ -3795,34 +2865,34 @@ zero load failures. A channel that does fail says so on its own row and leaves t
 
 ---
 
-# The batch, closed out
+### Closed out
 
 **Fourteen asked for, fourteen built.** Nothing was skipped and nothing was blocked. Numbers
 145 (rebuilt) and 154–166 in the grid; the ghost card now reads 167.
 
-## Two deliberate exceptions, both flagged rather than slipped through
+### Two deliberate exceptions, both flagged rather than slipped through
 
 1. **The Ocean Sound Mixer plays real recordings**, against the cabinet's standing no-sampling
-   rule. The brief asked for this specifically and knowingly. Handled as narrowly as possible —
+   rule. The plan asked for this specifically and knowingly. Handled as narrowly as possible —
    every channel badged, nothing copied into the repo, streamed from NOAA and never re-served —
    and **`README.md` has been amended**, because it stated the rule absolutely and would
    otherwise now be making a false claim about its own cabinet.
 2. **The Comfort Jar's content is invented.** Also asked for, also the right call — a
    reassurance is not a fact and has no source to cite — and the page says so and says why.
 
-## One thing that is out of line with a house standard, on purpose
+### One thing that is out of line with a house standard, on purpose
 
 **The Nightlight makes no sound at all**, so it is the fifth drawer with no cue, alongside
 conduct, the morse key, the radio and Room Tone. Those four are exempt because they are
-instruments you came to play. The Nightlight is exempt for a different reason: the brief asked
+instruments you came to play. The Nightlight is exempt for a different reason: the plan asked
 for a drawer that "succeeds by being boring in a good way — nothing to click", and a nightlight
 that hums at you is a worse nightlight. It also carries no mute button, because a mute button on
 a silent page is worse than no button. **Flagged here rather than quietly left**, in case the
 "every drawer makes a noise" audit is re-run and counts it as a regression.
 
-## Untouched, as instructed
+### Untouched, as instructed
 
-None of the following was started, and nothing in this batch reaches the hub shell: the Windows 98
+None of the following was started, and nothing in this round reaches the hub shell: the Windows 98
 folder/icon density toggle; the live-desktop **widget system** (toggle, placement, wiring); the
 "4B, Pasadena-Adjacent" apartment toy; any 3D rocket/anatomy deconstruction; marketplace-listings
 scraping of any kind; and sitcom/pop-culture rooms, which remain declined outright rather than
@@ -3832,7 +2902,7 @@ rest-mode screensaver and the widget system respectively, and neither is wired t
 > **Carried forward for the widget session:** every individual widget must end up
 > **independently toggleable on and off — not gated behind a single master switch.**
 
-## Shared code touched
+### Shared code touched
 
 - `store.js` — new `postcards` table and `postcard()` / `corkboard()`.
 - `server.js` — new `/api/postcards` route, added to the `WRITABLE` allowlist.
@@ -3844,7 +2914,7 @@ rest-mode screensaver and the widget system respectively, and neither is wired t
   which is exactly the difference and now says so), the new route, the new shared file, and the
   sampling-rule exception.
 
-## Verified across the whole batch
+### Verified across the whole set
 
 - **Every page loaded in a real browser at 1280px and again at a 390px touch viewport.**
   All 14 new drawers plus the hub and the `/bonsai/` stub: **zero page errors, zero horizontal
@@ -3869,18 +2939,18 @@ rest-mode screensaver and the widget system respectively, and neither is wired t
 
 ---
 
-# Hub shell — Phase A: desktop density toggle (Icons vs. Folders)
+## Hub shell — Phase A: desktop density toggle (Icons vs. Folders)
 
 Dedicated-session work, one phase at a time. **Phase A only. Phase B has not been started.**
 
-## Note on the governing documents, again
+### Note on the governing documents, again
 
-The brief cites `CONVENTIONS-AND-RULES.md` as the authority for the one-phase-at-a-time rule.
+The plan cites `CONVENTIONS-AND-RULES.md` as the authority for the one-phase-at-a-time rule.
 **Those two files still do not exist in this repository** — only `README.md` and this file. Checked
-again at the start of this session. The brief's own inline instructions were detailed enough to
+again at the start of this session. The plan's own inline instructions were detailed enough to
 work from and were followed literally; flagging once more rather than repeatedly.
 
-## What was already there
+### What was already there
 
 Most of it, as it turns out — and checking first was the single most useful thing in this phase.
 The Windows 98 desktop **already had a complete folder system**: folder icons, a folder window with
@@ -3889,7 +2959,7 @@ z-ordered windows, all in `desk.folders` and remembered in `lc-w98-desktop`. **N
 was written.** Category folders open through exactly the same `openFolder()` path as a folder a
 visitor made themselves.
 
-## The design: category folders are computed, not stored
+### The design: category folders are computed, not stored
 
 The folders a visitor makes and the eight category folders are deliberately different kinds of
 thing. Category folders **hold no state** — their contents are recomputed from the toy list every
@@ -3910,9 +2980,9 @@ Three places needed deliberate work rather than falling out for free:
 - **Context menu.** A category folder offers Open and a shortcut back to Icons, and deliberately
   offers no Rename and no Delete, because there is nothing underneath it to rename or delete.
 
-## Where a new drawer lands: by its tag, with a short exception list
+### Where a new drawer lands: by its tag, with a short exception list
 
-The brief offered "Uncategorized until sorted" or "assigned when built" and asked for whichever is
+The plan offered "Uncategorized until sorted" or "assigned when built" and asked for whichever is
 less fragile. **Neither, quite — a new drawer's home is derived from the `tag` its hub card already
 carries**, with a 15-entry per-slug exception list for drawers whose natural home is not their
 tag's. A drawer added next year is filed correctly the moment its card exists, with nothing to
@@ -3922,7 +2992,7 @@ need editing on every addition and would silently drop new drawers into nothing.
 `tag -> folder`: game→Games, generator→Generators, real data→Real Data, reference and scroll
 story→Reference Desk, toy→Toys, reflection→Personal, sound→Ambience. Fallback is Toys.
 
-## The mapping, as built — all 139 drawers, each in exactly one folder
+### The mapping, as built — all 139 drawers, each in exactly one folder
 
 - **Games & Arcade (25)** — type-ghost, apocalypse-quiz, perfume-match, morse, bureaucracy,
   case-opener, boss-battle, speedrun-anything, escape-room, character-match, higher-or-lower,
@@ -3953,7 +3023,7 @@ story→Reference Desk, toy→Toys, reflection→Personal, sound→Ambience. Fal
 - **Social & Shared (6)** — message-in-a-bottle, who-else-is-here, guestbook, pixel-canvas,
   story-chain, postcards
 
-## One real bug, found by testing the reset path
+### One real bug, found by testing the reset path
 
 **A desktop reset in Folders mode silently reverted to Icons on the next reload.** `deskForget()`
 kept the chosen density in memory but cleared the stored record outright, so the two disagreed
@@ -3964,7 +3034,7 @@ look at them — and it is deliberately *not* wired into Display Properties' "Re
 because throwing somebody back to 139 loose icons for wanting the teal scheme again would be a
 surprise.
 
-## Verified in a real browser
+### Verified in a real browser
 
 - **All 139 drawers have exactly one home**; the eight folders sum to 139 with none empty and no
   drawer unplaced.
@@ -3983,11 +3053,11 @@ surprise.
 
 ---
 
-# Hub shell — Phase B: the live widget system
+## Hub shell — Phase B: the live widget system
 
-Started only after Phase A was finished and looked at, as the brief required.
+Started only after Phase A was finished and looked at, as the plan required.
 
-## Again: extend what is there
+### Again: extend what is there
 
 The desktop **already had a widget framework** — the six ornaments in the right-hand rail come
 with drag by the title bar, resize by the corner grip, double-click to swell, remembered positions
@@ -3997,7 +3067,7 @@ it exists. **No parallel widget system was written.**
 
 What is genuinely new is the switchboard, the peeks themselves, and the drift layer.
 
-## The hard requirement: a switch each, not one master switch
+### The hard requirement: a switch each, not one master switch
 
 `WG_REG` lists **all thirteen** ornaments — the six that were always here as well as the seven new
 ones — and each has its own switch in a new **Widgets** tab in Display Properties, persisted
@@ -4011,7 +3081,7 @@ The rows are rendered by the desktop closure rather than by the settings closure
 where the register lives and a second copy over there would be a second copy to keep in step. The
 settings pane owns the panel; the desktop owns what goes in that fieldset.
 
-## Default-off, and why — measured, not guessed
+### Default-off, and why — measured, not guessed
 
 At 1280×860 the original six ornaments already stand **763px tall in the 816px the rail has**.
 There is room for about one more. Switching the new peeks on by default would have overflowed the
@@ -4020,14 +3090,14 @@ no box and costs the rail nothing — arrives on. The Widgets pane then measures
 says either *"About 61 pixels of rail left"* or *"over-full by about 106 pixels, so the bottom one
 is behind the taskbar"*. Inventing a hard cap would have been worse than measuring and saying so.
 
-## The seven
+### The seven
 
 - **Windowsill peek** — reads the drawer's own three records in the same browser, so it is the
   visitor's actual plant at its actual age, with the drawer's own stage thresholds. Draws the
   active plant. Click opens the sill.
 - **Hearth peek** — the fireplace's particle flame in miniature, on the same additive-blend
   colour-by-age rule. Click opens the drawer.
-- **Coil** — **`shared/lc-coil-idle.js` reused directly**, as the brief asked, rather than
+- **Coil** — **`shared/lc-coil-idle.js` reused directly**, as the plan asked, rather than
   rebuilt. Its own click handler boops it; it does not navigate.
 - **Postcards peek** — real cards off `/api/postcards`, cycling every nine seconds, re-pulled
   every three minutes. Says so honestly when there is no shared storage.
@@ -4039,7 +3109,7 @@ is behind the taskbar"*. Inventing a hard cap would have been worse than measuri
   so it follows whatever the visitor chose. Behind the icons, pointer-transparent, out of the
   accessibility tree, and it stops dead when the tab is hidden.
 
-## The species list was extracted rather than copied
+### The species list was extracted rather than copied
 
 The badge and the drawer must show the same species on the same day, and two copies of a
 sixty-five entry list are two lists that will disagree eventually. The rotation now lives in
@@ -4047,7 +3117,7 @@ sixty-five entry list are two lists that will disagree eventually. The rotation 
 so every actual fact is still fetched live by whoever is displaying it. The drawer shows its usual
 empty-card state if the shared file fails to load.
 
-## One real bug, and it was the kind that hides
+### One real bug, and it was the kind that hides
 
 **A peek switched on in the first moments of a visit could start before the shared file it needs
 had arrived**, and returned quietly. For the species badge, whose own retry interval is ten
@@ -4056,7 +3126,7 @@ affected peeks now wait briefly for their dependency and then fail out loud. Fou
 everything on at boot rather than after the page had settled; it did not reproduce once the page
 had time to load, which is exactly why it was worth looking for.
 
-## Verified in a real browser
+### Verified in a real browser
 
 - **All thirteen toggled off one at a time.** Every one disappeared and stopped on its own, and in
   every single case **zero others became invisible and zero others stopped running**.
@@ -4073,7 +3143,7 @@ had time to load, which is exactly why it was worth looking for.
 - Sweep of the hub and eight affected drawers at 1280px and 390px: **zero page errors, zero
   horizontal overflow**.
 
-## Files touched
+### Files touched
 
 - `public/index.html` — drift layer, seven widget bodies, `WG_REG` and the switchboard, the
   Widgets tab, the peek implementations, the rail-capacity readout.
@@ -4082,9 +3152,9 @@ had time to load, which is exactly why it was worth looking for.
 - `public/shared/lc-coil-idle.js` — **not modified**, only used, which was the point of building
   it dependency-free in the first place.
 
-## Phase B, closing out: one more real bug, and a full cabinet sweep
+### Phase B, closing out: one more real bug, and a full cabinet sweep
 
-### The drift layer scrolled away, and then came out 300x150
+#### The drift layer scrolled away, and then came out 300x150
 
 Two defects in the same feature, both found by looking at it in a state the earlier tests had not
 put it in — a **scrolled** desktop.
@@ -4105,7 +3175,7 @@ put it in — a **scrolled** desktop.
 Verified after: backing store 1280x830 exactly matching the desktop's client box, unmoved after
 scrolling 900px, stopping above the taskbar, and actually painting.
 
-### Full sweep: 139 drawers, both widths
+#### Full sweep: 139 drawers, both widths
 
 The house standard is the whole cabinet, not the pages that were touched. Both phases changed
 shared infrastructure, so:
@@ -4125,7 +3195,7 @@ Both findings checked against `git status` before being reported:
   capped at 20 requests per IP per hour and a 139-page sweep runs into it. Correct behaviour, not
   a defect.
 
-## Hotfix: the drift layer was painting the desktop icons over the Start menu
+### Hotfix: the drift layer was painting the desktop icons over the Start menu
 
 Reported from a screenshot: the Start menu was open with desktop icons showing straight through
 it — labels and sprites drawn over the menu's list rows.
