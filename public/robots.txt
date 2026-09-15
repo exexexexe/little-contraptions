@@ -1,0 +1,8 @@
+# Little Contraptions — https://contraptions.up.railway.app
+# A cabinet of small, self-contained web toys. Crawl away.
+
+User-agent: *
+Allow: /
+Disallow: /api/
+
+Sitemap: https://contraptions.up.railway.app/sitemap.xml
