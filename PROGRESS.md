@@ -3530,3 +3530,22 @@ so: **zoom and pan**, not a second set of narrow-board layouts.
 ### Next up
 - Unchanged from Phase 2: the remaining five to seven Workshop Basics levels, then Chapter 2
   (gears), which should still need no engine change.
+
+### Deployed — 17 September 2026
+
+`hub` on Railway, commit `7ade6fb`, **SUCCESS**. Live at
+https://contraptions.up.railway.app/workshop/
+
+Verified against production rather than against localhost: all six of the drawer's URLs answer
+200 (the page, the engine, the chapter's parts, the app, the level index and a level file), the
+content gate run **against the live site** passes 3/3 with the same step counts as locally
+(256, 170, 126), and both the bench and the hub front page load with **zero console errors**.
+`verification/phase-3/live-bench.png`, `live-hub.png`.
+
+**How the deploy had to be triggered, for next time.** Pushing to `main` still does not deploy
+on its own — the note in the README holds. `create-deployment` is the wrong tool for this
+service: given the project, environment and service it **created a second service** from the
+repo rather than deploying to `hub`. What works is `connect-service-source` pointed at
+`exexexexe/little-contraptions` on `main`, which re-triggers `hub` in place; note that it
+rejects `environmentId` unless the change is staged, because a live connect applies to every
+environment.
