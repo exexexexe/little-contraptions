@@ -396,7 +396,14 @@
       world = engine.world;
     }
 
+    /* What part of the board the canvas is showing, in board units. The whole
+       board, until somebody zooms in. Its aspect is locked to the board's, so
+       nothing is ever drawn stretched. */
+    var view = { x: 0, y: 0, w: W };
+    var MIN_VIEW = 560;
+
     var board = {
+      view: view,
       W: W, H: H, GRID: GRID, DT: DT,
       palette: PALETTE, pen: PEN,
       canvas: cv, ctx: ctx,
@@ -492,6 +499,63 @@
     }
 
     /* --- placing, moving, removing --------------------------------------- */
+
+    /* --- the view ------------------------------------------------------- */
+
+    function viewH() { return view.w * H / W; }
+
+    function clampView() {
+      view.w = Math.max(MIN_VIEW, Math.min(W, view.w));
+      view.x = Math.max(0, Math.min(W - view.w, view.x));
+      view.y = Math.max(0, Math.min(H - viewH(), view.y));
+    }
+
+    /* One board unit, measured in CSS pixels of the canvas as it is on the
+       page. Everything that has to be big enough for a fingertip is sized
+       through this rather than in board units, because a board unit is worth
+       four times as much on a phone as it is on a desk. */
+    function unitPx() {
+      if (!cv) return 1;
+      var r = cv.getBoundingClientRect();
+      if (!r.width) return 1;
+      return (r.width / view.w);
+    }
+
+    function setView(x, y, w) {
+      if (w != null) view.w = w;
+      if (x != null) view.x = x;
+      if (y != null) view.y = y;
+      clampView();
+      onChange(board);
+    }
+
+    /* Zoom about a point on the board, so whatever is under the pointer or
+       between two fingers stays under them. */
+    function zoomBy(factor, ax, ay) {
+      var before = view.w;
+      view.w = Math.max(MIN_VIEW, Math.min(W, view.w / factor));
+      var k = view.w / before;
+      if (ax == null) { ax = view.x + view.w / 2; ay = view.y + viewH() / 2; }
+      view.x = ax - (ax - view.x) * k;
+      view.y = ay - (ay - view.y) * k;
+      clampView();
+      onChange(board);
+    }
+
+    function panBy(dx, dy) {
+      view.x -= dx; view.y -= dy;
+      clampView();
+      onChange(board);
+    }
+
+    function fit() { view.w = W; view.x = 0; view.y = 0; clampView(); onChange(board); }
+
+    /* Canvas CSS coordinates in, board units out. */
+    function toBoard(clientX, clientY) {
+      var r = cv.getBoundingClientRect();
+      return { x: view.x + (clientX - r.left) / r.width * view.w,
+               y: view.y + (clientY - r.top) / r.height * viewH() };
+    }
 
     function snap(v) { return Math.round(v / GRID) * GRID; }
 
@@ -621,7 +685,10 @@
         var dx = x - p.x, dy = y - p.y;
         var lx = dx * Math.cos(a) - dy * Math.sin(a);
         var ly = dx * Math.sin(a) + dy * Math.cos(a);
-        var hw = Math.max(def.w, 44) / 2, hh = Math.max(def.h, 44) / 2;
+        /* 44 CSS pixels is the smallest thing worth asking anyone to hit, so
+           the minimum is converted out of pixels rather than assumed. */
+        var min = 44 / unitPx();
+        var hw = Math.max(def.w, min) / 2, hh = Math.max(def.h, min) / 2;
         if (Math.abs(lx) <= hw && Math.abs(ly) <= hh) return p;
       }
       return null;
@@ -740,7 +807,8 @@
       var def = PARTS[p.part];
       if (!def.rotatable) return null;
       var a = p.angle * Math.PI / 180, d = def.h / 2 + 48;
-      return { x: p.x + Math.sin(a) * d, y: p.y - Math.cos(a) * d, r: 20 };
+      return { x: p.x + Math.sin(a) * d, y: p.y - Math.cos(a) * d,
+               r: Math.max(20, 22 / unitPx()) };
     }
 
     function drawGhost(part, x, y, angle, ok) {
@@ -758,6 +826,13 @@
 
     function draw(ghost) {
       if (!ctx) return;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, W, H);
+      /* Everything below is drawn in board units; the transform is what makes
+         a zoomed-in board show more of the same drawing rather than a
+         scaled-up picture of it. */
+      var z = W / view.w;
+      ctx.setTransform(z, 0, 0, z, -view.x * z, -view.y * z);
       drawPaper();
       var a = api();
       /* Zones under everything, parts over them. */
@@ -770,12 +845,15 @@
       if (board.selected && board.status !== 'running') drawSelection(board.selected);
       if (ghost) drawGhost(ghost.part, ghost.x, ghost.y, ghost.angle, ghost.ok);
       drawFrame();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
     }
 
     Object.assign(board, {
       load: load, lint: lint,
       add: add, remove: remove, moveTo: moveTo, rotate: rotate, clear: clear,
       partAt: partAt, handleAt: handleAt, snap: snap,
+      setView: setView, zoomBy: zoomBy, panBy: panBy, fit: fit,
+      viewH: viewH, unitPx: unitPx, toBoard: toBoard, MIN_VIEW: MIN_VIEW,
       trayLeft: trayLeft,
       run: run, reset: reset, step: step, runHeadless: runHeadless,
       draw: draw, rebuild: rebuild,
