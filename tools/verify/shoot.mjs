@@ -28,10 +28,11 @@ const height = Number(arg('height', 900));
 const full = process.argv.includes('--full');
 if (!url || !out) { console.error('need --url and --out'); process.exit(2); }
 
-/* Recent Playwright prefers a separate "headless shell" build. Where only the
-   full Chromium is on the machine, fall back to it rather than asking for
-   another download. */
-const browser = await chromium.launch().catch(() => chromium.launch({ channel: 'chromium' }));
+/* $PW_CHROME names a browser binary to use instead of the one this Playwright
+   would download for itself — handy on a machine that already has a complete
+   build of a different revision. */
+const launch = process.env.PW_CHROME ? { executablePath: process.env.PW_CHROME } : {};
+const browser = await chromium.launch(launch);
 const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: 2 });
 
 const errors = [];
