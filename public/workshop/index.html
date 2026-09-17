@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Contraption Bench</title>
+<meta name="description" content="Lay out ramps, dominoes, a seesaw, a fan and a pulley, then start the machine and watch whether it actually does the job. Nothing is on rails — the parts are simulated and a plan can fail.">
+<link rel="canonical" href="https://contraptions.up.railway.app/workshop/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Little Contraptions">
+<meta property="og:url" content="https://contraptions.up.railway.app/workshop/">
+<meta property="og:title" content="The Contraption Bench — Little Contraptions">
+<meta property="og:description" content="Lay out ramps, dominoes, a seesaw, a fan and a pulley, then start the machine and watch whether it actually does the job. Nothing is on rails — the parts are simulated and a plan can fail.">
+<meta property="og:image" content="https://contraptions.up.railway.app/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="The Contraption Bench — Little Contraptions">
+<meta name="twitter:description" content="Lay out ramps, dominoes, a seesaw, a fan and a pulley, then start the machine and watch whether it actually does the job.">
+<meta name="twitter:image" content="https://contraptions.up.railway.app/og.png">
+
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23F0E4CE'/><circle cx='11' cy='11' r='5.2' fill='none' stroke='%23B98A3C' stroke-width='2.6'/><circle cx='22' cy='21' r='4' fill='none' stroke='%236E6A62' stroke-width='2.4'/><path d='M4 27h24' stroke='%238A5A2B' stroke-width='3' stroke-linecap='round'/></svg>">
+<style>
+:root{ color-scheme: light; }
+:root{
+  --paper:#F0E4CE;
+  --paper-2:#E4D5B9;
+  --ink:#3A2E20;
+  --dim:#8A7A62;
+  --rule:#D9C8A8;
+  --brass:#B98A3C;
+  --brass-2:#D8A94A;
+  --wood:#C08A4E;
+  --wood-2:#8A5A2B;
+  --iron:#6E6A62;
+  --red:#E2483C;
+  --blue:#2E7BD6;
+  --green:#2FA86B;
+  --sans:"Avenir Next","Segoe UI",system-ui,-apple-system,"Helvetica Neue",sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;min-height:100%}
+body{
+  background:#E8DAC0;
+  background-image:radial-gradient(circle at 12px 12px, rgba(0,0,0,.055) 2.1px, transparent 2.4px);
+  background-size:24px 24px;
+  color:var(--ink);font-family:var(--sans);
+  min-height:100vh;padding:22px 16px 84px;
+  display:flex;flex-direction:column;align-items:center;
+}
+.wrap{ width:min(1080px,100%) }
+
+header{ display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:14px }
+h1{ font-size:clamp(20px,4.6vw,26px);font-weight:800;letter-spacing:-.01em;margin:0 }
+.tagline{ font-size:13.5px;color:var(--dim);margin:4px 0 0 }
+.plate{
+  font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--dim);text-align:right;line-height:1.9;
+}
+.plate b{ color:var(--ink);font-size:15px;letter-spacing:.06em }
+
+/* --- the bench: board on the left, parts tray on the right --- */
+.bench{ display:grid;grid-template-columns:1fr;gap:14px }
+@media (min-width:860px){ .bench{ grid-template-columns:1fr 208px } }
+
+.board{
+  position:relative;border-radius:14px;overflow:hidden;
+  background:var(--paper);
+  border:8px solid #C7A87C;
+  box-shadow:0 16px 40px rgba(80,60,30,.28), inset 0 0 0 2px rgba(255,255,255,.5);
+}
+.board canvas{ display:block;width:100%;height:auto;touch-action:none;cursor:default }
+.board.placing canvas{ cursor:grabbing }
+.board.over-part canvas{ cursor:grab }
+
+.tray{
+  background:#fff;border:2px solid var(--rule);border-radius:12px;padding:12px;
+  display:flex;flex-direction:column;gap:9px;align-self:start;
+}
+.tray h2{
+  font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);
+  margin:0 0 2px;font-weight:700;
+}
+.tray .empty{ font-size:13px;line-height:1.6;color:var(--dim);margin:0 }
+.part{
+  display:flex;align-items:center;gap:10px;width:100%;text-align:left;
+  font:inherit;font-size:13px;font-weight:600;color:var(--ink);
+  background:#F6EFE1;border:2px solid #E0D0B2;border-radius:10px;
+  padding:7px 9px;cursor:grab;transition:border-color .14s,background .14s,opacity .14s;
+}
+.part:hover{ border-color:#B79E76 }
+.part:focus-visible{ outline:3px solid var(--blue);outline-offset:2px }
+.part[aria-pressed="true"]{ background:var(--ink);border-color:var(--ink);color:#FFF6E6 }
+.part[data-spent="1"]{ opacity:.4;cursor:not-allowed }
+.part canvas{ width:38px;height:30px;flex:0 0 auto }
+.part .n{ flex:1 }
+.part .left{ font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--dim) }
+.part[aria-pressed="true"] .left{ color:#C9BCA4 }
+
+.bar{ display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;align-items:center }
+.bar button, .bar select{
+  font:inherit;font-size:13px;font-weight:600;cursor:pointer;
+  background:#fff;color:var(--ink);border:2px solid #D3C0A0;border-radius:10px;
+  padding:9px 15px;transition:border-color .14s,background .14s,transform .1s;
+}
+.bar button:hover, .bar select:hover{ border-color:#B79E76 }
+.bar button:active{ transform:translateY(1px) }
+.bar button:focus-visible, .bar select:focus-visible{ outline:3px solid var(--blue);outline-offset:2px }
+.bar button:disabled{ opacity:.45;cursor:not-allowed;transform:none }
+.bar button.go{ background:var(--red);border-color:#C2382E;color:#fff }
+.bar button.go:hover{ background:#F0554A;border-color:#C2382E }
+.bar button.go:disabled{ background:var(--red) }
+.bar .spacer{ flex:1 }
+
+.rows{ display:grid;grid-template-columns:1fr;gap:14px;margin-top:16px }
+@media (min-width:760px){ .rows{ grid-template-columns:1fr 1fr } }
+.card{ background:#fff;border:2px solid var(--rule);border-radius:12px;padding:14px 15px 16px }
+.card h2{ font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin:0 0 11px;font-weight:700 }
+.card p{ font-size:13.5px;line-height:1.75;color:#5C4E3C;margin:0 0 9px }
+.card p:last-child{ margin:0 }
+.said{ font-size:14px;line-height:1.7;color:var(--ink);font-weight:600;min-height:2.6em;margin:0 }
+.said.win{ color:#1F7A4C }
+.said.fail{ color:#B33227 }
+
+.book{ margin-top:26px;padding-top:18px;border-top:2px solid var(--rule);font-size:14px;line-height:1.85;color:#5C4E3C }
+.book p{ margin:0 0 11px }
+.book p:last-child{ margin:0 }
+.book b{ color:var(--ink) }
+
+@media (pointer:coarse){
+  .part{ min-height:44px }
+  .bar button, .bar select{ min-height:44px }
+}
+
+#lc-back{
+  position:fixed;left:14px;bottom:14px;z-index:9999;
+  display:inline-flex;align-items:center;gap:0;overflow:hidden;
+  font:700 11px/1 var(--mono);
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  color:#FFF6E6;background:var(--ink);
+  border:2px solid rgba(255,255,255,.5);border-radius:999px;
+  width:40px;height:40px;justify-content:center;
+  box-shadow:0 6px 18px rgba(80,60,30,.35);
+  transition:width .18s ease, background .16s, gap .18s ease;
+}
+@media (pointer:coarse){ #lc-back{ width:44px;height:44px } }
+#lc-back .a{ font-size:15px;line-height:1;flex:0 0 auto }
+#lc-back .w{ max-width:0;opacity:0;transition:max-width .18s ease, opacity .14s ease }
+#lc-back:hover, #lc-back:focus-visible{ width:120px;gap:9px;background:#54432F }
+#lc-back:hover .w, #lc-back:focus-visible .w{ max-width:80px;opacity:1 }
+#lc-back:focus-visible{ outline:3px solid var(--blue);outline-offset:3px }
+@media (max-width:520px){ #lc-back{ left:10px;bottom:10px } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div>
+    <h1>The Contraption Bench</h1>
+    <p class="tagline" id="tagline">Lay the parts out, start the machine, and see whether it does the job.</p>
+  </div>
+  <div class="plate">
+    job <b id="p-level">&mdash;</b><br>
+    <span id="p-state">bench idle</span>
+  </div>
+</header>
+
+<div class="bench">
+  <div class="board" id="board">
+    <canvas id="cv" width="1600" height="1000"></canvas>
+  </div>
+  <div class="tray" id="tray">
+    <h2>Parts tray</h2>
+    <p class="empty" id="tray-empty">Nothing on the bench yet.</p>
+  </div>
+</div>
+
+<div class="bar">
+  <button type="button" class="go" id="btn-run">Start the machine</button>
+  <button type="button" id="btn-reset">Put it back</button>
+  <button type="button" id="btn-clear">Clear the bench</button>
+  <span class="spacer"></span>
+  <select id="sel-level" aria-label="Which job"></select>
+</div>
+
+<div class="rows">
+  <div class="card">
+    <h2>The job</h2>
+    <p class="said" id="goal">&mdash;</p>
+  </div>
+  <div class="card">
+    <h2>What happened</h2>
+    <p class="said" id="said">&mdash;</p>
+  </div>
+</div>
+
+<div class="book">
+  <p><b>Nothing here is on rails.</b> Every part you put down becomes a real body in a physics
+  simulation &mdash; it has mass, friction and a bit of bounce, and it is under gravity from the
+  moment the machine starts. A ramp does not carry the ball along a path; the ball rolls down it,
+  and can hop off it, sit on the wrong side of it, or stop dead in a corner.</p>
+  <p>That means a layout which looks right can still fail, and the only way to find out is to
+  start it. <b>Put it back</b> returns every part to exactly where you left it before the run, so
+  a near miss can be nudged rather than rebuilt.</p>
+</div>
+
+</div>
+<a id="lc-back" href="/" aria-label="Back to the cabinet"><span class="a" aria-hidden="true">&larr;</span><span class="w">cabinet</span></a>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+<script src="/shared/lc-contraption.js"></script>
+<script src="/workshop/parts.js"></script>
+<script src="/workshop/app.js"></script>
+</body>
+</html>

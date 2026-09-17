@@ -3222,3 +3222,69 @@ asking the browser what is actually on top at that point: **0 icons painting ove
 1280px and 1120px. Also confirmed still correct: folder windows, Display Properties, the context
 menu and the taskbar all layer above the desktop; a widget still sits above the backdrop; and the
 drift still paints in both density modes. Zero console errors.
+
+---
+
+## Session 17 September 2026 — Phase 0: Scaffold (The Contraption Bench)
+
+First phase of the contraption game: a physics-puzzle drawer where parts are laid out on a
+bench and a simulation is run against a win condition. This phase is the route, the shell and
+the physics engine coming up — no parts and no rules yet.
+
+### Done
+- New drawer at `public/workshop/` — **No. 167, "The Contraption Bench"**, tagged `game`.
+- `public/shared/lc-contraption.js` — the engine module. Board geometry (1600x1000 internal
+  units, 40-unit grid), the palette, the part and win-condition registries, and the Matter.js
+  engine itself.
+- `public/workshop/parts.js` and `public/workshop/app.js` — the chapter's part set and the
+  page wiring. Both real files from the start so the script order on the page is the final one.
+- Card added to the grid in `public/index.html` (ghost card moved on to drawer 168), icon-map
+  entry `'workshop':'gear'`, and a `sitemap.xml` entry.
+- `tools/verify/shoot.mjs` — loads a page headless, records every console message and page
+  error, saves a screenshot, and **exits non-zero if anything errored**, so it gates rather
+  than informs. `tools/verify/README.md` says how to point it at an out-of-repo Playwright.
+
+### Decisions made (no need to revisit unless something breaks)
+- **The engine lives in `public/shared/`, the chapter lives in `public/workshop/`.** The brief
+  wants every future chapter (gears, trebuchet, music box, pinball) to reuse this engine, and
+  `shared/` is where the hub already puts a module written ahead of its second user —
+  `lc-coil-idle.js` went in the same way. The engine knows nothing about ramps or balls: part
+  types and win-condition types are *registered into* it from the chapter's own files.
+- **Slug is `workshop`, not `contraption`.** The whole cabinet is called Little Contraptions;
+  a drawer called `/contraption/` would read as the site rather than as one drawer of it.
+  Later chapters get their own slugs and load the same engine.
+- **Board units are 1600x1000 with a 40-unit grid, fixed.** Levels are authored in board units
+  and drawn to whatever width the page gives the canvas, so a level file can never depend on
+  somebody's screen. 40 columns by 25 rows.
+- **Matter.js 0.19.0 from cdnjs**, the same build and the same CDN line the other nine physics
+  drawers already use. No bundler, no new dependency — the hub still installs nothing to run.
+- **Position iterations raised to 8 (Matter's default is 6/4).** Stacked dominoes and a loaded
+  seesaw both settle badly at the default and the board is small enough that the extra passes
+  cost nothing measurable. Written down because it is the kind of number that looks arbitrary
+  later.
+- **Playwright is installed outside the repo and imported through `$PW`.** Adding it to
+  `package.json` would put it in Railway's install on every deploy, for a dependency only the
+  verification harness needs. ES modules ignore `NODE_PATH`, hence the dynamic import off an
+  environment variable rather than a plain `import`.
+
+### Verified
+- **Route loads, board renders, zero console errors.** `/workshop/` served 200, and so did all
+  three of its scripts. Headless Chromium at 1280x900: **0 console errors, 0 page errors, 0
+  failed requests.** Screenshot looked at, not inferred:
+  `verification/phase-0/bench-empty.png` — bone paper, the 40-unit grid with every fifth line
+  darker, the brass rule, the empty parts tray and both cards all present.
+- **Matter.js initialises.** Asked the live page rather than reading the code:
+  `Matter.version === "0.19.0"`, `LCContraption.haveMatter === true`, and the engine object
+  exists on the board.
+- **The hub grid picks it up.** 140 cards on the front page, the workshop card among them at
+  No. 167, the footer count deriving 140 on its own, and the ghost card now reading 168.
+- **390px: no horizontal overflow** (`scrollWidth === clientWidth === 390`).
+  `verification/phase-0/bench-empty-390.png`.
+
+### Escalations
+- None.
+
+### Next up
+- Phase 1, the core engine: the parts tray, placing and dragging parts onto the board, the
+  level-file JSON schema, Run and Reset, and the win-condition checker — gated on a hardcoded
+  test level actually reporting solved and not-solved from a headless run.
