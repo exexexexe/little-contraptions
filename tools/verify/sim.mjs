@@ -53,8 +53,14 @@ for (const id of list) {
     let solution = { status: 'no solution in the file', steps: 0 };
     let used = 0;
     if ((b.level.solution || []).length) {
-      used = LCBench.applySolution();
-      solution = LCBench.runHeadless();
+      /* A solution the bench refuses to lay out — a part that will not fit
+         where the file says to put it — is a failing level, not a crash. */
+      try {
+        used = LCBench.applySolution();
+        solution = LCBench.runHeadless();
+      } catch (e) {
+        solution = { status: 'cannot be laid out: ' + e.message, steps: 0 };
+      }
     }
     b.clear(); b.reset();
     return {

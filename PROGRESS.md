@@ -3372,3 +3372,106 @@ The bench can now be laid out, started, and told whether it did the job.
 ### Next up
 - Phase 2: the other four Workshop Basics parts — domino, seesaw, fan, pulley — then three
   hand-authored levels, each needing a different subset, each gated through `sim.mjs`.
+
+## Session 17 September 2026 — Phase 2: Workshop Basics parts and levels
+
+The five parts, and three jobs that each need a different handful of them.
+
+### Done
+- **Five parts**, each registered from `public/workshop/parts.js`, none of them known to the
+  engine: **ramp** (fixed plank), **domino** (stands, falls, high static friction so it
+  topples rather than sliding), **seesaw** (plank pinned through its middle, with a block
+  under it that stops it turning all the way round), **fan** (pushes anything dynamic in the
+  cone in front of it), **pulley** (wheel, rope, bucket one side, tray the other).
+- **Three levels**, each needing a different subset:
+  - `first-drop` — **ramp** ×2. A post blocks the floor; two ramps have to route the ball over
+    it. Par 2.
+  - `tip-it-in` — **seesaw** ×1 and the **block** it is given. A level seesaw tips towards
+    whatever lands on it, which sends the ball back the way it came; the block goes on the far
+    arm to weigh it down first. Par 1.
+  - `counterweight` — **fan** ×1 and **pulley** ×1. The ball sits on a shelf and will stay
+    there for ever. The fan blows it off, the pulley's bucket catches it, and the loaded bucket
+    rides down into the crate. Par 2.
+- **A placement rule: nothing may be put down inside something else.** `add`, `moveTo` and
+  `rotate` all refuse a position that would overlap another part, and the page says so.
+- `solution` entries can now also **move** a part the level already placed
+  (`{move: "block", x, y}`), so a level whose puzzle is *where to put what you were given* can
+  state its own solution.
+- README: drawer count to 140, `lc-contraption.js` and `tools/verify/` in the structure list.
+
+### Decisions made (no need to revisit unless something breaks)
+- **The fan applies force scaled to each body's mass.** In Matter, a force of `mass × 0.001`
+  exactly cancels gravity, so scaling by mass is what makes "wind" mean the same acceleration
+  for a ball and for a domino rather than the same shove for both. Reach 420, cone 150 wide at
+  the mouth, push 0.0017 — about 1.7g close up, falling off linearly.
+- **The pulley is written as one degree of freedom by hand, not as two constraints.** The
+  obvious fake — two constraints whose lengths are set from where the ends already are —
+  *quietly does nothing*: the lengths agree with every position, so they never pull. It was
+  written that way first and measured moving 12 units in 600 steps. It is now: hold both ends
+  on vertical rails, make their speeds equal and opposite, and correct the two rope lengths
+  back to adding up. Measured after: bucket down 114, tray up 120. The consequence is that the
+  ends cannot be shoved sideways, which is roughly true of a rope over a wheel and is what
+  stops the bucket swinging off into the scenery.
+- **The pulley's two ends are made to weigh the same** (`setMass(tray, bucket.mass)`). Before
+  that the bucket was the heavier by half and sat on its own end stop before the player did
+  anything — a pulley already at the bottom of its travel is scenery, not a part.
+- **The ball's restitution dropped from .28 to .14.** At .28 it bounced off a seesaw instead of
+  riding it, and a part that the ball refuses to stay on is not a part.
+- **The seesaw's plank is light (density .0009) relative to the ball.** At .0016 a ball landing
+  on an arm moved it three degrees, which reads as a plank that is nailed down.
+- **The overlap rule is a correctness fix, not a nicety.** Two solids that start inside each
+  other are shoved apart hard on the first step, and it looks exactly like a machine working.
+  Both earlier "solutions" were doing this — see below. The board's own floor and walls are
+  excluded, because a seesaw's foot is *meant* to sit in the floor.
+
+### Verified
+- **Each mechanism was measured, not eyeballed.** Six dominoes in a row, the first nudged: all
+  six over (60–90°). Seesaw with a ball landing on one arm: tips to **−27°**, pivot drift
+  **0**. Fan with a ball in front of it: **520 → 1570** across the board. Pulley empty:
+  **580 → 575**, i.e. hangs where it was put; loaded: **bucket down 114, tray up 120**.
+- **The three levels pass the content gate**, `tools/verify/sim.mjs`: each lints clean, each
+  **fails as handed over**, each **solves from its own recorded solution** — 256, 170 and 126
+  steps against pars of 2, 1 and 2. All three now carry `verified: true` because of that run
+  and not because they look right.
+- **Both parts are genuinely needed in `counterweight`**, checked by running the level with
+  each alone: fan only → the ball is blown across the board into the far wall, failed; pulley
+  only → the ball never leaves the shelf, 2000 steps, failed; both → solved.
+- **The levels are puzzles, not lucky dips.** Sweeping the placement grid: `first-drop`
+  446 solutions out of 84,564 layouts (0.5%), `tip-it-in` 25 of 792 (3%), `counterweight`
+  52 of 2,016 (2.6%) — and in each case the solutions fall in one coherent cluster, which is
+  what a real mechanism looks like as opposed to a fluke.
+- **The overlap rule works through the real interface.** Dragging a ramp onto open board
+  placed it; dragging the next one into the post was refused, the tray count stayed at 1 used,
+  and the card read "That will not fit there — something is already in the way."
+  `verification/phase-2/will-not-fit.png`.
+- **All five parts drawn and looked at**: `verification/phase-2/parts-sheet.png`. Start,
+  laid-out and solved shots for each of the three levels are in the same folder.
+- **Zero console errors** on the bench and on the hub, and **no horizontal overflow at 390px**.
+
+### Two things that were wrong and are worth remembering
+- **The first `tip-it-in` "solution" was a physics glitch.** The block was standing *through*
+  the seesaw plank, and the solver flinging them apart on step one was doing the work. It
+  passed the gate — the win condition genuinely fired — which is exactly why the gate alone is
+  not enough and the laid-out screenshot has to be looked at. The overlap rule now makes that
+  layout impossible, and the level was redesigned around the block as a counterweight on the
+  far arm.
+- **`first-drop`'s first solution had the second ramp inside the post.** Same class of thing,
+  caught by the same rule. Both levels were re-searched afterwards and their recorded
+  solutions replaced.
+
+### Escalations
+- None blocking. One thing for Maksim to decide when he next looks at this:
+  **the bench is cramped at 390px.** A 1600-unit board drawn 340px wide puts a grid square at
+  about 8px and the smallest drag target at about 9px, well under the 44px the rest of the
+  cabinet holds itself to. The two ways out are a pinch-zoom-and-pan board, or a second set of
+  level layouts authored for a narrower board. My leaning is **zoom and pan**, because two sets
+  of layouts means two sets of things to verify for ever. Nothing else in this phase depends on
+  the answer, so it has not been done either way.
+
+### Next up
+- The remaining five to seven Workshop Basics levels, now that the schema and all five parts
+  have been proved on three. The searcher used here — sweep the placement grid, count the
+  solutions, look at the cluster — is worth keeping as the way levels get their difficulty set
+  rather than guessed.
+- Then Chapter 2 (gears), which should need no engine change: a new `parts.js` and a new
+  `levels/` folder under its own slug, both registering into `lc-contraption.js`.
