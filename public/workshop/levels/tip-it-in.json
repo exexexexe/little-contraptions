@@ -1,0 +1,66 @@
+{
+  "id": "tip-it-in",
+  "chapter": "workshop-basics",
+  "title": "Tip It In",
+  "goal": "A seesaw, a block to weigh one end down, and a ball that has to end up in the crate.",
+  "opening": "A level seesaw tips towards whatever lands on it, which sends the ball back the way it came. Weigh the far end down first.",
+  "won": "Down the seesaw and into the crate.",
+  "lost": "Everything has stopped and the ball is not in the crate. The block belongs on the far arm, not under it.",
+  "source": "hand-designed",
+  "verified": true,
+  "par": 1,
+  "scenery": [
+    {
+      "part": "ball",
+      "id": "ball",
+      "x": 300,
+      "y": 90,
+      "r": 26
+    },
+    {
+      "part": "goal",
+      "id": "crate",
+      "x": 1300,
+      "y": 900,
+      "w": 280,
+      "h": 200,
+      "title": "the crate"
+    }
+  ],
+  "placed": [
+    {
+      "part": "domino",
+      "id": "block",
+      "x": 900,
+      "y": 300
+    }
+  ],
+  "tray": [
+    {
+      "part": "seesaw",
+      "count": 1
+    }
+  ],
+  "win": {
+    "type": "reachZone",
+    "body": "ball",
+    "zone": "crate",
+    "hold": 400
+  },
+  "limits": {
+    "maxSteps": 1800
+  },
+  "solution": [
+    {
+      "part": "seesaw",
+      "x": 320,
+      "y": 760,
+      "angle": 0
+    },
+    {
+      "move": "block",
+      "x": 440,
+      "y": 560
+    }
+  ]
+}

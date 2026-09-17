@@ -1,3 +1,5 @@
 [
-  { "id": "test-ramp", "title": "The First Drop", "file": "test-ramp.json" }
+  { "id": "first-drop",    "title": "The First Drop",   "file": "first-drop.json" },
+  { "id": "tip-it-in",     "title": "Tip It In",        "file": "tip-it-in.json" },
+  { "id": "counterweight", "title": "The Counterweight","file": "counterweight.json" }
 ]

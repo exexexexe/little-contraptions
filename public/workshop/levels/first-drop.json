@@ -1,0 +1,68 @@
+{
+  "id": "first-drop",
+  "chapter": "workshop-basics",
+  "title": "The First Drop",
+  "goal": "Two ramps, a post in the way, and a ball that has to end up in the crate.",
+  "opening": "The ball falls straight down and the post stops anything rolling along the floor. Get it over.",
+  "won": "Over the post and into the crate.",
+  "lost": "Everything has stopped, and the ball is not in the crate. Put it back and move a ramp.",
+  "source": "hand-designed",
+  "verified": true,
+  "par": 2,
+  "scenery": [
+    {
+      "part": "ball",
+      "id": "ball",
+      "x": 140,
+      "y": 90,
+      "r": 26
+    },
+    {
+      "part": "wall",
+      "id": "post",
+      "x": 560,
+      "y": 810,
+      "w": 44,
+      "h": 380
+    },
+    {
+      "part": "goal",
+      "id": "crate",
+      "x": 1340,
+      "y": 900,
+      "w": 240,
+      "h": 200,
+      "title": "the crate"
+    }
+  ],
+  "placed": [],
+  "tray": [
+    {
+      "part": "ramp",
+      "count": 2
+    }
+  ],
+  "win": {
+    "type": "reachZone",
+    "body": "ball",
+    "zone": "crate",
+    "hold": 400
+  },
+  "limits": {
+    "maxSteps": 1800
+  },
+  "solution": [
+    {
+      "part": "ramp",
+      "x": 240,
+      "y": 280,
+      "angle": 30
+    },
+    {
+      "part": "ramp",
+      "x": 560,
+      "y": 560,
+      "angle": 30
+    }
+  ]
+}

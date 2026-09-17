@@ -60,9 +60,12 @@ Opens on http://localhost:3000.
 
 ## The toys
 
-**139 drawers**, each a single self-contained HTML file under `public/<slug>/index.html`.
-(`public/` holds 167 such files; 28 of them are redirect stubs left behind by
+**140 drawers**, each under `public/<slug>/index.html`.
+(`public/` holds 168 such files; 28 of them are redirect stubs left behind by
 consolidations, which is exactly the difference.)
+All but one are a single self-contained HTML file. The Contraption Bench
+(`/workshop/`) is a folder — a page, its chapter's parts, and its levels as
+JSON — because the engine under it is meant to be reused by later chapters.
 The hub filters them by the tag on each card.
 
 The table below covers the first 29 and has not been maintained since — the
@@ -354,10 +357,23 @@ style.
       lc-species.js        the species rotation, shared by the drawer and the
                            desktop badge so the two cannot disagree about the
                            day; identifiers only, every fact still fetched
+      lc-contraption.js    the contraption engine: board, grid, placement,
+                           the fixed-step simulation, the level schema and its
+                           lint pass, and the win-condition check. Knows nothing
+                           about ramps or balls — part types and win-condition
+                           types are registered into it from a chapter's own
+                           files. Used by /workshop/, and built to be used by
+                           the chapters after it
       lc-coil-idle.js      the small wobbling coil, as a droppable component —
                            its own spring integration, no Matter.js, no
                            dependency at all, built for a future desktop widget
                            and deliberately not wired into one yet
+
+    tools/verify/        the build gates: a headless screenshot that fails on
+                         any console error, and a headless run of every
+                         contraption level. Playwright lives outside the repo
+                         and is pointed at with $PW — see tools/verify/README.md
+    verification/        what those gates actually looked at, per phase
 
 `NO_CACHE=1` serves every static file with `no-store`. An hour of browser cache
 on a `.js` file is right in production and maddening while editing one.

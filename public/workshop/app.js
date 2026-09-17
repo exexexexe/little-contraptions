@@ -136,7 +136,10 @@
       solved: 'job done', failed: 'no good'
     }[board.status] || board.status;
 
-    if (board.status === 'solved') {
+    if (board.message) {
+      say(board.message, 'fail');
+      board.message = '';
+    } else if (board.status === 'solved') {
       say(current && current.won ? current.won : 'That did it — the job is done.', 'win');
     } else if (board.status === 'failed') {
       say(current && current.lost ? current.lost : 'Everything has stopped, and not where it was meant to. Put it back and move something.', 'fail');
@@ -308,6 +311,13 @@
     applySolution: function () {
       board.clear();
       (current.solution || []).forEach(function (s) {
+        if (s.move) {
+          var target = board.placements.filter(function (p) { return p.id === s.move; })[0];
+          if (!target) throw new Error('solution moves "' + s.move + '", which is not on the board');
+          board.moveTo(target, s.x, s.y);
+          if (s.angle != null) board.rotate(target, s.angle - target.angle);
+          return;
+        }
         var p = board.add(s.part, s.x, s.y, s.angle || 0);
         if (!p) throw new Error('solution asks for a ' + s.part + ' the tray does not have');
       });

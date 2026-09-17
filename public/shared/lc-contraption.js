@@ -171,7 +171,7 @@
       build: function (p) {
         var r = p.r || 26;
         return { bodies: [M.Bodies.circle(p.x, p.y, r, {
-          restitution: p.restitution == null ? .28 : p.restitution,
+          restitution: p.restitution == null ? .14 : p.restitution,
           friction: .04, frictionAir: .001, density: .0022,
           label: p.id || 'ball'
         })] };
@@ -303,8 +303,14 @@
      `solution` is what makes "verified": true mean something. The harness
      places exactly that layout, runs the simulation to completion, and refuses
      the level unless the win condition actually fires — and unless the same
-     level *fails* with the bench left empty, which catches a win zone that was
-     already satisfied before the player did anything.
+     level *fails* with the bench left as handed over, which catches a win zone
+     that was already satisfied before the player did anything.
+
+     Its entries come in two kinds: `{part, x, y, angle}` takes a part out of
+     the tray and puts it down, and `{move, x, y, angle}` picks up something
+     already on the board — a `placed` part, by its id — and moves it. A level
+     whose whole puzzle is where to put a part it already gave you needs the
+     second kind to be able to state its own solution at all.
 
      Anything in `scenery` or `placed` is a part name looked up in the part
      registry, so a chapter's own parts need no engine change. */
@@ -333,8 +339,13 @@
 
     (level.solution || []).forEach(function (p, i) {
       var where = 'solution[' + i + ']';
-      if (!PARTS[p.part]) bad.push(where + ': no such part "' + p.part + '"');
       if (typeof p.x !== 'number' || typeof p.y !== 'number') bad.push(where + ': needs numeric x and y');
+      if (p.move) {
+        var target = (level.placed || []).filter(function (q) { return q.id === p.move; })[0];
+        if (!target) bad.push(where + ': nothing placed on the board has id "' + p.move + '"');
+      } else if (!PARTS[p.part]) {
+        bad.push(where + ': no such part "' + p.part + '"');
+      }
     });
 
     (level.tray || []).forEach(function (t, i) {
@@ -418,6 +429,13 @@
       p.bodies = built.bodies || [];
       p.constraints = built.constraints || [];
       p.tick = built.tick || null;
+      /* Anything else a part hands back is kept on the placement, so a part
+         that needs its own state to draw with — where a pulley's anchors are,
+         how much rope has gone over the wheel — has somewhere to put it
+         without the engine knowing what it is. */
+      Object.keys(built).forEach(function (k) {
+        if (k !== 'bodies' && k !== 'constraints' && k !== 'tick') p[k] = built[k];
+      });
       p.bodies.forEach(function (b) { b.plugin = b.plugin || {}; b.plugin.lcPlacement = p; });
       if (p.bodies.length) M.Composite.add(world, p.bodies);
       if (p.constraints.length) M.Composite.add(world, p.constraints);
@@ -477,6 +495,43 @@
 
     function snap(v) { return Math.round(v / GRID) * GRID; }
 
+    /* Nothing may be put down inside something else. Two solids that start
+       overlapping are shoved apart hard on the first step, which looks like a
+       machine working and is really the solver getting out of a hole — and a
+       level "solved" that way is not solved. The board's own floor and walls
+       are excluded: a seesaw's foot is *meant* to sit in the floor. */
+    function simpleParts(b) { return b.parts.length > 1 ? b.parts.slice(1) : [b]; }
+
+    function overlaps(bodies, ignore) {
+      if (!HAVE_MATTER) return false;
+      var others = [];
+      board.placements.forEach(function (p) {
+        if (p === ignore) return;
+        (p.bodies || []).forEach(function (b) {
+          simpleParts(b).forEach(function (q) { others.push(q); });
+        });
+      });
+      return bodies.some(function (b) {
+        return simpleParts(b).some(function (a) {
+          return others.some(function (o) {
+            var c = M.Collision.collides(a, o);
+            /* A tolerance, because a ball resting exactly on a shelf is
+               touching, not overlapping, and floating point says so. */
+            return c && c.collided && c.depth > 3;
+          });
+        });
+      });
+    }
+
+    /* Build a part where it is being asked for, without adding it to the
+       world, purely to ask whether it would fit. */
+    function trial(part, x, y, angle) {
+      var def = PARTS[part];
+      var spec = Object.assign({ w: def.w, h: def.h }, { part: part, x: x, y: y, angle: angle || 0 });
+      var built = def.build ? def.build(spec, api()) : { bodies: [] };
+      return built.bodies || [];
+    }
+
     function trayRow(part) {
       for (var i = 0; i < board.tray.length; i++) if (board.tray[i].part === part) return board.tray[i];
       return null;
@@ -492,7 +547,13 @@
       if (!def) return null;
       var row = trayRow(part);
       if (row && row.used >= row.count) return null;
-      var p = mk({ part: part, x: snap(x), y: snap(y), angle: angle || 0 }, false);
+      var sx = snap(x), sy = snap(y);
+      if (overlaps(trial(part, sx, sy, angle || 0), null)) {
+        board.message = 'That will not fit there — something is already in the way.';
+        onChange(board);
+        return null;
+      }
+      var p = mk({ part: part, x: sx, y: sy, angle: angle || 0 }, false);
       p.fromTray = !!row;
       if (row) row.used++;
       board.placements.push(p);
@@ -514,18 +575,26 @@
     }
 
     function moveTo(p, x, y) {
-      if (board.status === 'running' || !p || p.locked) return;
-      p.x = Math.max(GRID, Math.min(W - GRID, snap(x)));
-      p.y = Math.max(GRID, Math.min(H - GRID, snap(y)));
+      if (board.status === 'running' || !p || p.locked) return false;
+      var nx = Math.max(GRID, Math.min(W - GRID, snap(x)));
+      var ny = Math.max(GRID, Math.min(H - GRID, snap(y)));
+      if (nx === p.x && ny === p.y) return true;
+      if (overlaps(trial(p.part, nx, ny, p.angle), p)) return false;
+      p.x = nx; p.y = ny;
       board.status = 'idle';
       rebuild(); onChange(board);
+      return true;
     }
 
     function rotate(p, by) {
-      if (board.status === 'running' || !p || p.locked || !PARTS[p.part].rotatable) return;
-      p.angle = (((p.angle + by) % 360) + 360) % 360;
+      if (board.status === 'running' || !p || p.locked || !PARTS[p.part].rotatable) return false;
+      var a = (((p.angle + by) % 360) + 360) % 360;
+      if (a === p.angle) return true;
+      if (overlaps(trial(p.part, p.x, p.y, a), p)) return false;
+      p.angle = a;
       board.status = 'idle';
       rebuild(); onChange(board);
+      return true;
     }
 
     function clear() {

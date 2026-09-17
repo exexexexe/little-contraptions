@@ -1,0 +1,72 @@
+{
+  "id": "counterweight",
+  "chapter": "workshop-basics",
+  "title": "The Counterweight",
+  "goal": "The ball is on a shelf and will stay there. Blow it off, catch it, and let it ride down into the crate.",
+  "opening": "Nothing on this bench moves on its own. The fan starts it; the pulley has to be under where it lands.",
+  "won": "Blown off, caught, and lowered in.",
+  "lost": "Everything has stopped and the ball is not in the crate. Either it was never blown off, or the bucket was not under it.",
+  "source": "hand-designed",
+  "verified": true,
+  "par": 2,
+  "scenery": [
+    {
+      "part": "wall",
+      "id": "shelf",
+      "x": 240,
+      "y": 300,
+      "w": 300,
+      "h": 24
+    },
+    {
+      "part": "ball",
+      "id": "ball",
+      "x": 260,
+      "y": 262,
+      "r": 26
+    },
+    {
+      "part": "goal",
+      "id": "crate",
+      "x": 700,
+      "y": 820,
+      "w": 220,
+      "h": 220,
+      "title": "the crate"
+    }
+  ],
+  "placed": [],
+  "tray": [
+    {
+      "part": "fan",
+      "count": 1
+    },
+    {
+      "part": "pulley",
+      "count": 1
+    }
+  ],
+  "win": {
+    "type": "reachZone",
+    "body": "ball",
+    "zone": "crate",
+    "hold": 400
+  },
+  "limits": {
+    "maxSteps": 2400
+  },
+  "solution": [
+    {
+      "part": "fan",
+      "x": 80,
+      "y": 200,
+      "angle": 90
+    },
+    {
+      "part": "pulley",
+      "x": 840,
+      "y": 600,
+      "angle": 0
+    }
+  ]
+}
