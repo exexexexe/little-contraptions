@@ -3288,3 +3288,87 @@ the physics engine coming up — no parts and no rules yet.
 - Phase 1, the core engine: the parts tray, placing and dragging parts onto the board, the
   level-file JSON schema, Run and Reset, and the win-condition checker — gated on a hardcoded
   test level actually reporting solved and not-solved from a headless run.
+
+## Session 17 September 2026 — Phase 1: Core engine (The Contraption Bench)
+
+The bench can now be laid out, started, and told whether it did the job.
+
+### Done
+- **The level schema**, documented in `lc-contraption.js` beside the lint pass that enforces
+  it: `id`, `title`, `goal`, `source`, `verified`, `par`, `scenery` (fixed), `placed`
+  (movable, pre-laid), `tray` (what may be added and how many), `win`, `limits`, and
+  `solution` — a layout known to solve it.
+- **`LCContraption.lint(level)`** — checks every part name against the registry, every
+  coordinate against the board, ids for duplicates, tray counts, and, most usefully, that the
+  win condition names things the board actually contains. A win that names a missing body is
+  the failure this catches: the file looks fine and the level is simply never satisfiable.
+- **Core props in the engine** — `wall`, `ball`, `goal`. Every chapter needs something solid,
+  something to move and somewhere to end up, whatever its own parts are. `goal` has no bodies
+  at all: a goal is a place, not a thing, and the ball passes through it.
+- **Win conditions as a registry.** `reachZone` is the one Chapter 1 needs; `all` and `any`
+  compose others. Each is `{describe, init, test}` and is looked up by `win.type`.
+- **Placing and moving**: drag from the tray onto the board, or click the tray and then click
+  the board; drag a placed part to move it; a rotation handle on a stalk above the selection;
+  `[` and `]` to rotate, arrows to nudge, Delete to remove.
+- **Start / Put it back / Clear the bench**, and a job picker.
+- **`tools/verify/sim.mjs`** — the content gate. Per level: lint, run it *as handed over* and
+  require it not to solve, then place the level's own `solution` and require it to solve.
+- The Phase-1 test level, `levels/test-ramp.json` — "The First Drop": one ball, one crate,
+  one ramp in the tray.
+
+### Decisions made (no need to revisit unless something breaks)
+- **Placement snaps to the 40-unit grid; rotation snaps to 15 degrees.** Free placement was
+  the alternative. Snapping wins because a level is only "verified solvable" if the solution
+  that was verified can be laid out again — with free rotation, a layout that solved once is
+  not reachable a second time, and the whole content pipeline rests on that being false.
+- **The simulation is stepped at a fixed 60Hz**, on screen and headless alike. A variable
+  delta off `requestAnimationFrame` would make a verified level a different level on a slower
+  machine. One frame is one step: a throttled tab runs the machine slowly rather than
+  skipping it ahead.
+- **The placements are the truth; the bodies are only this run's copy.** Reset, and every
+  edit, rebuilds the Matter world from the placement list rather than trying to put bodies
+  back. Two dozen bodies rebuild in well under a frame, and there is no second source of
+  truth to drift.
+- **A run ends early when the board settles** — total speed under a threshold for 90
+  consecutive steps, after at least 120 — instead of always spending the full 1800-step
+  budget. The empty test board reports "no good" in 306 steps rather than 1800.
+- **`reachZone` requires the body to *stay* in the zone** (400ms by default). Without the
+  hold, a ball flying through the crate at speed counts as delivered, which is not what the
+  job says.
+- **"Clear the bench" restores the level's pre-placed parts** rather than emptying the board.
+  Clearing means "back to how the job was handed to me".
+- **`solution` in the level file is what makes `verified: true` mean anything.** The harness
+  places exactly that layout and refuses the level unless it solves — *and* unless the level
+  fails untouched, which catches a win zone that was already satisfied before the player did
+  anything.
+- **The verification harness drives the same board object the page uses** (`window.LCBench`).
+  There is no headless code path: if there were, a headless pass would not stand for the real
+  thing.
+- **Playwright's browser is pointed at with `$PW_CHROME`.** This machine already had complete
+  Chromium builds of other revisions; downloading another to match was slower than naming one.
+
+### Verified
+- **The headless content gate passes.** `tools/verify/sim.mjs`: `test-ramp` lints clean, is
+  **failed after 306 steps untouched**, and **solved after 214 steps** with its own solution.
+  1/1 levels pass, zero console errors during the run.
+- **Placing works through the real interface, not just the API.** Driving an actual mouse:
+  dragging the tray's Ramp onto the board placed it at 280,600 and moved the tray to 0/1;
+  dragging the rotation handle turned it to exactly 30 degrees; `]` took it to 45 and `[`
+  back to 30. `verification/phase-1/placed-ramp.png`.
+- **Run reports solved correctly.** Clicking Start ran 214 steps to `solved`, the crate drew
+  green, the plate read "job done" and the card said so.
+  `verification/phase-1/solved.png`.
+- **Run reports not-solved correctly.** Clear the bench, then Start: `failed` after 306
+  steps, "no good" on the plate. `verification/phase-1/empty-fails.png`.
+- **Put it back does not reload.** After a solved run, Reset returned status to `idle`, steps
+  to 0, both bodies to their starting coordinates and the ramp to 280/600/30 — with the
+  navigation count still 1, so the page was never reloaded.
+- **Zero console errors** across the whole interactive session, and **no horizontal overflow
+  at 390px** (`verification/phase-1/bench-390.png`).
+
+### Escalations
+- None.
+
+### Next up
+- Phase 2: the other four Workshop Basics parts — domino, seesaw, fan, pulley — then three
+  hand-authored levels, each needing a different subset, each gated through `sim.mjs`.
