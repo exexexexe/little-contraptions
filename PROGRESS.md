@@ -3475,3 +3475,58 @@ The five parts, and three jobs that each need a different handful of them.
   rather than guessed.
 - Then Chapter 2 (gears), which should need no engine change: a new `parts.js` and a new
   `levels/` folder under its own slug, both registering into `lc-contraption.js`.
+
+## Session 17 September 2026 — Phase 3: A board you can get at on a phone
+
+The escalation left at the end of Phase 2, settled. Maksim's call was to do as I had leaned,
+so: **zoom and pan**, not a second set of narrow-board layouts.
+
+### Done
+- The board has a **view** — a window on it, in board units, aspect locked to the board's so
+  nothing is ever drawn stretched. Zoom from the whole 1600-unit board down to 560.
+- **Pinch** to zoom, **one finger on the bare paper** to pan, **one finger on a part** to move
+  the part. **Wheel** zooms about the pointer. Three controls in the board's top-right corner
+  (&minus;, Fit, +) and the keys `+`, `&minus;` and `0` do the same, so none of it needs a
+  pointer at all.
+- **Hit targets are sized in pixels, not board units.** `partAt` and the rotation handle both
+  convert 44 CSS pixels into however many board units that currently is, so the smallest thing
+  you can grab is 44px at every zoom level, on every screen.
+
+### Decisions made
+- **Zoom and pan rather than a second set of layouts.** Two sets of layouts means two sets of
+  things to verify for ever, and every level that gets authored after this would owe a second
+  version of itself. This way the levels are the levels.
+- **A finger on a part moves the part; a finger on the paper moves the paper.** That division
+  needs no explaining to anyone and leaves no gesture doing two jobs.
+- **A second finger cancels whatever the first was doing** and starts a pinch. Trying to drag
+  a ramp and zoom at the same time is not a gesture anybody means, and dropping the drag is
+  the honest reading.
+- **The view controls sit top-right, not bottom-right.** They started bottom-right and the
+  screenshot showed them sitting on top of the crate — every job in the chapter puts its crate
+  along the bottom.
+- **`setPointerCapture` is wrapped in try/catch.** It throws if the pointer has already gone,
+  and an uncaught throw there takes the rest of the pointerdown handler with it — which is how
+  a single lost touch would leave the bench unresponsive.
+
+### Verified
+- **The view maths holds.** Zooming about a point keeps that point still (anchor 400,300 at
+  ×2 → view 200,150 w800, which is exactly right), pan moves, and both clamps hold: zooming
+  out past the board returns 0,0,1600 and zooming in past the limit stops at 560.
+- **The 44px floor is real, measured on the page at 390px wide.** Canvas 342px across, a board
+  unit worth 0.214px zoomed out and 0.611px zoomed in — and the minimum grab box measured
+  **44px at both**. Before this phase it was 9px.
+- **Gestures work, driven rather than reasoned about.** A one-finger drag on bare paper panned
+  the view from 280,175 to 566,0. A synthetic two-finger pinch took the view 1600 → 711 and
+  back out to 1600. A tray part still dragged onto the board correctly afterwards.
+- **The three levels still pass the content gate** unchanged — 256, 170 and 126 steps.
+- **Zero console errors** at 1280 and at 390, **no horizontal overflow at 390**. The one error
+  that did appear during testing was the `setPointerCapture` throw above; it was fixed rather
+  than noted.
+- Looked at: `verification/phase-3/bench-1280.png`, `mobile-fit.png`, `mobile-zoomed.png`.
+
+### Escalations
+- None. The Phase 2 escalation is closed by this phase.
+
+### Next up
+- Unchanged from Phase 2: the remaining five to seven Workshop Basics levels, then Chapter 2
+  (gears), which should still need no engine change.

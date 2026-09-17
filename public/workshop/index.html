@@ -73,6 +73,28 @@ h1{ font-size:clamp(20px,4.6vw,26px);font-weight:800;letter-spacing:-.01em;margi
 .board canvas{ display:block;width:100%;height:auto;touch-action:none;cursor:default }
 .board.placing canvas{ cursor:grabbing }
 .board.over-part canvas{ cursor:grab }
+.board.panning canvas{ cursor:grabbing }
+
+/* The view controls sit on the board rather than in the button row: they are
+   about the board, and on a phone the button row is already two lines long.
+   Top right, not bottom right — every job in the chapter puts its crate along
+   the bottom, and a control that covers the target is a control in the way. */
+.viewbar{
+  position:absolute;right:10px;top:10px;display:flex;gap:5px;
+  background:rgba(255,246,230,.86);border:2px solid #D3C0A0;border-radius:11px;padding:4px;
+  box-shadow:0 4px 14px rgba(80,60,30,.22);backdrop-filter:blur(3px);
+}
+.viewbar button{
+  font:700 15px/1 var(--sans);color:var(--ink);background:#fff;
+  border:2px solid #E0D0B2;border-radius:8px;cursor:pointer;
+  min-width:34px;height:34px;padding:0 8px;
+  transition:border-color .14s,background .14s;
+}
+.viewbar #btn-fit{ font-size:12px;letter-spacing:.06em;text-transform:uppercase }
+.viewbar button:hover{ border-color:#B79E76 }
+.viewbar button:active{ background:#F6EFE1 }
+.viewbar button:focus-visible{ outline:3px solid var(--blue);outline-offset:2px }
+@media (pointer:coarse){ .viewbar button{ min-width:44px;height:44px } }
 
 .tray{
   background:#fff;border:2px solid var(--rule);border-radius:12px;padding:12px;
@@ -170,6 +192,11 @@ h1{ font-size:clamp(20px,4.6vw,26px);font-weight:800;letter-spacing:-.01em;margi
 <div class="bench">
   <div class="board" id="board">
     <canvas id="cv" width="1600" height="1000"></canvas>
+    <div class="viewbar">
+      <button type="button" id="btn-zoom-out" aria-label="Zoom out">&minus;</button>
+      <button type="button" id="btn-fit">Fit</button>
+      <button type="button" id="btn-zoom-in" aria-label="Zoom in">+</button>
+    </div>
   </div>
   <div class="tray" id="tray">
     <h2>Parts tray</h2>
@@ -204,6 +231,11 @@ h1{ font-size:clamp(20px,4.6vw,26px);font-weight:800;letter-spacing:-.01em;margi
   <p>That means a layout which looks right can still fail, and the only way to find out is to
   start it. <b>Put it back</b> returns every part to exactly where you left it before the run, so
   a near miss can be nudged rather than rebuilt.</p>
+  <p>The bench is bigger than most screens. <b>Zoom in</b> with the controls in its corner, the
+  scroll wheel, or two fingers; drag the bare paper to move about, and drag a part to move the
+  part. <b>Fit</b> puts the whole bench back on screen. The keys work too: <b>+</b> and
+  <b>&minus;</b> zoom, <b>0</b> fits, <b>[</b> and <b>]</b> turn the selected part, the arrow
+  keys nudge it and <b>Delete</b> takes it off.</p>
 </div>
 
 </div>

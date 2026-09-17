@@ -153,11 +153,14 @@
   var dragging = null;   /* a placed part being moved */
   var rotating = null;   /* a placed part being turned by its handle */
 
-  function toBoard(ev) {
-    var r = cv.getBoundingClientRect();
-    return { x: (ev.clientX - r.left) * (board.W / r.width),
-             y: (ev.clientY - r.top) * (board.H / r.height) };
-  }
+  var panning = null;    /* the board itself being dragged about */
+  var pinch = null;      /* two fingers, zooming */
+  var pointers = {};     /* every pointer currently down on the canvas */
+
+  /* Board units, through whatever the board is currently showing. Once the
+     board can be zoomed there is no fixed relationship between a pixel and a
+     board unit, so nothing may assume one. */
+  function toBoard(ev) { return board.toBoard(ev.clientX, ev.clientY); }
   function overBoard(ev) {
     var r = cv.getBoundingClientRect();
     return ev.clientX >= r.left && ev.clientX <= r.right && ev.clientY >= r.top && ev.clientY <= r.bottom;
@@ -200,9 +203,33 @@
     });
   }
 
+  function pinchState() {
+    var ids = Object.keys(pointers);
+    if (ids.length < 2) return null;
+    var a = pointers[ids[0]], b = pointers[ids[1]];
+    return {
+      dist: Math.max(1, Math.hypot(a.x - b.x, a.y - b.y)),
+      mid: board.toBoard((a.x + b.x) / 2, (a.y + b.y) / 2)
+    };
+  }
+
   cv.addEventListener('pointerdown', function (ev) {
+    pointers[ev.pointerId] = { x: ev.clientX, y: ev.clientY };
+
+    /* A second finger turns whatever was happening into a pinch. Dropping the
+       part being dragged rather than trying to do both is the honest choice:
+       a two-fingered drag of one ramp is not a gesture anybody means. */
+    if (Object.keys(pointers).length === 2) {
+      dragging = null; rotating = null; panning = null; ghost = null;
+      pinch = pinchState();
+      return;
+    }
     if (board.status === 'running') return;
-    cv.setPointerCapture(ev.pointerId);
+    /* Capturing can throw if the pointer has already gone — a touch released
+       between the event being queued and being handled, or a synthetic event.
+       Losing the capture is survivable; losing the rest of this handler is
+       not, so it is not allowed to take the handler down with it. */
+    try { cv.setPointerCapture(ev.pointerId); } catch (e) {}
     var b = toBoard(ev);
 
     if (board.selected) {
@@ -225,10 +252,31 @@
       refresh();
       return;
     }
+    /* Empty board, nothing armed: the gesture is for the board itself. A
+       finger on a part moves the part, a finger on the paper moves the paper,
+       which is the division everybody already expects. */
     board.selected = null;
+    panning = { x: ev.clientX, y: ev.clientY };
   });
 
   cv.addEventListener('pointermove', function (ev) {
+    if (pointers[ev.pointerId]) { pointers[ev.pointerId].x = ev.clientX; pointers[ev.pointerId].y = ev.clientY; }
+
+    if (pinch) {
+      var now = pinchState();
+      if (now) {
+        board.zoomBy(now.dist / pinch.dist, pinch.mid.x, pinch.mid.y);
+        pinch = pinchState();
+      }
+      return;
+    }
+    if (panning) {
+      var u = board.unitPx();
+      board.panBy((ev.clientX - panning.x) / u, (ev.clientY - panning.y) / u);
+      panning.x = ev.clientX; panning.y = ev.clientY;
+      return;
+    }
+
     var b = toBoard(ev);
     if (rotating) {
       /* The handle sits above the part, so the angle from part to pointer is
@@ -244,16 +292,34 @@
   });
 
   function endPointer(ev) {
-    if (cv.hasPointerCapture && ev.pointerId != null && cv.hasPointerCapture(ev.pointerId)) {
-      cv.releasePointerCapture(ev.pointerId);
-    }
-    dragging = null; rotating = null;
+    try {
+      if (cv.hasPointerCapture && ev.pointerId != null && cv.hasPointerCapture(ev.pointerId)) {
+        cv.releasePointerCapture(ev.pointerId);
+      }
+    } catch (e) {}
+    delete pointers[ev.pointerId];
+    if (Object.keys(pointers).length < 2) pinch = null;
+    dragging = null; rotating = null; panning = null;
   }
   cv.addEventListener('pointerup', endPointer);
   cv.addEventListener('pointercancel', endPointer);
   cv.addEventListener('pointerleave', function () { if (!dragging && !rotating) ghost = null; });
 
+  cv.addEventListener('wheel', function (ev) {
+    ev.preventDefault();
+    var b = toBoard(ev);
+    board.zoomBy(ev.deltaY < 0 ? 1.18 : 1 / 1.18, b.x, b.y);
+  }, { passive: false });
+
+  document.getElementById('btn-zoom-in').addEventListener('click', function () { board.zoomBy(1.4); });
+  document.getElementById('btn-zoom-out').addEventListener('click', function () { board.zoomBy(1 / 1.4); });
+  document.getElementById('btn-fit').addEventListener('click', function () { board.fit(); });
+
   document.addEventListener('keydown', function (ev) {
+    /* The view can be worked without a pointer at all. */
+    if (ev.key === '+' || ev.key === '=') { board.zoomBy(1.4); ev.preventDefault(); return; }
+    if (ev.key === '-' || ev.key === '_') { board.zoomBy(1 / 1.4); ev.preventDefault(); return; }
+    if (ev.key === '0') { board.fit(); ev.preventDefault(); return; }
     if (board.status === 'running' || !board.selected) return;
     var p = board.selected, g = board.GRID, done = true;
     switch (ev.key) {
@@ -294,6 +360,7 @@
   (function frame() {
     if (board.status === 'running') board.step();
     boardEl.classList.toggle('placing', !!(dragging || rotating));
+    boardEl.classList.toggle('panning', !!(panning || pinch));
     board.draw(ghost);
     requestAnimationFrame(frame);
   })();
