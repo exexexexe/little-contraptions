@@ -1603,11 +1603,17 @@ async function handleApi(req, res, url) {
    *  should read as a broken server.
    * ------------------------------------------------------------------ */
 
-  // --- how many people are on the hub right now --------------------
-  // In memory only; see the note on `here` above.
+  // --- how many people are on the hub right now, and ever -----------
+  // "Right now" is in memory only; see the note on `here` above. "Ever"
+  // is the store's ledger: one row per browser token, never swept.
   if (path === '/api/here') {
     const token = url.searchParams.get('t') || '';
-    return sendJson(res, 200, { ok: true, here: beat(token), window: HERE_WINDOW });
+    const n = beat(token);
+    // "ever" is the never-swept ledger in the store; null when there is
+    // no database, so the page can leave that half blank rather than lie.
+    let ever = null;
+    try { store.ledgerSign(token); ever = store.ledgerCount(); } catch (e) { ever = null; }
+    return sendJson(res, 200, { ok: true, here: n, ever: ever, window: HERE_WINDOW });
   }
 
   // --- shared high scores ------------------------------------------

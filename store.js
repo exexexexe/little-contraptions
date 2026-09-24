@@ -168,7 +168,16 @@ function open() {
         at       INTEGER NOT NULL
       );
       CREATE INDEX IF NOT EXISTS postcards_at ON postcards(at DESC);
+
+      /* The one list that is never swept: every browser token that has
+         ever said hello, and when it first did. No place, no times after
+         the first — just enough to answer "how many, ever". */
+      CREATE TABLE IF NOT EXISTS ledger (
+        token    TEXT PRIMARY KEY,
+        first_at INTEGER NOT NULL
+      );
     `);
+    seedLedger();
     reason = null;
     console.log('[store] open at %s', dbPath);
     return true;
@@ -176,6 +185,26 @@ function open() {
     console.error('[store] could not open:', e && e.message);
     db = null; reason = 'open_failed';
     return false;
+  }
+}
+
+/* The ledger arrived after the hub had already been open for a while.
+   Every token already sitting in the other tables was a visitor, so they
+   are counted on the first open rather than lost. Runs once: after that
+   the ledger is non-empty and this is a no-op. */
+function seedLedger() {
+  if (db.prepare('SELECT 1 FROM ledger LIMIT 1').get()) return;
+  const now = Date.now();
+  db.exec('BEGIN');
+  try {
+    db.prepare('INSERT OR IGNORE INTO ledger (token, first_at) SELECT token, first_at FROM visitors').run();
+    for (const t of ['scores', 'guestbook', 'pixels', 'story', 'hall', 'postcards']) {
+      db.prepare(`INSERT OR IGNORE INTO ledger (token, first_at) SELECT DISTINCT token, ? FROM ${t}`).run(now);
+    }
+    db.exec('COMMIT');
+  } catch (e) {
+    db.exec('ROLLBACK');
+    throw e;
   }
 }
 
@@ -290,6 +319,8 @@ function seen(token, place) {
     now, now
   );
 
+  ledgerSign(token);
+
   // nothing is kept beyond the window this toy displays
   db.prepare('DELETE FROM visitors WHERE seen_at < ?').run(now - PRESENCE_WINDOW);
   return { ok: true };
@@ -311,6 +342,19 @@ function roster() {
   const ever = db.prepare('SELECT COUNT(*) AS n FROM visitors').get().n;
 
   return { ok: true, places: rows, today: total, now: nowish, tracked: ever };
+}
+
+/* Every browser that has ever been on the hub, counted once. `sign` is
+   called on each heartbeat, so it must stay cheap: one primary-key
+   insert that is ignored after the first time. */
+function ledgerSign(token) {
+  if (!ready() || typeof token !== 'string' || !/^[a-z0-9]{8,64}$/i.test(token)) return;
+  db.prepare('INSERT OR IGNORE INTO ledger (token, first_at) VALUES (?, ?)').run(token, Date.now());
+}
+
+function ledgerCount() {
+  if (!ready()) return null;
+  return db.prepare('SELECT COUNT(*) AS n FROM ledger').get().n;
 }
 
 /* ------------------------------------------------------------------ *
@@ -747,7 +791,7 @@ function corkboard(token, before) {
 module.exports = {
   ready, status, MAX_TEXT,
   castBottle, findBottle, markFound, bottleStats,
-  seen, roster,
+  seen, roster, ledgerSign, ledgerCount,
   BOARDS, boardList, submitScore, leaderboard,
   sign, guestbook,
   hallSign, hall,
